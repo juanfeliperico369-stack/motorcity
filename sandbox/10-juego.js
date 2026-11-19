@@ -47,7 +47,7 @@ async function iniciar() {
     else if (k === 'KeyR' && !$('#bRun').hidden) entrarRun();
     else if (k === 'KeyY') { jugador.aspecto = MC.Personaje.azar(Date.now() & 0xffff); guard.aspecto = jugador.aspecto; guardar(); }
     else if (k === 'KeyQ' && seguir) seguir.girar(-1); else if (k === 'KeyE' && seguir) seguir.girar(1);
-    else if (/^Digit[1-8]$/.test(k)) ponVista(MC.VISTAS[+k.slice(5) - 1].id);
+    else if (/^Digit[1-9]$/.test(k) && MC.VISTAS[+k.slice(5) - 1]) ponVista(MC.VISTAS[+k.slice(5) - 1].id);
     else if (k === 'Escape') menu(null);
   }
   $('#bVista').onclick = menuVistas; $('#bPixel').onclick = () => tecla('KeyP'); $('#bVeh').onclick = menuVehiculos; $('#bHora').onclick = () => tecla('KeyH'); $('#bClima').onclick = () => tecla('KeyC'); $('#bYo').onclick = () => tecla('KeyY'); $('#bIr').onclick = menuIr;

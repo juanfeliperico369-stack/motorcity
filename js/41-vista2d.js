@@ -143,11 +143,13 @@ const Vista2D = {
   cables(D, cables) { const { g, pr, z } = D; g.strokeStyle = 'rgba(30,32,38,.8)'; g.lineWidth = Math.max(.6, z * .12); for (const L of cables) { g.beginPath(); for (let s = 0; s <= L.T.largo; s += 20) { let dE = 1e9; for (const e of L.est) dE = Math.min(dE, Math.abs(e.s - s)); const c = L.T.at(s), h = 6 + 22 * suave(clamp(dE / 120, 0, 1)), [x, y] = pr(c.x, c.y, h); s ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); } },
   etiquetas(D) {
     const { g, pr, z, W, H, E } = D; if (z < .35) return; g.font = '700 ' + Math.round(clamp(z * 4, 10, 14)) + 'px system-ui, sans-serif'; g.textAlign = 'center';
-    const pon = (t, x, y, col) => { const [sx, sy] = pr(x, y, 8); if (sx < -60 || sx > W + 60 || sy < -20 || sy > H + 20) return; const w = g.measureText(t).width + 10; g.fillStyle = 'rgba(10,35,66,.82)'; g.fillRect(sx - w / 2, sy - 16, w, 18); g.fillStyle = col; g.fillText(t, sx, sy - 3); };
+    /* las etiquetas no se montan unas sobre otras ni tapan el centro (donde va el jugador) */
+    const usadas = [], cx = W / 2, cy = H / 2, R0 = Math.min(W, H) * .09;
+    const pon = (t, x, y, col) => { const [sx, sy] = pr(x, y, 8); if (sx < -60 || sx > W + 60 || sy < -20 || sy > H + 20) return; const w = g.measureText(t).width + 10, r = [sx - w / 2 - 3, sy - 19, sx + w / 2 + 3, sy + 5]; if (usadas.some(u => r[0] < u[2] && r[2] > u[0] && r[1] < u[3] && r[3] > u[1])) return; if (Math.abs(sx - cx) < w / 2 + R0 && Math.abs(sy - 8 - cy) < R0 + 10) return; usadas.push(r); g.fillStyle = 'rgba(10,35,66,.82)'; g.fillRect(sx - w / 2, sy - 16, w, 18); g.fillStyle = col; g.fillText(t, sx, sy - 3); };
     for (const l of E.transporte ? E.transporte.lineas : []) if (l.clase === 'metro' || l.clase === 'cable' || l.clase === 'tram') for (const s of l.est) { const q = l.T.at(s.s); pon(s.nombre, q.x, q.y, '#ffffff'); }
     if (z > .9) for (const s of E.mundo.transporte.encicla || []) pon('🚲 ' + s.nombre, s.x, s.y, '#c4ec7c');
     const lug = []; for (const L of E.mundo.lugares) { if (L.secreto) continue; const [sx, sy] = pr(L.x, L.y, 8); if (sx > -40 && sx < W + 40 && sy > 0 && sy < H + 20) lug.push([Math.hypot(sx - W / 2, sy - H / 2), L]); }
-    lug.sort((a, b) => a[0] - b[0]); for (const [, L] of lug.slice(0, z > 3 ? 14 : 8)) pon(L.nombre, L.x, L.y, '#ffd84a');   // pocas y las del centro: que no tapen el mapa
+    lug.sort((a, b) => a[0] - b[0]); for (const [, L] of lug.slice(0, D.P.k < .45 ? 5 : z > 3 ? 14 : 8)) pon(L.nombre, L.x, L.y, '#ffd84a');   // pocas y las del centro: que no tapen el mapa
   }
 };
 MC.Vista2D = Vista2D;

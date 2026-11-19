@@ -189,24 +189,38 @@ if (fs.existsSync(gu)) {
   const cr = hab[0] && MC.Cosmos.criaturaDe(hab[0]); ok(hab.length && hab[0].temperatura > -10 && hab[0].temperatura < 60 && cr && cr.verosimil && MC.Cosmos.mundoDe(hab[0]).tipo, 'cosmos: un planeta habitable con agua, su mundo jugable y una criatura verosímil a su gravedad', hab[0] && { planeta: hab[0].nombre, g: +hab[0].g.toFixed(1), T: Math.round(hab[0].temperatura), criatura: cr && cr.especie }); }
 
 if (process.argv.includes('--navegador')) {
-  console.log('13) Banco de pruebas en Chromium');
+  console.log('14) Banco de pruebas en Chromium');
   const html = path.join(RAIZ, 'dist/motor-city.html'); let chromium; try { ({ chromium } = require('playwright')); } catch (e) { console.log('  (sin playwright: se salta)'); }
   if (chromium && fs.existsSync(html)) {
     const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] }), p = await b.newPage({ viewport: { width: 412, height: 860 } }), errs = [];
     p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
     await p.goto('file://' + html); await p.waitForFunction(() => window.MCS && MCS.listo, null, { timeout: 120000 });
     const vistas = await p.evaluate(async () => { const out = {}; for (const [i, v] of MC.VISTAS.entries()) { window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Digit' + (i + 1) })); await new Promise(r => setTimeout(r, 900)); out[v.id] = MCS.vistas.actual.id; } MCS.vistas.pixel = true; await new Promise(r => setTimeout(r, 600)); MCS.vistas.pixel = false; return out; });
-    ok(Object.keys(vistas).length === 8 && !errs.length, 'las 8 vistas y el pixel sin errores', vistas);
+    ok(Object.keys(vistas).length === 9 && Object.entries(vistas).every(([k, v]) => k === v) && !errs.length, 'las 9 vistas (con la lateral) y el pixel sin errores', vistas);
+    const ras = await p.evaluate(async () => { MCS.vistas.motor3d = 'raster'; window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Digit' + (MC.VISTAS.findIndex(q => q.id === 'tercera') + 1) })); await new Promise(r => setTimeout(r, 1500)); const n = MCS.vistas.raster ? MCS.vistas.raster.n : 0, gpu = MC.GPU.perfil(); MCS.vistas.motor3d = 'auto'; return { poligonos: n, nivel: gpu.nivel, webgl: gpu.webgl, software: gpu.software, escala: +MCS.vistas.res.escala.toFixed(2) }; });
+    ok(ras.poligonos > 200 && !errs.length, 'GPU virtual: la 3D por software (MC.Raster) dibuja la ciudad sin WebGL', ras);
     const run = await p.evaluate(async () => { const r = MCS.mundo.red('rueda'), e = r.aristas.filter(a => a.k === MC.VIA.CICLO && a.largo > 300)[2], q = e.t.at(e.largo / 2); Object.assign(MCS.cuerpo, { x: q.x, y: q.y, a: q.a }); MCS.cuerpo.setVeh('bici'); const ant = { x: MCS.cuerpo.x, y: MCS.cuerpo.y, min: MCS.reloj.min };
       document.querySelector('#bRun').hidden = false; document.querySelector('#bRun').click(); await new Promise(r => setTimeout(r, 2500)); const dentro = MC.Run.activo, s = MC.Run.g.p.s; MC.Run.salir(); await new Promise(r => setTimeout(r, 400));
       return { dentro, s: Math.round(s), lejos: Math.round(Math.hypot(MCS.cuerpo.x - ant.x, MCS.cuerpo.y - ant.y)), enCiclo: MCS.mundo.esCiclovia(MCS.cuerpo.x, MCS.cuerpo.y, 25) || MCS.mundo.red('rueda').cercana(MCS.cuerpo.x, MCS.cuerpo.y, 10) != null, dmin: MCS.reloj.min - ant.min, clima: MCS.clima.tipo }; });
     ok(run.dentro && run.s > 5 && run.enCiclo && run.dmin >= 0 && run.dmin < 10, 'Run en la ciclovía: entra, corre y vuelve al mundo en el punto donde iba, a la misma hora', run);
     /* rendimiento: CPU 4× más lenta, tiempo de dibujo (mediana) por vista */
     const cdp = await p.context().newCDPSession(p); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
-    const med = await p.evaluate(async () => { const out = {}; MCS.vistas.auto = false; MCS.vistas.calidad = .8; for (const v of ['cenital', 'ciudad3d', 'maqueta', 'pano']) { window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Digit' + (MC.VISTAS.findIndex(q => q.id === v) + 1) })); await new Promise(r => setTimeout(r, 1500)); const L = []; const t = performance.now(); while (performance.now() - t < 2500) { await new Promise(r => requestAnimationFrame(r)); L.push(MCS.vistas.ms); } L.sort((a, b) => a - b); out[v] = +L[L.length >> 1].toFixed(1); if (MCS.vistas.actual.id !== v || !L[L.length >> 1]) out[v] = 99; } return out; });
+    const med = await p.evaluate(async () => { const out = {}; MCS.vistas.auto = false; MCS.vistas.calidad = .8; for (const v of ['cenital', 'ciudad3d', 'maqueta', 'lateral', 'pano']) { window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Digit' + (MC.VISTAS.findIndex(q => q.id === v) + 1) })); await new Promise(r => setTimeout(r, 1500)); const L = []; const t = performance.now(); while (performance.now() - t < 2500) { await new Promise(r => requestAnimationFrame(r)); L.push(MCS.vistas.ms); } L.sort((a, b) => a - b); out[v] = +L[L.length >> 1].toFixed(1); if (MCS.vistas.actual.id !== v || !L[L.length >> 1]) out[v] = 99; } return out; });
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
-    ok(Object.values(med).every(m => m < 40), 'CPU 4× más lenta: mediana del dibujo menor a 40 ms en las vistas 2D y la panorámica', med);
+    ok(Object.values(med).every(m => m < 40), 'CPU 4× más lenta: mediana del dibujo menor a 40 ms en las vistas 2D, la lateral y la panorámica', med);
     ok(!errs.length, 'sin errores en la consola', errs.slice(0, 3)); await b.close();
+  }
+  /* el minijuego Mandados: mi casa, diseño, lugares, historias y que la interfaz no tape el centro */
+  const mh = path.join(RAIZ, 'dist/juegos/mandados.html');
+  if (chromium && fs.existsSync(mh)) {
+    const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 412, height: 860 } }), errs = [];
+    p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+    await p.goto('file://' + mh); await p.click('#jugar'); await p.waitForFunction(() => window.MANDADOS, null, { timeout: 120000 }); await p.waitForTimeout(1500);
+    const r = await p.evaluate(async () => { const G = window.MANDADOS, tapa = MC.UI.verificar(G.ui), R = G.ponHogar('Calle 31 # 28-15'); G.cuerpo.x = G.hogar.d.x; G.cuerpo.y = G.hogar.d.y + 3; G.abrirCasa(); await new Promise(q => setTimeout(q, 600)); const barra = !document.querySelector('#barraCasa').hidden;
+      document.querySelector('#bcEstilo').click(); const est = G.hogar.plano().estilo; document.querySelector('#bcSalir').click(); await new Promise(q => setTimeout(q, 400)); G.ponVista('lateral'); await new Promise(q => setTimeout(q, 800));
+      return { tapa, calidad: R.ubicacion.calidad, barra, estilo: est, lugares: MC.Lugares.en(G.mundo, 0, 0, G.mundo.ancho, G.mundo.alto).length, vista: G.vistas.actual.id, ocurrencias: G.ocu.resumen() }; });
+    ok(r.tapa.length === 0 && r.calidad === 'exacta' && r.barra && r.estilo && r.lugares > 20 && r.vista === 'lateral' && !errs.length, 'Mandados: la interfaz no tapa el centro; mi casa desde la dirección, se diseña; lugares y vista lateral', r);
+    await b.close();
   }
 }
 console.log((mal ? '✗ ' + mal + ' pruebas fallaron' : '✓ TODAS LAS PRUEBAS PASARON') + ' · ' + bien + ' bien · ' + ((Date.now() - t0) / 1000).toFixed(1) + ' s');
