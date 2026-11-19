@@ -450,6 +450,62 @@ const Trabajo = {
 };
 Object.assign(MC, { Dinero, Libro, Mercado, Finanzas, Trabajo });
 
+/* ---- js/04-escala.js ---- */
+/* =====================================================================
+   ESCALA · que todo tenga el tamaño y la proporción de la realidad
+   Regla de oro: el motor piensa en METROS, SEGUNDOS y KILOGRAMOS. El dibujo solo multiplica por los píxeles por metro
+   de cada vista (pxPorMetro). Así una persona, una puerta, una bici, un carro, un bus y un edificio guardan siempre su
+   proporción real en todas las vistas y en todos los juegos.
+   - MEDIDAS: tamaños de referencia (con su rango) de personas, puertas, pisos, calles, vehículos, árboles y mobiliario.
+   - validar(): revisa el registro de vehículos (o cualquier lista) y dice qué se sale de lo real.
+   - Ayudas: altura por clase, píxeles por metro enteros para el pixel art, escala de sprites y «arcade» sin deformar.
+   ===================================================================== */
+const MEDIDAS = {
+  /* gente (Colombia: hombres ≈ 1,72 m y mujeres ≈ 1,59 m de estatura media adulta, NCD‑RisC) */
+  persona: { alto: [1.45, 1.95], ref: 1.68 }, nino8: { alto: [1.15, 1.40], ref: 1.28 },
+  /* arquitectura (NSR‑10 y práctica común) */
+  puerta: { alto: [2.0, 2.4], ancho: [.7, 1.2], ref: [2.1, .9] }, piso: { alto: [2.5, 3.6], ref: 3.0 }, escalon: { alto: [.15, .18], fondo: [.28, .30] },
+  baranda: { alto: [.9, 1.1] }, ventana: { alto: [1.0, 1.5], antepecho: [.9, 1.1] },
+  /* calles */
+  carril: { ancho: [2.8, 3.65], ref: 3.25 }, anden: { ancho: [1.2, 4] }, ciclorruta: { ancho: [1.6, 3.0], ref: 2.4 }, poste: { alto: [8, 12] }, semaforo: { alto: [4.5, 6] },
+  /* naturaleza */
+  arbol: { alto: [4, 30], ref: 10 }, palma: { alto: [8, 25] },
+  /* vehículos: largo, ancho, alto (m) y masa (kg) */
+  pie: { largo: [.3, .8], ancho: [.3, .8], alto: [1.4, 2], masa: [40, 120] },
+  rueda: { largo: [.3, 2.6], ancho: [.15, 1.2], alto: [.1, 1.3], masa: [55, 220] },
+  moto: { largo: [1.7, 2.5], ancho: [.6, 1.0], alto: [1, 1.5], masa: [140, 450] },
+  auto: { largo: [3.0, 5.6], ancho: [1.5, 2.1], alto: [.95, 2.0], masa: [550, 3000] },
+  pesado: { largo: [6, 19], ancho: [2.2, 2.6], alto: [2.6, 4.4], masa: [3500, 52000] },
+  riel: { largo: [18, 140], ancho: [2.4, 3.3], alto: [3.2, 4.2], masa: [30000, 250000] },
+  cable: { largo: [1.8, 3.5], ancho: [1.6, 2.6], alto: [2, 2.8], masa: [500, 1500] },
+  aire: { largo: [.5, 40], ancho: [.5, 40], alto: [1, 12], masa: [80, 80000] },
+  agua: { largo: [1.5, 15], ancho: [.5, 4], alto: [.5, 3.5], masa: [5, 12000] }
+};
+const ALTO_CLASE = { pie: 1.7, rueda: 1.1, moto: 1.2, auto: 1.45, pesado: 3.4, riel: 3.8, cable: 2.4, aire: 2.5, agua: 1.2 };
+const Escala = {
+  MEDIDAS,
+  alto(V) { return V.alto || ALTO_CLASE[V.clase] || 1.5; },
+  /* píxeles por metro para que la vista muestre «metros» de alto en «px» de pantalla; con pixel art, entero */
+  pxPorMetro(px, metros, entero) { const k = px / Math.max(.01, metros); return entero ? Math.max(1, Math.round(k)) : k; },
+  /* cuánto se escala un sprite dibujado con «altoPx» de alto para que mida «altoReal» metros a «pxm» píxeles por metro */
+  escalaSprite(altoPx, altoReal, pxm) { return altoReal * pxm / Math.max(1, altoPx); },
+  /* ¿está v (un número o [largo, ancho, alto]) dentro del rango real? con tolerancia */
+  dentro(v, rango, tol = .05) { return v >= rango[0] * (1 - tol) && v <= rango[1] * (1 + tol); },
+  /* revisa una lista de vehículos (por defecto todo el registro) y devuelve lo que no es proporcional */
+  validar(lista) {
+    const L = lista || (MC.Vehiculos ? [...MC.Vehiculos.lista.values()] : []), malos = [];
+    for (const V of L) { const R = MEDIDAS[V.clase]; if (!R) continue; const alto = Escala.alto(V);
+      for (const [k, v] of [['largo', V.largo], ['ancho', V.ancho], ['alto', alto], ['masa', V.masa]]) if (v != null && R[k] && !Escala.dentro(v, R[k])) malos.push({ id: V.id, medida: k, valor: v, rango: R[k] }); }
+    return malos;
+  },
+  /* proporción real entre dos cosas (p. ej. Escala.proporcion('auto', 'persona') ≈ 0,86 de alto) */
+  proporcion(a, b, medida = 'alto') { const A = MEDIDAS[a], B = MEDIDAS[b], va = A && (Array.isArray(A.ref) ? A.ref[0] : A.ref || (A[medida] && (A[medida][0] + A[medida][1]) / 2)), vb = B && (Array.isArray(B.ref) ? B.ref[0] : B.ref || (B[medida] && (B[medida][0] + B[medida][1]) / 2)); return va && vb ? va / vb : NaN; },
+  /* «arcade» sin deformar: un juego puede ir más rápido (tiempo) o comprimir distancias de viaje (mapa), pero los
+     cuerpos conservan su tamaño. Devuelve los factores para cada cosa. */
+  arcade({ velocidad = 1, distancia = 1 } = {}) { return { velocidad, tiempo: distancia / velocidad, tamano: 1 }; }
+};
+MC.Escala = Escala;
+
 /* ---- js/05-gpu.js ---- */
 /* =====================================================================
    GPU VIRTUAL · que el juego ande fluido en cualquier aparato, tenga o no tenga tarjeta gráfica
@@ -2217,6 +2273,169 @@ Cuerpo.prototype.actualizar = function (dt, E = {}) {
   this.a += R.giro * dt; this.v = R.avance; this.derrape = R.derrape; this._niveles(dt); this.estado = 'sentado'; return this;
 };
 
+/* ---- js/37-manejo.js ---- */
+/* =====================================================================
+   MANEJO · tipos de control, sensibilidad y asistencias (que todo se sienta fluido e intuitivo)
+   - CURVAS DE RESPUESTA: zona muerta radial (sin «deriva» del dedo o del mando) y respuesta exponencial: lo pequeño
+     es preciso y lo grande es rápido. Cada clase de vehículo tiene su perfil (a pie es directo; el carro es suave).
+   - GIRO SEGÚN LA VELOCIDAD: a más velocidad, menos giro por el mismo gesto (como la dirección real y los juegos de
+     carreras): nada de trompos por un dedo nervioso.
+   - ESQUEMAS: joystick flotante o fijo, volante con pedales, tocar para ir (camino A* por las calles), inclinar el
+     celular, un pulgar (acelera solo) y carriles (deslizar, como los corredores). El teclado y el mando sirven siempre.
+   - ASISTENCIAS (se apagan en «experto»): acelerar solo, frenar antes de las curvas (v = √(μ·g/κ)), imán de calle
+     (alinea suave con la vía cuando ya casi va derecho) y freno de llegada en «tocar para ir».
+   Uso: const entrada = MC.Manejo.aplicar(controles.leer(), cuerpo, { camara, esquema: 'joystick', vista: 'mundo'|'volante' })
+        cuerpo.actualizar(dt, entrada)
+   ===================================================================== */
+const PERFIL_MANEJO = {
+  pie: { zm: .1, expo: 1.15, giroVel: 0 }, rueda: { zm: .12, expo: 1.35, giroVel: .35 }, moto: { zm: .12, expo: 1.55, giroVel: .55 },
+  auto: { zm: .1, expo: 1.75, giroVel: .62 }, pesado: { zm: .1, expo: 1.9, giroVel: .7 }, aire: { zm: .12, expo: 1.5, giroVel: .3 }, agua: { zm: .12, expo: 1.6, giroVel: .4 }, riel: { zm: .1, expo: 1, giroVel: 0 }, cable: { zm: .1, expo: 1, giroVel: 0 }
+};
+const ESQUEMAS = {
+  joystick: { n: 'Joystick', icono: '🕹️', ayuda: 'Pon el pulgar a la izquierda y arrastra hacia donde quieres ir.' },
+  joystick_fijo: { n: 'Joystick fijo', icono: '🎯', ayuda: 'El joystick queda siempre en el mismo lugar, abajo a la izquierda.' },
+  volante: { n: 'Volante y pedales', icono: '🛞', ayuda: 'Izquierda y derecha para girar; a la derecha, acelerar y frenar.' },
+  tocar_ir: { n: 'Tocar para ir', icono: '👆', ayuda: 'Toca un punto del mapa y el personaje va solo por las calles.' },
+  inclinacion: { n: 'Inclinar el celular', icono: '📱', ayuda: 'Inclina el celular para girar; acelera solo.' },
+  un_pulgar: { n: 'Un pulgar', icono: '👍', ayuda: 'Acelera solo; desliza para girar y mantén oprimido para frenar.' },
+  carriles: { n: 'Carriles', icono: '↔️', ayuda: 'Desliza a los lados para cambiar de carril y hacia arriba para saltar.' }
+};
+const Manejo = {
+  PERFIL: PERFIL_MANEJO, ESQUEMAS,
+  /* zona muerta radial con reescalado y respuesta exponencial: entra 0..1, sale 0..1 */
+  curva(m, p = PERFIL_MANEJO.rueda) { if (m <= p.zm) return 0; const t = Math.min(1, (m - p.zm) / (1 - p.zm)); return Math.pow(t, p.expo); },
+  /* giro efectivo a la velocidad v de un vehículo de velocidad máxima vmax */
+  giroPorVelocidad(giro, v, vmax, p) { const r = clamp(Math.abs(v) / Math.max(1, vmax), 0, 1); return giro / (1 + p.giroVel * 2.2 * r * r); },
+  /* velocidad segura en una curva de curvatura κ (1/m) con agarre μ: la misma que usan los pilotos de la IA */
+  vSegura(kappa, mu = .8) { return Math.sqrt(mu * 9.81 / Math.max(1e-4, Math.abs(kappa))); },
+  /* traduce la entrada cruda (MC.Controles.leer) a la entrada del cuerpo (MC.Cuerpo.actualizar) */
+  aplicar(ent, C, op = {}) {
+    const V = C.veh, P = Object.assign({}, PERFIL_MANEJO[V.clase] || PERFIL_MANEJO.rueda, op.perfil || {}), A = Object.assign({ autoAcelerar: false, frenoCurvas: true, imanCalle: true }, op.asist || {}), esq = op.esquema || 'joystick';
+    const s = ent.stick || { x: 0, y: 0, m: 0 }, m0 = Math.min(1, Math.hypot(s.x, s.y)), m = Manejo.curva(m0, P), k = m0 > 0 ? m / m0 : 0, sx = s.x * k, sy = s.y * k;
+    const out = { salto: ent.salto, turbo: ent.turbo, correr: ent.correr, sube: ent.sube, baja: ent.baja, acel: 0, giro: 0 };
+    const vmax = C.vmax ? C.vmax() : V.vmax || 5, volante = op.vista === 'volante' || esq === 'volante' || esq === 'inclinacion' || esq === 'un_pulgar' || esq === 'carriles';
+    if (!volante) {
+      /* el stick apunta en el mundo, relativo a la cámara (lo natural en cenital, 3D oblicua, maqueta y lateral) */
+      const yaw = op.camara ? op.camara.yaw : 0, c = Math.cos(yaw), sn = Math.sin(yaw);
+      if (m > 0) out.dir = { x: sx * c + sy * sn, y: -sx * sn + sy * c, m };
+      out.acel = ent.acel || 0; out.giro = ent.giro || 0;
+    } else {
+      let giro = esq === 'inclinacion' ? Manejo.inclinacion() : (sx || ent.giro || 0);
+      out.giro = Manejo.giroPorVelocidad(clamp(giro, -1, 1), C.v, vmax, P);
+      out.acel = -sy || ent.acel || 0; if (esq === 'un_pulgar' || esq === 'inclinacion' || A.autoAcelerar) out.acel = ent.freno || (ent.acel < 0) ? -1 : Math.max(out.acel, .85);
+    }
+    /* frenar antes de la curva: mira la vía de adelante (si el juego la da) y no deja pasar de la velocidad segura */
+    if (A.frenoCurvas && op.curvaAdelante != null && V.clase !== 'pie') { const vs = Manejo.vSegura(op.curvaAdelante, op.mu || .8); if (C.v > vs && out.acel > 0) out.acel = C.v > vs * 1.08 ? -.6 : 0; }
+    /* imán de calle: si ya casi va derecho por la vía, la alinea suave (no lucha contra el jugador) */
+    if (A.imanCalle && op.rumboVia != null && V.clase !== 'pie' && Math.abs(out.giro) < .25 && !out.dir) { const d = angDif(C.a, op.rumboVia), d2 = Math.abs(d) > Math.PI / 2 ? angDif(C.a, op.rumboVia + Math.PI) : d; if (Math.abs(d2) < .35) out.giro += clamp(d2 * 1.5, -.25, .25); }
+    return out;
+  },
+  /* inclinar el celular: γ (izquierda/derecha) con zona muerta; pide permiso en iPhone (llámalo desde un toque) */
+  _incl: 0,
+  activarInclinacion() {
+    if (typeof window === 'undefined' || !window.DeviceOrientationEvent) return Promise.resolve(false);
+    const on = () => { window.addEventListener('deviceorientation', e => { const g = (screen.orientation && Math.abs(screen.orientation.angle) === 90) ? e.beta : e.gamma; Manejo._incl = clamp((g || 0) / 30, -1, 1); }); return true; };
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') return DeviceOrientationEvent.requestPermission().then(r => r === 'granted' && on()).catch(() => false);
+    return Promise.resolve(on());
+  },
+  inclinacion() { const v = Manejo._incl; return Math.abs(v) < .08 ? 0 : (v - Math.sign(v) * .08) / .92; },
+  /* tocar para ir: el camino por la red (A*) hasta el punto tocado; cada cuadro, la dirección al siguiente punto */
+  rutaA(mundo, desde, hasta, red = 'peaton') {
+    try { const R = mundo.red(red), a = R.cercana(desde.x, desde.y, 120), b = R.cercana(hasta.x, hasta.y, 120); if (!a || !b) return [hasta.x, hasta.y];
+      const na = a.arista.a, nb = b.arista.b, C = R.camino(na, nb); if (!C) return [hasta.x, hasta.y]; const P = [desde.x, desde.y];
+      for (const { arista: e, adelante } of C) { const p = e.t.p, n = p.length; if (adelante) for (let i = 0; i < n; i += 2) P.push(p[i], p[i + 1]); else for (let i = n - 2; i >= 0; i -= 2) P.push(p[i], p[i + 1]); }
+      P.push(hasta.x, hasta.y); return P; } catch (e) { return [hasta.x, hasta.y]; }
+  },
+  seguirRuta(C, ruta, op = {}) {
+    if (!ruta || ruta.length < 2) return null; let i = ruta._i || 0; while (i + 3 < ruta.length && Math.hypot(ruta[i] - C.x, ruta[i + 1] - C.y) < (op.radio || 3)) i += 2; ruta._i = i;
+    const tx = ruta[i], ty = ruta[i + 1], d = Math.hypot(tx - C.x, ty - C.y), ultimo = i + 2 >= ruta.length; if (ultimo && d < 1.2) return { llego: true, acel: 0 };
+    return { dir: { x: (tx - C.x) / (d || 1), y: (ty - C.y) / (d || 1), m: ultimo ? clamp(d / 6, .3, 1) : 1 } };   // frena al llegar
+  },
+  /* carriles: −1, 0 o 1 con deslizar; devuelve el desplazamiento lateral suave en metros */
+  carril(estado, gesto, ancho = 1.6) { if (gesto === 'izq') estado.c = Math.max(-1, (estado.c || 0) - 1); if (gesto === 'der') estado.c = Math.min(1, (estado.c || 0) + 1); estado.x = lerp(estado.x || 0, (estado.c || 0) * ancho, .25); return estado.x; }
+};
+MC.Manejo = Manejo;
+
+/* ---- js/38-sprites.js ---- */
+/* =====================================================================
+   SPRITES · imágenes de arte (de Gemini, ChatGPT o un artista) dentro del motor, sin romper nada
+   - ATLAS: una imagen con muchos cuadros y su mapa { nombre: [x, y, w, h, ancla_x, ancla_y] }. Una sola textura =
+     menos cambios de estado y dibujo más rápido (como los «sprite sheets» de todos los motores 2D).
+   - ANIMACIONES por tiempo o por la FASE del cuerpo (los pies del sprite van al ritmo real del paso o del pedal).
+   - DIRECCIONES: 1, 2 (espejo), 4 u 8 direcciones según el rumbo y la cámara (los juegos isométricos y cenitales).
+   - ESCALA REAL: cada sprite dice cuánto mide en metros (MC.Escala): se ve proporcionado en cualquier zoom.
+   - PIXEL ART: dibujo sin suavizado y en píxeles enteros cuando la vista está en pixel.
+   - NUEVE PARTES (9‑slice) para marcos de interfaz que se estiran sin deformar las esquinas.
+   - FONDO MAGENTA: si la herramienta de arte no da transparencia, el magenta plano (#ff00ff) se vuelve transparente.
+   - RESPALDO PROCEDURAL: si un sprite no está (o no ha cargado), se dibuja el del motor. El arte nuevo nunca rompe el juego.
+   - HORNEAR: cualquier dibujo procedural se puede «hornear» a un atlas al arrancar (dibujar una imagen es más barato
+     que repetir cien trazos cada cuadro).
+   Uso: MC.Sprites.atlas('encicla', { imagen: 'data:image/png;base64,…', cuadros: {...}, anim: {...}, metros: { bici: 1.75 } })
+        MC.Sprites.dibujar(g, 'encicla/bici_lado', x, y, pxPorMetro, { t, fase, rumbo, camara, espejo, pixel })
+   ===================================================================== */
+const Sprites = {
+  atlases: new Map(), faltan: new Set(),
+  /* registra un atlas; imagen: dataURL, URL local, <img> o <canvas> */
+  atlas(id, def) {
+    const A = { id, cuadros: def.cuadros || {}, anim: def.anim || {}, metros: def.metros || {}, img: null, listo: false, magenta: def.magenta !== false };
+    const fin = img => { A.img = A.magenta ? Sprites._sinMagenta(img) : img; A.listo = true; MC.emit('sprites', id); };
+    if (def.imagen && typeof def.imagen === 'object') fin(def.imagen);
+    else if (def.imagen && typeof Image !== 'undefined') { const im = new Image(); im.onload = () => fin(im); im.onerror = () => MC.falla('sprites', 'no cargó ' + id); im.src = def.imagen; }
+    this.atlases.set(id, A); return A;
+  },
+  /* el magenta plano se vuelve transparente (con borde suave para el antialias) */
+  _sinMagenta(img) {
+    if (typeof document === 'undefined') return img; try {
+      const c = lienzo(img.width, img.height), g = c.getContext('2d'); g.drawImage(img, 0, 0); const d = g.getImageData(0, 0, c.width, c.height), p = d.data;
+      for (let i = 0; i < p.length; i += 4) { const r = p[i], gg = p[i + 1], b = p[i + 2], dist = Math.abs(r - 255) + gg + Math.abs(b - 255); if (dist < 60) p[i + 3] = 0; else if (dist < 140 && r > 180 && b > 180 && gg < 110) p[i + 3] = Math.min(p[i + 3], (dist - 60) * 3); }
+      g.putImageData(d, 0, 0); return c; } catch (e) { return img; }
+  },
+  /* busca el cuadro: 'atlas/nombre'; con animación (por tiempo o fase) y dirección */
+  cuadro(ref, op = {}) {
+    const [aid, nombre] = ref.includes('/') ? ref.split('/') : [null, ref], A = aid ? this.atlases.get(aid) : null; if (!A || !A.listo) { this.faltan.add(ref); return null; }
+    let n = nombre; const an = A.anim[nombre];
+    if (an) { const L = an.cuadros, i = op.fase != null && an.porFase ? Math.floor(((op.fase / TAU) % 1 + 1) % 1 * L.length) : Math.floor((op.t || 0) * (an.fps || 8)); n = an.bucle === false ? L[Math.min(L.length - 1, i)] : L[((i % L.length) + L.length) % L.length]; }
+    /* direcciones: nombre_N, _NE, … (8) o _arriba/_abajo/_izq/_der (4) según el rumbo visto desde la cámara */
+    if (op.rumbo != null) { const a = (((op.rumbo + (op.camara || 0)) % TAU) + TAU) % TAU;
+      const D8 = ['E', 'SE', 'S', 'SO', 'O', 'NO', 'N', 'NE'], d8 = D8[Math.round(a / (TAU / 8)) % 8]; if (A.cuadros[n + '_' + d8]) n = n + '_' + d8;
+      else { const D4 = ['der', 'abajo', 'izq', 'arriba'], d4 = D4[Math.round(a / (TAU / 4)) % 4]; if (A.cuadros[n + '_' + d4]) n = n + '_' + d4; } }
+    const c = A.cuadros[n]; if (!c) { this.faltan.add(ref); return null; } return { A, c, metros: A.metros[nombre] || A.metros[n] || c[6] || null };
+  },
+  tiene(ref) { return !!this.cuadro(ref); },
+  /* dibuja con el ancla en (x, y) (normalmente los pies); alto real en metros × pxPorMetro */
+  dibujar(g, ref, x, y, pxm, op = {}) {
+    const q = this.cuadro(ref, op); if (!q) { if (op.respaldo) op.respaldo(g, x, y, pxm); return false; }
+    const [sx, sy, sw, sh, ax = sw / 2, ay = sh] = q.c, altoM = op.metros || q.metros || 1.7, k = altoM * pxm / sh, espejo = op.espejo || (op.dir != null && op.dir < 0);
+    g.save(); if (op.pixel) g.imageSmoothingEnabled = false; if (op.alfa != null) g.globalAlpha *= op.alfa;
+    let dx = x - ax * k, dy = y - ay * k, dw = sw * k, dh = sh * k; if (op.pixel) { dx = Math.round(dx); dy = Math.round(dy); dw = Math.max(1, Math.round(dw)); dh = Math.max(1, Math.round(dh)); }
+    if (espejo) { g.translate(x, 0); g.scale(-1, 1); g.translate(-x, 0); }
+    if (op.rot) { g.translate(x, y); g.rotate(op.rot); g.translate(-x, -y); }
+    g.drawImage(q.A.img, sx, sy, sw, sh, dx, dy, dw, dh); g.restore(); return true;
+  },
+  /* marco de nueve partes: b = borde en px del atlas */
+  nueve(g, ref, x, y, w, h, b = 8) {
+    const q = this.cuadro(ref); if (!q) return false; const [sx, sy, sw, sh] = q.c, I = q.A.img, cw = sw - 2 * b, ch = sh - 2 * b;
+    const P = [[0, 0, b, b, 0, 0, b, b], [b, 0, cw, b, b, 0, w - 2 * b, b], [sw - b, 0, b, b, w - b, 0, b, b], [0, b, b, ch, 0, b, b, h - 2 * b], [b, b, cw, ch, b, b, w - 2 * b, h - 2 * b], [sw - b, b, b, ch, w - b, b, b, h - 2 * b], [0, sh - b, b, b, 0, h - b, b, b], [b, sh - b, cw, b, b, h - b, w - 2 * b, b], [sw - b, sh - b, b, b, w - b, h - b, b, b]];
+    for (const [ax, ay, aw, ah, bx, by, bw, bh] of P) if (aw > 0 && ah > 0 && bw > 0 && bh > 0) g.drawImage(I, sx + ax, sy + ay, aw, ah, x + bx, y + by, bw, bh); return true;
+  },
+  /* hornea dibujos procedurales a un atlas: lista [{ nombre, w, h, ancla:[ax,ay], metros, dibujar(g, w, h) }] */
+  hornear(id, lista) {
+    if (typeof document === 'undefined') return null; let W = 0, H = 0, x = 0, y = 0, fila = 0; const lado = 1024, pos = [];
+    for (const it of lista) { if (x + it.w > lado) { x = 0; y += fila + 2; fila = 0; } pos.push([x, y]); x += it.w + 2; fila = Math.max(fila, it.h); W = Math.max(W, x); }
+    H = y + fila; const c = lienzo(Math.max(1, W), Math.max(1, H)), g = c.getContext('2d'), cuadros = {}, metros = {};
+    lista.forEach((it, i) => { const [px, py] = pos[i]; g.save(); g.translate(px, py); g.beginPath(); g.rect(0, 0, it.w, it.h); g.clip(); it.dibujar(g, it.w, it.h); g.restore(); cuadros[it.nombre] = [px, py, it.w, it.h, ...(it.ancla || [it.w / 2, it.h])]; if (it.metros) metros[it.nombre] = it.metros; });
+    return this.atlas(id, { imagen: c, cuadros, metros, magenta: false });
+  },
+  /* pieles de arte hechas con sprites: MC.arte.registrar(juego, MC.Sprites.comoArte('encicla', { personaje: 'persona', bici: 'bici' })) */
+  comoArte(aid, mapa) {
+    const piel = {};
+    if (mapa.personaje) piel.personajeLado = (g, J, A, x, y, pxm, dir) => Sprites.dibujar(g, aid + '/' + mapa.personaje + '_' + (J.estado || 'quieto'), x, y, pxm, { fase: J.fase, dir, metros: A.alto || 1.7, respaldo: () => MC.arte.pieles.motor.personajeLado && MC.arte.pieles.motor.personajeLado(g, J, A, x, y, pxm, dir) });
+    if (mapa.vehiculos) piel.vehiculoLado = (g, V, x, y, pxm, dir, C) => Sprites.dibujar(g, aid + '/' + (mapa.vehiculos[V.id] || V.id), x, y, pxm, { dir, metros: MC.Escala ? MC.Escala.alto(V) : 1.2, fase: C && C.fase, respaldo: () => MC.arte.pieles.motor.vehiculoLado && MC.arte.pieles.motor.vehiculoLado(g, V, x, y, pxm, dir, C) });
+    return piel;
+  }
+};
+MC.Sprites = Sprites;
+
 /* ---- js/40-dibujo.js ---- */
 /* =====================================================================
    DIBUJO 2D COMPARTIDO · paleta del motor, losas del suelo en caché y pinceles de edificios y vehículos
@@ -3194,16 +3413,24 @@ const PROGRAMAS = {
   oficina: [['recepcion', 14], ['oficina', 12], ['oficina', 12], ['sala_juntas', 16], ['cocineta', 6], ['bano', 4], ['bano', 4]],
   iglesia: [['nave', 160], ['altar', 30], ['sacristia', 14], ['bano', 4]],
   colegio: [['aula', 48], ['aula', 48], ['aula', 48], ['rectoria', 14], ['bano', 8], ['patio', 60]],
-  bodega: [['bodega', 200], ['oficina', 12], ['bano', 4]]
+  bodega: [['bodega', 200], ['oficina', 12], ['bano', 4]],
+  /* lugares jugables (MC.Lugares): talleres, tiendas, centros comerciales, bibliotecas y restaurantes */
+  taller: [['taller', 60], ['repuestos', 14], ['mostrador_taller', 10], ['bano', 3]],
+  tienda: [['tienda', 40], ['probador', 4], ['probador', 4], ['caja', 6], ['bodega', 10]],
+  centro_comercial: [['pasillo_cc', 140], ['local', 40], ['local', 40], ['local', 36], ['local', 36], ['comidas', 70], ['bano', 10], ['bano', 10]],
+  biblioteca: [['lectura', 80], ['estanteria', 60], ['infantil', 30], ['computadores', 24], ['recepcion', 12], ['bano', 5]],
+  restaurante: [['comedor_r', 50], ['cocina', 18], ['caja', 5], ['bano', 4], ['bano', 4]]
 };
-const PISO_DE = { sala: '#d6b48a', comedor: '#d6b48a', alcoba: '#c49a6c', cocina: '#e8e2d4', bano: '#cfe3ea', patio: '#a8b89a', ropas: '#e0dbcf', balcon: '#cfc6b5', local: '#e6e0d2', bodega: '#bdb8ad', oficina: '#d0c8b8', recepcion: '#e8e2d4', sala_juntas: '#c9b391', cocineta: '#e8e2d4', nave: '#d9c9a8', altar: '#b5542f', sacristia: '#c9b391', aula: '#d8d0bc', rectoria: '#c9b391', pasillo: '#d9d2c2' };
-const MUEBLES = { sala: [['sofa', 2.1, .9], ['mesa_centro', 1, .6], ['tv', 1.4, .4], ['matera', .5, .5]], comedor: [['comedor', 1.6, .9]], cocina: [['estufa', .6, .6], ['nevera', .7, .7], ['lavaplatos', 1.2, .6], ['mesón', 1.6, .6]], alcoba: [['cama', 1.4, 1.9], ['closet', 1.6, .6], ['mesa_noche', .45, .45]], bano: [['inodoro', .4, .65], ['lavamanos', .5, .45], ['ducha', .9, .9]], patio: [['matera', .5, .5], ['matera', .5, .5], ['lavadero', .8, .6]], ropas: [['lavadora', .6, .6]], balcon: [['matera', .5, .5]], local: [['mostrador', 2.4, .7], ['estante', 2, .5], ['estante', 2, .5], ['nevera', .8, .7]], bodega: [['estante', 2.4, .8], ['estante', 2.4, .8], ['estiba', 1.2, 1]], oficina: [['escritorio', 1.4, .7], ['silla', .55, .55], ['archivador', .9, .5]], recepcion: [['mostrador', 2, .7], ['sofa', 1.8, .8]], sala_juntas: [['mesa_juntas', 3, 1.2]], cocineta: [['mesón', 1.6, .6], ['nevera', .7, .7]], nave: [['banca', 3, .5], ['banca', 3, .5], ['banca', 3, .5], ['banca', 3, .5], ['banca', 3, .5], ['banca', 3, .5]], altar: [['altar', 2.4, 1]], sacristia: [['closet', 1.6, .6]], aula: [['tablero', 3, .15], ['pupitre', .7, .5], ['pupitre', .7, .5], ['pupitre', .7, .5], ['pupitre', .7, .5], ['pupitre', .7, .5], ['pupitre', .7, .5]], rectoria: [['escritorio', 1.4, .7]] };
+/* cuartos que pueden aparecer o no (cada casa es distinta aunque salga del mismo programa) */
+const OPCIONALES = { casa: [['estudio', 8], ['terraza', 9], ['alcoba', 9], ['bano', 3.5], ['sala_tv', 10]], apartamento: [['estudio', 7], ['alcoba', 9], ['bano', 3.5], ['ropas', 3]] };
+const PISO_DE = { taller: '#9ea3a8', repuestos: '#b9b4a8', mostrador_taller: '#c9c1b0', tienda: '#efe9dc', probador: '#d9cfe0', caja: '#e6e0d2', pasillo_cc: '#f1eee6', comidas: '#e9dcc5', lectura: '#c9a77c', estanteria: '#b88e62', infantil: '#bfe0c8', computadores: '#d4d7dc', comedor_r: '#c49a6c', estudio: '#c9a77c', terraza: '#c8b9a0', sala_tv: '#d6b48a', sala: '#d6b48a', comedor: '#d6b48a', alcoba: '#c49a6c', cocina: '#e8e2d4', bano: '#cfe3ea', patio: '#a8b89a', ropas: '#e0dbcf', balcon: '#cfc6b5', local: '#e6e0d2', bodega: '#bdb8ad', oficina: '#d0c8b8', recepcion: '#e8e2d4', sala_juntas: '#c9b391', cocineta: '#e8e2d4', nave: '#d9c9a8', altar: '#b5542f', sacristia: '#c9b391', aula: '#d8d0bc', rectoria: '#c9b391', pasillo: '#d9d2c2' };
+const MUEBLES = { taller: [['banco_trabajo', 2.2, .8], ['elevador', 2.6, 1.6], ['herramientas', 1.6, .5], ['compresor', .6, .6], ['soporte_bici', 1.2, .5]], repuestos: [['estante', 2, .5], ['estante', 2, .5], ['llantas', 1, 1]], mostrador_taller: [['mostrador', 2, .6]], tienda: [['perchero', 1.6, .5], ['perchero', 1.6, .5], ['vitrina', 1.4, .6], ['espejo', .8, .2], ['exhibidor', 1.2, 1.2]], probador: [['espejo', .6, .15]], caja: [['mostrador', 1.8, .6]], pasillo_cc: [['banca', 1.6, .5], ['matera', .8, .8], ['fuente', 2.4, 2.4], ['banca', 1.6, .5]], comidas: [['mesa_cc', 1.2, 1.2], ['mesa_cc', 1.2, 1.2], ['mesa_cc', 1.2, 1.2], ['mesa_cc', 1.2, 1.2]], lectura: [['mesa_lectura', 2.4, 1.2], ['mesa_lectura', 2.4, 1.2], ['estante', 2.4, .4], ['sillon', .9, .9]], estanteria: [['estante', 2.4, .4], ['estante', 2.4, .4], ['estante', 2.4, .4], ['estante', 2.4, .4]], infantil: [['tapete', 2.4, 1.8], ['estante', 1.6, .4], ['puff', .6, .6]], computadores: [['escritorio', 1.4, .7], ['escritorio', 1.4, .7], ['escritorio', 1.4, .7]], comedor_r: [['mesa_r', 1, 1], ['mesa_r', 1, 1], ['mesa_r', 1, 1], ['mesa_r', 1, 1], ['mesa_r', 1, 1]], estudio: [['escritorio', 1.3, .65], ['biblioteca', 1.6, .4], ['silla', .5, .5]], terraza: [['hamaca', 2.6, .9], ['matera', .6, .6], ['matera', .6, .6]], sala_tv: [['sofa', 2, .9], ['tv', 1.4, .4], ['puff', .6, .6]], sala: [['sofa', 2.1, .9], ['mesa_centro', 1, .6], ['tv', 1.4, .4], ['matera', .5, .5]], comedor: [['comedor', 1.6, .9]], cocina: [['estufa', .6, .6], ['nevera', .7, .7], ['lavaplatos', 1.2, .6], ['mesón', 1.6, .6]], alcoba: [['cama', 1.4, 1.9], ['closet', 1.6, .6], ['mesa_noche', .45, .45]], bano: [['inodoro', .4, .65], ['lavamanos', .5, .45], ['ducha', .9, .9]], patio: [['matera', .5, .5], ['matera', .5, .5], ['lavadero', .8, .6]], ropas: [['lavadora', .6, .6]], balcon: [['matera', .5, .5]], local: [['mostrador', 2.4, .7], ['estante', 2, .5], ['estante', 2, .5], ['nevera', .8, .7]], bodega: [['estante', 2.4, .8], ['estante', 2.4, .8], ['estiba', 1.2, 1]], oficina: [['escritorio', 1.4, .7], ['silla', .55, .55], ['archivador', .9, .5]], recepcion: [['mostrador', 2, .7], ['sofa', 1.8, .8]], sala_juntas: [['mesa_juntas', 3, 1.2]], cocineta: [['mesón', 1.6, .6], ['nevera', .7, .7]], nave: [['banca', 3, .5], ['banca', 3, .5], ['banca', 3, .5], ['banca', 3, .5], ['banca', 3, .5], ['banca', 3, .5]], altar: [['altar', 2.4, 1]], sacristia: [['closet', 1.6, .6]], aula: [['tablero', 3, .15], ['pupitre', .7, .5], ['pupitre', .7, .5], ['pupitre', .7, .5], ['pupitre', .7, .5], ['pupitre', .7, .5], ['pupitre', .7, .5]], rectoria: [['escritorio', 1.4, .7]] };
 const Interiores = {
   PROGRAMAS, PISO_DE, MUEBLES,
   programaDe(e) { const k = e.clase || ''; if (k === 'iglesia') return 'iglesia'; if (k === 'educativo') return 'colegio'; if (k === 'nave' || k === 'parqueadero' || k === 'techo') return 'bodega'; if (k === 'comercio') return 'comercio'; if (k === 'civico' || k === 'salud' || k === 'transporte') return 'oficina'; if (k === 'edificio' || k === 'torre') return 'apartamento'; return 'casa'; },
   /* plano local (metros, origen en una esquina, x a lo largo del edificio) */
   generar(e, op = {}) {
-    const r = mulberry32(op.semilla ?? ((e.s || .5) * 1e9 | 0)), W = Math.max(5, (e.hw || 4) * 2), D = Math.max(5, (e.hd || 4) * 2), prog = op.programa || Interiores.programaDe(e), lista = PROGRAMAS[prog].slice();
+    const r = mulberry32(op.semilla ?? ((e.s || .5) * 1e9 | 0)), W = Math.max(5, (e.hw || 4) * 2), D = Math.max(5, (e.hd || 4) * 2), prog = op.programa || Interiores.programaDe(e), lista = Interiores.variar(PROGRAMAS[prog].slice(), prog, r, W * D);
     const areaT = W * D, sumaP = lista.reduce((a, q) => a + q[1], 0), escala = areaT / sumaP, cuartos = [];
     /* BSP: parte el rectángulo en dos con una proporción que respeta el área pedida de cada lado */
     const partir = (x, y, w, h, items) => {
@@ -3231,23 +3458,81 @@ const Interiores = {
     const pisos = Math.max(1, e.pis || 1), plano = { programa: prog, ancho: W, fondo: D, pisos, cuartos: C2, puertas, ventanas, muebles, escaleras: pisos > 1 ? { x: W - 1.3, y: D - 3.2, w: 1.1, h: 3 } : null, edificio: e };
     plano.solido = (x, y) => { if (x < .15 || y < .15 || x > W - .15 || y > D - .15) return !puertas.some(p => p.entrada && Math.abs(p.x - x) < p.ancho / 2 && y < .3); if (muebles.some(m => x > m.x && x < m.x + m.w && y > m.y && y < m.y + m.h && !['tapete', 'ducha'].includes(m.tipo))) return true; for (const c of C2) for (const b of [[c.x, c.y, c.x + c.w, c.y], [c.x, c.y, c.x, c.y + c.h]]) { const vert = b[0] === b[2]; if (vert ? Math.abs(x - b[0]) < .08 && y > b[1] && y < b[3] : Math.abs(y - b[1]) < .08 && x > b[0] && x < b[2]) { if (!puertas.some(p => p.vertical === vert && (vert ? Math.abs(p.x - b[0]) < .1 && Math.abs(p.y - y) < p.ancho / 2 : Math.abs(p.y - b[1]) < .1 && Math.abs(p.x - x) < p.ancho / 2))) return true; } } return false; };
     plano.cuartoEn = (x, y) => C2.find(c => x >= c.x && x <= c.x + c.w && y >= c.y && y <= c.y + c.h) || null;
+    plano.estilo = Interiores.estiloPara(e, op.estilo, r); Interiores.decorar(plano, r);
     return plano;
   },
   /* planta vista desde arriba: (x, y) esquina en pantalla, esc px por metro */
   dibujar(g, P, x, y, esc, op = {}) {
     g.save(); g.translate(x, y); g.scale(esc, esc); g.lineJoin = 'round';
     g.fillStyle = '#2b2f38'; g.fillRect(-.25, -.25, P.ancho + .5, P.fondo + .5);
-    for (const c of P.cuartos) { g.fillStyle = PISO_DE[c.tipo] || '#d9d2c2'; g.fillRect(c.x + .06, c.y + .06, c.w - .12, c.h - .12); if (c.tipo === 'bano' || c.tipo === 'cocina') { g.strokeStyle = 'rgba(0,0,0,.08)'; g.lineWidth = .03; for (let q = .3; q < c.w; q += .3) { g.beginPath(); g.moveTo(c.x + q, c.y); g.lineTo(c.x + q, c.y + c.h); g.stroke(); } } }
+    for (const c of P.cuartos) { g.fillStyle = Interiores.pisoDe(P, c.tipo); g.fillRect(c.x + .06, c.y + .06, c.w - .12, c.h - .12); Interiores.patron(g, P, c); if (c.tipo === 'bano' || c.tipo === 'cocina') { g.strokeStyle = 'rgba(0,0,0,.08)'; g.lineWidth = .03; for (let q = .3; q < c.w; q += .3) { g.beginPath(); g.moveTo(c.x + q, c.y); g.lineTo(c.x + q, c.y + c.h); g.stroke(); } } }
     g.strokeStyle = '#2b2f38'; g.lineWidth = .14; for (const c of P.cuartos) g.strokeRect(c.x, c.y, c.w, c.h);
     for (const p of P.puertas) { g.fillStyle = PISO_DE.pasillo; if (p.vertical) g.fillRect(p.x - .1, p.y - p.ancho / 2, .2, p.ancho); else g.fillRect(p.x - p.ancho / 2, p.y - .1, p.ancho, .2); g.strokeStyle = 'rgba(43,47,56,.5)'; g.lineWidth = .04; g.beginPath(); if (p.vertical) g.arc(p.x, p.y - p.ancho / 2, p.ancho, 0, Math.PI / 2); else g.arc(p.x - p.ancho / 2, p.y, p.ancho, 0, Math.PI / 2); g.stroke(); }
     for (const v of P.ventanas) { g.fillStyle = '#8cbedc'; if (v.vertical) g.fillRect(v.x - .1, v.y - v.ancho / 2, .2, v.ancho); else g.fillRect(v.x - v.ancho / 2, v.y - .1, v.ancho, .2); }
     const COL = { cama: '#f2efe8', sofa: '#6d8fb3', closet: '#8d6e63', estufa: '#3b3d42', nevera: '#e9eef3', inodoro: '#ffffff', ducha: '#b7d7e6', lavamanos: '#ffffff', mostrador: '#a1887f', estante: '#8d6e63', banca: '#8d6e63', altar: '#efe8d8', escritorio: '#a1887f', comedor: '#8d6e63', tv: '#1d1f24', matera: '#4a9444', pupitre: '#a1887f', tablero: '#2e5d3a' };
-    for (const m of P.muebles) { g.fillStyle = COL[m.tipo] || '#bcaaa4'; g.fillRect(m.x, m.y, m.w, m.h); g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = .03; g.strokeRect(m.x, m.y, m.w, m.h); if (m.tipo === 'cama') { g.fillStyle = '#c43a26'; g.fillRect(m.x + m.w * .08, m.y + m.h * .3, m.w * .84, m.h * .62); } }
+    const EST = (P.estilo && ESTILOS_INT[P.estilo]) || ESTILOS_INT.paisa;
+    for (const m of P.muebles) { if (m.tipo === 'tapete') { Interiores.tapete(g, m, EST); continue; } g.fillStyle = m.color || (EST.muebles[m.tipo]) || COL[m.tipo] || EST.madera; g.fillRect(m.x, m.y, m.w, m.h); g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = .03; g.strokeRect(m.x, m.y, m.w, m.h); if (m.tipo === 'cama') { g.fillStyle = '#c43a26'; g.fillRect(m.x + m.w * .08, m.y + m.h * .3, m.w * .84, m.h * .62); } }
     if (P.escaleras) { const s2 = P.escaleras; g.fillStyle = '#bdb8ad'; g.fillRect(s2.x, s2.y, s2.w, s2.h); g.strokeStyle = '#7d7f84'; g.lineWidth = .04; for (let q = 0; q < s2.h; q += .28) { g.beginPath(); g.moveTo(s2.x, s2.y + q); g.lineTo(s2.x + s2.w, s2.y + q); g.stroke(); } }
     if (op.etiquetas !== false && esc > 14) { g.fillStyle = 'rgba(20,24,32,.55)'; g.font = '600 ' + (.42) + 'px system-ui'; g.textAlign = 'center'; for (const c of P.cuartos) if (c.w > 1.8) g.fillText({ bano: 'baño', sala_juntas: 'juntas', recepcion: 'recepción', balcon: 'balcón', rectoria: 'rectoría', sacristia: 'sacristía' }[c.tipo] || c.tipo, c.x + c.w / 2, c.y + c.h / 2); }
     g.restore();
   }
 };
+/* ---------- estilos: la misma casa genérica se ve distinta en cada hogar ---------- */
+const ESTILOS_INT = {
+  paisa: { n: 'Paisa tradicional', piso: 'hidraulica', pisos: ['#b5542f', '#d8c3a5', '#7a8a6a'], muro: '#f3ead8', madera: '#7b4a2e', acento: '#c43a26', muebles: { sofa: '#8a3b2a', comedor: '#6d4126' }, deco: ['matera', 'matera', 'cuadro', 'hamaca', 'tapete'] },
+  moderno: { n: 'Moderno', piso: 'porcelanato', pisos: ['#e7e4de', '#d9d6cf'], muro: '#fafafa', madera: '#c8b79c', acento: '#2f80ed', muebles: { sofa: '#4a5568', comedor: '#d9cbb3' }, deco: ['lampara', 'cuadro', 'matera', 'tapete'] },
+  minimalista: { n: 'Minimalista', piso: 'cemento', pisos: ['#cfcfcc', '#bdbdb9'], muro: '#ffffff', madera: '#e3d5bf', acento: '#111111', muebles: { sofa: '#e8e6e1', comedor: '#f2efe9' }, deco: ['matera', 'lampara'] },
+  bohemio: { n: 'Bohemio', piso: 'madera', pisos: ['#a0703f', '#8c5f33'], muro: '#f6e3c8', madera: '#6b4423', acento: '#d9822b', muebles: { sofa: '#b0413e', comedor: '#7a4a28' }, deco: ['tapete', 'tapete', 'matera', 'matera', 'cuadro', 'cojines', 'lampara'] },
+  campestre: { n: 'Campestre', piso: 'madera', pisos: ['#b38b5d', '#a17c50'], muro: '#efe6d2', madera: '#5d3d24', acento: '#4a7c3a', muebles: { sofa: '#7d8f5b', comedor: '#5d3d24' }, deco: ['matera', 'matera', 'matera', 'hamaca', 'cuadro'] },
+  industrial: { n: 'Industrial', piso: 'cemento', pisos: ['#8e8e8b', '#7d7d7a'], muro: '#b8b2a8', madera: '#3f3a36', acento: '#d35400', muebles: { sofa: '#5b4636', comedor: '#2f2f2f' }, deco: ['lampara', 'cuadro', 'matera'] },
+  juvenil: { n: 'Juvenil', piso: 'madera', pisos: ['#d2b48c', '#c4a57c'], muro: '#e8f4ff', madera: '#c9a77c', acento: '#ff2fb3', muebles: { sofa: '#39a0ff', comedor: '#ffcc33' }, deco: ['tapete', 'cuadro', 'cuadro', 'lampara', 'puff'] },
+  clasico: { n: 'Clásico', piso: 'madera', pisos: ['#7a4f2a', '#6b4423'], muro: '#efe4cf', madera: '#4e2f1a', acento: '#8e1b1b', muebles: { sofa: '#6e1f1f', comedor: '#4e2f1a' }, deco: ['tapete', 'cuadro', 'cuadro', 'lampara', 'matera'] }
+};
+/* catálogo para diseñar la casa (medidas reales; precio en centavos de peso) */
+const CATALOGO = [
+  ['sofa', 'Sofá de tres puestos', 2.1, .9, 120000000, 'sala'], ['sofa_l', 'Sofá en L', 2.6, 1.6, 210000000, 'sala'], ['sillon', 'Sillón', .9, .9, 45000000, 'sala'], ['mesa_centro', 'Mesa de centro', 1, .6, 25000000, 'sala'],
+  ['tv', 'Televisor 55"', 1.25, .3, 180000000, 'sala'], ['comedor', 'Comedor de 4 puestos', 1.6, .9, 90000000, 'comedor'], ['cama', 'Cama doble', 1.4, 1.9, 110000000, 'alcoba'], ['cama_sencilla', 'Cama sencilla', 1, 1.9, 60000000, 'alcoba'],
+  ['closet', 'Clóset', 1.6, .6, 80000000, 'alcoba'], ['escritorio', 'Escritorio', 1.3, .65, 40000000, 'estudio'], ['biblioteca', 'Biblioteca', 1.6, .4, 50000000, 'estudio'], ['nevera', 'Nevera', .7, .7, 190000000, 'cocina'],
+  ['estufa', 'Estufa', .6, .6, 90000000, 'cocina'], ['matera', 'Matera con planta', .5, .5, 6000000, ''], ['tapete', 'Tapete', 2, 1.4, 20000000, ''], ['lampara', 'Lámpara de pie', .4, .4, 15000000, ''],
+  ['cuadro', 'Cuadro', .9, .06, 12000000, ''], ['hamaca', 'Hamaca', 2.6, .9, 18000000, ''], ['puff', 'Puf', .6, .6, 9000000, ''], ['consola', 'Consola de videojuegos', .5, .3, 250000000, 'sala'],
+  ['soporte_bici', 'Soporte para la bici', 1.2, .5, 15000000, ''], ['acuario', 'Acuario', 1, .45, 40000000, '']
+].map(([id, n, w, h, precio, cuarto]) => ({ id, n, w, h, precio, cuarto }));
+Object.assign(Interiores, {
+  ESTILOS: ESTILOS_INT, CATALOGO, OPCIONALES,
+  /* agrega o quita cuartos opcionales según el área: dos casas del mismo tamaño casi nunca quedan iguales */
+  variar(lista, prog, r, area) {
+    lista = lista.map(q => q.slice()); const op = OPCIONALES[prog] || []; const base = lista.reduce((a, q) => a + q[1], 0); let extra = 0;
+    for (const q of op) if (r() < .45 && base + extra + q[1] < area * 1.05) { lista.splice(1 + Math.floor(r() * (lista.length - 1)), 0, q.slice()); extra += q[1]; }
+    if (r() < .3 && lista.length > 5) { const i = lista.findIndex(q => q[0] === 'ropas' || q[0] === 'balcon'); if (i > 0) lista.splice(i, 1); }
+    for (const q of lista) q[1] *= .8 + r() * .4;   // proporciones distintas
+    return lista;
+  },
+  estiloPara(e, pedido, r) { if (pedido && ESTILOS_INT[pedido]) return pedido; const L = Object.keys(ESTILOS_INT), z = e && e.zona; if (z === 'ladera' || z === 'pueblo') return r() < .6 ? 'paisa' : L[Math.floor(r() * L.length)]; if (z === 'poblado') return r() < .5 ? 'moderno' : 'minimalista'; return L[Math.floor(r() * L.length)]; },
+  pisoDe(P, tipo) { const E = ESTILOS_INT[P.estilo]; if (!E || ['bano', 'cocina', 'cocineta', 'patio', 'taller', 'bodega', 'pasillo_cc'].includes(tipo) || P.programa !== 'casa' && P.programa !== 'apartamento') return PISO_DE[tipo] || '#d9d2c2'; return E.pisos[(tipo.length + (P.cuartos.findIndex(c => c.tipo === tipo))) % E.pisos.length]; },
+  /* textura del piso por estilo: tablas de madera, baldosa hidráulica o porcelanato */
+  patron(g, P, c) {
+    const E = ESTILOS_INT[P.estilo]; if (!E || ['bano', 'cocina', 'patio', 'taller'].includes(c.tipo)) return; g.save(); g.beginPath(); g.rect(c.x, c.y, c.w, c.h); g.clip();
+    if (E.piso === 'madera') { g.strokeStyle = 'rgba(0,0,0,.12)'; g.lineWidth = .02; for (let q = c.y; q < c.y + c.h; q += .18) { g.beginPath(); g.moveTo(c.x, q); g.lineTo(c.x + c.w, q); g.stroke(); } }
+    else if (E.piso === 'hidraulica') { g.fillStyle = 'rgba(255,255,255,.18)'; for (let yy = c.y; yy < c.y + c.h; yy += .4) for (let xx = c.x + ((yy - c.y) / .4 % 2) * .2; xx < c.x + c.w; xx += .4) { g.beginPath(); g.moveTo(xx + .2, yy); g.lineTo(xx + .4, yy + .2); g.lineTo(xx + .2, yy + .4); g.lineTo(xx, yy + .2); g.fill(); } }
+    else if (E.piso === 'porcelanato') { g.strokeStyle = 'rgba(0,0,0,.07)'; g.lineWidth = .015; for (let q = c.x; q < c.x + c.w; q += .6) { g.beginPath(); g.moveTo(q, c.y); g.lineTo(q, c.y + c.h); g.stroke(); } for (let q = c.y; q < c.y + c.h; q += .6) { g.beginPath(); g.moveTo(c.x, q); g.lineTo(c.x + c.w, q); g.stroke(); } }
+    g.restore();
+  },
+  tapete(g, m, E) { g.fillStyle = E.acento; g.fillRect(m.x, m.y, m.w, m.h); g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = .05; g.strokeRect(m.x + .12, m.y + .12, m.w - .24, m.h - .24); g.strokeRect(m.x + .25, m.y + .25, m.w - .5, m.h - .5); },
+  /* decoración del estilo: tapetes, materas, cuadros y lámparas donde quepan (sin tapar puertas ni el paso) */
+  decorar(P, r) {
+    const E = ESTILOS_INT[P.estilo]; if (!E || !['casa', 'apartamento'].includes(P.programa)) return;
+    for (const c of P.cuartos) { if (!['sala', 'alcoba', 'comedor', 'estudio', 'terraza', 'sala_tv', 'balcon'].includes(c.tipo)) continue;
+      for (const d of E.deco) { if (r() < .45) continue; const dim = d === 'tapete' ? [Math.min(2.2, c.w * .5), Math.min(1.6, c.h * .4)] : d === 'cuadro' ? [.8, .06] : d === 'hamaca' ? [2.6, .9] : [.45, .45];
+        for (let k = 0; k < 6; k++) { const x = d === 'tapete' ? c.x + (c.w - dim[0]) / 2 + (r() - .5) * .4 : c.x + .1 + r() * Math.max(0, c.w - dim[0] - .2), y = d === 'cuadro' ? c.y + .02 : d === 'tapete' ? c.y + (c.h - dim[1]) / 2 + (r() - .5) * .4 : c.y + .1 + r() * Math.max(0, c.h - dim[1] - .2), m = { tipo: d, x, y, w: dim[0], h: dim[1], cuarto: c.tipo, deco: true };
+          if (Interiores.cabe(P, m, d === 'tapete' || d === 'cuadro')) { if (d === 'tapete') P.muebles.unshift(m); else P.muebles.push(m); break; } } } }
+  },
+  /* ¿cabe el mueble ahí? dentro del cuarto, sin tapar puertas y con 0,6 m para pasar (los tapetes van debajo de todo) */
+  cabe(P, m, encima) {
+    const c = P.cuartoEn(m.x + m.w / 2, m.y + m.h / 2); if (!c || m.x < c.x - .01 || m.y < c.y - .01 || m.x + m.w > c.x + c.w + .01 || m.y + m.h > c.y + c.h + .01) return false;
+    if (P.puertas.some(p => Math.hypot(clamp(p.x, m.x, m.x + m.w) - p.x, clamp(p.y, m.y, m.y + m.h) - p.y) < (encima ? .3 : 1))) return false;
+    if (encima) return true; return !P.muebles.some(o => o !== m && o.tipo !== 'tapete' && m.x < o.x + o.w + .5 && m.x + m.w + .5 > o.x && m.y < o.y + o.h + .5 && m.y + m.h + .5 > o.y);
+  }
+});
 MC.Interiores = Interiores;
 
 /* ---- js/50-run.js ---- */
@@ -3478,6 +3763,12 @@ MC.Musica = Musica;
    - Piezas: barra superior de fichas, velocímetro, barras (energía, agua, gasolina), botones táctiles grandes (≥ 48 px),
      menú, diálogo con opciones, avisos, panel de misión, minimapa (con las losas del motor) y brújula.
    - Accesible: etiquetas aria, contraste alto, respeta «reducir movimiento», funciona con teclado y con el dedo.
+   - DISTRIBUCIÓN (lo que no se negocia): el centro de la pantalla es del juego (la «zona libre» donde va el jugador);
+     la información va en las esquinas de arriba, el movimiento abajo a la izquierda y las acciones abajo a la derecha,
+     donde llega el pulgar. Nada tapa la zona libre (MC.UI.verificar lo comprueba en las pruebas).
+   - HUD CONTEXTUAL: lo que no cambia se atenúa solo a los pocos segundos y vuelve al cambiar (menos ruido, más mundo);
+     al ir rápido, solo queda lo vital (foco); en modo cine no queda nada.
+   - AVISOS EN COLA: uno a la vez, cortos, arriba y al centro (nunca encima del jugador), sin robar el control.
    Uso: const ui = MC.UI.crear(document.body, { tema: 'motorcity' }); ui.ficha('hora', '🕐 8:00'); ui.boton({ id, icono, texto, al })
    ===================================================================== */
 const TEMAS_UI = {
@@ -3505,6 +3796,9 @@ const UI = {
 #${id} .dialogo{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);width:min(520px,92vw);padding:14px;border-radius:var(--r);background:var(--f);border:1px solid var(--b)}#${id} .dialogo .opts{display:grid;gap:6px;margin-top:10px}#${id} .dialogo button{font-size:15px;text-align:left;padding:10px}
 #${id} .menu{position:absolute;right:66px;top:max(10px,env(safe-area-inset-top));max-height:78vh;overflow:auto;width:min(300px,72vw);padding:8px;border-radius:var(--r);background:var(--f);border:1px solid var(--b);display:grid;gap:4px}#${id} .menu button{text-align:left;font-size:14px;padding:8px 10px}
 #${id} canvas.mini{position:absolute;right:10px;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 96px);width:120px;height:120px;border-radius:50%;border:2px solid var(--b);background:#0006}
+#${id} .fichas>*,#${id} .botones>*,#${id} .mision,#${id} .vel,#${id} .barras{transition:opacity .6s}#${id} .dim{opacity:.38}#${id}.foco .fichas,#${id}.foco .botones,#${id}.foco .mision,#${id}.foco .barras{opacity:.18}#${id}.cine>*{opacity:0!important;pointer-events:none!important}
+#${id} .aviso{top:calc(max(10px,env(safe-area-inset-top)) + 54px)}
+@media (orientation:landscape) and (max-height:500px){#${id} .fichas{right:120px}#${id} .ficha{padding:4px 8px;font-size:12px}}
 @media (prefers-reduced-motion:reduce){#${id} *{transition:none!important}}`;
     document.head.appendChild(css);
     const div = (cls, padre = capa) => { const d = document.createElement('div'); d.className = cls; padre.appendChild(d); return d; };
@@ -3512,11 +3806,20 @@ const UI = {
     const F = {}, Bs = {}, Ba = {};
     const ui = {
       capa, tema: T,
-      ficha(clave, texto) { if (!F[clave]) { F[clave] = div('ficha', fichas); } F[clave].textContent = texto; return F[clave]; },
+      ficha(clave, texto) { if (!F[clave]) { F[clave] = div('ficha', fichas); } const el = F[clave]; if (el.textContent !== texto) { el.textContent = texto; ui.contextual(el); } return el; },
+      /* se atenúa sola si no cambia en «seg» segundos; vuelve a encenderse al cambiar */
+      contextual(el, seg = ui.atenuar) { if (!el || !seg) return; el.classList.remove('dim'); clearTimeout(el._dim); el._dim = setTimeout(() => el.classList.add('dim'), seg * 1000); },
+      atenuar: op.atenuar ?? 5,
+      /* foco: al ir rápido o en tensión, solo queda lo vital (velocidad, aviso); cine: nada */
+      foco(on) { capa.classList.toggle('foco', !!on); }, cine(on) { capa.classList.toggle('cine', !!on); },
+      /* el rectángulo que la interfaz no debe tapar (en px de la ventana) */
+      zonaLibre() { const W = innerWidth, H = innerHeight, v = H > W; return v ? { x0: W * .12, y0: H * .24, x1: W * .88, y1: H * .68 } : { x0: W * .26, y0: H * .2, x1: W * .74, y1: H * .74 }; },
       boton({ id: bid, icono = '', texto = '', al, padre }) { const b = document.createElement('button'); b.className = 'p'; b.innerHTML = icono + (texto ? '<small>' + texto + '</small>' : ''); b.setAttribute('aria-label', texto || bid); b.onclick = e => { e.stopPropagation(); al && al(e); }; (padre || botones).appendChild(b); Bs[bid] = b; return b; },
       velocidad(ms, extra = '') { vel.innerHTML = '<b>' + Math.round(Math.abs(ms) * 3.6) + '</b> km/h ' + extra; },
       barra(clave, etiqueta, v) { if (!Ba[clave]) { const w = div('', barras); w.innerHTML = '<small>' + etiqueta + '</small><div class="barra"><i></i></div>'; Ba[clave] = w.querySelector('i'); } Ba[clave].style.width = Math.round(clamp(v, 0, 1) * 100) + '%'; },
-      aviso(texto, ms = 2200) { aviso.textContent = texto; aviso.classList.add('on'); clearTimeout(ui._t); ui._t = setTimeout(() => aviso.classList.remove('on'), ms); },
+      /* avisos en cola: uno a la vez; si llega uno igual, no se repite */
+      aviso(texto, ms = 2200) { const C = ui._cola || (ui._cola = []); if (C.some(q => q[0] === texto) || aviso.textContent === texto && aviso.classList.contains('on')) return; C.push([texto, ms]); if (!ui._av) ui._sig(); },
+      _sig() { const q = (ui._cola || []).shift(); if (!q) { ui._av = false; return; } ui._av = true; aviso.textContent = q[0]; aviso.classList.add('on'); clearTimeout(ui._t); ui._t = setTimeout(() => { aviso.classList.remove('on'); setTimeout(() => ui._sig(), 320); }, q[1]); },
       mision(texto) { mision.hidden = !texto; mision.innerHTML = texto || ''; },
       /* diálogo con opciones: devuelve una promesa con la opción elegida */
       dialogo(titulo, texto, opciones = ['Listo']) { return new Promise(res => { const d = div('dialogo p'); d.setAttribute('role', 'dialog'); d.innerHTML = '<b>' + titulo + '</b><div>' + texto + '</div><div class="opts"></div>'; opciones.forEach((o, i) => { const b = document.createElement('button'); b.textContent = o; b.onclick = () => { d.remove(); res(i); }; d.querySelector('.opts').appendChild(b); if (!i) setTimeout(() => b.focus(), 50); }); }); },
@@ -3529,6 +3832,17 @@ const UI = {
     return ui;
   }
 };
+/* ¿algo de la interfaz tapa la zona libre? devuelve la lista de lo que estorba (para las pruebas y para el juego) */
+UI.verificar = function (ui) {
+  if (!ui || typeof document === 'undefined') return []; const Z = ui.zonaLibre(), malos = [];
+  for (const el of ui.capa.querySelectorAll('.ficha, .botones button, .mision, .vel, .barras, canvas.mini, .p')) {
+    if (el.hidden || el.closest('[hidden]') || el.classList.contains('dialogo') || el.classList.contains('menu')) continue; const r = el.getBoundingClientRect(); if (!r.width || !r.height) continue;
+    if (r.right > Z.x0 && r.left < Z.x1 && r.bottom > Z.y0 && r.top < Z.y1) malos.push((el.className || el.tagName) + ' ' + Math.round(r.left) + ',' + Math.round(r.top));
+  }
+  return malos;
+};
+/* los principios de la interfaz del motor (resumen de docs/INVESTIGACION.md) */
+UI.PRINCIPIOS = ['El centro es del juego', 'Arriba se informa, abajo se actúa', 'Los botones donde llega el pulgar (≥ 48 px)', 'Lo que no cambia se atenúa', 'Un aviso a la vez, corto', 'Se aprende jugando, no leyendo', 'Todo con el dedo, el teclado y el mando', 'Respetar «reducir movimiento» y el contraste'];
 MC.UI = UI;
 
 /* ---- js/80-mecanicas.js ---- */
@@ -3600,7 +3914,7 @@ class Dialogo {
 }
 Object.assign(MC, { Mision, Inventario, Carrera, Logros, Dialogo });
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","46-vistas.js","47-seguir.js","48-interiores.js","50-run.js","60-musica.js","70-interfaz.js","80-mecanicas.js"];
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","46-vistas.js","47-seguir.js","48-interiores.js","50-run.js","60-musica.js","70-interfaz.js","80-mecanicas.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;

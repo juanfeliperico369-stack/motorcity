@@ -4,6 +4,12 @@
    - Piezas: barra superior de fichas, velocímetro, barras (energía, agua, gasolina), botones táctiles grandes (≥ 48 px),
      menú, diálogo con opciones, avisos, panel de misión, minimapa (con las losas del motor) y brújula.
    - Accesible: etiquetas aria, contraste alto, respeta «reducir movimiento», funciona con teclado y con el dedo.
+   - DISTRIBUCIÓN (lo que no se negocia): el centro de la pantalla es del juego (la «zona libre» donde va el jugador);
+     la información va en las esquinas de arriba, el movimiento abajo a la izquierda y las acciones abajo a la derecha,
+     donde llega el pulgar. Nada tapa la zona libre (MC.UI.verificar lo comprueba en las pruebas).
+   - HUD CONTEXTUAL: lo que no cambia se atenúa solo a los pocos segundos y vuelve al cambiar (menos ruido, más mundo);
+     al ir rápido, solo queda lo vital (foco); en modo cine no queda nada.
+   - AVISOS EN COLA: uno a la vez, cortos, arriba y al centro (nunca encima del jugador), sin robar el control.
    Uso: const ui = MC.UI.crear(document.body, { tema: 'motorcity' }); ui.ficha('hora', '🕐 8:00'); ui.boton({ id, icono, texto, al })
    ===================================================================== */
 const TEMAS_UI = {
@@ -31,6 +37,9 @@ const UI = {
 #${id} .dialogo{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);width:min(520px,92vw);padding:14px;border-radius:var(--r);background:var(--f);border:1px solid var(--b)}#${id} .dialogo .opts{display:grid;gap:6px;margin-top:10px}#${id} .dialogo button{font-size:15px;text-align:left;padding:10px}
 #${id} .menu{position:absolute;right:66px;top:max(10px,env(safe-area-inset-top));max-height:78vh;overflow:auto;width:min(300px,72vw);padding:8px;border-radius:var(--r);background:var(--f);border:1px solid var(--b);display:grid;gap:4px}#${id} .menu button{text-align:left;font-size:14px;padding:8px 10px}
 #${id} canvas.mini{position:absolute;right:10px;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 96px);width:120px;height:120px;border-radius:50%;border:2px solid var(--b);background:#0006}
+#${id} .fichas>*,#${id} .botones>*,#${id} .mision,#${id} .vel,#${id} .barras{transition:opacity .6s}#${id} .dim{opacity:.38}#${id}.foco .fichas,#${id}.foco .botones,#${id}.foco .mision,#${id}.foco .barras{opacity:.18}#${id}.cine>*{opacity:0!important;pointer-events:none!important}
+#${id} .aviso{top:calc(max(10px,env(safe-area-inset-top)) + 54px)}
+@media (orientation:landscape) and (max-height:500px){#${id} .fichas{right:120px}#${id} .ficha{padding:4px 8px;font-size:12px}}
 @media (prefers-reduced-motion:reduce){#${id} *{transition:none!important}}`;
     document.head.appendChild(css);
     const div = (cls, padre = capa) => { const d = document.createElement('div'); d.className = cls; padre.appendChild(d); return d; };
@@ -38,11 +47,20 @@ const UI = {
     const F = {}, Bs = {}, Ba = {};
     const ui = {
       capa, tema: T,
-      ficha(clave, texto) { if (!F[clave]) { F[clave] = div('ficha', fichas); } F[clave].textContent = texto; return F[clave]; },
+      ficha(clave, texto) { if (!F[clave]) { F[clave] = div('ficha', fichas); } const el = F[clave]; if (el.textContent !== texto) { el.textContent = texto; ui.contextual(el); } return el; },
+      /* se atenúa sola si no cambia en «seg» segundos; vuelve a encenderse al cambiar */
+      contextual(el, seg = ui.atenuar) { if (!el || !seg) return; el.classList.remove('dim'); clearTimeout(el._dim); el._dim = setTimeout(() => el.classList.add('dim'), seg * 1000); },
+      atenuar: op.atenuar ?? 5,
+      /* foco: al ir rápido o en tensión, solo queda lo vital (velocidad, aviso); cine: nada */
+      foco(on) { capa.classList.toggle('foco', !!on); }, cine(on) { capa.classList.toggle('cine', !!on); },
+      /* el rectángulo que la interfaz no debe tapar (en px de la ventana) */
+      zonaLibre() { const W = innerWidth, H = innerHeight, v = H > W; return v ? { x0: W * .12, y0: H * .24, x1: W * .88, y1: H * .68 } : { x0: W * .26, y0: H * .2, x1: W * .74, y1: H * .74 }; },
       boton({ id: bid, icono = '', texto = '', al, padre }) { const b = document.createElement('button'); b.className = 'p'; b.innerHTML = icono + (texto ? '<small>' + texto + '</small>' : ''); b.setAttribute('aria-label', texto || bid); b.onclick = e => { e.stopPropagation(); al && al(e); }; (padre || botones).appendChild(b); Bs[bid] = b; return b; },
       velocidad(ms, extra = '') { vel.innerHTML = '<b>' + Math.round(Math.abs(ms) * 3.6) + '</b> km/h ' + extra; },
       barra(clave, etiqueta, v) { if (!Ba[clave]) { const w = div('', barras); w.innerHTML = '<small>' + etiqueta + '</small><div class="barra"><i></i></div>'; Ba[clave] = w.querySelector('i'); } Ba[clave].style.width = Math.round(clamp(v, 0, 1) * 100) + '%'; },
-      aviso(texto, ms = 2200) { aviso.textContent = texto; aviso.classList.add('on'); clearTimeout(ui._t); ui._t = setTimeout(() => aviso.classList.remove('on'), ms); },
+      /* avisos en cola: uno a la vez; si llega uno igual, no se repite */
+      aviso(texto, ms = 2200) { const C = ui._cola || (ui._cola = []); if (C.some(q => q[0] === texto) || aviso.textContent === texto && aviso.classList.contains('on')) return; C.push([texto, ms]); if (!ui._av) ui._sig(); },
+      _sig() { const q = (ui._cola || []).shift(); if (!q) { ui._av = false; return; } ui._av = true; aviso.textContent = q[0]; aviso.classList.add('on'); clearTimeout(ui._t); ui._t = setTimeout(() => { aviso.classList.remove('on'); setTimeout(() => ui._sig(), 320); }, q[1]); },
       mision(texto) { mision.hidden = !texto; mision.innerHTML = texto || ''; },
       /* diálogo con opciones: devuelve una promesa con la opción elegida */
       dialogo(titulo, texto, opciones = ['Listo']) { return new Promise(res => { const d = div('dialogo p'); d.setAttribute('role', 'dialog'); d.innerHTML = '<b>' + titulo + '</b><div>' + texto + '</div><div class="opts"></div>'; opciones.forEach((o, i) => { const b = document.createElement('button'); b.textContent = o; b.onclick = () => { d.remove(); res(i); }; d.querySelector('.opts').appendChild(b); if (!i) setTimeout(() => b.focus(), 50); }); }); },
@@ -55,4 +73,15 @@ const UI = {
     return ui;
   }
 };
+/* ¿algo de la interfaz tapa la zona libre? devuelve la lista de lo que estorba (para las pruebas y para el juego) */
+UI.verificar = function (ui) {
+  if (!ui || typeof document === 'undefined') return []; const Z = ui.zonaLibre(), malos = [];
+  for (const el of ui.capa.querySelectorAll('.ficha, .botones button, .mision, .vel, .barras, canvas.mini, .p')) {
+    if (el.hidden || el.closest('[hidden]') || el.classList.contains('dialogo') || el.classList.contains('menu')) continue; const r = el.getBoundingClientRect(); if (!r.width || !r.height) continue;
+    if (r.right > Z.x0 && r.left < Z.x1 && r.bottom > Z.y0 && r.top < Z.y1) malos.push((el.className || el.tagName) + ' ' + Math.round(r.left) + ',' + Math.round(r.top));
+  }
+  return malos;
+};
+/* los principios de la interfaz del motor (resumen de docs/INVESTIGACION.md) */
+UI.PRINCIPIOS = ['El centro es del juego', 'Arriba se informa, abajo se actúa', 'Los botones donde llega el pulgar (≥ 48 px)', 'Lo que no cambia se atenúa', 'Un aviso a la vez, corto', 'Se aprende jugando, no leyendo', 'Todo con el dedo, el teclado y el mando', 'Respetar «reducir movimiento» y el contraste'];
 MC.UI = UI;
