@@ -131,8 +131,9 @@ Object.assign(Interiores, {
   /* ¿cabe el mueble ahí? dentro del cuarto, sin tapar puertas y con 0,6 m para pasar (los tapetes van debajo de todo) */
   cabe(P, m, encima) {
     const c = P.cuartoEn(m.x + m.w / 2, m.y + m.h / 2); if (!c || m.x < c.x - .01 || m.y < c.y - .01 || m.x + m.w > c.x + c.w + .01 || m.y + m.h > c.y + c.h + .01) return false;
-    if (P.puertas.some(p => Math.hypot(clamp(p.x, m.x, m.x + m.w) - p.x, clamp(p.y, m.y, m.y + m.h) - p.y) < (encima ? .3 : 1))) return false;
-    if (encima) return true; return !P.muebles.some(o => o !== m && o.tipo !== 'tapete' && m.x < o.x + o.w + .5 && m.x + m.w + .5 > o.x && m.y < o.y + o.h + .5 && m.y + m.h + .5 > o.y);
+    if (P.puertas.some(p => Math.hypot(clamp(p.x, m.x, m.x + m.w) - p.x, clamp(p.y, m.y, m.y + m.h) - p.y) < (encima ? .3 : .9))) return false;
+    /* paso libre: 0,5 m entre muebles grandes; las cosas pequeñas (materas, lámparas) pueden ir más juntas */
+    if (encima) return true; const paso = clamp(Math.min(m.w, m.h) * .6, .2, .5); return !P.muebles.some(o => o !== m && o.tipo !== 'tapete' && o.tipo !== 'cuadro' && m.x < o.x + o.w + paso && m.x + m.w + paso > o.x && m.y < o.y + o.h + paso && m.y + m.h + paso > o.y);
   }
 });
 MC.Interiores = Interiores;
