@@ -31,7 +31,7 @@ Funciona en **un solo HTML**, sin internet y en cualquier celular.
 | **Cuerpos y máquinas** | `MC.Personaje`, `MC.Vehiculos`, `MC.Cuerpo`, `MC.Taller`, `MC.Seres` | Personaje único, 35 vehículos, física con puentes, taller de ingeniería, biología. |
 | **Controles** | `MC.Controles`, `MC.Manejo` | Teclado, dedo y mando; curvas, esquemas y asistencias. |
 | **Cámara y vistas** | `MC.Camara`, `MC.Vistas`, `MC.Vista2D`, `MC.Raster`, `MC.Losas` | 9 vistas más pixel, 3D por software y resortes. |
-| **Arte** | `MC.arte`, `MC.Sprites`, `MC.Pincel` | Pieles por juego, atlas, animaciones y respaldo procedural. |
+| **Arte** | `MC.arte`, `MC.Sprites`, `MC.Pincel`, `MC.Pieles` | Pieles por juego, atlas, animaciones y respaldo procedural. **Paquetes de arte** de las IAs (`arte/gemini/`) instalados en una línea (2.5.1). |
 | **Adentro** | `MC.Interiores`, `MC.Hogar`, `MC.Direccion` | Interiores con estilos, **tu casa desde tu dirección** y diseño. |
 | **A dónde ir** | `MC.Lugares`, `MC.Desgaste` | Talleres, tiendas, restaurantes, bibliotecas y parques; reparar y mejorar. |
 | **Qué pasa** | `MC.Mision`, `MC.Inventario`, `MC.Carrera`, `MC.Logros`, `MC.Dialogo`, `MC.Historias`, `MC.Director`, `MC.Ocurrencias` | Misiones, carreras, historias con pilares, ritmo y lo imprevisto. |
@@ -103,7 +103,7 @@ new MC.Bucle({
 2. **Si es de un solo juego**, va en el juego (su `juego.js`), no en el motor.
 3. **Si otros juegos lo pueden usar**, pídeselo a una IA así:
    > «Lee `CONTRIBUIR.md` y la skill `motor-city-desarrollo`, crea el módulo con `node motor.mjs nuevo modulo nombre`, con sus pruebas, y deja un reporte con `node motor.mjs reporte`».
-4. **Si es arte**, pídelo a Gemini o ChatGPT con las reglas de `docs/PETICION-*.md`: un solo documento, sprites en atlas con fondo magenta o transparente, y medidas en metros.
+4. **Si es arte**, pídelo a Gemini o ChatGPT con las reglas del documento único (§10): un solo documento, sprites en atlas con fondo magenta o transparente, y medidas en metros. Cuando llega, va a `arte/<ia>/` y se instala con `MC.Pieles.instalar`.
 5. **Si es un dato real** (un precio, una cifra científica), va con su **fuente** en el código y su **prueba** con el valor conocido (skill `motor-city-ciencia`).
 6. **Si algo falla en el celular**, anota el modelo y lo que pasó. Con `MC.Ocurrencias.exportar()` y `MC.GPU.perfil()` la IA del motor lo reproduce.
 

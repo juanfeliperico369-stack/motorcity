@@ -296,8 +296,9 @@ if (process.argv.includes('--navegador')) {
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: sx, y: sy, id: 1 }] });
     for (let i = 1; i <= 10; i++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: sx, y: sy - i * 6, id: 1 }] }); await p.waitForTimeout(30); }
     await p.waitForTimeout(2000); const movio = await p.evaluate(c => +Math.hypot(MANDADOS.cuerpo.x - c.x, MANDADOS.cuerpo.y - c.y).toFixed(1), a); await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-    const r = { tutorial: !!tuto, libre: a.libre, vehiculos: a.vehiculos, pxPorMetro: a.pxPorMetro, joystick: a.joystick, primerMandado: a.primerMandado, movio };
-    ok(r.tutorial && r.libre && r.vehiculos >= 30 && r.pxPorMetro >= 8 && r.joystick && r.primerMandado < 900 && r.movio > 2 && !errs.length, 'Mandados en un celular táctil: tutorial, todo libre y gratis, joystick visible que mueve, cámara legible y el primer mandado cerca', r);
+    const arte = await p.evaluate(async () => { for (let i = 0; i < 100 && !MC.Sprites.atlases.get('gemini_u_noche'); i++) await new Promise(q => setTimeout(q, 50)); MANDADOS.ponVista('maqueta'); MANDADOS.reloj.min = 20.5 * 60; await new Promise(q => setTimeout(q, 700)); MANDADOS.ponVista('cenital'); const L = [...MC.Sprites.atlases.values()]; return { piel: MC.arte.activa, atlas: L.filter(A => A.listo && A.id.startsWith('gemini')).length, faltan: MC.Pieles.faltan().length, icono: MC.Pieles.icono('vista_cenital').startsWith('<svg') }; });
+    const r = { tutorial: !!tuto, libre: a.libre, vehiculos: a.vehiculos, pxPorMetro: a.pxPorMetro, joystick: a.joystick, primerMandado: a.primerMandado, movio, arte };
+    ok(r.tutorial && r.libre && r.vehiculos >= 30 && r.pxPorMetro >= 8 && r.joystick && r.primerMandado < 900 && r.movio > 2 && arte.piel === 'gemini' && arte.atlas >= 10 && arte.faltan === 0 && arte.icono && !errs.length, 'Mandados en un celular táctil: tutorial, todo libre y gratis, joystick visible que mueve, cámara legible, el primer mandado cerca y el arte de Gemini cargado (de día y de noche)', r);
     await b.close();
   }
   if (chromium && fs.existsSync(mh)) {

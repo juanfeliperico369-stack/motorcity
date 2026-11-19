@@ -12,11 +12,12 @@
 Versión **2.5.1** · 19‑nov‑2026 · **118 pruebas en verde** (`node motor.mjs prueba --navegador`).
 
 ## Resumen
-- **Hechos:** 55 pedidos ✅.
+- **Hechos:** 57 pedidos ✅.
 - **Hechos, pero falta algo de afuera:** 2 🟡. El motor ya está copiado en EnCicla y El Metro, pero sus IAs todavía no lo usan. Y falta probar en un celular real.
-- **Pendientes:** 3 ⏳:
+- **Pendientes:** 4 ⏳:
   - los juegos *Motor City* (carreras) y *Extremo*;
-  - las entregas de Gemini y ChatGPT;
+  - la entrega de ChatGPT (la de Gemini ya llegó y está integrada);
+  - la segunda vuelta del arte de Gemini (personaje y vehículos a escala);
   - la licencia.
 
   Ninguno es un olvido. Cada uno está en el plan (§9 y §12 del documento único).
@@ -97,10 +98,13 @@ Versión **2.5.1** · 19‑nov‑2026 · **118 pruebas en verde** (`node motor.m
 | «No está completamente liberado porque hay que pagar» | ✅ | **Modo libre**, prendido por defecto: los 34 vehículos (bici, moto, carro, bus, avión, lancha…), la casa, los lugares y la ciudad son gratis. Se apaga en ⚙️ Ajustes. |
 | «Mejóralo con lo nuevo» | ✅ | Agua (al agua, bucear, lancha), terreno, sombras, ciudad (modo alcalde), mi casa, lugares, historias y paisaje sonoro. El primer mandado empieza cerca. |
 | Que no se rompa otra vez | ✅ | Prueba nueva en `pruebas/prueba.mjs`: un celular táctil abre el juego, arrastra el joystick y se mueve. |
+| La entrega de Gemini, integrada | ✅ | `arte/gemini/` (10 atlas, íconos, hitos, paletas), `js/87-pieles.js` (`MC.Pieles`) y el selector 🎨 Arte en Mandados. La revisión está en `arte/gemini/LEEME.md`: se usan árboles, props, rocas, fachadas y muebles; el personaje, los vehículos y los animales quedan procedurales hasta que vengan a escala. |
+| La auditoría de Gemini, corregida | ✅ | Leyenda en las capas de datos; etiquetas de los cuartos en la esquina; ventanas encendidas en las casas bajas; la maqueta sin el corte de tierra; barras con fondo. Además, un comentario que desde la 2.2 anulaba dos líneas de la interfaz. |
 
 ## 6. Lo que falta, y a quién le toca
 | Qué | Estado | A quién le toca |
 |---|---|---|
 | Probar en un **celular real** de gama media | 🟡 | Al autor. Anota el modelo y lo que se siente lento o confuso. |
-| Arte de Gemini (G‑M0…G‑M15) y código de ChatGPT (C‑M1…C‑M15) | ⏳ | Al autor, que les pasa el documento único (§9 y §10), y a cada IA. |
+| Código de ChatGPT (C‑M1…C‑M15) | ⏳ | Al autor, que le pasa el documento único (§9.2 y §10.2), y a ChatGPT. |
+| Arte de Gemini, segunda vuelta: personaje y vehículos a escala | ⏳ | A Gemini (lista en `arte/gemini/LEEME.md`). |
 | Licencia del motor | ⏳ | Al autor (`docs/NEGOCIO-Y-USOS.md`). |

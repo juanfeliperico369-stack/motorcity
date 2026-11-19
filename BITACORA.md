@@ -22,13 +22,29 @@
    - la tarjeta del mandado lleva el título en una línea y, primero, la distancia y el tiempo.
 9. **`docs/PEDIDOS.md`:** cada pedido del autor, su estado y dónde quedó. Hay 55 hechos, 2 que dependen de afuera y 3 pendientes con dueño.
 
+10. **Llegó la entrega de Gemini** (`ENTREGA-GEMINI-MOTOR-CITY-2.5.md`, G‑M0…G‑M15) y quedó integrada:
+    - el arte, extraído a `arte/gemini/`: 10 atlas WebP, manifiesto, 53 íconos, 30 hitos y paletas;
+    - `MC.Pieles` lo instala como piel con respaldo procedural en cada gancho, a la medida del motor y con una copia nocturna;
+    - en Mandados se usan los árboles del trópico, los props, las rocas, las fachadas y los muebles, con el selector 🎨 Arte en Vista;
+    - el personaje, los vehículos y los animales siguen procedurales, porque los de Gemini no vienen a escala;
+    - la revisión está en `arte/gemini/LEEME.md`.
+11. **De la auditoría de Gemini** se corrigió:
+    - la leyenda de las capas de datos (`ui.leyenda`);
+    - las etiquetas de los cuartos, ahora en la esquina;
+    - las ventanas de noche en las casas bajas;
+    - la maqueta, sin el corte de tierra de la vista lateral;
+    - las barras, con fondo.
+
+    También apareció un `//` que desde la 2.2 anulaba `mision.hidden` y el `aria-live` del aviso.
+
 **Probado** (118 pruebas). La nueva, en un celular táctil emulado (412 × 860), comprueba:
 - aparece el tutorial;
 - todo es libre y gratis, con 34 vehículos;
 - el joystick se ve;
 - arrastrarlo mueve al personaje unos 4 m en 2 s;
 - la cámara da 9 px por metro;
-- el primer mandado está a menos de 900 m.
+- el primer mandado está a menos de 900 m;
+- el arte de Gemini carga (10 atlas, de día y de noche) sin sprites faltantes.
 
 En computador, las flechas y WASD mueven y giran.
 

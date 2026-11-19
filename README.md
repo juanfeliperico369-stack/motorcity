@@ -65,7 +65,8 @@
   - joystick visible, botones de acción y cámara cerca;
   - flecha al objetivo y tutorial;
   - **modo libre** con todo gratis y los 34 vehículos;
-  - en computador, flechas o WASD.
+  - en computador, flechas o WASD;
+  - **el arte de Gemini integrado** (`arte/gemini/`, `MC.Pieles`): guayacanes, ceibas, palmas, postes, rocas, fachadas y muebles, con respaldo procedural.
 
 ## Trabajar en el motor
 ```bash

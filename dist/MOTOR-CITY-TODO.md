@@ -61,7 +61,7 @@
 | **2.3** | Estudiar **SimCity, Los Sims, Cities: Skylines y Townscaper**: cómo crean entornos, ambientes, sombras y detalles de ciudad. Un **documento único** con todo y el código a usar | **Sombras del sol** por hora en todas las vistas. **Mobiliario urbano** y luces de noche. **Fachadas por reglas** (WFC). **`MC.Urbe`**: zonas, demanda RCI, valor del suelo, servicios, contaminación, crecimiento, niveles, recursos, presupuesto y **capas de datos**. **Objetos inteligentes** y necesidades (`MC.Habitante`). **`MC.Ondas`**, `MC.Autotile` y `MC.RejillaIrregular`. **`MC.Paisaje`** (sonido ambiente). Mandados con **modo alcalde** y casa habitada. 109 pruebas. Este documento. |
 | **2.4** | Montañas, rocas y tipos de terreno; agua en **lagos, ríos, playa y mar**; **límites de paso verosímiles** («el personaje pasa por encima de cosas que no debería») | **`MC.Terreno`**: agua por tipo y profundidad; material y pendiente; **reglas de paso** por vehículo con su motivo (vadear, nadar, barrancos, roca, monte, arena, nieve, borde del mundo); **obstáculos reales** (emblemáticos, árboles de las losas, postes, bancas, rocas, tráfico y gente). **`MC.Naturaleza`**: rocas, palmas, frailejones, arbustos y juncos. **Lagos** en los mundos generados (llenado por prioridad) y mar a nivel 0. **Agua y roca en las losas**: color por profundidad, espuma en la orilla y roca en las laderas empinadas. Brillos del agua. El personaje se ve vadeando o nadando. 115 pruebas. |
 | **2.5** | «Añade la capacidad de poder entrar en el agua» | **Entrar al agua de verdad:**<ul><li>con un vehículo, al empujar hacia el agua honda (o con «🏊 Al agua») uno se baja, el vehículo queda **parqueado en la orilla** y se entra nadando;</li><li>se **bucea** («🤿», o Z/Ctrl) con **aire limitado** (~35 s); sin aire se sube sola;</li><li>el cuerpo tiene pose de **nado** (crol) y de **buceo** (rana);</li><li>bajo el agua todo se tiñe de azul, con rayos de luz y burbujas;</li><li>se sale por la orilla y se **vuelve a subir** al vehículo;</li><li>**lancha**: embarcar en el agua honda más cercana y «⚓ A tierra» (queda amarrada).</li></ul>117 pruebas. |
-| **2.5.1** (esta) | «El minijuego es injugable: no hay controles de verdad, no se puede mover nada; hay que pagar cosas. Mejóralo con lo nuevo. ¿Ya están todos los pedidos?» | **Lo que pasaba:** el personaje sí se movía, pero la cámara estaba tan lejos que medía 3 píxeles y el joystick no se veía. **Lo que se hizo:**<ul><li>**cámara cerca**: unos 45 m en el lado corto de la pantalla;</li><li>**marca del jugador** (anillo y flecha);</li><li>**joystick visible** con guía, y **botones de acción** para el pulgar: ⤒ saltar, ⚡ turbo, y 🔽 🔼 en el agua o en el aire;</li><li>**flecha al objetivo** con la distancia, siempre en la zona libre;</li><li>**tutorial** al empezar;</li><li>**modo libre** por defecto: todo gratis, con los 34 vehículos (pie, bici, moto, carro, bus, avión y lancha);</li><li>menús **Vista** y **Ajustes**;</li><li>el **primer mandado cerca**;</li><li>en computador, flechas o WASD;</li><li>la lista **`docs/PEDIDOS.md`**.</li></ul>118 pruebas, con una nueva que juega en un celular táctil. |
+| **2.5.1** (esta) | «El minijuego es injugable: no hay controles de verdad, no se puede mover nada; hay que pagar cosas. Mejóralo con lo nuevo. ¿Ya están todos los pedidos?» | **Lo que pasaba:** el personaje sí se movía, pero la cámara estaba tan lejos que medía 3 píxeles y el joystick no se veía. **Lo que se hizo:**<ul><li>**cámara cerca**: unos 45 m en el lado corto de la pantalla;</li><li>**marca del jugador** (anillo y flecha);</li><li>**joystick visible** con guía, y **botones de acción** para el pulgar: ⤒ saltar, ⚡ turbo, y 🔽 🔼 en el agua o en el aire;</li><li>**flecha al objetivo** con la distancia, siempre en la zona libre;</li><li>**tutorial** al empezar;</li><li>**modo libre** por defecto: todo gratis, con los 34 vehículos (pie, bici, moto, carro, bus, avión y lancha);</li><li>menús **Vista** y **Ajustes**;</li><li>el **primer mandado cerca**;</li><li>en computador, flechas o WASD;</li><li>la lista **`docs/PEDIDOS.md`**.</li></ul>**Llegó la entrega de Gemini** (G‑M0…G‑M15) y quedó integrada:<ul><li>`arte/gemini/` y **`MC.Pieles`**, con respaldo procedural en cada gancho;</li><li>en Mandados se usan árboles del trópico, props, rocas, fachadas y muebles, y el selector 🎨 Arte;</li><li>también se corrigió lo válido de su auditoría.</li></ul>118 pruebas, con una nueva que juega en un celular táctil. |
 
 ## 3. Estado actual
 | | |
@@ -178,6 +178,19 @@ MC.arte.registrar('encicla', {
 - si un gancho devuelve `true`, el motor no dibuja lo suyo;
 - si no, dibuja el respaldo procedural;
 - lo que falte queda en `MC.Sprites.faltan`.
+
+**2.5.1 · un paquete entero de arte, en una línea** (`js/87-pieles.js`):
+```js
+// arte/<ia>/ = atlas .webp + manifiesto.json (cuadros, anim, metros) + iconos.json + hitos.json + paletas.json
+// juego.json: "arte": ["gemini"] → el HTML trae MC_ARTE.gemini (o se incluye dist/arte/gemini.js)
+MC.Pieles.instalar('gemini', MC_ARTE.gemini, { partes: ['prop', 'naturaleza', 'fachada', 'mueble'], pixel: () => vistas.pixel, usar: true });
+MC.arte.usar('motor');                    // volver al procedural
+MC.Pieles.icono('vista_cenital', 20);     // <svg> de G‑M9
+```
+- Cada gancho cae al dibujo del motor si el sprite no está.
+- Los árboles y las rocas se dibujan **a la medida del motor**, para que la sombra calculada coincida con el dibujo.
+- De noche se usa una **copia oscurecida** del atlas, hecha una sola vez.
+- Las partes son: `prop`, `naturaleza`, `fachada`, `personaje`, `vehiculo`, `animal` y `mueble`.
 
 ### 5.5 Mi casa y quien vive en ella (Los Sims)
 ```js
@@ -346,6 +359,14 @@ MC.Sprites.atlas('gemini', { imagen: 'data:image/webp;base64,…', cuadros: { po
 MC.arte.registrar('motor', { prop: (g, p, x, y, pxm) => MC.Sprites.dibujar(g, 'gemini/' + (p.t === 'arbol' ? 'arbol_guayacan' : p.t), x, y, pxm) });
 ```
 
+**Estado (2.5.1):** la entrega G‑M0…G‑M15 llegó (`ENTREGA-GEMINI-MOTOR-CITY-2.5.md`) y está integrada en `arte/gemini/`. La revisión de Claude está en `arte/gemini/LEEME.md`:
+- **se usan** los árboles, los props, las rocas, las fachadas y los muebles;
+- **falta, para la segunda vuelta:**
+  - el personaje y los vehículos a escala, llenando el cuadro;
+  - sin sombra horneada;
+  - 2 px de margen entre cuadros;
+  - árboles de 128 px.
+
 **No es tu rol:** el código del motor (eso es de ChatGPT).
 
 ### 9.2 ChatGPT (Codex) · CÓDIGO: auditoría, mejoras, contenido y pruebas
@@ -399,7 +420,12 @@ MC.arte.registrar('motor', { prop: (g, p, x, y, pxm) => MC.Sprites.dibujar(g, 'g
 Son «la IA de ese juego» (9.3 a 9.5): misma rama, mismas pruebas y reporte.
 
 ### 9.7 Claude (la IA del motor) · lo que sigue
-1. Unir las entregas de Gemini y ChatGPT: 2.6.
+1. Unir la entrega de ChatGPT (la de Gemini quedó en la 2.5.1): 2.6.
+   - Del informe de Gemini queda pendiente:
+     - la cola única de avisos y anuncios;
+     - el minimapa suavizado;
+     - el modo para daltónicos con sus paletas;
+     - los íconos SVG en la interfaz.
 2. Carreras de *Motor City* sobre la red real (`MC.Carrera`), con repeticiones.
 3. *Extremo*: física de tabla, de bici de montaña y de surf.
 4. Agentes con propósito en `MC.Urbe`.
@@ -466,7 +492,7 @@ Son «la IA de ese juego» (9.3 a 9.5): misma rama, mismas pruebas y reporte.
 | **C‑M14 (nuevo)** | **Distritos y políticas** en `MC.Urbe`, como Cities: Skylines: nombre, impuestos por distrito y políticas (prohibir industria pesada, bici prioritaria, parques gratis), con efecto en los campos y en la demanda. |
 
 ## 11. Cómo entregar
-- **Gemini:** `ENTREGA-GEMINI-MOTOR-CITY-2.3.md`:
+- **Gemini:** `ENTREGA-GEMINI-MOTOR-CITY-<versión>.md` (Claude extrae el arte a `arte/gemini/`):
   - resumen de 10 líneas;
   - cada G‑M, con su imagen en base64 o SVG, su JSON y una nota de uso;
   - auditoría (tabla);
@@ -533,11 +559,12 @@ No hace falta conectar ninguna aplicación.
 Versión **2.5.1** · 19‑nov‑2026 · **118 pruebas en verde** (`node motor.mjs prueba --navegador`).
 
 ### Resumen
-- **Hechos:** 55 pedidos ✅.
+- **Hechos:** 57 pedidos ✅.
 - **Hechos, pero falta algo de afuera:** 2 🟡. El motor ya está copiado en EnCicla y El Metro, pero sus IAs todavía no lo usan. Y falta probar en un celular real.
-- **Pendientes:** 3 ⏳:
+- **Pendientes:** 4 ⏳:
   - los juegos *Motor City* (carreras) y *Extremo*;
-  - las entregas de Gemini y ChatGPT;
+  - la entrega de ChatGPT (la de Gemini ya llegó y está integrada);
+  - la segunda vuelta del arte de Gemini (personaje y vehículos a escala);
   - la licencia.
 
   Ninguno es un olvido. Cada uno está en el plan (§9 y §12 del documento único).
@@ -618,12 +645,15 @@ Versión **2.5.1** · 19‑nov‑2026 · **118 pruebas en verde** (`node motor.m
 | «No está completamente liberado porque hay que pagar» | ✅ | **Modo libre**, prendido por defecto: los 34 vehículos (bici, moto, carro, bus, avión, lancha…), la casa, los lugares y la ciudad son gratis. Se apaga en ⚙️ Ajustes. |
 | «Mejóralo con lo nuevo» | ✅ | Agua (al agua, bucear, lancha), terreno, sombras, ciudad (modo alcalde), mi casa, lugares, historias y paisaje sonoro. El primer mandado empieza cerca. |
 | Que no se rompa otra vez | ✅ | Prueba nueva en `pruebas/prueba.mjs`: un celular táctil abre el juego, arrastra el joystick y se mueve. |
+| La entrega de Gemini, integrada | ✅ | `arte/gemini/` (10 atlas, íconos, hitos, paletas), `js/87-pieles.js` (`MC.Pieles`) y el selector 🎨 Arte en Mandados. La revisión está en `arte/gemini/LEEME.md`: se usan árboles, props, rocas, fachadas y muebles; el personaje, los vehículos y los animales quedan procedurales hasta que vengan a escala. |
+| La auditoría de Gemini, corregida | ✅ | Leyenda en las capas de datos; etiquetas de los cuartos en la esquina; ventanas encendidas en las casas bajas; la maqueta sin el corte de tierra; barras con fondo. Además, un comentario que desde la 2.2 anulaba dos líneas de la interfaz. |
 
 ### 6. Lo que falta, y a quién le toca
 | Qué | Estado | A quién le toca |
 |---|---|---|
 | Probar en un **celular real** de gama media | 🟡 | Al autor. Anota el modelo y lo que se siente lento o confuso. |
-| Arte de Gemini (G‑M0…G‑M15) y código de ChatGPT (C‑M1…C‑M15) | ⏳ | Al autor, que les pasa el documento único (§9 y §10), y a cada IA. |
+| Código de ChatGPT (C‑M1…C‑M15) | ⏳ | Al autor, que le pasa el documento único (§9.2 y §10.2), y a ChatGPT. |
+| Arte de Gemini, segunda vuelta: personaje y vehículos a escala | ⏳ | A Gemini (lista en `arte/gemini/LEEME.md`). |
 | Licencia del motor | ⏳ | Al autor (`docs/NEGOCIO-Y-USOS.md`). |
 
 
@@ -663,7 +693,7 @@ Funciona en **un solo HTML**, sin internet y en cualquier celular.
 | **Cuerpos y máquinas** | `MC.Personaje`, `MC.Vehiculos`, `MC.Cuerpo`, `MC.Taller`, `MC.Seres` | Personaje único, 35 vehículos, física con puentes, taller de ingeniería, biología. |
 | **Controles** | `MC.Controles`, `MC.Manejo` | Teclado, dedo y mando; curvas, esquemas y asistencias. |
 | **Cámara y vistas** | `MC.Camara`, `MC.Vistas`, `MC.Vista2D`, `MC.Raster`, `MC.Losas` | 9 vistas más pixel, 3D por software y resortes. |
-| **Arte** | `MC.arte`, `MC.Sprites`, `MC.Pincel` | Pieles por juego, atlas, animaciones y respaldo procedural. |
+| **Arte** | `MC.arte`, `MC.Sprites`, `MC.Pincel`, `MC.Pieles` | Pieles por juego, atlas, animaciones y respaldo procedural. **Paquetes de arte** de las IAs (`arte/gemini/`) instalados en una línea (2.5.1). |
 | **Adentro** | `MC.Interiores`, `MC.Hogar`, `MC.Direccion` | Interiores con estilos, **tu casa desde tu dirección** y diseño. |
 | **A dónde ir** | `MC.Lugares`, `MC.Desgaste` | Talleres, tiendas, restaurantes, bibliotecas y parques; reparar y mejorar. |
 | **Qué pasa** | `MC.Mision`, `MC.Inventario`, `MC.Carrera`, `MC.Logros`, `MC.Dialogo`, `MC.Historias`, `MC.Director`, `MC.Ocurrencias` | Misiones, carreras, historias con pilares, ritmo y lo imprevisto. |
@@ -735,7 +765,7 @@ new MC.Bucle({
 2. **Si es de un solo juego**, va en el juego (su `juego.js`), no en el motor.
 3. **Si otros juegos lo pueden usar**, pídeselo a una IA así:
    > «Lee `CONTRIBUIR.md` y la skill `motor-city-desarrollo`, crea el módulo con `node motor.mjs nuevo modulo nombre`, con sus pruebas, y deja un reporte con `node motor.mjs reporte`».
-4. **Si es arte**, pídelo a Gemini o ChatGPT con las reglas de `docs/PETICION-*.md`: un solo documento, sprites en atlas con fondo magenta o transparente, y medidas en metros.
+4. **Si es arte**, pídelo a Gemini o ChatGPT con las reglas del documento único (§10): un solo documento, sprites en atlas con fondo magenta o transparente, y medidas en metros. Cuando llega, va a `arte/<ia>/` y se instala con `MC.Pieles.instalar`.
 5. **Si es un dato real** (un precio, una cifra científica), va con su **fuente** en el código y su **prueba** con el valor conocido (skill `motor-city-ciencia`).
 6. **Si algo falla en el celular**, anota el modelo y lo que pasó. Con `MC.Ocurrencias.exportar()` y `MC.GPU.perfil()` la IA del motor lo reproduce.
 
@@ -977,7 +1007,7 @@ MC.arte.registrar('encicla', {
 | 1.0.0 | 18‑nov‑2026 | Una tubería con dos resoluciones, el exportador a El Metro, el sincronizador y el contrato (BicicletasUno). |
 | 1.1.0 | 18/19‑nov‑2026 | Túneles y deprimidos; el lector `valle.js`; la fachada de El Metro. |
 | 1.2.0 | 19‑nov‑2026 | Une las dos 1.1.0 con la fuente de verdad en BicicletasUno. |
-| **2.5.1** | 19‑nov‑2026 | **Jugable en el celular:**<ul><li>`ui.joystick(ctl, op)` y `ui.pintarJoystick()`: joystick visible que sigue al dedo, con guía «Arrastra para moverte»;</li><li>`ui.accion({ id, icono, texto, mantener, ctl, al })`: botones redondos para el pulgar, que al mantenerse alimentan `ctl.boton`;</li><li>`ui.barraVisible`;</li><li>`MC.UI.indicador(g, W, H, sx, sy, op)`: el pin o la flecha al objetivo, con `op.rect` para no tapar la interfaz;</li><li>`ui.mision` con el título en una línea y el detalle en dos;</li><li>marca del jugador en las vistas 2D (`E.marcaJugador`);</li><li>`Losas`: resolución hasta 6 y presupuesto de píxeles.</li></ul>Mandados: cámara de unos 45 m en el lado corto, modo libre (todo gratis, 34 vehículos), menú Vista y menú Ajustes, tutorial, y el primer mandado cerca. 118 pruebas. |
+| **2.5.1** | 19‑nov‑2026 | **Arte de Gemini integrado:** `js/87-pieles.js` (`MC.Pieles.instalar(id, paquete, { partes, pixel, usar })`, `MC.Pieles.icono`, `MC.Pieles.faltan`). La construcción compila `arte/<id>/` dentro del HTML con `"arte": ["<id>"]` en `juego.json`, y suelto en `dist/arte/<id>.js`. Las capas de `MC.Urbe` traen `titulo` y `leyenda`, y hay `ui.leyenda`. **Jugable en el celular:**<ul><li>`ui.joystick(ctl, op)` y `ui.pintarJoystick()`: joystick visible que sigue al dedo, con guía «Arrastra para moverte»;</li><li>`ui.accion({ id, icono, texto, mantener, ctl, al })`: botones redondos para el pulgar, que al mantenerse alimentan `ctl.boton`;</li><li>`ui.barraVisible`;</li><li>`MC.UI.indicador(g, W, H, sx, sy, op)`: el pin o la flecha al objetivo, con `op.rect` para no tapar la interfaz;</li><li>`ui.mision` con el título en una línea y el detalle en dos;</li><li>marca del jugador en las vistas 2D (`E.marcaJugador`);</li><li>`Losas`: resolución hasta 6 y presupuesto de píxeles.</li></ul>Mandados: cámara de unos 45 m en el lado corto, modo libre (todo gratis, 34 vehículos), menú Vista y menú Ajustes, tutorial, y el primer mandado cerca. 118 pruebas. |
 | **2.5.0** | 19‑nov‑2026 | **Entrar al agua:** `cuerpo.bajarse`, `montar` y `puedeMontar` (vehículo parqueado en la orilla, también solo al empujar hacia lo hondo), nado con **buceo** y **aire** (`buceando`, `aire`, `pulmones`, evento `sinAire`), poses `nada` y `bucea`, `embarcar` y `desembarcar` (lancha), `Terreno.aguaHonda` y `tierraFirme`. Tono bajo el agua, burbujas y vehículo parqueado en las vistas. 117 pruebas. |
 | **2.4.0** | 19‑nov‑2026 | Terreno y límites verosímiles: agua por tipo y profundidad (vadear, nadar; lancha con calado), pendiente máxima fuera de las vías, roca, monte, arena y nieve por vehículo, obstáculos reales (emblemáticos, árboles de las losas, mobiliario, rocas, tráfico y gente) y edificios también sobre la calle si uno se mete de verdad. Naturaleza. Lagos por llenado de prioridad en el generador y mar a nivel 0. Agua por profundidad, espuma y roca de acantilado en las losas; brillos del agua; vadear y nadar visibles. 115 pruebas. |
 | **2.3.0** | 19‑nov‑2026 | Lo aprendido de SimCity, Los Sims, Cities: Skylines y Townscaper: sombras del sol por hora (2D y raster), mobiliario urbano y luces de noche, fachadas por reglas (WFC), `MC.Urbe` (zonas, demanda RCI, valor del suelo, servicios, contaminación, crecimiento, niveles, recursos, presupuesto y capas de datos), objetos inteligentes y `MC.Habitante`, `MC.Ondas`, `MC.Autotile`, `MC.RejillaIrregular` y `MC.Paisaje`. Ganchos de arte `prop`, `fachadaModulo` y `mueble`. Documento único. 109 pruebas. |
@@ -1682,13 +1712,29 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
    - la tarjeta del mandado lleva el título en una línea y, primero, la distancia y el tiempo.
 9. **`docs/PEDIDOS.md`:** cada pedido del autor, su estado y dónde quedó. Hay 55 hechos, 2 que dependen de afuera y 3 pendientes con dueño.
 
+10. **Llegó la entrega de Gemini** (`ENTREGA-GEMINI-MOTOR-CITY-2.5.md`, G‑M0…G‑M15) y quedó integrada:
+    - el arte, extraído a `arte/gemini/`: 10 atlas WebP, manifiesto, 53 íconos, 30 hitos y paletas;
+    - `MC.Pieles` lo instala como piel con respaldo procedural en cada gancho, a la medida del motor y con una copia nocturna;
+    - en Mandados se usan los árboles del trópico, los props, las rocas, las fachadas y los muebles, con el selector 🎨 Arte en Vista;
+    - el personaje, los vehículos y los animales siguen procedurales, porque los de Gemini no vienen a escala;
+    - la revisión está en `arte/gemini/LEEME.md`.
+11. **De la auditoría de Gemini** se corrigió:
+    - la leyenda de las capas de datos (`ui.leyenda`);
+    - las etiquetas de los cuartos, ahora en la esquina;
+    - las ventanas de noche en las casas bajas;
+    - la maqueta, sin el corte de tierra de la vista lateral;
+    - las barras, con fondo.
+
+    También apareció un `//` que desde la 2.2 anulaba `mision.hidden` y el `aria-live` del aviso.
+
 **Probado** (118 pruebas). La nueva, en un celular táctil emulado (412 × 860), comprueba:
 - aparece el tutorial;
 - todo es libre y gratis, con 34 vehículos;
 - el joystick se ve;
 - arrastrarlo mueve al personaje unos 4 m en 2 s;
 - la cámara da 9 px por metro;
-- el primer mandado está a menos de 900 m.
+- el primer mandado está a menos de 900 m;
+- el arte de Gemini carga (10 atlas, de día y de noche) sin sprites faltantes.
 
 En computador, las flechas y WASD mueven y giran.
 
