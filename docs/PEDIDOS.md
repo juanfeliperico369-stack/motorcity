@@ -12,10 +12,12 @@
 Versión **2.5.1** · 19‑nov‑2026 · **118 pruebas en verde** (`node motor.mjs prueba --navegador`).
 
 ## Resumen
-- **Hechos:** 57 pedidos ✅.
+- **Hechos:** 58 pedidos ✅.
 - **Hechos, pero falta algo de afuera:** 2 🟡. El motor ya está copiado en EnCicla y El Metro, pero sus IAs todavía no lo usan. Y falta probar en un celular real.
-- **Pendientes:** 4 ⏳:
+- **Pendientes:** 6 ⏳:
   - los juegos *Motor City* (carreras) y *Extremo*;
+  - bajar la maqueta de 40 ms en cualquier máquina;
+  - el test de WebRTC de EnCicla, que le toca a su IA;
   - la entrega de ChatGPT (la de Gemini ya llegó y está integrada);
   - la segunda vuelta del arte de Gemini (personaje y vehículos a escala);
   - la licencia.
@@ -99,6 +101,7 @@ Versión **2.5.1** · 19‑nov‑2026 · **118 pruebas en verde** (`node motor.m
 | «Mejóralo con lo nuevo» | ✅ | Agua (al agua, bucear, lancha), terreno, sombras, ciudad (modo alcalde), mi casa, lugares, historias y paisaje sonoro. El primer mandado empieza cerca. |
 | Que no se rompa otra vez | ✅ | Prueba nueva en `pruebas/prueba.mjs`: un celular táctil abre el juego, arrastra el joystick y se mueve. |
 | La entrega de Gemini, integrada | ✅ | `arte/gemini/` (10 atlas, íconos, hitos, paletas), `js/87-pieles.js` (`MC.Pieles`) y el selector 🎨 Arte en Mandados. La revisión está en `arte/gemini/LEEME.md`: se usan árboles, props, rocas, fachadas y muebles; el personaje, los vehículos y los animales quedan procedurales hasta que vengan a escala. |
+| La auditoría de Codex (`docs/AUDITORIA-MOTOR-CITY-2026-11-19.md`), atendida | ✅ | Las pruebas usan el Chromium del sistema si Playwright no trae el suyo, o el que diga `MC_CHROMIUM`. El arte de Gemini ya se revisó en las vistas. Lo que no es del motor quedó con su dueño (abajo). |
 | La auditoría de Gemini, corregida | ✅ | Leyenda en las capas de datos; etiquetas de los cuartos en la esquina; ventanas encendidas en las casas bajas; la maqueta sin el corte de tierra; barras con fondo. Además, un comentario que desde la 2.2 anulaba dos líneas de la interfaz. |
 
 ## 6. Lo que falta, y a quién le toca
@@ -108,3 +111,5 @@ Versión **2.5.1** · 19‑nov‑2026 · **118 pruebas en verde** (`node motor.m
 | Código de ChatGPT (C‑M1…C‑M15) | ⏳ | Al autor, que le pasa el documento único (§9.2 y §10.2), y a ChatGPT. |
 | Arte de Gemini, segunda vuelta: personaje y vehículos a escala | ⏳ | A Gemini (lista en `arte/gemini/LEEME.md`). |
 | Licencia del motor | ⏳ | Al autor (`docs/NEGOCIO-Y-USOS.md`). |
+| Maqueta por debajo de 40 ms en cualquier máquina (Codex midió 44,7 ms en la suya; aquí da 27–29 ms) | ⏳ | A Claude: caché por región y fachadas horneadas (§9.7). |
+| El test de WebRTC de EnCicla (ventana fija de 900 ms) | ⏳ | A la IA de EnCicla (lo señalaron Gemini y Codex). |

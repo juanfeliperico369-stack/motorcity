@@ -264,6 +264,9 @@ console.log('15) Terreno: agua, montañas, rocas y límites de paso');
 if (process.argv.includes('--navegador')) {
   console.log('16) Banco de pruebas en Chromium');
   const html = path.join(RAIZ, 'dist/motor-city.html'); let chromium; try { ({ chromium } = require('playwright')); } catch (e) { console.log('  (sin playwright: se salta)'); }
+  /* 2.5.1 (auditoría de Codex): si Playwright no trae su navegador (red cerrada), se usa el Chromium del sistema; o se elige con MC_CHROMIUM=/ruta */
+  if (chromium) { const L = chromium.launch.bind(chromium), cand = [process.env.MC_CHROMIUM, '/usr/bin/chromium', '/usr/bin/chromium-browser', '/usr/bin/google-chrome-stable', '/usr/bin/google-chrome'].filter(Boolean); let avisado = false;
+    chromium = { launch: async (op = {}) => { if (process.env.MC_CHROMIUM) return L({ ...op, executablePath: process.env.MC_CHROMIUM }); try { return await L(op); } catch (e) { for (const x of cand) if (fs.existsSync(x)) { if (!avisado) { console.log('  (Playwright sin su navegador: se usa ' + x + ')'); avisado = true; } return L({ ...op, executablePath: x }); } throw e; } } }; }
   if (chromium && fs.existsSync(html)) {
     const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] }), p = await b.newPage({ viewport: { width: 412, height: 860 } }), errs = [];
     p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });

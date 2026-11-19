@@ -36,6 +36,9 @@
     - las barras, con fondo.
 
     También apareció un `//` que desde la 2.2 anulaba `mision.hidden` y el `aria-live` del aviso.
+12. **De la auditoría de Codex** (`docs/AUDITORIA-MOTOR-CITY-2026-11-19.md`): las pruebas usan el Chromium del sistema si Playwright no trae el suyo, o el que diga `MC_CHROMIUM`. Quedan anotados, con su dueño:
+    - la maqueta, que midió 44,7 ms en su máquina y aquí 27–29 ms;
+    - el test de WebRTC de EnCicla.
 
 **Probado** (118 pruebas). La nueva, en un celular táctil emulado (412 × 860), comprueba:
 - aparece el tutorial;

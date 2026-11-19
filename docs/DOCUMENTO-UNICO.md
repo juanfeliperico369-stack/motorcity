@@ -270,6 +270,7 @@ MC.Terreno.aguaHonda(M, x, y, r, min); MC.Terreno.tierraFirme(M, x, y, r);
 ### 5.10 Probar y medir
 ```bash
 node motor.mjs construir && node motor.mjs prueba --navegador     # 118 en verde
+MC_CHROMIUM=/usr/bin/chromium node motor.mjs prueba --navegador   # si Playwright no pudo bajar su navegador (red cerrada)
 node motor.mjs reporte "Lo que cambié" --juego encicla --autor "IA de EnCicla"
 node motor.mjs documento                                          # arma dist/MOTOR-CITY-TODO.md (este documento + anexos)
 ```
@@ -419,6 +420,7 @@ Son «la IA de ese juego» (9.3 a 9.5): misma rama, mismas pruebas y reporte.
 
 ### 9.7 Claude (la IA del motor) · lo que sigue
 1. Unir la entrega de ChatGPT (la de Gemini quedó en la 2.5.1): 2.6.
+   - De la auditoría de Codex: bajar la **maqueta** de 40 ms en cualquier máquina, con caché por región y fachadas horneadas.
    - Del informe de Gemini queda pendiente:
      - la cola única de avisos y anuncios;
      - el minimapa suavizado;
