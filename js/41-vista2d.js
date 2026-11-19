@@ -3,6 +3,10 @@
      pantalla = centro + Aplasta(k) · Gira(yaw) · (punto − cámara) · zoom  −  altura · zoom · hk
    - cenital: k = 1, hk = 0 (los techos van en las losas) · oblicua: k = cos(incl), hk = sin(incl)
    - maqueta 2:1: yaw en múltiplos de 90° + 45°, k = 0,5, hk = 0,82 (la proyección de la maqueta de El Metro)
+   - lateral: la misma ciudad vista de lado (inclinación de 1,2 a 1,47 rad), como una casa de muñecas cortada:
+     cielo arriba, el corte de la tierra abajo y una franja de calle con profundidad (FEZ, Little Nightmares).
+     La ciudad 3D también se inclina con dos dedos hasta quedar de lado.
+   - Lo que tapa al jugador (edificios delante de él) se vuelve transparente: el mundo nunca esconde la acción.
    El suelo sale de las losas; los edificios se levantan con su huella y su altura reales; puentes y viaducto
    a su nivel; tráfico, transporte y gente encima. El pixel es la misma vista en un búfer pequeño (vistas.js).
    ===================================================================== */
@@ -10,22 +14,33 @@ const Vista2D = {
   parametros(cam, modo) {
     if (modo === 'cenital') return { yaw: cam.yaw, k: 1, hk: 0 };
     if (modo === 'maqueta') { const q = Math.round((cam.yaw - Math.PI / 4) / (Math.PI / 2)); return { yaw: Math.PI / 4 + q * Math.PI / 2, k: .5, hk: .82 }; }
-    const p = clamp(cam.pitch, .15, 1.15); return { yaw: cam.yaw, k: Math.cos(p), hk: Math.sin(p) };
+    if (modo === 'lateral') { const p = clamp(Math.max(cam.pitch, 1.2), 1.2, 1.47); return { yaw: cam.yaw, k: Math.cos(p), hk: Math.sin(p) }; }
+    const p = clamp(cam.pitch, .15, 1.47); return { yaw: cam.yaw, k: Math.cos(p), hk: Math.sin(p) };
   },
   dibujar(g, W, H, E, op = {}) {
     const C = E.camara, modo = op.modo || 'cenital', P = this.parametros(C, modo), z = C.zoom, cs = Math.cos(P.yaw), sn = Math.sin(P.yaw);
     /* matriz mundo → pantalla (sin altura) */
-    const a = z * cs, b = z * sn * P.k, c = -z * sn, d = z * cs * P.k, e = W / 2 - a * C.x - c * C.y, f = H / 2 - b * C.x - d * C.y;
+    const oy = P.k < .45 ? H * .17 : 0, a = z * cs, b = z * sn * P.k, c = -z * sn, d = z * cs * P.k, e = W / 2 - a * C.x - c * C.y, f = H / 2 + oy - b * C.x - d * C.y;   // de lado, el piso baja: más cielo y menos tierra
     const pr = (x, y, h = 0) => [a * x + c * y + e, b * x + d * y + f - h * z * P.hk];
     const inv = (sx, sy) => { const det = a * d - b * c, X = sx - e, Y = sy - f; return [(d * X - c * Y) / det, (-b * X + a * Y) / det]; };
     E._pr = pr; E._vista = { modo, P, W, H, z };
     /* caja del mundo visible (con margen para lo alto) */
     let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const [sx, sy] of [[0, -H * .6 * P.hk], [W, -H * .6 * P.hk], [0, H], [W, H]]) { const [wx, wy] = inv(sx, sy); x0 = Math.min(x0, wx); x1 = Math.max(x1, wx); y0 = Math.min(y0, wy); y1 = Math.max(y1, wy); }
+    /* de lado (k pequeño) la caja se iría al infinito: se recorta a una franja de profundidad alrededor de la cámara */
+    if (P.k < .55) { const R = Math.max(W, H) / z * .6 + 60, Rp = Math.min(R, 90 + 260 * P.k); const fx = Math.sin(P.yaw), fy = Math.cos(P.yaw); const RR = Math.max(R, Rp); x0 = Math.max(x0, C.x - RR); x1 = Math.min(x1, C.x + RR); y0 = Math.max(y0, C.y - RR); y1 = Math.min(y1, C.y + RR); E._franja = { Rp, fx, fy }; } else E._franja = null;
     E._caja = [x0, y0, x1, y1];
     /* ---------- suelo ---------- */
     const sinTechos = modo !== 'cenital', pixel = !!op.pixel, Ls = z < .22 ? E.losasLejos : E.losas, Ld = Ls.L;
     let res = z * (op.dpr || 1); const RES = [.0625, .125, .25, .5, 1, 2, 3]; res = RES.find(r => r >= res * (pixel ? .9 : .8)) || 3; if (Ls === E.losasLejos) res = Math.min(res, .25);
-    g.save(); g.fillStyle = '#5e8c4a'; g.fillRect(0, 0, W, H); g.setTransform(a, b, c, d, e, f); g.imageSmoothingEnabled = !pixel;
+    g.save(); g.fillStyle = '#5e8c4a'; g.fillRect(0, 0, W, H);
+    if (E._franja) {   /* de lado: cielo arriba de la franja y el corte de la tierra abajo (casa de muñecas) */
+      const Rp = E._franja.Rp, yF = H / 2 + oy - Rp * z * P.k, yC = H / 2 + oy + Rp * z * P.k, cie = E.cielo || { top: [.4, .6, .9], hor: [.8, .88, .95] };
+      const gs = g.createLinearGradient(0, 0, 0, Math.max(1, yF)); gs.addColorStop(0, css3(cie.top)); gs.addColorStop(1, css3(cie.hor)); g.fillStyle = gs; g.fillRect(0, 0, W, Math.max(0, yF));
+      const gt = g.createLinearGradient(0, yC, 0, H); gt.addColorStop(0, '#6b4f36'); gt.addColorStop(.15, '#5a4230'); gt.addColorStop(1, '#2e2219'); g.fillStyle = gt; g.fillRect(0, yC, W, H - yC);
+      g.fillStyle = 'rgba(0,0,0,.18)'; for (let i = 0; i < 40; i++) g.fillRect(h2(i, 1, 9) * W, yC + 6 + h2(i, 2, 9) * (H - yC), 2 + h2(i, 3, 9) * 4, 2);
+      g.beginPath(); g.rect(0, yF, W, yC - yF); g.clip();
+    }
+    g.setTransform(a, b, c, d, e, f); g.imageSmoothingEnabled = !pixel;
     const gx0 = Math.floor(x0 / Ld), gx1 = Math.floor(x1 / Ld), gy0 = Math.floor(y0 / Ld), gy1 = Math.floor(y1 / Ld); let faltan = 0;
     for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) {
       let L = Ls.losa(gx, gy, res, faltan > (op.presupuesto ?? 2), sinTechos);
@@ -38,7 +53,8 @@ const Vista2D = {
     const objs = [], noche = E.cielo ? E.cielo.noche : 0, dy = (x, y) => b * x + d * y + f;
     if (modo !== 'cenital') {
       const minH = z < .5 ? 9 : z < 1 ? 5 : 0, maxN = Math.round(1800 * (E.calidad ?? 1));
-      const lista = E.mundo.edificiosEn(x0, y0, x1, y1).filter(q => q.h >= minH); if (lista.length > maxN) lista.sort((p, q) => q.h * q.hw * q.hd - p.h * p.hw * p.hd).length = maxN;
+      const Fr = E._franja, delante = (x, y) => Fr && Fr.fx * (x - C.x) + Fr.fy * (y - C.y) > Fr.Rp;   // de lado: lo que queda antes del corte no se dibuja
+      const lista = E.mundo.edificiosEn(x0, y0, x1, y1).filter(q => q.h >= minH && !delante(q.x, q.y)); if (lista.length > maxN) lista.sort((p, q) => q.h * q.hw * q.hd - p.h * p.hw * p.hd).length = maxN;
       for (const q of lista) objs.push({ y: dy(q.x, q.y) + Math.max(q.hw, q.hd) * z * P.k * .5, t: 0, q });
       for (const q of E.mundo.sitios().E) { const k2 = q.caja; if (k2[2] < x0 || k2[0] > x1 || k2[3] < y0 || k2[1] > y1) continue; objs.push({ y: dy(q.x, q.y), t: 4, q }); }
     }
@@ -49,9 +65,14 @@ const Vista2D = {
     for (const x of E.extras || []) objs.push({ y: dy(x.x, x.y), t: 6, q: x });
     objs.sort((p, q) => p.y - q.y);
     const luzX = Math.cos(P.yaw + 2.4), dibCtx = { g, pr, z, P, noche, E, luzX, modo, W, H };
+    /* rayos X: lo que queda delante del jugador y lo tapa se dibuja transparente */
+    const Jc = E.jugador && E.jugador.cuerpo, jKey = Jc ? dy(Jc.x, Jc.y) : 0, jS = Jc ? pr(Jc.x, Jc.y, (Jc.zPaso || 0) + (Jc.z || 0) + 1) : null;
+    const tapa = q => { const hw = q.hw != null ? Math.max(q.hw, q.hd) : q.caja ? Math.max(q.caja[2] - q.caja[0], q.caja[3] - q.caja[1]) / 2 : 15, r = hw * z * 1.15 + 12, [bx, by] = pr(q.x, q.y, 0), [, ty] = pr(q.x, q.y, q.h || 10); return Math.abs(jS[0] - bx) < r && jS[1] > ty - 12 && jS[1] < by + hw * z * P.k + 12; };
     for (const o of objs) {
+      const rx = Jc && modo !== 'cenital' && (o.t === 0 || o.t === 4) && o.y > jKey && tapa(o.q); if (rx) g.globalAlpha = .28;
       if (o.t === 0) this.edificio(dibCtx, o.q); else if (o.t === 1) this.pasoElevado(dibCtx, o.q); else if (o.t === 2) this.vehiculo(dibCtx, o.q);
       else if (o.t === 3) this.peaton(dibCtx, o.q); else if (o.t === 4) this.sitio(dibCtx, o.q); else if (o.t === 5) this.jugador(dibCtx, o.q); else if (o.t === 6 && o.q.dibujar) o.q.dibujar(g, pr, z, P);
+      if (rx) g.globalAlpha = 1;
     }
     /* cables del Metrocable: el cable entre torres por encima de todo */
     if (E.cables) this.cables(dibCtx, E.cables);

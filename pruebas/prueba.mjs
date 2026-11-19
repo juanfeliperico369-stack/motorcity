@@ -89,6 +89,19 @@ const B2 = new MC.Cuerpo(M, { x: via.x, y: via.y, a: via.ang, veh: 'pie' }); B2.
 let agua = null; for (let i = 0; i < 4000 && !agua; i++) { const x = col.x + (i % 63) * 10 - 300, y = col.y + Math.floor(i / 63) * 10 - 300; if (M.suelo(x, y) === MC.TT.WATER) agua = { x, y }; }
 if (agua) { const B3 = new MC.Cuerpo(M, { x: agua.x - 60, y: agua.y, a: 0, veh: 'carro' }); ok(!B3.puede(agua.x, agua.y) && new MC.Cuerpo(M, { veh: 'lancha' }).puede(agua.x, agua.y), 'el carro no entra al río; la lancha sí'); }
 
+/* puentes por superficies: se sube por la rampa al tablero y por debajo se pasa sin subir */
+{ const Pq = M.pasos().filter(q => q.tipo === 'puente' && !q.peatonal && q.nivel >= 1 && q.largo > 80 && q.largo < 150 && q.ancho > 7 && q.ancho < 14).slice(1, 6); let arriba = 0, debajo = 0;
+  for (const q of Pq) { const T = new MC.Trazo(q.p), a = T.at(.5), b = T.at(4), C = new MC.Cuerpo(M, { x: a.x, y: a.y, a: Math.atan2(b.y - a.y, b.x - a.x), veh: 'carro' }); let mx = 0;
+    for (let i = 0; i < 900; i++) { const pr = T.proyectar(C.x, C.y), q2 = T.at(Math.min(q.largo, pr.s + 6)); C.actualizar(1 / 60, { acel: .7, dir: { x: q2.x - C.x, y: q2.y - C.y, m: 1 } }); mx = Math.max(mx, C.zPaso); if (pr.s > q.largo - 1) break; }
+    if (Math.abs(mx - q.nivel * 4.5) < .05) arriba++;
+    const m = T.at(q.largo / 2), nx = -Math.sin(m.a), ny = Math.cos(m.a), D = new MC.Cuerpo(M, { x: m.x + nx * (q.ancho / 2 + 4), y: m.y + ny * (q.ancho / 2 + 4), a: Math.atan2(-ny, -nx), veh: 'pie' }); let md = 0; for (let i = 0; i < 120; i++) { D.actualizar(1 / 60, { acel: 1 }); md = Math.max(md, D.zPaso); } if (md === 0) debajo++; }
+  ok(Pq.length === 5 && arriba === 5 && debajo === 5, 'puentes: el carro sube por la rampa al tablero y el peatón pasa por debajo', { arriba, debajo }); }
+{ const via2 = M.viaCercana(col.x, col.y, 80), J = new MC.Cuerpo(M, { x: via2.x, y: via2.y, a: via2.ang, veh: 'pie' }); J.actualizar(1 / 60, {}); J.enAire = true; J.z = .01; J.vz = -.1; J.coyote = .1; J.actualizar(1 / 60, { salto: true });
+  ok(J.vz > 3, 'salto con tiempo de coyote (justo después de dejar el borde)'); }
+{ const st = { v: 0 }; let x = 0; for (let i = 0; i < 120; i++) x = MC.resorte(x, 10, st, .2, 1 / 60); const st2 = { v: 0 }; let y = 0; for (let i = 0; i < 30; i++) y = MC.resorte(y, 10, st2, .2, 1 / 15);
+  const rd = new MC.ResDinamica({ objetivo: 16.7 }); for (let i = 0; i < 200; i++) rd.medir(40); const lento = rd.escala; for (let i = 0; i < 600; i++) rd.medir(5);
+  let pasos = 0; const bu = new MC.Bucle({ actualizar: () => pasos++, dibujar: () => {} }); bu.corre = true; bu.t0 = 0; bu._cuadro(1000 / 30); bu._cuadro(1000 / 30 + 5000);
+  ok(Math.abs(x - 10) < .01 && Math.abs(y - x) < .05 && lento < .6 && rd.escala > .95 && pasos === 2 + 5, 'resortes iguales a 60 y a 15 cuadros por segundo; resolución dinámica; paso fijo con tope', { lento: +lento.toFixed(2), pasos }); }
 console.log('9) Huevos, guardado y compatibilidad');
 MC.huevos.poner({ id: 'prueba', x: col.x, y: col.y, radio: 30 }); const h1 = MC.huevos.revisar({ x: col.x + 5, y: col.y }), h2b = MC.huevos.revisar({ x: col.x + 5, y: col.y }); ok(h1.length === 1 && h2b.length === 0, 'un huevo de pascua se cumple una sola vez');
 const sv = MC.guardado.completar({ a: 1, b: { c: 2 } }, { a: 0, b: { c: 0, d: 5 }, e: [1] }); ok(sv.a === 1 && sv.b.c === 2 && sv.b.d === 5 && sv.e[0] === 1, 'guardado sin romper: lo nuevo con su valor por defecto');

@@ -1,8 +1,10 @@
 /* =====================================================================
    GESTOR DE VISTAS · todas las dimensiones de vista del motor con un solo botón
-   cenital · ciudad 3D (oblicua) · maqueta 2:1 · panorámica (de perfil) · tercera persona · primera persona · dron · cine
+   cenital · ciudad 3D (oblicua) · maqueta 2:1 · lateral (de lado, gira de a 90°) · panorámica (de perfil) · tercera persona
+   · primera persona · dron · cine
    + PIXEL en cualquiera de ellas (la misma escena en un búfer pequeño, agrandada sin suavizado).
-   - Canvas 2D es la base (anda en todo); WebGL es la mejora (si falta, la 3D cae a la ciudad 3D oblicua).
+   - Canvas 2D es la base (anda en todo); WebGL es la mejora. Si falta WebGL, o es por software, la 3D la dibuja
+     MC.Raster (la «tarjeta gráfica» del motor en Canvas 2D). La 3D usa resolución dinámica (MC.ResDinamica).
    - Transición suave entre vistas en el mismo punto (fundido con la vista anterior).
    - Calidad automática: mide el tiempo de cada cuadro y sube o baja el detalle (tráfico, edificios, resolución).
    ===================================================================== */
@@ -10,6 +12,7 @@ const VISTAS = [
   { id: 'cenital', n: 'Cenital', icon: '🗺️', tipo: '2d', modo: 'cenital', control: 'mundo' },
   { id: 'ciudad3d', n: 'Ciudad 3D', icon: '🏙️', tipo: '2d', modo: 'oblicua', control: 'mundo' },
   { id: 'maqueta', n: 'Maqueta 2:1', icon: '🧊', tipo: '2d', modo: 'maqueta', control: 'mundo' },
+  { id: 'lateral', n: 'Lateral', icon: '↔️', tipo: '2d', modo: 'lateral', control: 'mundo' },
   { id: 'pano', n: 'Panorámica', icon: '🎬', tipo: 'pano', control: 'pano' },
   { id: 'tercera', n: 'Tercera persona', icon: '🎮', tipo: 'gl', perfil: 'tercera', control: 'volante' },
   { id: 'primera', n: 'Primera persona', icon: '👁️', tipo: 'gl', perfil: 'primera', control: 'volante' },
@@ -20,15 +23,18 @@ class Vistas {
   constructor(mundo, op = {}) {
     this.mundo = mundo; this.losas = new Losas(mundo); this.losasLejos = new Losas(mundo, { lado: 1280, max: 40 }); this.pano = new Panoramica(mundo); this.gl = null; this.glIntentado = false;
     this.actual = VISTAS[0]; this.anterior = null; this.pixel = false; this.escalaPixel = op.escalaPixel || 3; this.calidad = op.calidad ?? .85; this.auto = op.auto !== false; this.ms = 16; this.dpr = 1; this.fundido = null; this._buf = null;
+    const aj = GPU.ajustes(); this.motor3d = op.motor3d || 'auto'; this.raster = null; this.res = new ResDinamica({ objetivo: 1000 / aj.fps, escala: aj.escala });
   }
-  lista() { return VISTAS.map(v => Object.assign({ disponible: v.tipo !== 'gl' || this.hayGL() }, v)); }
+  lista() { return VISTAS.map(v => Object.assign({ disponible: true }, v)); }
+  /* ¿la 3D la dibuja el raster por software? 'auto': si no hay WebGL o si el WebGL es por software */
+  usaRaster() { if (this.motor3d === 'raster') return true; if (this.motor3d === 'gl') return !this.hayGL(); return GPU.perfil().nivel === 'software' || !this.hayGL(); }
   hayGL() { if (!this.glIntentado) { this.glIntentado = true; try { this.gl = new VistaGL(this.mundo, this.losas); if (!this.gl.ok) this.gl = null; } catch (e) { this.gl = null; MC.falla('WebGL', e); } } return !!this.gl; }
   /* cambia de vista (por id) con transición; la cámara toma el perfil de la nueva */
   usar(id, E) {
-    let v = VISTAS.find(q => q.id === id) || VISTAS[0]; if (v.tipo === 'gl' && !this.hayGL()) v = VISTAS[1];
+    let v = VISTAS.find(q => q.id === id) || VISTAS[0];
     if (v === this.actual) return v; this.anterior = this.actual; this.actual = v;
     if (this._ultimo) { this.fundido = { cv: this._copia(this._ultimo), t: 0 }; }
-    if (E && E.camara) { if (v.perfil) E.camara.usarPerfil(v.perfil); if (v.modo === 'oblicua' && E.camara.pitch < .3) E.camara.pitch = .62; if (v.id === 'maqueta') E.camara.zoom = Math.max(E.camara.zoom, 1.2); }
+    if (E && E.camara) { if (v.perfil) E.camara.usarPerfil(v.perfil); if (v.modo === 'oblicua' && (E.camara.pitch < .3 || E.camara.pitch > 1.2)) E.camara.pitch = .62; if (v.id === 'maqueta') E.camara.zoom = Math.max(E.camara.zoom, 1.2); if (v.id === 'lateral') { E.camara.pitch = 1.38; E.camara.girarA(Math.round(E.camara.yaw / (Math.PI / 2)) * Math.PI / 2); E.camara.zoom = Math.max(E.camara.zoom, 2); } }
     MC.emit('vista', v); return v;
   }
   siguiente(E, paso = 1) { const L = this.lista().filter(v => v.disponible), i = L.findIndex(v => v.id === this.actual.id); return this.usar(L[(i + paso + L.length) % L.length].id, E); }
@@ -42,7 +48,13 @@ class Vistas {
     try {
       if (v.tipo === '2d') { Vista2D.dibujar(dst, w, h, E, { modo: v.modo, pixel: px, dpr: this.dpr, presupuesto: this.calidad > .6 ? 3 : 1, etiquetas: !px }); this._clima2D(dst, w, h, E); }
       else if (v.tipo === 'pano') { this.pano.dibujar(dst, w, h, E, px ? { k: clamp(Math.min(w, h * 1.4) / 70, 2, 40) * (zoomReal / 3.2) } : {}); }
-      else if (v.tipo === 'gl') { const cv = this.gl && this.gl.dibujar(w, h, E, { presupuesto: 4 + 6 * this.calidad }); if (cv) { dst.drawImage(cv, 0, 0); this._clima2D(dst, w, h, E, true); } else Vista2D.dibujar(dst, w, h, E, { modo: 'oblicua' }); }
+      else if (v.tipo === 'gl') {
+        /* resolución dinámica: la 3D se dibuja a escala s y se agranda (bajar píxeles antes que cuadros) */
+        const s = this.auto ? this.res.escala : 1, rw = Math.max(64, Math.round(w * s)), rh = Math.max(48, Math.round(h * s));
+        if (this.usaRaster()) { if (!this.raster) this.raster = new Raster(this.mundo); if (!this._rb || this._rb.width !== rw || this._rb.height !== rh) this._rb = lienzo(rw, rh); this.raster.dibujar(this._rb.getContext('2d'), rw, rh, E); dst.drawImage(this._rb, 0, 0, w, h); }
+        else { const cv = this.gl.dibujar(rw, rh, E, { presupuesto: 4 + 6 * this.calidad }); if (cv) dst.drawImage(cv, 0, 0, w, h); }
+        this._clima2D(dst, w, h, E, true);
+      }
     } catch (e) { MC.falla('vista ' + v.id, e); }
     E.camara.zoom = zoomReal;
     if (px) { g.save(); g.imageSmoothingEnabled = false; g.drawImage(this._buf, 0, 0, W, H); g.restore(); }
@@ -51,7 +63,7 @@ class Vistas {
     this._ultimo = g.canvas;
     this.losas.trabajar(this.calidad > .6 ? 5 : 3);
     /* calidad automática: media móvil del tiempo de dibujo */
-    const ms = MC.ahora() - t0; this.ms = this.ms * .92 + ms * .08;
+    const ms = MC.ahora() - t0; this.ms = this.ms * .92 + ms * .08; if (v.tipo === 'gl' && this.auto) this.res.medir(ms);
     if (this.auto) { if (this.ms > 26 && this.calidad > .35) this.calidad = Math.max(.35, this.calidad - .01); else if (this.ms < 11 && this.calidad < 1) this.calidad = Math.min(1, this.calidad + .004); }
     return ms;
   }

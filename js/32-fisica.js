@@ -24,12 +24,14 @@ class Cuerpo {
   puede(x, y) {
     const V = this.veh; if (V.clase === 'aire' && this.z > 3) return this.mundo.dentro(x, y);
     if (this.paso) return true;
+    /* un tablero o una rampa que queda entre los pies y la cabeza es una pared (no se atraviesa ni se pasa por debajo) */
+    const pie = this.zPaso + this.z, alto = this.altoCuerpo(); for (const S of this.superficies(x, y)) if (S.P && S.h - pie > this.escalonDin() && S.h - pie < alto) return false;
     const tt = this.mundo.suelo(x, y); if (Vehiculos.suelo(V, tt) <= 0) return false;
     if (this.chocaEdificios && V.clase !== 'agua' && tt !== TT.ROAD && tt !== TT.AVE && tt !== TT.AUTO && tt !== TT.CICLO && this.mundo.edificioEn(x, y, V.clase === 'pie' ? .2 : .4)) return false;
     return true;
   }
   actualizar(dt, E = {}) {
-    const V = this.veh, M = this.mundo; this.eventos.length = 0; dt = Math.min(dt, .1);
+    const V = this.veh, M = this.mundo; this.eventos.length = 0; dt = Math.min(dt, .1); this._dt = dt;
     this.corriendo = !!E.correr && V.id === 'pie';
     /* rumbo deseado (joystick que apunta en el mundo) o giro (volante) */
     let acel = E.acel || 0, giro = E.giro || 0;
@@ -49,7 +51,13 @@ class Cuerpo {
     if (V.clase === 'pie' && !E.dir) this.a += giro * V.giro[0] * dt;
     /* vuelo */
     if (V.clase === 'aire') this._vuelo(dt, E);
-    else if (E.salto && !this.enAire && V.salto) { this.vz = Math.sqrt(2 * GRAV * .6 * V.salto); this.enAire = true; this.eventos.push('salto'); MC.emit('salto', this); }
+    else {
+      /* salto con «tiempo de coyote» (se puede saltar un instante después de dejar el borde) y con memoria del botón
+         (si se oprime un poco antes de caer, salta al tocar el piso): así se siente justo, como en los buenos plataformeros */
+      if (!this.enAire) this.coyote = .12; else this.coyote = Math.max(0, (this.coyote || 0) - dt);
+      if (E.salto) this.bufSalto = .14; else this.bufSalto = Math.max(0, (this.bufSalto || 0) - dt);
+      if (this.bufSalto > 0 && V.salto && (!this.enAire || (this.coyote > 0 && this.vz <= 0))) { this.vz = Math.sqrt(2 * GRAV * .6 * V.salto); this.enAire = true; this.coyote = 0; this.bufSalto = 0; this.eventos.push('salto'); MC.emit('salto', this); }
+    }
     if (this.enAire && V.clase !== 'aire') { this.z += this.vz * dt; this.vz -= GRAV * dt; if (this.z <= 0) { this.z = 0; this.enAire = false; this.eventos.push(this.vz < -6 ? 'aterrizaFuerte' : 'aterriza'); this.vz = 0; } }
     /* mover con choques (desliza por el eje libre) */
     const dx = Math.cos(this.a) * this.v * dt, dy = Math.sin(this.a) * this.v * dt, nx = this.x + dx, ny = this.y + dy;
@@ -69,27 +77,49 @@ class Cuerpo {
     else this.vz = lerp(this.vz, E.sube || E.salto ? 5 : E.baja ? -6 : (this.z > 0 ? -1.2 : 0), Math.min(1, dt * 3));
     this.z = clamp(this.z + this.vz * dt, 0, techo); this.enAire = this.z > .05;
   }
-  /* ---------- puentes, viaducto y deprimidos ---------- */
+  /* ---------- puentes, viaducto, deprimidos y cualquier superficie con altura ----------
+     Como el controlador de personaje de los motores grandes: en cada punto hay varias superficies (el terreno y los
+     tableros con su rampa). El cuerpo se apoya en la más alta que le quede a la altura de un escalón; lo que queda
+     entre los pies y la cabeza es pared; lo que queda arriba de la cabeza se pasa por debajo. Si el apoyo desaparece,
+     cae con gravedad (y aterriza en lo que haya abajo). Las barandas no dejan caer del tablero. */
+  escalon() { const V = this.veh; return V.clase === 'pie' ? .5 : V.clase === 'aire' ? 1.2 : .35; }
+  /* el escalón crece con lo que se avanza en el cuadro: la rampa más empinada sube ~0,62 m por metro */
+  escalonDin() { return this.escalon() + Math.abs(this.v) * (this._dt || 1 / 60) * .7; }
+  altoCuerpo() { const V = this.veh; return V.clase === 'pesado' ? 3.6 : V.clase === 'auto' ? 1.6 : V.clase === 'aire' ? 2.2 : 1.8; }
+  admite(P) {
+    const V = this.veh; if (P.tipo === 'viaducto') return !!V.via && V.clase !== 'pie'; if (P.tipo === 'tunel') return !!V.via;
+    if (P.peatonal && (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto')) return false;
+    if (!P.peatonal && V.clase === 'pie' && P.tipo === 'puente' && P.ancho > 12) return false; return true;
+  }
+  /* altura del tablero sobre el terreno a s metros del comienzo: rampas suaves en los dos extremos */
+  static alturaTablero(P, s) { const rampa = P.tipo === 'viaducto' ? 1e-6 : Math.min(P.largo * .4, P.tipo === 'tunel' ? 26 : P.peatonal ? 9 : 22); return P.nivel * NIVEL_M * suave(clamp(Math.min(s, P.largo - s) / rampa, 0, 1)); }
+  /* las superficies en (x, y): [{ h (m sobre el terreno), P (el paso o null), s, lat }] */
+  superficies(x, y) {
+    const out = [{ h: 0, P: null }], M = this.mundo; if (!M.pasosEn) return out;
+    for (const P of M.pasosEn(x - 3, y - 3, x + 3, y + 3)) {
+      if (!this.admite(P)) continue; const T = P.trazo || (P.trazo = new Trazo(P.p)), pr = T.proyectar(x, y); if (pr.s < -.3 || pr.s > P.largo + .3) continue;
+      const q = T.at(clamp(pr.s, 0, P.largo)), lat = (x - q.x) * -Math.sin(q.a) + (y - q.y) * Math.cos(q.a); if (Math.abs(lat) > P.ancho / 2 + .15) continue;
+      /* el deprimido es un corte en el piso: solo se entra por sus extremos y en su sentido (la calle de arriba lo cruza) */
+      if (P.tipo === 'tunel' && this.paso !== P && !((pr.s < 3 || pr.s > P.largo - 3) && Math.abs(Math.cos(angDif(this.a, q.a))) > .5)) continue;
+      out.push({ h: Cuerpo.alturaTablero(P, pr.s), P, s: pr.s, lat, q });
+    }
+    if (out.some(S => S.P && S.P.tipo === 'tunel')) out.shift();   // dentro del deprimido no hay piso arriba
+    return out;
+  }
   _niveles(dt) {
-    const V = this.veh, M = this.mundo;
-    if (this.paso) {
-      const P = this.paso, T = P.trazo || (P.trazo = new Trazo(P.p)), pr = T.proyectar(this.x, this.y), q = T.at(pr.s), lat = (this.x - q.x) * -Math.sin(q.a) + (this.y - q.y) * Math.cos(q.a), med = P.ancho / 2 - .3;
-      if (Math.abs(lat) > med && pr.s > 1 && pr.s < P.largo - 1) { const l = clamp(lat, -med, med); this.x = q.x - Math.sin(q.a) * l; this.y = q.y + Math.cos(q.a) * l; }   // baranda
-      const rampa = Math.min(P.largo * .4, P.tipo === 'tunel' ? 26 : P.peatonal ? 9 : 22), f = suave(Math.min(pr.s, P.largo - pr.s) / rampa);
-      this.zPaso = P.nivel * NIVEL_M * f; this.sPaso = pr.s;
-      if (pr.s <= .4 || pr.s >= P.largo - .4) { this.paso = null; this.zPaso = 0; this.eventos.push('salePaso'); }
-      return;
-    }
-    if (!M.nivel(this.x, this.y) && Math.abs(this.v) < .1) return;
-    /* entrar por un extremo, mirando hacia el tablero */
-    for (const P of M.pasosEn(this.x - 30, this.y - 30, this.x + 30, this.y + 30)) {
-      if (P.tipo === 'viaducto') continue; if (P.tipo === 'tunel' && !V.via) continue; if (P.peatonal && (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto')) continue; if (!P.peatonal && V.clase === 'pie' && P.tipo === 'puente' && P.ancho > 12) continue;
-      const p = P.p, n = p.length; for (const [ex, ey, ix, iy] of [[p[0], p[1], p[2], p[3]], [p[n - 2], p[n - 1], p[n - 4], p[n - 3]]]) {
-        const d = Math.hypot(this.x - ex, this.y - ey); if (d > Math.max(4, P.ancho / 2 + 1)) continue;
-        const ang = Math.atan2(iy - ey, ix - ex); if (Math.cos(angDif(this.a, ang)) * Math.sign(this.v || 1) < .5) continue;
-        this.paso = P; this.eventos.push('entraPaso'); MC.emit('paso', { cuerpo: this, paso: P }); return;
-      }
-    }
+    const pie = this.zPaso + this.z, esc = this.escalonDin(), SS = this.superficies(this.x, this.y); let apoyo = null;
+    for (const S of SS) if (S.h <= pie + esc && (!apoyo || S.h > apoyo.h)) apoyo = S;
+    if (!apoyo) apoyo = SS.reduce((a, b) => b.h < a.h ? b : a, SS[0]);   // nada a la mano: lo más bajo
+    /* barandas: en lo alto del tablero no se sale por los lados */
+    if (apoyo.P && Math.abs(apoyo.h) > .6 && apoyo.s > 1 && apoyo.s < apoyo.P.largo - 1) { const med = apoyo.P.ancho / 2 - .3, q = apoyo.q; if (Math.abs(apoyo.lat) > med) { const l = clamp(apoyo.lat, -med, med); this.x = q.x - Math.sin(q.a) * l; this.y = q.y + Math.cos(q.a) * l; } }
+    const antes = this.paso; this.paso = apoyo.P; this.sPaso = apoyo.s || 0;
+    if (apoyo.P !== antes) { if (apoyo.P) { this.eventos.push('entraPaso'); MC.emit('paso', { cuerpo: this, paso: apoyo.P }); } else this.eventos.push('salePaso'); }
+    const V = this.veh;
+    if (V.clase === 'aire') { this.z = Math.max(0, pie - apoyo.h); this.zPaso = apoyo.h; return; }
+    /* bajar: si el apoyo queda más abajo que un escalón, el cuerpo cae; si no, se pega al piso (rampas en bajada) */
+    if (pie - apoyo.h > esc + .05 && !this.enAire) { this.enAire = true; this.vz = Math.min(0, this.vz); this.eventos.push('cae'); }
+    if (this.enAire) { this.z = pie - apoyo.h; this.zPaso = apoyo.h; if (this.z <= 0) { this.z = 0; this.enAire = false; this.eventos.push(this.vz < -6 ? 'aterrizaFuerte' : 'aterriza'); this.vz = 0; } }
+    else { this.zPaso = apoyo.h; this.z = 0; }
   }
 }
 Object.assign(MC, { Cuerpo, GRAV });
