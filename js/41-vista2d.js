@@ -124,8 +124,9 @@ const Vista2D = {
     const { g, pr, z, W, H, E } = D; if (z < .35) return; g.font = '700 ' + Math.round(clamp(z * 4, 10, 14)) + 'px system-ui, sans-serif'; g.textAlign = 'center';
     const pon = (t, x, y, col) => { const [sx, sy] = pr(x, y, 8); if (sx < -60 || sx > W + 60 || sy < -20 || sy > H + 20) return; const w = g.measureText(t).width + 10; g.fillStyle = 'rgba(10,35,66,.82)'; g.fillRect(sx - w / 2, sy - 16, w, 18); g.fillStyle = col; g.fillText(t, sx, sy - 3); };
     for (const l of E.transporte ? E.transporte.lineas : []) if (l.clase === 'metro' || l.clase === 'cable' || l.clase === 'tram') for (const s of l.est) { const q = l.T.at(s.s); pon(s.nombre, q.x, q.y, '#ffffff'); }
-    if (z > .9) for (const s of E.mundo.transporte.encicla) pon('🚲 ' + s.nombre, s.x, s.y, '#c4ec7c');
-    for (const L of E.mundo.lugares) if (!L.secreto) pon(L.nombre, L.x, L.y, '#ffd84a');
+    if (z > .9) for (const s of E.mundo.transporte.encicla || []) pon('🚲 ' + s.nombre, s.x, s.y, '#c4ec7c');
+    const lug = []; for (const L of E.mundo.lugares) { if (L.secreto) continue; const [sx, sy] = pr(L.x, L.y, 8); if (sx > -40 && sx < W + 40 && sy > 0 && sy < H + 20) lug.push([Math.hypot(sx - W / 2, sy - H / 2), L]); }
+    lug.sort((a, b) => a[0] - b[0]); for (const [, L] of lug.slice(0, z > 3 ? 14 : 8)) pon(L.nombre, L.x, L.y, '#ffd84a');   // pocas y las del centro: que no tapen el mapa
   }
 };
 MC.Vista2D = Vista2D;

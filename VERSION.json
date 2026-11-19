@@ -1,10 +1,10 @@
 {
- "version": "2.0.0",
+ "version": "2.1.0",
  "fecha": "2026-11-19",
- "nombre": "Motor City · Motor del Valle 2.0",
+ "nombre": "Motor City",
  "fuente_de_verdad": "juanfeliperico369-stack/motorcity",
  "copias": [
-  "juanfeliperico369-stack/BicicletasUno (carpeta motor-valle/)",
-  "juanfeliperico369-stack/MetroZero (carpeta motor-valle/)"
+  "juanfeliperico369-stack/BicicletasUno (carpeta motor-city/)",
+  "juanfeliperico369-stack/MetroZero (carpeta motor-city/)"
  ]
 }

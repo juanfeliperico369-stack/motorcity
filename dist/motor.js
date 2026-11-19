@@ -1,4 +1,4 @@
-/* Motor City · Motor del Valle 2.0 2.0.0 · 2026-11-19 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 2.1.0 · 2026-11-19 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -7,12 +7,12 @@
 /* =====================================================================
    MOTOR CITY · NÚCLEO (MC)
    El motor de mundo abierto que comparten Juega EnCicla, El Metro y los juegos que vienen.
-   Todo el motor vive en un solo cierre y solo publica MC (y, por compatibilidad, Valle/MotorValle).
+   Todo el motor vive en un solo cierre y solo publica MC (y, por compatibilidad con los juegos 1.x, Valle/MotorValle).
    Reglas: un solo HTML, sin internet ni librerías; español de Colombia; ningún dato personal.
    ===================================================================== */
 const MC = {
-  version: '2.0.0',
-  nombre: 'Motor City · Motor del Valle 2.0',
+  version: '2.1.0',
+  nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
   ahora: () => (typeof performance !== 'undefined' ? performance.now() : Date.now())
@@ -149,6 +149,225 @@ async function inflar(u8, size) {
 }
 Object.assign(MC, { inflarCrudo, inflarSync, inflar, deB64 });
 
+/* ---- js/02-ciencia.js ---- */
+/* =====================================================================
+   CIENCIA · matemáticas, física y química fieles a la realidad (unidades del SI)
+   Todo es puro y determinista (mismas entradas → mismas salidas) y está probado en pruebas/prueba.mjs.
+   - Constantes y unidades · vectores y geometría · ruido (Perlin, fbm, crestas) · muestreo de Poisson
+   - Integradores (Euler semiimplícito, RK4) · estadística y distribuciones
+   - Física: atmósfera estándar (ISA), arrastre, sustentación, rodadura, pendiente, flotación, choques, proyectiles,
+     fricción por superficie y clima · Termodinámica: calor, enfriamiento de Newton, punto de rocío, índice de
+     calor y sensación térmica · Química: elementos, masa molar de fórmulas, balanceo exacto de ecuaciones,
+     gases ideales, pH, combustibles y baterías, materiales.
+   ===================================================================== */
+const C = {
+  g: 9.80665, G: 6.6743e-11, R: 8.314462618, NA: 6.02214076e23, kB: 1.380649e-23, sigma: 5.670374419e-8, c: 299792458,
+  Raire: 287.05, cpAire: 1005, rhoAire: 1.225, rhoAgua: 1000, cpAgua: 4186, Lv: 2.257e6, Lf: 3.34e5, P0: 101325, T0: 288.15, atm: 101325
+};
+const U = {
+  kmh: v => v / 3.6, aKmh: v => v * 3.6, mph: v => v * .44704, nudos: v => v * .514444,
+  C_K: t => t + 273.15, K_C: t => t - 273.15, F_C: f => (f - 32) * 5 / 9, C_F: c => c * 9 / 5 + 32,
+  kWh: e => e * 3.6e6, aKWh: j => j / 3.6e6, cv: p => p * 735.49875, hp: p => p * 745.699872, aCv: w => w / 735.49875,
+  psi: p => p * 6894.757, bar: p => p * 1e5, L: v => v / 1000, cal: c => c * 4.184, kcal: c => c * 4184, aKcal: j => j / 4184, grad: r => r * 180 / Math.PI, rad: d => d * Math.PI / 180
+};
+/* ---------- vectores (arreglos) y geometría ---------- */
+const V2 = { suma: (a, b) => [a[0] + b[0], a[1] + b[1]], resta: (a, b) => [a[0] - b[0], a[1] - b[1]], esc: (a, k) => [a[0] * k, a[1] * k], punto: (a, b) => a[0] * b[0] + a[1] * b[1], cruz: (a, b) => a[0] * b[1] - a[1] * b[0], largo: a => Math.hypot(a[0], a[1]), unit: a => { const l = Math.hypot(a[0], a[1]) || 1; return [a[0] / l, a[1] / l]; }, rot: (a, t) => [a[0] * Math.cos(t) - a[1] * Math.sin(t), a[0] * Math.sin(t) + a[1] * Math.cos(t)] };
+const V3 = { suma: (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], resta: (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], esc: (a, k) => [a[0] * k, a[1] * k, a[2] * k], punto: (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], cruz: (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]], largo: a => Math.hypot(a[0], a[1], a[2]), unit: a => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; } };
+const Geo = {
+  area(P) { let a = 0; const n = P.length >> 1; for (let i = 0; i < n; i++) { const j = (i + 1) % n; a += P[2 * i] * P[2 * j + 1] - P[2 * j] * P[2 * i + 1]; } return a / 2; },
+  centroide(P) { let cx = 0, cy = 0, a = 0; const n = P.length >> 1; for (let i = 0; i < n; i++) { const j = (i + 1) % n, f = P[2 * i] * P[2 * j + 1] - P[2 * j] * P[2 * i + 1]; a += f; cx += (P[2 * i] + P[2 * j]) * f; cy += (P[2 * i + 1] + P[2 * j + 1]) * f; } a /= 2; return a ? [cx / (6 * a), cy / (6 * a)] : [P[0], P[1]]; },
+  /* cruce de los segmentos ab y cd: [t, u] o null */
+  cruce(a, b, c, d) { const r = [b[0] - a[0], b[1] - a[1]], s = [d[0] - c[0], d[1] - c[1]], den = r[0] * s[1] - r[1] * s[0]; if (Math.abs(den) < 1e-12) return null; const t = ((c[0] - a[0]) * s[1] - (c[1] - a[1]) * s[0]) / den, u = ((c[0] - a[0]) * r[1] - (c[1] - a[1]) * r[0]) / den; return t >= 0 && t <= 1 && u >= 0 && u <= 1 ? [t, u] : null; },
+  /* envolvente convexa (cadena monótona de Andrew) de puntos [[x,y],…] */
+  envolvente(Pts) { const p = Pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]); if (p.length < 3) return p; const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]), lo = [], hi = []; for (const q of p) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); } for (const q of p.slice().reverse()) { while (hi.length >= 2 && cr(hi[hi.length - 2], hi[hi.length - 1], q) <= 0) hi.pop(); hi.push(q); } hi.pop(); lo.pop(); return lo.concat(hi); },
+  bezier: (p0, p1, p2, p3, t) => { const u = 1 - t; return [u * u * u * p0[0] + 3 * u * u * t * p1[0] + 3 * u * t * t * p2[0] + t * t * t * p3[0], u * u * u * p0[1] + 3 * u * u * t * p1[1] + 3 * u * t * t * p2[1] + t * t * t * p3[1]]; },
+  catmull: (p0, p1, p2, p3, t) => { const t2 = t * t, t3 = t2 * t, f = (a, b, c, d) => .5 * (2 * b + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3); return [f(p0[0], p1[0], p2[0], p3[0]), f(p0[1], p1[1], p2[1], p3[1])]; }
+};
+const Suaviza = { entra: t => t * t, sale: t => t * (2 - t), entraSale: t => t < .5 ? 2 * t * t : -1 + (4 - 2 * t) * t, cubica: t => t * t * (3 - 2 * t), quintica: t => t * t * t * (t * (t * 6 - 15) + 10), rebote: t => { const n = 7.5625, d = 2.75; if (t < 1 / d) return n * t * t; if (t < 2 / d) return n * (t -= 1.5 / d) * t + .75; if (t < 2.5 / d) return n * (t -= 2.25 / d) * t + .9375; return n * (t -= 2.625 / d) * t + .984375; }, elastico: t => t === 0 || t === 1 ? t : Math.pow(2, -10 * t) * Math.sin((t * 10 - .75) * (2 * Math.PI / 3)) + 1 };
+/* ---------- ruido coherente (Perlin con gradientes, sembrado) ---------- */
+class Ruido {
+  constructor(semilla = 1) { const r = mulberry32(semilla), p = new Uint8Array(256); for (let i = 0; i < 256; i++) p[i] = i; for (let i = 255; i > 0; i--) { const j = Math.floor(r() * (i + 1)), t = p[i]; p[i] = p[j]; p[j] = t; } this.p = new Uint8Array(512); for (let i = 0; i < 512; i++) this.p[i] = p[i & 255]; }
+  /* Perlin 2D en [-1, 1] (aprox.) */
+  n2(x, y) {
+    const P = this.p, X = Math.floor(x) & 255, Y = Math.floor(y) & 255; x -= Math.floor(x); y -= Math.floor(y);
+    const u = x * x * x * (x * (x * 6 - 15) + 10), v = y * y * y * (y * (y * 6 - 15) + 10), gr = (h, a, b) => { switch (h & 7) { case 0: return a + b; case 1: return -a + b; case 2: return a - b; case 3: return -a - b; case 4: return a; case 5: return -a; case 6: return b; default: return -b; } };
+    const aa = P[P[X] + Y], ab = P[P[X] + Y + 1], ba = P[P[X + 1] + Y], bb = P[P[X + 1] + Y + 1];
+    return lerp(lerp(gr(aa, x, y), gr(ba, x - 1, y), u), lerp(gr(ab, x, y - 1), gr(bb, x - 1, y - 1), u), v) * .7071;
+  }
+  /* movimiento browniano fraccional: octavas que suman detalle */
+  fbm(x, y, oct = 5, lac = 2, gan = .5) { let a = 1, f = 1, s = 0, n = 0; for (let i = 0; i < oct; i++) { s += a * this.n2(x * f, y * f); n += a; a *= gan; f *= lac; } return s / n; }
+  /* crestas (cordilleras afiladas) en [0, 1] */
+  crestas(x, y, oct = 5) { let a = .5, f = 1, s = 0, w = 1; for (let i = 0; i < oct; i++) { let v = 1 - Math.abs(this.n2(x * f, y * f)); v *= v * w; w = clamp(v * 2, 0, 1); s += v * a; a *= .5; f *= 2; } return s; }
+  /* deformación del dominio (formas orgánicas) */
+  torcido(x, y, k = 1.5) { return this.fbm(x + k * this.fbm(x + 5.2, y + 1.3, 3), y + k * this.fbm(x + 1.7, y + 9.2, 3)); }
+}
+/* muestreo de Poisson en disco (Bridson): puntos repartidos sin amontonarse, para árboles, casas, NPC… */
+function poissonDisco(ancho, alto, r, semilla = 1, k = 24, acepta) {
+  const rand = mulberry32(semilla), cel = r / Math.SQRT2, gw = Math.ceil(ancho / cel), gh = Math.ceil(alto / cel), grid = new Int32Array(gw * gh).fill(-1), pts = [], act = [];
+  const pon = (x, y) => { pts.push([x, y]); act.push(pts.length - 1); grid[Math.floor(y / cel) * gw + Math.floor(x / cel)] = pts.length - 1; };
+  pon(rand() * ancho, rand() * alto);
+  while (act.length) { const i = Math.floor(rand() * act.length), [px, py] = pts[act[i]]; let ok = false;
+    for (let t = 0; t < k; t++) { const a = rand() * TAU, d = r * (1 + rand()), x = px + Math.cos(a) * d, y = py + Math.sin(a) * d; if (x < 0 || y < 0 || x >= ancho || y >= alto) continue; const gx = Math.floor(x / cel), gy = Math.floor(y / cel); let lejos = true;
+      for (let j = Math.max(0, gy - 2); j <= Math.min(gh - 1, gy + 2) && lejos; j++) for (let q = Math.max(0, gx - 2); q <= Math.min(gw - 1, gx + 2); q++) { const o = grid[j * gw + q]; if (o >= 0 && (pts[o][0] - x) ** 2 + (pts[o][1] - y) ** 2 < r * r) { lejos = false; break; } }
+      if (lejos && (!acepta || acepta(x, y))) { pon(x, y); ok = true; break; } }
+    if (!ok) act.splice(i, 1); }
+  return pts;
+}
+/* ---------- integradores ---------- */
+const Integra = {
+  /* y' = f(t, y) con y un arreglo de números (RK4 clásico) */
+  rk4(f, t, y, h) { const k1 = f(t, y), y2 = y.map((v, i) => v + h / 2 * k1[i]), k2 = f(t + h / 2, y2), y3 = y.map((v, i) => v + h / 2 * k2[i]), k3 = f(t + h / 2, y3), y4 = y.map((v, i) => v + h * k3[i]), k4 = f(t + h, y4); return y.map((v, i) => v + h / 6 * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i])); },
+  /* Euler semiimplícito (estable para juegos): primero la velocidad, luego la posición */
+  euler(x, v, a, h) { const v2 = v + a * h; return [x + v2 * h, v2]; }
+};
+/* ---------- estadística y azar con distribuciones ---------- */
+const Est = {
+  media: L => L.reduce((a, b) => a + b, 0) / (L.length || 1),
+  desv: L => { const m = Est.media(L); return Math.sqrt(L.reduce((a, b) => a + (b - m) ** 2, 0) / Math.max(1, L.length - 1)); },
+  percentil: (L, p) => { const s = L.slice().sort((a, b) => a - b), i = (s.length - 1) * p, lo = Math.floor(i); return s[lo] + (s[Math.min(s.length - 1, lo + 1)] - s[lo]) * (i - lo); },
+  normal: (r, m = 0, s = 1) => { const u = Math.max(1e-12, r()), v = r(); return m + s * Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * v); },
+  exponencial: (r, lam) => -Math.log(1 - r()) / lam,
+  poisson: (r, lam) => { const L = Math.exp(-lam); let k = 0, p = 1; do { k++; p *= r(); } while (p > L); return k - 1; },
+  ponderado: (r, items) => { let t = 0; for (const [, w] of items) t += w; let x = r() * t; for (const [v, w] of items) { x -= w; if (x <= 0) return v; } return items[items.length - 1][0]; }
+};
+/* ---------- física ---------- */
+const MU = { asfalto: [.9, .8], asfalto_mojado: [.6, .5], concreto: [.85, .75], adoquin: [.7, .6], grava: [.6, .5], tierra: [.55, .45], barro: [.35, .25], pasto: [.45, .35], arena: [.5, .4], nieve: [.3, .2], hielo: [.12, .08], madera: [.6, .5], caucho_metal: [.8, .6] };   // [estático, dinámico] de caucho sobre…
+const Fis = {
+  /* atmósfera estándar internacional (troposfera, h < 11 km): { T (K), p (Pa), rho (kg/m³) } */
+  atmosfera(h) { const T = C.T0 - .0065 * h, p = C.P0 * Math.pow(1 - 2.25577e-5 * h, 5.25588); return { T, p, rho: p / (C.Raire * T) }; },
+  arrastre: (rho, v, Cd, A) => .5 * rho * v * v * Cd * A,                       // N
+  sustentacion: (rho, v, Cl, S) => .5 * rho * v * v * Cl * S,                   // N
+  rodadura: (Crr, m, pend = 0) => Crr * m * C.g * Math.cos(Math.atan(pend)),  // N
+  pendiente: (m, pend) => m * C.g * Math.sin(Math.atan(pend)),                 // N (pend: tanto por uno, subida > 0)
+  flotacion: (rhoFluido, V) => rhoFluido * V * C.g,                           // N
+  /* velocidad máxima donde la potencia iguala arrastre + rodadura (+ pendiente) [m/s] — bisección */
+  vmaxPotencia(P, m, Cd, A, Crr, rho = C.rhoAire, pend = 0) { let lo = 0, hi = 150; for (let i = 0; i < 60; i++) { const v = (lo + hi) / 2, F = Fis.arrastre(rho, v, Cd, A) + Fis.rodadura(Crr, m, pend) + Fis.pendiente(m, pend); if (F * v > P) hi = v; else lo = v; } return (lo + hi) / 2; },
+  frenada: (v, mu) => v * v / (2 * mu * C.g),                                  // m hasta detenerse
+  /* tiro parabólico sin aire: alcance y tiempo desde altura h0 */
+  proyectil(v0, ang, h0 = 0) { const vx = v0 * Math.cos(ang), vy = v0 * Math.sin(ang), t = (vy + Math.sqrt(vy * vy + 2 * C.g * h0)) / C.g; return { t, alcance: vx * t, alturaMax: h0 + vy * vy / (2 * C.g) }; },
+  /* choque 1D con coeficiente de restitución e (1 elástico, 0 plástico): velocidades después */
+  choque(m1, v1, m2, v2, e = 1) { const P = m1 * v1 + m2 * v2, M = m1 + m2; return [(P + m2 * e * (v2 - v1)) / M, (P + m1 * e * (v1 - v2)) / M]; },
+  energiaCinetica: (m, v) => .5 * m * v * v,
+  mu: (sup, mojado) => { const b = MU[sup] || MU.asfalto; return mojado && MU[sup + '_mojado'] ? MU[sup + '_mojado'][1] : b[1] * (mojado ? .72 : 1); },
+  /* péndulo simple (balanceo de cabinas, columpios): periodo */
+  periodoPendulo: L => TAU * Math.sqrt(L / C.g)
+};
+/* ---------- termodinámica y humedad ---------- */
+const Termo = {
+  calor: (m, c, dT) => m * c * dT,
+  newton: (T, Tamb, k, t) => Tamb + (T - Tamb) * Math.exp(-k * t),
+  /* punto de rocío (fórmula de Magnus, °C) */
+  rocio(Tc, HR) { const a = 17.625, b = 243.04, g = Math.log(HR / 100) + a * Tc / (b + Tc); return b * g / (a - g); },
+  humedad(Tc, Td) { const a = 17.625, b = 243.04; return 100 * Math.exp(a * Td / (b + Td) - a * Tc / (b + Tc)); },
+  /* índice de calor (regresión de Rothfusz, NOAA) en °C */
+  indiceCalor(Tc, HR) { const T = U.C_F(Tc); if (T < 80) return Tc; const R = HR; let F = -42.379 + 2.04901523 * T + 10.14333127 * R - .22475541 * T * R - 6.83783e-3 * T * T - 5.481717e-2 * R * R + 1.22874e-3 * T * T * R + 8.5282e-4 * T * R * R - 1.99e-6 * T * T * R * R; return U.F_C(F); },
+  /* sensación térmica por viento (Environment Canada; T ≤ 10 °C, viento > 4,8 km/h) */
+  sensacionViento(Tc, vKmh) { if (Tc > 10 || vKmh <= 4.8) return Tc; const v = Math.pow(vKmh, .16); return 13.12 + .6215 * Tc - 11.37 * v + .3965 * Tc * v; },
+  /* temperatura con la altura (gradiente de 6,5 °C por km) */
+  conAltura: (T0, h0, h) => T0 - .0065 * (h - h0)
+};
+/* ---------- química ---------- */
+const ELEMENTOS = 'H:1.008:hidrógeno He:4.0026:helio Li:6.94:litio Be:9.0122:berilio B:10.81:boro C:12.011:carbono N:14.007:nitrógeno O:15.999:oxígeno F:18.998:flúor Ne:20.180:neón Na:22.990:sodio Mg:24.305:magnesio Al:26.982:aluminio Si:28.085:silicio P:30.974:fósforo S:32.06:azufre Cl:35.45:cloro Ar:39.948:argón K:39.098:potasio Ca:40.078:calcio Ti:47.867:titanio V:50.942:vanadio Cr:51.996:cromo Mn:54.938:manganeso Fe:55.845:hierro Co:58.933:cobalto Ni:58.693:níquel Cu:63.546:cobre Zn:65.38:zinc Br:79.904:bromo Ag:107.87:plata Sn:118.71:estaño I:126.90:yodo Pt:195.08:platino Au:196.97:oro Hg:200.59:mercurio Pb:207.2:plomo U:238.03:uranio'.split(' ').reduce((o, s, i) => { const [sim, m, n] = s.split(':'); o[sim] = { z: i + 1, masa: +m, nombre: n }; return o; }, {});
+const Quim = {
+  ELEMENTOS,
+  /* «Ca(OH)2» → { Ca: 1, O: 2, H: 2 } (acepta paréntesis anidados e hidratos con ·) */
+  atomos(f) {
+    const partes = f.split(/[·.*]/); if (partes.length > 1) { const T = {}; for (const p of partes) { const m = p.match(/^(\d+)(.*)$/), k = m ? +m[1] : 1, A = Quim.atomos(m ? m[2] : p); for (const e in A) T[e] = (T[e] || 0) + A[e] * k; } return T; }
+    let i = 0; const pila = [{}];
+    while (i < f.length) { const ch = f[i];
+      if (ch === '(' || ch === '[') { pila.push({}); i++; }
+      else if (ch === ')' || ch === ']') { i++; let n = ''; while (/\d/.test(f[i] || '')) n += f[i++]; const g = pila.pop(), top = pila[pila.length - 1]; for (const e in g) top[e] = (top[e] || 0) + g[e] * (+n || 1); }
+      else { const m = f.slice(i).match(/^([A-Z][a-z]?)(\d*)/); if (!m) throw new Error('fórmula inválida: ' + f); if (!ELEMENTOS[m[1]]) throw new Error('elemento desconocido: ' + m[1]); const top = pila[pila.length - 1]; top[m[1]] = (top[m[1]] || 0) + (+m[2] || 1); i += m[0].length; } }
+    if (pila.length !== 1) throw new Error('paréntesis sin cerrar: ' + f); return pila[0];
+  },
+  masaMolar(f) { const A = Quim.atomos(f); let m = 0; for (const e in A) m += ELEMENTOS[e].masa * A[e]; return m; },   // g/mol
+  /* balancea una ecuación «C8H18 + O2 -> CO2 + H2O» con coeficientes enteros mínimos (eliminación de Gauss exacta) */
+  balancear(ec) {
+    const [izq, der] = ec.split(/->|=>|→|=/).map(s => s.split('+').map(t => t.trim()).filter(Boolean)), esp = [...izq, ...der], el = [...new Set(esp.flatMap(e => Object.keys(Quim.atomos(e))))];
+    const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a || 1; }, fr = (n, d = 1) => { if (d < 0) { n = -n; d = -d; } const g = gcd(n, d); return [n / g, d / g]; };
+    const sub = (a, b) => fr(a[0] * b[1] - b[0] * a[1], a[1] * b[1]), mul = (a, b) => fr(a[0] * b[0], a[1] * b[1]), div = (a, b) => fr(a[0] * b[1], a[1] * b[0]);
+    const M = el.map(e => esp.map((s, j) => fr((Quim.atomos(s)[e] || 0) * (j < izq.length ? 1 : -1))));
+    const n = esp.length, piv = []; let r = 0;
+    for (let c = 0; c < n && r < M.length; c++) { let p = r; while (p < M.length && M[p][c][0] === 0) p++; if (p === M.length) continue; [M[r], M[p]] = [M[p], M[r]]; const pv = M[r][c]; M[r] = M[r].map(v => div(v, pv)); for (let i = 0; i < M.length; i++) if (i !== r && M[i][c][0] !== 0) { const f = M[i][c]; M[i] = M[i].map((v, j) => sub(v, mul(f, M[r][j]))); } piv.push(c); r++; }
+    const libre = [...Array(n).keys()].find(c => !piv.includes(c)); if (libre === undefined) throw new Error('la ecuación no tiene solución única');
+    const x = Array(n).fill(null).map(() => fr(0)); x[libre] = fr(1); piv.forEach((c, i) => { x[c] = fr(-M[i][libre][0], M[i][libre][1]); });
+    const lcm = x.reduce((a, v) => a * v[1] / gcd(a, v[1]), 1), ent = x.map(v => v[0] * lcm / v[1]), g = ent.reduce((a, v) => gcd(a, v)), co = ent.map(v => Math.abs(v / g));
+    return { coef: co, texto: izq.map((s, i) => (co[i] > 1 ? co[i] + ' ' : '') + s).join(' + ') + ' → ' + der.map((s, i) => (co[izq.length + i] > 1 ? co[izq.length + i] + ' ' : '') + s).join(' + ') };
+  },
+  /* gases ideales PV = nRT: pasa tres y devuelve el que falta */
+  gas({ P, V, n, T }) { if (P == null) return n * C.R * T / V; if (V == null) return n * C.R * T / P; if (n == null) return P * V / (C.R * T); return P * V / (n * C.R); },
+  pH: H => -Math.log10(H),
+  /* energía de combustibles y baterías (valores típicos; poder calorífico inferior) */
+  COMBUSTIBLES: { gasolina: { MJkg: 43.4, MJL: 32.2, CO2kgL: 2.31 }, diesel: { MJkg: 42.6, MJL: 35.8, CO2kgL: 2.68 }, etanol: { MJkg: 26.8, MJL: 21.2, CO2kgL: 1.51 }, gnv: { MJkg: 47.1, MJL: null, CO2kgL: null }, hidrogeno: { MJkg: 120, MJL: null, CO2kgL: 0 }, bateria_litio: { MJkg: .9, MJL: 2.2, CO2kgL: 0 }, cuerpo_humano: { MJkg: 37.7, MJL: null, CO2kgL: null } },
+  MATERIALES: { acero: { rho: 7850, fluencia: 250e6, E: 200e9 }, aluminio: { rho: 2700, fluencia: 276e6, E: 69e9 }, fibra_carbono: { rho: 1600, fluencia: 600e6, E: 70e9 }, titanio: { rho: 4500, fluencia: 880e6, E: 114e9 }, madera: { rho: 600, fluencia: 40e6, E: 11e9 }, concreto: { rho: 2400, fluencia: 3e6, E: 30e9 }, ladrillo: { rho: 1900, fluencia: 7e6, E: 15e9 }, vidrio: { rho: 2500, fluencia: 50e6, E: 70e9 }, caucho: { rho: 1100, fluencia: 15e6, E: .05e9 }, plastico_abs: { rho: 1050, fluencia: 40e6, E: 2.3e9 } }
+};
+Object.assign(MC, { C, U, V2, V3, Geo, Suaviza, Ruido, poissonDisco, Integra, Est, Fis, MU, Termo, Quim });
+MC.Ciencia = { C, U, V2, V3, Geo, Suaviza, Ruido, poissonDisco, Integra, Est, Fis, MU, Termo, Quim };
+
+/* ---- js/03-economia.js ---- */
+/* =====================================================================
+   ECONOMÍA · números lógicos y verificables para cualquier juego
+   - Dinero en enteros (centavos): nunca hay errores de coma flotante en las cuentas.
+   - Libro contable de partida doble: toda transacción cuadra (debe = haber) y el sistema no crea dinero de la nada.
+   - Mercados con oferta y demanda (equilibrio lineal exacto y ajuste walrasiano en el tiempo), elasticidad y choques.
+   - Finanzas: interés compuesto, inflación, cuota de un préstamo (sistema francés), valor presente neto y TIR,
+     depreciación. Empleos y salarios por hora de juego.
+   Los valores de referencia (salario mínimo, precios) son configurables: actualízalos cada año en la ciudad.
+   ===================================================================== */
+const Dinero = {
+  moneda: 'COP', decimales: 0,
+  /* de unidades a centavos (enteros) y al revés */
+  aCent: v => Math.round(v * 100), deCent: c => c / 100,
+  formato(cent, moneda = Dinero.moneda) { try { return new Intl.NumberFormat('es-CO', { style: 'currency', currency: moneda, maximumFractionDigits: moneda === 'COP' ? 0 : 2 }).format(cent / 100); } catch (e) { return '$' + Math.round(cent / 100).toLocaleString('es-CO'); } },
+  /* reparte un monto en partes enteras proporcionales que suman exacto (método del mayor residuo) */
+  repartir(cent, pesos) { const T = pesos.reduce((a, b) => a + b, 0), base = pesos.map(p => Math.floor(cent * p / T)); let resto = cent - base.reduce((a, b) => a + b, 0); const ord = pesos.map((p, i) => [cent * p / T - base[i], i]).sort((a, b) => b[0] - a[0]); for (let k = 0; resto > 0; k++, resto--) base[ord[k % ord.length][1]]++; return base; }
+};
+/* libro de partida doble: cuentas con saldo en centavos; cada asiento mueve de una a otra y la suma total siempre es 0 */
+class Libro {
+  constructor() { this.cuentas = new Map(); this.asientos = []; this.cuenta('mundo'); }
+  cuenta(id, tipo = 'activo') { if (!this.cuentas.has(id)) this.cuentas.set(id, { id, tipo, saldo: 0 }); return this.cuentas.get(id); }
+  saldo(id) { return (this.cuentas.get(id) || { saldo: 0 }).saldo; }
+  /* mueve `cent` de `de` a `a`; con `estricto`, no deja saldos negativos (salvo el mundo, que emite) */
+  mover(de, a, cent, concepto = '', estricto = true) {
+    cent = Math.round(cent); if (cent <= 0) return false; const D = this.cuenta(de), A = this.cuenta(a);
+    if (estricto && de !== 'mundo' && D.saldo < cent) return false;
+    D.saldo -= cent; A.saldo += cent; this.asientos.push({ de, a, cent, concepto, n: this.asientos.length }); if (this.asientos.length > 5000) this.asientos.splice(0, 1000); MC.emit('dinero', { de, a, cent, concepto }); return true;
+  }
+  cuadra() { let s = 0; for (const c of this.cuentas.values()) s += c.saldo; return s === 0; }
+}
+/* un mercado: demanda Qd = a − b·P y oferta Qs = c + d·P (P en unidades de moneda) */
+class Mercado {
+  constructor({ nombre, a, b, c, d, precio }) { Object.assign(this, { nombre, a, b, c, d }); this.precio = precio ?? this.equilibrio().P; this.choque = 0; }
+  equilibrio() { const P = (this.a + this.choque - this.c) / (this.b + this.d); return { P, Q: this.a + this.choque - this.b * P }; }
+  demanda(P = this.precio) { return Math.max(0, this.a + this.choque - this.b * P); }
+  oferta(P = this.precio) { return Math.max(0, this.c + this.d * P); }
+  /* elasticidad precio de la demanda en el precio actual */
+  elasticidad(P = this.precio) { const Q = this.demanda(P); return Q ? -this.b * P / Q : -Infinity; }
+  /* ajuste walrasiano: el precio sube si falta y baja si sobra (k: velocidad por unidad de tiempo) */
+  paso(dt, k = .05) { const exceso = this.demanda() - this.oferta(); this.precio = Math.max(0, this.precio + k * exceso * dt); return this.precio; }
+}
+const Finanzas = {
+  compuesto: (P, r, n) => P * Math.pow(1 + r, n),                       // capital con interés r por periodo, n periodos
+  inflacion: (precio, anual, anios) => precio * Math.pow(1 + anual, anios),
+  tasaPeriodo: (anual, periodos = 12) => Math.pow(1 + anual, 1 / periodos) - 1,   // tasa efectiva anual → por periodo
+  /* cuota fija de un préstamo (sistema francés) y su tabla */
+  cuota: (P, r, n) => r === 0 ? P / n : P * r / (1 - Math.pow(1 + r, -n)),
+  amortizacion(P, r, n) { const q = Finanzas.cuota(P, r, n), T = []; let s = P; for (let i = 1; i <= n; i++) { const int = s * r, ab = q - int; s -= ab; T.push({ n: i, cuota: q, interes: int, abono: ab, saldo: Math.max(0, s) }); } return T; },
+  vpn: (r, flujos) => flujos.reduce((a, f, t) => a + f / Math.pow(1 + r, t), 0),
+  /* tasa interna de retorno por bisección (flujos con un cambio de signo) */
+  tir(flujos) { let lo = -.99, hi = 10; const f = r => Finanzas.vpn(r, flujos); if (f(lo) * f(hi) > 0) return null; for (let i = 0; i < 200; i++) { const m = (lo + hi) / 2; if (f(lo) * f(m) <= 0) hi = m; else lo = m; } return (lo + hi) / 2; },
+  depreciacionLineal: (costo, residual, vida, t) => Math.max(residual, costo - (costo - residual) * t / vida),
+  depreciacionDecreciente: (costo, tasa, t) => costo * Math.pow(1 - tasa, t)
+};
+/* empleos y salarios: el pago por hora de juego sale del salario mensual de referencia */
+const Trabajo = {
+  referencia: { salarioMinimo: 1423500, horasMes: 192, nota: 'Salario mínimo de Colombia de 2025 como referencia: actualízalo en la configuración de la ciudad.' },
+  porHora: (mensual, horasMes = Trabajo.referencia.horasMes) => mensual / horasMes,
+  /* pago de un turno en centavos (con recargo nocturno del 35 % entre las 9 p. m. y las 6 a. m., como en Colombia) */
+  turno(mensual, minInicio, minutos) { const h = Trabajo.porHora(mensual) / 60; let pago = 0; for (let m = 0; m < minutos; m++) { const t = (minInicio + m) % 1440, noche = t >= 1260 || t < 360; pago += h * (noche ? 1.35 : 1); } return Math.round(pago * 100); }
+};
+Object.assign(MC, { Dinero, Libro, Mercado, Finanzas, Trabajo });
+
 /* ---- js/10-mundo.js ---- */
 /* =====================================================================
    MUNDO 2.0 · cargador y consultor del archivo MC4 (una ciudad entera en un solo archivo)
@@ -156,12 +375,12 @@ Object.assign(MC, { inflarCrudo, inflarSync, inflar, deB64 });
    Casilla de `tile` m (10 en el valle). Las capas se inflan cuando alguien las pide (perezosas).
    Juega EnCicla dibuja en px (1 m = 1,6 px): MC.Mundo.escala(1.6) le da las mismas consultas en px.
    ===================================================================== */
-const TT = { GRASS: 0, MOUNT: 1, BRICK: 2, BLDG: 3, ROAD: 4, AVE: 5, WALK: 6, CICLO: 7, WATER: 8, CANAL: 9, PLAZA: 10, BRIDGE: 11, STATION: 12, LAND: 13, AUTO: 14, DEPOT: 15, STEPS: 16 };
-const TT_NOMBRE = ['pasto', 'monte', 'ladrillo', 'edificio', 'calle', 'avenida', 'andén', 'ciclorruta', 'agua', 'quebrada', 'plaza', 'puente', 'estación', 'pista', 'autopista', 'patio', 'escalas'];
+const TT = { GRASS: 0, MOUNT: 1, BRICK: 2, BLDG: 3, ROAD: 4, AVE: 5, WALK: 6, CICLO: 7, WATER: 8, CANAL: 9, PLAZA: 10, BRIDGE: 11, STATION: 12, LAND: 13, AUTO: 14, DEPOT: 15, STEPS: 16, ARENA: 17, NIEVE: 18, ROCA: 19 };   // 17–19: mundos generados y otros territorios
+const TT_NOMBRE = ['pasto', 'monte', 'ladrillo', 'edificio', 'calle', 'avenida', 'andén', 'ciclorruta', 'agua', 'quebrada', 'plaza', 'puente', 'estación', 'pista', 'autopista', 'patio', 'escalas', 'arena', 'nieve', 'roca'];
 /* lo que no se atraviesa a pie ni en rueda (los botes sí van por el agua) */
-const TT_SOLIDO = [0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0];
+const TT_SOLIDO = [0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1];
 /* agarre y rodadura de cada suelo (1 = asfalto), como en Juega EnCicla */
-const TT_SUPERFICIE = [.55, .25, .3, .3, 1, 1, .62, 1.3, 0, 0, .8, 1, .75, 0, .92, .9, .42];
+const TT_SUPERFICIE = [.55, .25, .3, .3, 1, 1, .62, 1.3, 0, 0, .8, 1, .75, 0, .92, .9, .42, .4, .3, .35];
 const TT_CALLE = new Set([TT.ROAD, TT.AVE, TT.AUTO, TT.BRIDGE]);
 const TT_URBANO = new Set([TT.BRICK, TT.BLDG, TT.ROAD, TT.AVE, TT.AUTO, TT.WALK, TT.PLAZA, TT.STATION, TT.BRIDGE, TT.CICLO, TT.STEPS, TT.DEPOT]);
 /* tipos de vía del archivo de vectores (VIAS3) */
@@ -204,7 +423,17 @@ class Mundo {
   /* la capa ya inflada (síncrona) */
   capa(nombre) {
     let v = this._c.get(nombre); if (v !== undefined) return v;
-    const c = this.capaInfo(nombre); v = this._tipar(c, inflarSync(this._bytes(c), c.raw)); this._c.set(nombre, v); return v;
+    const c = this.capaInfo(nombre), b = this._bytes(c); v = this._tipar(c, c.z === 0 ? b : inflarSync(b, c.raw)); this._c.set(nombre, v); return v;
+  }
+  /* un mundo armado en memoria (generador procedural, editor o herramientas): capas ya tipadas, sin comprimir.
+     d = { meta: { W, H, tile, lon0, latN, kx, ky, nombre, … }, capas: { suelo: Uint8Array, relieve: {datos: Int16Array, w, h, paso}, … } } */
+  static desdeCapas(d, cfg) {
+    const M = Object.create(Mundo.prototype), meta = Object.assign({ formato: 'MC4', v: 4, unidad: 'm', atribucion: [], capas: {} }, d.meta);
+    M.meta = meta; M.cfg = cfg || null; M._c = new Map(); M.u8 = new Uint8Array(0); M.base = 0;
+    for (const [n, c] of Object.entries(d.capas)) { const info = Object.assign({ o: 0, n: 0, raw: 0, z: 0, tipo: c.tipo || 'json' }, c.info || {}); meta.capas[n] = info; M._c.set(n, c.datos !== undefined ? c.datos : c); }
+    M.W = meta.W; M.H = meta.H; M.tile = meta.tile; M.ancho = meta.W * meta.tile; M.alto = meta.H * meta.tile; M.kx = meta.kx * meta.tile; M.ky = meta.ky * meta.tile;
+    const r = M.capaInfo('relieve'); M.eW = r.w; M.eH = r.h; M.es = r.paso * M.tile; const c2 = M.capaInfo('municipio'); M.mW = c2.w; M.mH = c2.h; M.ms = c2.paso * M.tile;
+    return M;
   }
   async precargar(nombres) { await Promise.all(nombres.filter(n => this.tiene(n) && !this._c.has(n)).map(async n => { const c = this.capaInfo(n); this._c.set(n, this._tipar(c, await inflar(this._bytes(c), c.raw))); })); return this; }
 
@@ -251,6 +480,7 @@ class Mundo {
   /* ---------- vías con nombre (vectores) ---------- */
   vias() {
     if (this._vias) return this._vias;
+    if (this.capaInfo('vias').formato === 'VIASJ') return (this._vias = this.capa('vias').map((v, i) => ({ i, k: v[0], nombre: v[1] || '', nom: '', ancho: v[2] || VIA_ANCHO[v[0]] || 6, p: Float32Array.from(v[3]) })));   // [tipo, nombre, ancho, [x,y,…] metros]
     const c = this.capaInfo('vias'), u8 = this.capa('vias'), dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), n = dv.getUint32(0, true), L = new Array(n), v3 = (c.v || 3) >= 3, K = this.tile / (c.vq || 4), NOM = this.capa('info').calles;
     let o = 4;
     for (let i = 0; i < n; i++) {
@@ -287,6 +517,13 @@ class Mundo {
   _ed() {
     if (this._ED !== undefined) return this._ED;
     if (!this.tiene('edificios')) return (this._ED = null);
+    if (this.capaInfo('edificios').formato === 'EDJ') {   // [x, y, medio largo, medio ancho, ángulo, pisos, clase, polígono|null] en metros
+      const J = this.capa('edificios'), R = this.capaInfo('edificios').R || 320, nx = Math.ceil(this.ancho / R) + 1, ny = Math.ceil(this.alto / R) + 1, reg = new Map();
+      for (const q of J.lista) { const [x, y, hw, hd, an, pis, k, ring] = q, ux = Math.cos(an), uy = Math.sin(an), r = Math.floor(y / R) * nx + Math.floor(x / R); let P = ring ? Float32Array.from(ring) : null;
+        if (P) { let A = 0; const n = P.length / 2; for (let v = 0; v < n; v++) { const w = (v + 1) % n; A += P[2 * v] * P[2 * w + 1] - P[2 * w] * P[2 * v + 1]; } if (A < 0) { const P2 = new Float32Array(P.length); for (let v = 0; v < n; v++) { P2[2 * v] = P[2 * (n - 1 - v)]; P2[2 * v + 1] = P[2 * (n - 1 - v) + 1]; } P = P2; } }
+        (reg.get(r) || reg.set(r, []).get(r)).push({ x, y, hw, hd, ux, uy, h: Mundo.altoEdificio(k, pis), pis, k, clase: J.kinds[k], P, of: 0, s: h2(x * 2 | 0, y * 2 | 0, 9) }); }
+      return (this._ED = { json: true, R, nx, ny, reg, kinds: J.kinds, cuantos: J.lista.length });
+    }
     const E = this.capaInfo('edificios'), b = this.capa('edificios'), nR = E.nx * E.ny, cnt = new Int32Array(nR), i0 = new Int32Array(nR), p0 = new Int32Array(nR), q0 = new Int32Array(nR);
     let o = 0, ci = 0, cp = 0, cq = 0; const rv = () => { let v = 0, sh = 0, c; do { c = b[o++]; v += (c & 127) * 2 ** sh; sh += 7; } while (c & 128); return v; };
     for (let r = 0; r < nR; r++) { cnt[r] = rv(); const pb = rv(), qb = rv(); i0[r] = ci; p0[r] = cp; q0[r] = cq; ci += cnt[r]; cp += pb; cq += qb; }
@@ -303,6 +540,7 @@ class Mundo {
   /* los edificios de una región: { x, y, hw, hd, ux, uy, h, pis, k, clase, P (polígono o null), s (semilla) } */
   edificiosRegion(rx, ry) {
     const E = this._ed(); if (!E || rx < 0 || ry < 0 || rx >= E.nx || ry >= E.ny) return [];
+    if (E.json) return E.reg.get(ry * E.nx + rx) || [];
     const r = ry * E.nx + rx; let L = E.cache.get(r); if (L) { E.cache.delete(r); E.cache.set(r, L); return L; }
     const b = E.b, n = E.cnt[r], R = E.R, Q = E.Q, X0 = rx * R, Y0 = ry * R; L = [];
     let o = E.oPos + E.p0[r], q = E.oPol + E.q0[r], px = 0, py = 0, pa = 0;
@@ -391,12 +629,12 @@ class Mundo {
   /* lugar con postal más cercano */
   lugarCercano(x, y, r = 400) { let best = null, bd = r; for (const L of this.lugares) { const d = Math.hypot(L.x - x, L.y - y); if (d < bd) { bd = d; best = L; } } return best; }
   estacionCercana(x, y, r = 600, clase) { let best = null, bd = r; for (const l of this.transporte.lineas) { if (clase && l.clase !== clase) continue; for (const s of l.estaciones) { const d = Math.hypot(s[1] - x, s[2] - y); if (d < bd) { bd = d; best = { linea: l, nombre: s[0], x: s[1], y: s[2], d }; } } } return best; }
-  enciclaCercana(x, y, r = 600) { let best = null, bd = r; for (const s of this.transporte.encicla) { const d = Math.hypot(s.x - x, s.y - y); if (d < bd) { bd = d; best = s; } } return best; }
+  enciclaCercana(x, y, r = 600) { let best = null, bd = r; for (const s of this.transporte.encicla || []) { const d = Math.hypot(s.x - x, s.y - y); if (d < bd) { bd = d; best = s; } } return best; }
   /* un punto de partida bonito: la estación o el lugar con ese nombre o id */
   buscar(txt) {
     const t = String(txt).toLowerCase();
     for (const L of this.lugares) if (L.id.toLowerCase() === t || L.nombre.toLowerCase() === t) return { x: L.x, y: L.y, nombre: L.nombre };
-    for (const s of this.transporte.encicla) if (s.id === t || s.nombre.toLowerCase() === t) return { x: s.x, y: s.y, nombre: s.nombre };
+    for (const s of this.transporte.encicla || []) if (s.id === t || s.nombre.toLowerCase() === t) return { x: s.x, y: s.y, nombre: s.nombre };
     for (const l of this.transporte.lineas) for (const s of l.estaciones) if (s[0].toLowerCase() === t) return { x: s[1], y: s[2], nombre: s[0] };
     return null;
   }
@@ -406,7 +644,7 @@ function caja(R) { let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const P of
 function dentroPol(P, x, y) { let d = false; const n = P.length / 2; for (let i = 0, j = n - 1; i < n; j = i++) { const xi = P[2 * i], yi = P[2 * i + 1], xj = P[2 * j], yj = P[2 * j + 1]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) d = !d; } return d; }
 Object.assign(MC, { Mundo, TT, TT_NOMBRE, TT_SOLIDO, TT_SUPERFICIE, TT_CALLE, TT_URBANO, VIA, VIA_ANCHO, NIVEL_M, PISO_M, caja, dentroPol });
 
-/* ---------- compatibilidad con el Motor del Valle 1.x (Valle / MotorValle) ----------
+/* ---------- compatibilidad con el lector 1.x de los juegos (Valle / MotorValle) ----------
    Los juegos que ya llaman Valle.decodificar() siguen andando; Valle.mundo2() abre el mundo 2.0. */
 const ValleCompat = {
   version: MC.version,
@@ -430,7 +668,7 @@ const ValleCompat = {
     };
   }
 };
-MC.ValleCompat = ValleCompat;
+MC.ValleCompat = ValleCompat; MC.Compat1 = ValleCompat;
 
 /* ---- js/11-red.js ---- */
 /* =====================================================================
@@ -585,6 +823,143 @@ Mundo.prototype.red = function (cual = 'calles') {
   const T = { ciclo: new Set([VIA.CICLO]), calles: new Set([VIA.CALLE, VIA.AVENIDA, VIA.AUTOPISTA, VIA.CARRERA]), peaton: new Set([VIA.CALLE, VIA.AVENIDA, VIA.CARRERA, VIA.CICLO, VIA.PEATONAL, VIA.ESCALAS, VIA.SENDERO]), rueda: new Set([VIA.CALLE, VIA.AVENIDA, VIA.CARRERA, VIA.CICLO, VIA.PEATONAL]), todo: null }[cual];
   return (this._redes[cual] = new Red(this.vias(), { tipos: T, une: cual === 'ciclo' ? 9 : 6 }));
 };
+
+/* ---- js/12-generador.js ---- */
+/* =====================================================================
+   GENERADOR DE MUNDOS · mapas nuevos que no existen, con las mismas leyes que los reales
+   Lo que sale es un MC.Mundo como el de Medellín: sirve en todas las vistas, con la física, el tráfico, la IA y Run.
+   1. Relieve con ruido (fbm + crestas + deformación) y una forma: isla, valle (como el de Aburrá), costa, montaña o llanura.
+   2. Ríos que bajan por la pendiente más fuerte desde los nacimientos altos hasta el mar o el borde.
+   3. Biomas por temperatura (gradiente de 6,5 °C/km y latitud) y humedad: mar, playa, pasto, bosque, roca y nieve.
+   4. Pueblos donde es plano y hay agua cerca: cuadrícula orientada, plaza con iglesia, lotes con casas cuya altura
+      baja del centro a la orilla. Carreteras entre pueblos por A* sobre el costo de la pendiente, con puentes.
+   5. Nombres, municipios, lugares (plazas, miradores) y un cable al cerro más alto si queda cerca.
+   Determinista: la misma semilla da el mismo mundo.
+   ===================================================================== */
+const NOMBRES_PUEBLO = { pre: ['San', 'Santa', 'Villa', 'Puerto', 'Alto de', 'La', 'El', 'Valle de', 'Cerro', 'Llano'], raiz: ['Ánimas', 'Rosario', 'Guayacán', 'Ceibas', 'Pinos', 'Brisa', 'Cascada', 'Robles', 'Arenal', 'Laurel', 'Mirador', 'Esperanza', 'Palmas', 'Niebla', 'Cumbre', 'Orquídeas', 'Piedras', 'Garzas', 'Colibrí', 'Aurora'], santo: ['José', 'Rafael', 'Lucía', 'Antonio', 'Isidro', 'Bárbara', 'Vicente', 'Pedro', 'Elena', 'Jerónimo'] };
+/* estilos por defecto para mundos sin ciudad configurada (los mismos nombres de zona que Medellín) */
+const ZONAS_BASE = {
+  pueblo: { nombre: 'Pueblo', muros: ['#f2eee4', '#ece6d8', '#e8dfcc', '#c46a40', '#3f7fbf', '#d9534f', '#f0c419'], techos: ['#b5542f', '#a8492a', '#c8653b'], plancha: .15, tanques: .1, teja: .85, arboles: .6, densidad: .55, pisos: [1, 3], suelo: '#c9bea6' },
+  rural: { nombre: 'Rural', muros: ['#f2eee4', '#e8dfcc', '#c46a40'], techos: ['#b5542f', '#7d7f84'], plancha: .3, tanques: .2, teja: .6, arboles: 1, densidad: .15, pisos: [1, 2], suelo: '#6f9a52' },
+  mixto: { nombre: 'Ciudad mixta', muros: ['#c25f37', '#d9cdb7', '#b4552f', '#e6dccb', '#a9b1bc'], techos: ['#7d7f84', '#b5542f', '#9c9d9f'], plancha: .45, tanques: .3, teja: .4, arboles: .45, densidad: .85, pisos: [1, 8], suelo: '#c4b79f' }
+};
+const Generador = {
+  nombre(r) { const p = r.uno(NOMBRES_PUEBLO.pre); return p === 'San' || p === 'Santa' ? p + ' ' + (p === 'Santa' ? r.uno(['Lucía', 'Bárbara', 'Elena', 'Rosa', 'Ana']) : r.uno(NOMBRES_PUEBLO.santo)) : p + ' ' + r.uno(NOMBRES_PUEBLO.raiz); },
+  /* op: { semilla, ancho, alto (casillas), tile (m), tipo, pueblos, lat, altMax, nombre } */
+  mundo(op = {}) {
+    const sem = op.semilla ?? 1, r = new Azar(sem), N = new Ruido(sem), W = op.ancho || 512, H = op.alto || 512, T = op.tile || 10, tipo = op.tipo || 'isla', altMax = op.altMax || Math.min(2400, W * T * (tipo === 'montaña' ? .35 : .2)), lat = op.lat ?? 6.2;
+    const es = 4, eW = Math.ceil(W / es) + 2, eH = Math.ceil(H / es) + 2, E = new Float32Array(eW * eH), esc = 1 / (W * T / 3.2);
+    /* 1. relieve */
+    for (let j = 0; j < eH; j++) for (let i = 0; i < eW; i++) {
+      const x = i * es * T, y = j * es * T, u = i / (eW - 1), v = j / (eH - 1), n = N.torcido(x * esc, y * esc, 1.2) * .5 + .5, cr = N.crestas(x * esc * 1.6 + 7, y * esc * 1.6 + 3, 5);
+      let h;
+      if (tipo === 'isla') { const d = Math.hypot(u - .5, v - .5) * 2; h = (n * .7 + cr * .3) * (1 - d * d * 1.15) - .06; }
+      else if (tipo === 'valle') { const c = Math.abs(u - .5 - .06 * Math.sin(v * 5 + sem)) * 2; h = .08 + .1 * n + Math.pow(c, 1.6) * (.55 + .45 * cr) + .02 * (1 - v); }
+      else if (tipo === 'costa') { h = (n * .6 + cr * .45) * clamp(u * 1.6 - .25, 0, 1.2) - .06; }
+      else if (tipo === 'montaña') { h = .15 + cr * .85 + n * .25; }
+      else { h = .08 + n * .18 + cr * .08; }
+      E[j * eW + i] = h * altMax;
+    }
+    const cotaE = (x, y) => { const gx = clamp(x / (es * T), 0, eW - 1.001), gy = clamp(y / (es * T), 0, eH - 1.001), x0 = gx | 0, y0 = gy | 0, fx = gx - x0, fy = gy - y0, k = y0 * eW + x0; return (E[k] * (1 - fx) + E[k + 1] * fx) * (1 - fy) + (E[k + eW] * (1 - fx) + E[k + eW + 1] * fx) * fy; };
+    /* 2. ríos: de los nacimientos (altos y húmedos) por la pendiente más fuerte */
+    const rios = [], flujo = new Float32Array(eW * eH), nac = [];
+    for (let k = 0; k < 400; k++) { const i = 2 + r.e(0, eW - 5), j = 2 + r.e(0, eH - 5), h = E[j * eW + i]; if (h > altMax * .35) nac.push([i, j, h]); }
+    nac.sort((a, b) => b[2] - a[2]);
+    for (const [i0, j0] of nac.slice(0, op.rios ?? 6)) {
+      let i = i0, j = j0; const P = [];
+      for (let paso = 0; paso < eW * 3; paso++) { P.push((i + .5) * es * T, (j + .5) * es * T); flujo[j * eW + i] += 1; const h = E[j * eW + i]; if (h <= 0 || i <= 0 || j <= 0 || i >= eW - 1 || j >= eH - 1) break;
+        let bi = i, bj = j, bh = h; for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) { const q = E[(j + dj) * eW + i + di]; if (q < bh) { bh = q; bi = i + di; bj = j + dj; } }
+        if (bi === i && bj === j) { E[j * eW + i] = Math.min(...[[1, 0], [-1, 0], [0, 1], [0, -1]].map(([a, b]) => E[(j + b) * eW + i + a])) + .5; const o = r.uno([[1, 0], [-1, 0], [0, 1], [0, -1]]); bi = i + o[0]; bj = j + o[1]; }   // hoyo: se rellena y sigue
+        else E[bj * eW + bi] = Math.min(E[bj * eW + bi], h - .3);   // el río talla su cauce
+        i = bi; j = bj; }
+      if (P.length > 8) rios.push(P);
+    }
+    /* 3. suelo por casilla: biomas */
+    const suelo = new Uint8Array(W * H), T0 = 27 - Math.abs(lat) * .45;   // temperatura a nivel del mar según la latitud (aprox.)
+    for (let ty = 0; ty < H; ty++) for (let tx = 0; tx < W; tx++) {
+      const x = (tx + .5) * T, y = (ty + .5) * T, h = cotaE(x, y), temp = T0 - .0065 * h, hum = N.fbm(x * esc * 2 + 40, y * esc * 2 + 11, 3) * .5 + .5, pend = Math.hypot(cotaE(x + T, y) - cotaE(x - T, y), cotaE(x, y + T) - cotaE(x, y - T)) / (2 * T);
+      let t = TT.GRASS; if (h <= 0) t = TT.WATER; else if (h < 4 && tipo !== 'valle') t = TT.ARENA; else if (temp < -1) t = TT.NIEVE; else if (pend > 1.1 || (temp < 4 && pend > .5)) t = TT.ROCA; else if (hum > .55 || (pend > .35 && hum > .4)) t = TT.MOUNT;
+      suelo[ty * W + tx] = t;
+    }
+    const pon = (x, y, t, R = T / 2) => { for (let yy = y - R; yy <= y + R; yy += T / 2) for (let xx = x - R; xx <= x + R; xx += T / 2) { const tx = Math.floor(xx / T), ty = Math.floor(yy / T); if (tx >= 0 && ty >= 0 && tx < W && ty < H && (xx - x) ** 2 + (yy - y) ** 2 <= R * R + 1) suelo[ty * W + tx] = t; } };
+    const linea = (P, ancho, t) => { for (let k = 0; k + 3 < P.length; k += 2) { const ax = P[k], ay = P[k + 1], bx = P[k + 2], by = P[k + 3], L = Math.hypot(bx - ax, by - ay), n = Math.max(1, Math.ceil(L / (T / 2))); for (let q = 0; q <= n; q++) pon(ax + (bx - ax) * q / n, ay + (by - ay) * q / n, t, ancho / 2); } };
+    for (const P of rios) { const i = Math.floor(P[1] / (es * T)) * eW + Math.floor(P[0] / (es * T)); linea(P, 6 + Math.min(18, (flujo[i] || 1) * 2), TT.CANAL); }
+    /* 4. pueblos: plano, sin agua y con un río cerca */
+    const plano = (x, y, lim = .14) => { const h = cotaE(x, y); return h > 3 && Math.hypot(cotaE(x + 30, y) - cotaE(x - 30, y), cotaE(x, y + 30) - cotaE(x, y - 30)) / 60 < lim; };
+    let cand = poissonDisco(W * T, H * T, Math.min(W, H) * T / 7, sem + 3, 20, (x, y) => x > 300 && y > 300 && x < W * T - 300 && y < H * T - 300 && plano(x, y));
+    if (cand.length < (op.pueblos ?? 4)) cand = cand.concat(poissonDisco(W * T, H * T, Math.min(W, H) * T / 8, sem + 5, 20, (x, y) => x > 250 && y > 250 && x < W * T - 250 && y < H * T - 250 && plano(x, y, .22)));
+    const dRio = (x, y) => { let b = 1e9; for (const P of rios) for (let k = 0; k < P.length; k += 6) b = Math.min(b, Math.hypot(P[k] - x, P[k + 1] - y)); return b; };
+    const pueblos = cand.map(([x, y]) => ({ x, y, p: -dRio(x, y) / 400 - cotaE(x, y) / altMax })).sort((a, b) => b.p - a.p).slice(0, op.pueblos ?? 4).map((q, i) => Object.assign(q, { id: i + 1, nombre: this.nombre(r), radio: [420, 320, 260, 220, 200, 180][i] || 160, ang: r.r2(0, Math.PI / 2) }));
+    const vias = [], edif = [], lugares = [], calles = new Set(), pasos = [];
+    const valida = (x, y) => x > 0 && y > 0 && x < W * T && y < H * T && cotaE(x, y) > 2 && suelo[Math.floor(y / T) * W + Math.floor(x / T)] !== TT.CANAL;
+    for (const Pb of pueblos) {
+      const ca = Math.cos(Pb.ang), sa = Math.sin(Pb.ang), cuad = 70, n = Math.ceil(Pb.radio / cuad);
+      for (const eje of [0, 1]) for (let k = -n; k <= n; k++) {
+        const nom = (eje ? 'Calle ' : 'Carrera ') + (k + n + 1); let P = [];
+        const cierra = () => { if (P.length >= 4) { vias.push([k === 0 ? VIA.AVENIDA : VIA.CALLE, nom, k === 0 ? 10 : 7, P]); calles.add(nom); } P = []; };
+        for (let s = -Pb.radio; s <= Pb.radio; s += 10) { const lx = eje ? s : k * cuad, ly = eje ? k * cuad : s, x = Pb.x + lx * ca - ly * sa, y = Pb.y + lx * sa + ly * ca; if (Math.hypot(lx, ly) <= Pb.radio && valida(x, y) && plano(x, y) || (Math.hypot(lx, ly) <= Pb.radio * .5 && valida(x, y))) P.push(Math.round(x * 10) / 10, Math.round(y * 10) / 10); else cierra(); }
+        cierra();
+      }
+      /* plaza central con iglesia y casas en lotes a lo largo de cada cuadra */
+      for (let dy = -28; dy <= 28; dy += 4) for (let dx = -28; dx <= 28; dx += 4) pon(Pb.x + dx * ca - dy * sa, Pb.y + dx * sa + dy * ca, TT.PLAZA, 3);
+      const ix = Pb.x + 0 * ca - (-45) * sa, iy = Pb.y + 0 * sa + (-45) * ca; edif.push([ix, iy, 16, 9, Pb.ang + Math.PI / 2, 4, 6, null]);
+      lugares.push({ id: 'plaza' + Pb.id, nombre: 'Parque principal de ' + Pb.nombre, municipio: Pb.nombre, x: Pb.x, y: Pb.y, ancho: 60, alto: 60, dibujo: 'iglesia', dato: 'La plaza de ' + Pb.nombre + ', con su iglesia mirando al parque.', secreto: false });
+      for (let bi = -n; bi < n; bi++) for (let bj = -n; bj < n; bj++) {
+        const cx = (bi + .5) * cuad, cy = (bj + .5) * cuad, dc = Math.hypot(cx, cy); if (dc > Pb.radio || dc < 40) continue;
+        for (const [lado, sgn] of [[0, 1], [0, -1], [1, 1], [1, -1]]) for (let s = -cuad / 2 + 9; s <= cuad / 2 - 9; s += 9 + r.f() * 3) {
+          const fondo = 6 + r.f() * 4, lx = lado ? cx + sgn * (cuad / 2 - 5 - fondo / 2) : cx + s, ly = lado ? cy + s : cy + sgn * (cuad / 2 - 5 - fondo / 2), x = Pb.x + lx * ca - ly * sa, y = Pb.y + lx * sa + ly * ca;
+          if (!valida(x, y) || !plano(x, y, .25)) continue; const pis = Math.max(1, Math.round((4 - 3 * dc / Pb.radio) * (.6 + r.f() * .7))), an = Pb.ang + (lado ? 0 : Math.PI / 2);
+          edif.push([x, y, 4 + r.f() * 1.2, fondo / 2, an, pis, pis > 3 ? 1 : r.f() < .12 ? 8 : 0, null]);
+        }
+      }
+    }
+    /* 5. carreteras entre pueblos (A* en la malla del relieve: cuesta subir y cruzar agua) */
+    const camino = (a, b) => {
+      const ia = Math.round(a.x / (es * T)), ja = Math.round(a.y / (es * T)), ib = Math.round(b.x / (es * T)), jb = Math.round(b.y / (es * T)), g = new Float64Array(eW * eH).fill(Infinity), de = new Int32Array(eW * eH).fill(-1), abiertos = [[0, ja * eW + ia]]; g[ja * eW + ia] = 0;
+      while (abiertos.length) { let m = 0; for (let k = 1; k < abiertos.length; k++) if (abiertos[k][0] < abiertos[m][0]) m = k; const [, u] = abiertos.splice(m, 1)[0]; if (u === jb * eW + ib) break; const ui = u % eW, uj = (u / eW) | 0;
+        for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) { const vi = ui + di, vj = uj + dj; if (vi < 1 || vj < 1 || vi >= eW - 1 || vj >= eH - 1) continue; const v = vj * eW + vi, hv = E[v]; if (hv <= 0) continue; const L = Math.hypot(di, dj) * es * T, pend = Math.abs(hv - E[u]) / L, c = g[u] + L * (1 + pend * pend * 400 + (flujo[v] > 0 ? 8 : 0)); if (c < g[v]) { g[v] = c; de[v] = u; abiertos.push([c + Math.hypot(vi - ib, vj - jb) * es * T, v]); } }
+        if (abiertos.length > 40000) break; }
+      if (de[jb * eW + ib] < 0) return null; const R = []; for (let v = jb * eW + ib; v !== -1 && v !== ja * eW + ia; v = de[v]) R.push(((v % eW) + .5) * es * T, (((v / eW) | 0) + .5) * es * T); R.push(a.x, a.y);
+      let P = []; for (let k = R.length - 2; k >= 0; k -= 2) P.push(R[k], R[k + 1]);
+      for (let it = 0; it < 2; it++) { const Q = [P[0], P[1]]; for (let k = 0; k + 3 < P.length; k += 2) Q.push(P[k] * .75 + P[k + 2] * .25, P[k + 1] * .75 + P[k + 3] * .25, P[k] * .25 + P[k + 2] * .75, P[k + 1] * .25 + P[k + 3] * .75); Q.push(P[P.length - 2], P[P.length - 1]); P = Q; }   // curvas suaves (Chaikin)
+      return P.map(v => Math.round(v * 10) / 10);
+    };
+    for (let i = 1; i < pueblos.length; i++) { const a = pueblos[i], b = pueblos.slice(0, i).sort((p, q) => Math.hypot(p.x - a.x, p.y - a.y) - Math.hypot(q.x - a.x, q.y - a.y))[0], P = camino(a, b); if (!P) continue; const nom = 'Vía ' + a.nombre + ' – ' + b.nombre; vias.push([VIA.AVENIDA, nom, 9, P]); calles.add(nom);
+      /* puentes: donde la vía cruza un río */
+      let ini = -1; for (let k = 0; k < P.length; k += 2) { const t = suelo[Math.floor(P[k + 1] / T) * W + Math.floor(P[k] / T)], agua = t === TT.CANAL || t === TT.WATER; if (agua && ini < 0) ini = Math.max(0, k - 4); if (!agua && ini >= 0) { const seg = P.slice(ini, Math.min(P.length, k + 6)); if (seg.length >= 4) pasos.push([0, 1, 10, 6, 0, ...seg]); ini = -1; } } }
+    for (const [k, , ancho, P] of vias) linea(P, ancho, k === VIA.AVENIDA ? TT.AVE : TT.ROAD);
+    /* casas sobre el suelo (después de las vías para no taparlas) */
+    const edJ = [];
+    for (const e of edif) { const [x, y, hw, hd, an] = e, ux = Math.cos(an), uy = Math.sin(an); let libre = true; for (const [a, b] of [[1, 1], [1, -1], [-1, 1], [-1, -1], [0, 0]]) { const px = x + ux * hw * a - uy * hd * b, py = y + uy * hw * a + ux * hd * b, t = suelo[Math.floor(py / T) * W + Math.floor(px / T)]; if (t === TT.ROAD || t === TT.AVE || t === TT.CANAL || t === TT.WATER || t === undefined) libre = false; } if (!libre) continue; edJ.push(e.map((v, i) => i < 4 ? Math.round(v * 10) / 10 : v)); for (let a = -hw; a <= hw; a += T / 2) for (let b = -hd; b <= hd; b += T / 2) { const tx = Math.floor((x + ux * a - uy * b) / T), ty = Math.floor((y + uy * a + ux * b) / T); if (tx >= 0 && ty >= 0 && tx < W && ty < H) suelo[ty * W + tx] = TT.BLDG; } }
+    for (const q of pasos) { const P = q.slice(5); for (let k = 0; k < P.length; k += 2) { const tx = Math.floor(P[k] / T), ty = Math.floor(P[k + 1] / T); if (tx >= 0 && ty >= 0 && tx < W && ty < H) suelo[ty * W + tx] = TT.BRIDGE; } }
+    /* 6. municipios (el pueblo más cercano, hasta 3 radios), miradores y un cable al cerro más alto */
+    const cel = 8, mW = Math.ceil(W / cel) + 1, mH = Math.ceil(H / cel) + 1, muni = new Uint8Array(mW * mH), pis = new Uint8Array(mW * mH), nivel = new Int8Array(W * H);
+    for (let j = 0; j < mH; j++) for (let i = 0; i < mW; i++) { const x = (i + .5) * cel * T, y = (j + .5) * cel * T; let best = 0, bd = 1e18; for (const Pb of pueblos) { const d = Math.hypot(Pb.x - x, Pb.y - y) / Pb.radio; if (d < bd && d < 3) { bd = d; best = Pb.id; } } muni[j * mW + i] = best; }
+    for (const e of edJ) { const i = Math.min(mW - 1, Math.floor(e[0] / T / cel)), j = Math.min(mH - 1, Math.floor(e[1] / T / cel)); pis[j * mW + i] = Math.max(pis[j * mW + i], e[5]); }
+    for (const q of pasos) { const P = q.slice(5); for (let k = 0; k < P.length; k += 2) { const tx = Math.floor(P[k] / T), ty = Math.floor(P[k + 1] / T); for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) if (tx + a >= 0 && ty + b >= 0 && tx + a < W && ty + b < H) nivel[(ty + b) * W + tx + a] = 1; } }
+    let cima = null; for (let j = 2; j < eH - 2; j++) for (let i = 2; i < eW - 2; i++) { const h = E[j * eW + i]; if (!cima || h > cima.h) cima = { h, x: (i + .5) * es * T, y: (j + .5) * es * T }; }
+    if (cima) lugares.push({ id: 'cima', nombre: 'Mirador del cerro más alto', municipio: '', x: cima.x, y: cima.y, ancho: 40, alto: 40, dibujo: 'cerro', dato: 'A ' + Math.round(cima.h) + ' m sobre el mar.', secreto: false });
+    const lineas = []; if (cima && pueblos[0] && Math.hypot(cima.x - pueblos[0].x, cima.y - pueblos[0].y) < 4500) lineas.push({ id: 'CG', nombre: 'Cable ' + pueblos[0].nombre, clase: 'cable', color: '#e38835', estado: 'operativa', estaciones: [[pueblos[0].nombre, pueblos[0].x + 60, pueblos[0].y + 60], ['Mirador', cima.x, cima.y]], eje: null });
+    /* 7. el mundo */
+    const relieve = new Int16Array(eW * eH); for (let k = 0; k < E.length; k++) relieve[k] = Math.round(E[k]);
+    const nombre = op.nombre || 'Mundo ' + sem, kx = 111320 * Math.cos(lat * Math.PI / 180) / T, ky = 110574 / T;
+    const cfg = { id: 'gen-' + sem, nombre, ventana: { lon0: -75, latN: lat + H * T / 2 / 110574, lon1: -75 + W * T / (kx * T), latS: lat - H * T / 2 / 110574, lat_ref: lat }, casilla_m: T, zonas: Object.assign({}, ZONAS_BASE, (MC.ciudadBase && MC.ciudadBase.zonas) || {}), zona_por_comuna: [null], zona_por_municipio: [null, ...pueblos.map(() => 'pueblo')], clima: op.clima || null, transporte: { servicio: { habil: [300, 1320], domingo: [360, 1260] }, pico: [], clases: { cable: { vel_ms: 5, cabina_cada_s: 15, altura_m: 30 } } } };
+    const M = Mundo.desdeCapas({
+      meta: { W, H, tile: T, lon0: cfg.ventana.lon0, latN: cfg.ventana.latN, kx, ky, ciudad: cfg.id, nombre, generado: { semilla: sem, tipo }, atribucion: ['Mundo generado por Motor City (semilla ' + sem + ')'] },
+      capas: {
+        suelo: { datos: suelo, info: { tipo: 'u8', w: W, h: H } }, relieve: { datos: relieve, info: { tipo: 'i16', w: eW, h: eH, paso: es } },
+        municipio: { datos: muni, info: { tipo: 'u8', w: mW, h: mH, paso: cel } }, comuna: { datos: new Uint8Array(mW * mH), info: { tipo: 'u8', w: mW, h: mH, paso: cel } }, barrio: { datos: new Uint16Array(mW * mH), info: { tipo: 'u16', w: mW, h: mH, paso: cel } },
+        pisos: { datos: pis, info: { tipo: 'u8', w: mW, h: mH, paso: cel } }, lotes: { datos: new Uint8Array(mW * mH), info: { tipo: 'u8', w: mW, h: mH, paso: cel } }, nivel: { datos: nivel, info: { tipo: 'i8', w: W, h: H } },
+        vias: { datos: vias, info: { tipo: 'json', formato: 'VIASJ' } }, edificios: { datos: { kinds: ['casa', 'edificio', 'torre', 'nave', 'educativo', 'salud', 'iglesia', 'civico', 'comercio', 'deporte', 'techo', 'invernadero', 'tanque', 'transporte', 'parqueadero', 'rural'], lista: edJ }, info: { tipo: 'json', formato: 'EDJ', R: 320 } },
+        info: { datos: { barrios: [], comunas: [], municipios: pueblos.map(p => p.nombre), calles: [...calles], sitios_nombres: [], rio: [], parques: [] } }, pasos: { datos: { tipos: ['puente', 'tunel', 'viaducto'], lista: pasos } },
+        transporte: { datos: { lineas, encicla: [] } }, lugares: { datos: { lugares, hitos: [] } }, trafico: { datos: { carriles: [], semaforos: [] } }
+      }
+    }, cfg);
+    M.generado = { pueblos, rios: rios.length, edificios: edJ.length, vias: vias.length, puentes: pasos.length, cfg };
+    return M;
+  }
+};
+MC.Generador = Generador; MC.ZONAS_BASE = ZONAS_BASE;
 
 /* ---- js/20-tiempo.js ---- */
 /* =====================================================================
@@ -870,6 +1245,158 @@ class Transporte {
 }
 MC.Transporte = Transporte;
 
+/* ---- js/24-ambiente.js ---- */
+/* =====================================================================
+   AMBIENTE GLOBAL · clima y estaciones para cualquier lugar del planeta (o inventado)
+   - Temperatura por latitud, altura (−6,5 °C/km), estación del año (hemisferio norte o sur) y hora del día.
+   - Tipos de clima: tropical, montaña tropical, monzón, mediterráneo, templado, continental, desierto y polar.
+   - Precipitación por bloques de 3 h (determinista: la misma para todos a la misma fecha y hora): lluvia, tormenta
+     eléctrica, granizo, NIEVE (si hace frío) y su capa que se acumula y se derrite; niebla cuando el aire llega al
+     punto de rocío con poco viento; olas de CALOR; viento con ráfagas; humedad, índice de calor y sensación térmica.
+   - Efectos físicos: agarre de las llantas según el clima, visibilidad para las vistas y la IA, y calor para la biología.
+   Misma interfaz que MC.Clima (lluvia, nubes, niebla, tormenta, viento, rayo, temp, tipo, texto) más nieve y calor.
+   ===================================================================== */
+const CLIMAS = {
+  tropical: { hum: .78, amp: 4, lluvia: d => .45 + .25 * Math.cos(TAU * 2 * (d - 120) / 365) },
+  montana_tropical: { hum: .72, amp: 5, lluvia: d => .38 + .22 * Math.cos(TAU * 2 * (d - 120) / 365) },
+  monzon: { hum: .8, amp: 5, lluvia: (d, hs) => .15 + .65 * Math.max(0, Math.cos(TAU * (d - 200 * hs - (hs < 0 ? 182 : 0)) / 365)) },
+  mediterraneo: { hum: .55, amp: 9, lluvia: (d, hs) => .12 + .32 * Math.max(0, -Math.cos(TAU * (d - 200 - (hs < 0 ? 182 : 0)) / 365)) },
+  templado: { hum: .7, amp: 7, lluvia: () => .38 },
+  continental: { hum: .6, amp: 10, lluvia: (d, hs) => .28 + .12 * Math.cos(TAU * (d - 200 - (hs < 0 ? 182 : 0)) / 365) },
+  desierto: { hum: .22, amp: 14, lluvia: () => .04 },
+  polar: { hum: .65, amp: 5, lluvia: () => .25 }
+};
+const Ambiente = {
+  CLIMAS,
+  /* el tipo de clima probable por latitud y altura (se puede fijar a mano) */
+  tipoPara(lat, alt = 0) { const a = Math.abs(lat); if (a > 66) return 'polar'; if (a < 23.5) return alt > 1200 ? 'montana_tropical' : 'tropical'; if (a < 35) return 'mediterraneo'; if (a < 50) return 'templado'; return 'continental'; },
+  /* temperatura media del día a nivel del mar y su variación por estación (°C) */
+  tempMedia(lat, dia) { const a = Math.abs(lat), hs = lat >= 0 ? 1 : -1, base = 28 - .006 * lat * lat - .1 * a, amp = .25 * a, fase = TAU * (dia - (hs > 0 ? 200 : 17)) / 365; return base + amp * Math.cos(fase); },
+  estacion(fecha, lat) { const d = Calendario.diaDelAño(fecha); if (Math.abs(lat) < 23.5) return null; const n = lat >= 0 ? d : (d + 182) % 365; return n < 79 || n >= 355 ? 'invierno' : n < 172 ? 'primavera' : n < 266 ? 'verano' : 'otoño'; },
+  /* horas de luz del día (ecuación de la salida del sol) */
+  horasLuz(lat, dia) { const dec = -23.44 * Math.PI / 180 * Math.cos(TAU / 365 * (dia + 10)), x = -Math.tan(lat * Math.PI / 180) * Math.tan(dec); return x <= -1 ? 24 : x >= 1 ? 0 : 24 / Math.PI * Math.acos(x); },
+  /* agarre de una llanta (multiplica al coeficiente de fricción) según el clima del momento */
+  agarre(cl) { if (!cl) return 1; if (cl.hielo > .3) return .18; if (cl.nieveSuelo > 1) return .4; if (cl.lluvia > .1) return 1 - .3 * Math.min(1, cl.lluvia * 1.4); return 1; },
+  /* visibilidad en metros (para las vistas, la IA y el manejo) */
+  visibilidad(cl) { if (!cl) return 10000; return Math.max(40, 10000 * (1 - .96 * (cl.niebla || 0)) * (1 - .6 * (cl.lluvia || 0)) * (1 - .7 * (cl.nieve || 0))); },
+  crearClima(cfg, lat, alt) { return new ClimaGlobal({ lat, alt, tipo: (cfg && cfg.clima && cfg.clima.tipo) || Ambiente.tipoPara(lat, alt) }); }
+};
+class ClimaGlobal {
+  constructor({ lat = 6.2, alt = 1500, tipo } = {}) { Object.assign(this, { lat, alt, tipoClima: tipo || Ambiente.tipoPara(lat, alt) }); this.forzado = null; this.lluvia = 0; this.nubes = .2; this.niebla = 0; this.tormenta = 0; this.rayo = 0; this.nieve = 0; this.granizo = 0; this.nieveSuelo = 0; this.hielo = 0; this.calor = 0; this.viento = { v: 2, dir: 0 }; this.temp = 20; this.hum = 60; this.rocio = 12; this.tipo = 'despejado'; this._t = null; }
+  forzar(t) { this.forzado = t || null; }
+  _bloque(fecha, b) {
+    const sem = (fecha.getFullYear() * 400 + fecha.getMonth() * 32 + fecha.getDate()) * 8 + b, r = h2(sem, 7, 91), r2 = h2(sem, 9, 92), d = Calendario.diaDelAño(fecha), K = CLIMAS[this.tipoClima] || CLIMAS.templado, hs = this.lat >= 0 ? 1 : -1;
+    const tarde = b * 3 + 1.5 >= 13 && b * 3 + 1.5 <= 19 ? 1.5 : b < 2 ? .6 : .85, p = clamp(K.lluvia(d, hs) * tarde * .7, 0, .92);
+    if (r < p * .22) return { tipo: 'tormenta', lluvia: .9, nubes: 1, tormenta: 1, viento: 9 };
+    if (r < p) return { tipo: 'lluvia', lluvia: .35 + r2 * .45, nubes: .9, tormenta: 0, viento: 4 };
+    if (r < p + .2) return { tipo: 'nublado', lluvia: 0, nubes: .6 + r2 * .3, tormenta: 0, viento: 3 };
+    return { tipo: 'despejado', lluvia: 0, nubes: .08 + r2 * .25, tormenta: 0, viento: 2 + r2 * 2 };
+  }
+  actualizar(reloj, dt = 0) {
+    const h = reloj.hora, b = Math.floor(h / 3) % 8, f = (h % 3) / 3, d = Calendario.diaDelAño(reloj.fecha), K = CLIMAS[this.tipoClima] || CLIMAS.templado;
+    const F = { despejado: { tipo: 'despejado', lluvia: 0, nubes: .1, tormenta: 0, viento: 2 }, nublado: { tipo: 'nublado', lluvia: 0, nubes: .85, tormenta: 0, viento: 3 }, lluvia: { tipo: 'lluvia', lluvia: .7, nubes: .95, tormenta: 0, viento: 4 }, tormenta: { tipo: 'tormenta', lluvia: 1, nubes: 1, tormenta: 1, viento: 10 }, nieve: { tipo: 'nieve', lluvia: .6, nubes: .95, tormenta: 0, viento: 3, frio: -6 }, niebla: { tipo: 'nublado', lluvia: 0, nubes: .4, tormenta: 0, viento: .5, niebla: 1 }, calor: { tipo: 'despejado', lluvia: 0, nubes: 0, tormenta: 0, viento: 1, calor: 12 } }[this.forzado];
+    const A = F || this._bloque(reloj.fecha, b), B = F || this._bloque(b === 7 ? new Date(reloj.fecha.getFullYear(), reloj.fecha.getMonth(), reloj.fecha.getDate() + 1) : reloj.fecha, (b + 1) % 8), k = f > .8 ? suave((f - .8) / .2) : 0, s = dt > 0 ? Math.min(1, dt * .8) : 1;
+    /* temperatura: media del día por latitud y estación, menos la altura, más la onda del día (máx. ~15 h) */
+    const Tm = Ambiente.tempMedia(this.lat, d) - .0065 * this.alt + (A.frio || 0) + (A.calor || 0), Td = (K.amp * (1 - .5 * A.nubes)) * Math.sin(TAU * (h - 9) / 24), T = Tm + Td - lerp(A.lluvia, B.lluvia, k) * 2.5;
+    this.temp = dt > 0 ? lerp(this.temp, T, Math.min(1, dt * .2)) : T;
+    this.lluvia = lerp(this.lluvia, lerp(A.lluvia, B.lluvia, k), s); this.nubes = lerp(this.nubes, lerp(A.nubes, B.nubes, k), s); this.tormenta = lerp(this.tormenta, lerp(A.tormenta, B.tormenta, k), s);
+    this.viento.v = lerp(this.viento.v, lerp(A.viento, B.viento, k) * (1 + .35 * Math.sin(reloj.min * 1.3) * (this.tormenta + .2)), s); this.viento.dir = h2(reloj.fecha.getDate(), b, 5) * TAU;
+    /* humedad y rocío: el aire húmedo de la madrugada llega al rocío → niebla si hay poco viento */
+    this.hum = clamp(K.hum * 100 + this.lluvia * 25 - Td * 3 + (h < 8 ? 12 : 0), 8, 100); this.rocio = Termo.rocio(this.temp, this.hum);
+    const nb = A.niebla ? 1 : clamp((2.5 - (this.temp - this.rocio)) / 2.5, 0, 1) * clamp((3 - this.viento.v) / 3, 0, 1); this.niebla = lerp(this.niebla, nb, s);
+    /* nieve, granizo, hielo y capa de nieve */
+    const frio = this.temp < .8; this.nieve = frio ? this.lluvia : 0; if (frio) this.lluvia *= .15;
+    this.granizo = this.tormenta > .6 && this.temp > 4 && this.temp < 22 && h2(reloj.fecha.getDate(), b, 33) < .25 ? this.tormenta : 0;
+    if (dt > 0) { this.nieveSuelo = Math.max(0, this.nieveSuelo + (this.nieve * 2.2 - Math.max(0, this.temp) * .35) * dt * (reloj.vel || 1) / 60); this.hielo = this.temp < 0 && (this.nieveSuelo > .2 || this.lluvia > .05) ? clamp(this.hielo + dt * .01, 0, 1) : Math.max(0, this.hielo - dt * .02); }
+    this.calor = clamp((this.temp - 32) / 8, 0, 1);
+    this.tipo = this.nieve > .1 ? 'nieve' : this.granizo > .3 ? 'granizo' : this.niebla > .55 ? 'niebla' : this.calor > .3 ? 'calor' : (k > .5 ? B.tipo : A.tipo);
+    if (this.tormenta > .5 && dt > 0) { this.rayo = Math.max(0, this.rayo - dt * 4); if (Math.random() < dt * .12 * this.tormenta) { this.rayo = 1; MC.emit('rayo', this); } } else this.rayo = 0;
+    return this;
+  }
+  get sensacion() { return this.temp >= 27 ? Termo.indiceCalor(this.temp, this.hum) : Termo.sensacionViento(this.temp, this.viento.v * 3.6); }
+  texto() { const ic = { despejado: '☀️ Despejado', nublado: '☁️ Nublado', lluvia: '🌧️ Lluvia', tormenta: '⛈️ Tormenta', nieve: '🌨️ Nieve', granizo: '🧊 Granizo', niebla: '🌫️ Niebla', calor: '🔥 Calor' }[this.tipo] || this.tipo; return ic + ' · ' + Math.round(this.temp) + ' °C' + (Math.abs(this.sensacion - this.temp) > 2 ? ' (se siente ' + Math.round(this.sensacion) + ')' : '') + (this.nieveSuelo > .5 ? ' · ' + Math.round(this.nieveSuelo) + ' cm de nieve' : ''); }
+}
+Object.assign(MC, { Ambiente, ClimaGlobal, CLIMAS });
+
+/* ---- js/25-ia.js ---- */
+/* =====================================================================
+   INTELIGENCIA ARTIFICIAL · que el mundo esté vivo
+   - Utilidad (Utility AI): cada agente puntúa sus opciones con curvas y hace la que más le sirve ahora.
+   - Árboles de comportamiento mínimos (secuencia, selector, condición, acción) para misiones, rivales y jefes.
+   - Comportamientos de dirección (Reynolds): buscar, huir, llegar, deambular, separarse (gente, animales, bandadas).
+   - Población con RUTINAS REALES: cada persona tiene casa y trabajo (en edificios reales del mundo), necesidades
+     (energía, hambre, ganas de salir, plata) y un día: duerme, madruga, viaja por las calles (A*), trabaja, almuerza,
+     sale a la plaza o al parque, vuelve a casa. Lo que está lejos se simula «en grueso» (barato).
+   - Pilotos con física: la velocidad segura en una curva es v = √(μ·g / κ) (κ = curvatura): así frenan los rivales.
+   ===================================================================== */
+const IA = {
+  /* curvas de respuesta (entrada 0–1 → utilidad 0–1) */
+  curva: { lineal: x => clamp(x, 0, 1), cuadrada: x => clamp(x, 0, 1) ** 2, raiz: x => Math.sqrt(clamp(x, 0, 1)), inversa: x => 1 - clamp(x, 0, 1), campana: (x, c = .5, a = .25) => Math.exp(-((x - c) ** 2) / (2 * a * a)), escalon: (x, u = .5) => x >= u ? 1 : 0 },
+  /* opciones: [{ id, puntaje(ctx) }] → la mejor (con un poco de azar para que no sean robots) */
+  elegir(opciones, ctx, azar = Math.random, ruido = .05) { let best = null, bv = -1; for (const o of opciones) { const v = o.puntaje(ctx) + (azar() - .5) * ruido; if (v > bv) { bv = v; best = o; } } return best; },
+  /* árbol de comportamiento: nodos que devuelven 'ok' | 'falla' | 'sigue' */
+  secuencia: (...h) => ctx => { for (const n of h) { const r = n(ctx); if (r !== 'ok') return r; } return 'ok'; },
+  selector: (...h) => ctx => { for (const n of h) { const r = n(ctx); if (r !== 'falla') return r; } return 'falla'; },
+  condicion: f => ctx => f(ctx) ? 'ok' : 'falla',
+  accion: f => ctx => f(ctx) || 'ok',
+  /* dirección (Reynolds): devuelven una fuerza deseada [fx, fy] */
+  buscar: (p, obj, vmax) => { const d = V2.resta(obj, p), L = V2.largo(d) || 1; return V2.esc(d, vmax / L); },
+  huir: (p, obj, vmax) => V2.esc(IA.buscar(p, obj, vmax), -1),
+  llegar: (p, obj, vmax, frena = 8) => { const d = V2.resta(obj, p), L = V2.largo(d) || 1; return V2.esc(d, Math.min(vmax, vmax * L / frena) / L); },
+  deambular: (ang, r, k = .6) => { const a = ang + (r() - .5) * k; return [Math.cos(a), Math.sin(a), a]; },
+  separar: (p, vecinos, radio) => { let fx = 0, fy = 0; for (const q of vecinos) { const dx = p[0] - q[0], dy = p[1] - q[1], d = Math.hypot(dx, dy); if (d > 0 && d < radio) { fx += dx / d * (radio - d) / radio; fy += dy / d * (radio - d) / radio; } } return [fx, fy]; },
+  /* velocidad segura en una curva de curvatura κ (1/m) con agarre μ */
+  vCurva: (kappa, mu = .9) => Math.abs(kappa) < 1e-4 ? 1e3 : Math.sqrt(mu * C.g / Math.abs(kappa))
+};
+/* ---------- población con rutinas ---------- */
+const ACTIVIDADES = ['dormir', 'casa', 'trabajo', 'almuerzo', 'paseo', 'compras'];
+class Poblacion {
+  /* op: { n, centro: {x, y}, radio, semilla, red ('peaton'|'rueda') } */
+  constructor(mundo, op = {}) {
+    this.mundo = mundo; this.r = mulberry32(op.semilla ?? 11); this.red = mundo.red(op.red || 'rueda'); this.gente = []; const c = op.centro || { x: mundo.ancho / 2, y: mundo.alto / 2 }, R = op.radio || 700;
+    const ed = mundo.edificiosEn(c.x - R, c.y - R, c.x + R, c.y + R), casas = ed.filter(e => e.k === 0 || e.k === 1 || e.k === 2 || e.k === 15), trabajos = ed.filter(e => [3, 4, 5, 7, 8, 13].includes(e.k)), plazas = mundo.lugares.filter(l => Math.hypot(l.x - c.x, l.y - c.y) < R * 1.5);
+    const punto = e => { const q = this.red.cercana(e.x, e.y, 120); return q ? { x: q.x, y: q.y, nodo: q.arista.a } : null; };
+    for (let i = 0; i < (op.n || 40) && casas.length; i++) {
+      const casa = punto(casas[(this.r() * casas.length) | 0]), trab = trabajos.length ? punto(trabajos[(this.r() * trabajos.length) | 0]) : casa, ocio = plazas.length ? punto(plazas[(this.r() * plazas.length) | 0]) : casa; if (!casa) continue;
+      const madruga = 300 + this.r() * 120, sale = madruga + 540 + this.r() * 90;
+      this.gente.push({ id: i, casa, trabajo: trab || casa, ocio: ocio || casa, x: casa.x, y: casa.y, a: 0, v: 1.2 + this.r() * .4, horario: { despierta: madruga, entra: madruga + 90, sale, duerme: 1320 + this.r() * 80 }, nec: { energia: 1, hambre: .2, salir: .3 }, act: 'dormir', ruta: null, s: 0, visible: false, semilla: (this.r() * 1e6) | 0, fase: this.r() * 9, aspecto: null });
+    }
+  }
+  /* qué quiere hacer cada uno ahora (utilidad sobre necesidades y horario) */
+  _decidir(p, min) {
+    const H = p.horario, enHora = (a, b) => min >= a && min < b, finde = this.finDeSemana;
+    const ops = [
+      { id: 'dormir', puntaje: () => (min >= H.duerme || min < H.despierta) ? 1 : IA.curva.inversa(p.nec.energia) * .9 },
+      { id: 'trabajo', puntaje: () => !finde && enHora(H.entra, H.sale) && !enHora(720, 780) ? .95 : 0 },
+      { id: 'almuerzo', puntaje: () => enHora(720, 790) ? .7 + p.nec.hambre * .3 : p.nec.hambre * .5 },
+      { id: 'paseo', puntaje: () => (enHora(H.sale, H.duerme) || (finde && enHora(600, H.duerme))) ? .45 + p.nec.salir * .4 : 0 },
+      { id: 'casa', puntaje: () => .3 }
+    ];
+    return IA.elegir(ops, p, this.r, .04).id;
+  }
+  _destino(p, act) { return act === 'trabajo' ? p.trabajo : act === 'paseo' || act === 'almuerzo' ? p.ocio : p.casa; }
+  /* un paso: dt en s reales; reloj del mundo; (cx, cy) donde está la cámara: lo cercano se mueve paso a paso */
+  paso(dt, reloj, cx, cy, radioVisible = 450) {
+    const min = reloj.min, dtJuego = dt * (reloj.vel || 1) * 60; this.finDeSemana = reloj.dia === 0 || reloj.dia === 6 || reloj.domingo;
+    for (const p of this.gente) {
+      p.nec.energia = clamp(p.nec.energia + (p.act === 'dormir' ? .00004 : -.000012) * dtJuego, 0, 1); p.nec.hambre = clamp(p.nec.hambre + (p.act === 'almuerzo' ? -.0004 : .00001) * dtJuego, 0, 1); p.nec.salir = clamp(p.nec.salir + (p.act === 'paseo' ? -.0002 : .00001) * dtJuego, 0, 1);
+      const quiere = this._decidir(p, min);
+      if (quiere !== p.act) { p.act = quiere; const d = this._destino(p, quiere); if (d && (Math.hypot(d.x - p.x, d.y - p.y) > 15)) { const a = this.red.cercana(p.x, p.y, 120); p.ruta = a ? this.red.camino(a.arista.a, d.nodo) : null; p.tramo = 0; p.s = 0; p.dest = d; } }
+      const cerca = Math.hypot(p.x - cx, p.y - cy) < radioVisible;
+      if (p.ruta && p.ruta.length) {
+        let avanza = p.v * dt * (cerca ? 1 : (reloj.vel || 1) * 8);   // lejos: se mueve en grueso (más rápido, sin detalle)
+        while (avanza > 0 && p.tramo < p.ruta.length) { const t = p.ruta[p.tramo], L = t.arista.largo, falta = L - p.s; if (avanza < falta) { p.s += avanza; avanza = 0; } else { avanza -= falta; p.tramo++; p.s = 0; } }
+        if (p.tramo >= p.ruta.length) { p.ruta = null; p.x = p.dest.x; p.y = p.dest.y; }
+        else { const t = p.ruta[p.tramo], s = t.adelante ? p.s : t.arista.largo - p.s, q = t.arista.t.at(s, 1.6); p.x = q.x; p.y = q.y; p.a = q.a + (t.adelante ? 0 : Math.PI); p.fase += dt * p.v * 1.8; }
+      }
+      p.visible = cerca && (p.ruta != null || p.act === 'paseo');   // dentro de casa o del trabajo no se ven
+    }
+    return this.gente.filter(p => p.visible);
+  }
+  resumen() { const c = {}; for (const p of this.gente) c[p.act] = (c[p.act] || 0) + 1; return c; }
+}
+Object.assign(MC, { IA, Poblacion, ACTIVIDADES });
+
 /* ---- js/30-personaje.js ---- */
 /* =====================================================================
    PERSONAJE ÚNICO · el mismo cuerpo para todos los juegos; cada juego lo viste a su estilo
@@ -1027,7 +1554,9 @@ const Vehiculos = {
   /* registra (o completa) un vehículo: lo que no diga lo hereda de su base `de` */
   registrar(def) {
     const base = def.de ? this.lista.get(def.de) : null; if (def.de && !base) throw new Error('base desconocida: ' + def.de);
-    const v = Object.assign({ juegos: ['*'] }, base || {}, def); if (base) v.de = def.de; this.lista.set(v.id, v); MC.emit('vehiculo', v); return v;
+    const v = Object.assign({ juegos: ['*'] }, base || {}, def); if (base) v.de = def.de;
+    if (v.suelo && v.suelo.length < 20) { const S = v.suelo.slice(); S[17] = S[17] ?? (v.clase === 'agua' ? 0 : S[0] * .75); S[18] = S[18] ?? (v.clase === 'agua' ? 0 : S[0] * .45); S[19] = S[19] ?? (v.clase === 'agua' ? 0 : S[1] * .8); v.suelo = S; }   // arena, nieve y roca
+    this.lista.set(v.id, v); MC.emit('vehiculo', v); return v;
   },
   get(id) { return this.lista.get(id) || this.lista.get('pie'); },
   /* los que se pueden elegir en un juego (filtro opcional) */
@@ -1257,6 +1786,201 @@ class Camara {
 }
 Object.assign(MC, { Camara, CAM_PERFIL });
 
+/* ---- js/35-seres.js ---- */
+/* =====================================================================
+   SERES · personas, animales y criaturas con biología y ciencia reales
+   PERSONAS
+   - Proporciones antropométricas (Drillis y Contini) que cambian con la edad (la cabeza es 1/4 del bebé y 1/7,5 del adulto).
+   - Biomecánica: velocidad al caminar y al correr por el número de Froude (Fr = v²/gL; se pasa a correr cerca de 0,5).
+   - Metabolismo basal (Mifflin‑St Jeor), gasto por actividad (METs), frecuencia cardiaca (Tanaka: 208 − 0,7·edad),
+     potencia sostenida (W/kg según el estado físico), energía, hidratación y temperatura con el clima.
+   - Genética mendeliana: genes diploides para piel (poligénica), ojos, pelo, rizo y estatura; cruzar dos personas
+     da un hijo con los alelos de los dos. El fenotipo sale como el aspecto del personaje único del motor.
+   ANIMALES Y CRIATURAS
+   - Alometría real a partir de la masa: metabolismo de Kleiber (3,4·M^0,75 W), altura de cadera, velocidad máxima
+     (Hirt y otros, 2017), pulso (241·M^−0,25), longevidad y marcha por el número de Froude (paso, trote, galope).
+   - Catálogo de especies del valle (perro criollo, gallinazo, colibrí, iguana, zarigüeya, ardilla, caballo…).
+   - Criaturas inventadas «entendibles»: plan corporal (patas, segmentos, alas, cola) y prueba de verosimilitud por la
+     ley cuadrado‑cubo con la gravedad del planeta (¿aguantan sus huesos su peso?).
+   Dibujo de lado en cualquier estilo (vector, silueta o pixel con las vistas) y en 3D con la malla del motor.
+   ===================================================================== */
+const PROP = { pierna: .530, muslo: .245, canilla: .246, brazo: .186, antebrazo: .146, mano: .108, hombros: .259, cadera: .191, cabeza: .130 };
+const GENES = {
+  piel: { loci: 6, tipo: 'aditivo' },     // 0–12 alelos oscuros → del más claro al más oscuro
+  ojos: { loci: 2, tipo: 'ojos' },        // B (café) domina sobre G (verde) que domina sobre b (azul)
+  pelo: { loci: 3, tipo: 'aditivo' },     // eumelanina: 0 rubio … 6 negro
+  rizo: { loci: 1, tipo: 'incompleto' },  // LL liso, LR ondulado, RR rizado
+  talla: { loci: 8, tipo: 'aditivo' }     // estatura: ±0,09 m alrededor de la media según los alelos
+};
+const Genetica = {
+  azar(r, sexo) { const g = { sexo: sexo || (r() < .5 ? 'f' : 'm') }; for (const [k, G] of Object.entries(GENES)) { g[k] = []; for (let i = 0; i < G.loci; i++) g[k].push(G.tipo === 'ojos' ? [0, 0].map(() => { const x = r(); return x < .55 ? 'B' : x < .75 ? 'G' : 'b'; }) : [r() < .5 ? 1 : 0, r() < .5 ? 1 : 0]); } return g; },
+  /* meiosis: de cada locus, un alelo al azar del padre y otro de la madre */
+  cruzar(a, b, r, sexo) { const h = { sexo: sexo || (r() < .5 ? 'f' : 'm') }; for (const k of Object.keys(GENES)) h[k] = a[k].map((par, i) => [par[r() < .5 ? 0 : 1], b[k][i][r() < .5 ? 0 : 1]]); return h; },
+  fenotipo(g) {
+    const suma = k => g[k].reduce((s, p) => s + p[0] + p[1], 0), ojos = g.ojos.flat(), o = ojos.includes('B') ? 'café' : ojos.includes('G') ? 'verde' : 'azul', rz = g.rizo[0][0] + g.rizo[0][1];
+    const piel = suma('piel') / 12, pelo = suma('pelo') / 6, talla = (suma('talla') - 8) / 8;
+    return { piel, ojos: o, pelo, rizo: ['liso', 'ondulado', 'rizado'][rz], talla, estaturaAdulta: (g.sexo === 'f' ? 1.62 : 1.75) * (1 + .052 * talla) };
+  }
+};
+class Persona {
+  /* op: { sexo, edad (años), estatura (m), masa (kg), forma (0 sedentaria … 1 atleta), genoma, semilla } */
+  constructor(op = {}) {
+    const r = mulberry32(op.semilla ?? 7); this.genoma = op.genoma || Genetica.azar(r, op.sexo); this.sexo = op.sexo || this.genoma.sexo; this.edad = op.edad ?? 30; this.forma = op.forma ?? .5;
+    const F = Genetica.fenotipo(this.genoma), crece = this.edad >= 18 ? 1 : clamp(.42 + .58 * Math.pow(this.edad / 18, .8), .3, 1);
+    this.estatura = op.estatura ?? F.estaturaAdulta * crece; this.masa = op.masa ?? 22 * this.estatura * this.estatura * (1 + (this.forma - .5) * .1); this.fen = F;
+    this.estado = { energia: 1, hidratacion: 1, temp: 37, fc: this.fcReposo, fatiga: 0 };
+  }
+  get imc() { return this.masa / (this.estatura * this.estatura); }
+  /* proporciones del cuerpo en metros (la cabeza pesa más en los niños) */
+  get cuerpo() { const H = this.estatura, k = this.edad < 18 ? clamp(.25 - (this.edad / 18) * (.25 - PROP.cabeza), PROP.cabeza, .25) : PROP.cabeza, f = (1 - k) / (1 - PROP.cabeza); const o = {}; for (const [p, v] of Object.entries(PROP)) o[p] = p === 'cabeza' ? k * H : v * H * f; o.ancho = o.hombros * (.85 + .3 * clamp((this.imc - 18) / 15, 0, 1)); return o; }
+  /* metabolismo basal (kcal/día, Mifflin‑St Jeor) */
+  get tmb() { return 10 * this.masa + 6.25 * this.estatura * 100 - 5 * this.edad + (this.sexo === 'm' ? 5 : -161); }
+  get fcMax() { return 208 - .7 * this.edad; }
+  get fcReposo() { return 75 - 20 * this.forma; }
+  /* velocidades por el número de Froude con la largura de la pierna */
+  get vCamina() { return Math.sqrt(.25 * C.g * this.cuerpo.pierna); }
+  get vCambio() { return Math.sqrt(.5 * C.g * this.cuerpo.pierna); }
+  get vCorre() { return (3.2 + 5.6 * this.forma) * clamp(this.estatura / 1.75, .5, 1.1) * (this.edad > 40 ? 1 - (this.edad - 40) * .006 : 1) * (this.edad < 14 ? .7 + this.edad * .02 : 1); }
+  /* potencia sostenible al pedalear (W): 1,5 W/kg sedentario … 4 W/kg atleta */
+  get potencia() { return this.masa * (1.5 + 2.5 * this.forma); }
+  /* MET aproximado de una actividad a una velocidad v (m/s) */
+  met(act, v = 0) { const kmh = v * 3.6; switch (act) { case 'quieto': return 1.3; case 'camina': return clamp(1 + .55 * kmh, 2, 6); case 'corre': return clamp(kmh * 1.02, 6, 20); case 'pedalea': return clamp(3 + .35 * kmh, 3.5, 16); case 'impulsa': case 'patina': case 'tabla': return clamp(3 + .3 * kmh, 3, 12); case 'sentado': return 1.5; default: return 2; } }
+  /* un paso de vida: energía, agua, pulso y temperatura según la actividad y el clima (dt en s de juego) */
+  vivir(dt, act, v, clima) {
+    const E = this.estado, met = this.met(act, v), kcal = met * 3.5 * this.masa / 200 * dt / 60, umbral = 5 + 5 * this.forma, calor = clima ? clamp(((clima.sensacion ?? clima.temp) - 27) / 12, 0, 1) : 0;
+    E.energia = clamp(E.energia - (met > umbral ? (met - umbral) * .0009 : -.0012) * dt * (1 + calor * .6), 0, 1);
+    E.hidratacion = clamp(E.hidratacion - (.00002 + met * .000004 * (1 + calor * 2)) * dt, 0, 1);
+    const int = clamp((met - 1) / 15, 0, 1), fcObj = this.fcReposo + (this.fcMax - this.fcReposo) * int * (1.15 - .3 * E.energia) * (1 + calor * .1); E.fc = lerp(E.fc, fcObj, Math.min(1, dt * .25));
+    E.temp = lerp(E.temp, 37 + int * 1.4 + calor * 1.2 - (clima && clima.temp < 5 ? (5 - clima.temp) * .05 : 0), Math.min(1, dt * .01)); E.fatiga = clamp(1 - E.energia * .7 - E.hidratacion * .3, 0, 1);
+    return { kcal, met };
+  }
+  /* rendimiento físico de este momento (0–1): baja con el cansancio, la sed y el calor */
+  get rendimiento() { const E = this.estado; return clamp(.35 + .65 * E.energia, .2, 1) * clamp(.6 + .4 * E.hidratacion, .3, 1) * (E.temp > 39 ? .75 : 1); }
+  /* el aspecto del personaje único del motor (MC.Personaje) que sale de su genética */
+  aspecto(extra = {}) { const F = this.fen; return Personaje.aspecto(Object.assign({ piel: Math.round(F.piel * 6), colPelo: F.pelo > .8 ? 0 : F.pelo > .55 ? 1 : F.pelo > .35 ? 2 : F.pelo > .2 ? 3 : 4, peinado: { liso: 1, ondulado: 3, rizado: 5 }[F.rizo], estatura: this.estatura / 1.72 }, extra)); }
+}
+/* ---------- animales ---------- */
+const ESPECIES = {
+  perro_criollo: { n: 'Perro criollo', plan: 'cuadrupedo', masa: 18, colores: ['#c9935e', '#3b2a1e', '#e8dcc8'], cola: .5 },
+  gato: { n: 'Gato', plan: 'cuadrupedo', masa: 4.2, colores: ['#e8a35c', '#5a5a5a', '#f2efe8'], cola: .8 },
+  caballo: { n: 'Caballo', plan: 'cuadrupedo', masa: 450, colores: ['#6b3f22', '#2b1a10', '#d9c7a8'], cola: .6 },
+  vaca: { n: 'Vaca', plan: 'cuadrupedo', masa: 600, colores: ['#f2efe8', '#1d1f24'], cola: .5 },
+  zarigueya: { n: 'Zarigüeya (chucha)', plan: 'cuadrupedo', masa: 2.5, colores: ['#9a9890', '#f2efe8'], cola: 1.1 },
+  ardilla: { n: 'Ardilla de cola roja', plan: 'cuadrupedo', masa: .3, colores: ['#a5532a', '#e8a35c'], cola: 1.2 },
+  iguana: { n: 'Iguana', plan: 'reptil', masa: 4, colores: ['#5f9a3a', '#3d6b2a'], cola: 1.6 },
+  gallina: { n: 'Gallina', plan: 'ave_suelo', masa: 2, colores: ['#c45a2a', '#e8dcc8', '#d92b2b'], cola: .3 },
+  gallinazo: { n: 'Gallinazo', plan: 'ave', masa: 2, colores: ['#1d1f24', '#3b3d42'], envergadura: 1.45 },
+  colibri: { n: 'Colibrí', plan: 'ave', masa: .004, colores: ['#2e9d55', '#c43a26'], envergadura: .11 },
+  paloma: { n: 'Paloma', plan: 'ave', masa: .35, colores: ['#8e96a3', '#5d6573'], envergadura: .65 },
+  sabaleta: { n: 'Sabaleta', plan: 'pez', masa: .4, colores: ['#9fb4c8', '#d9e4ee'] },
+  mariposa: { n: 'Mariposa', plan: 'insecto_volador', masa: .0005, colores: ['#f0a030', '#1d1f24'], envergadura: .08 },
+  hormiga_arriera: { n: 'Hormiga arriera', plan: 'insecto', masa: .00002, colores: ['#8a3a22'] }
+};
+const Animal = {
+  ESPECIES,
+  /* lo que dice la masa (kg): alometría de los vertebrados terrestres */
+  alometria(M, plan = 'cuadrupedo', g = C.g) {
+    const k = Math.sqrt(C.g / g), cadera = .17 * Math.pow(M, .36), vmax = plan === 'pez' ? .9 * Math.pow(M, .19) : plan.startsWith('ave') && plan !== 'ave_suelo' ? 14 * Math.pow(M, .12) : 25.5 * Math.pow(M, .26) * (1 - Math.exp(-22 * Math.pow(M, -.6))) / 3.6;
+    return { metabolismoW: 3.4 * Math.pow(M, .75), cadera, vmax: vmax * (plan.startsWith('ave') ? 1 : k), pulso: 241 * Math.pow(M, -.25), longevidad: 11.8 * Math.pow(M, .2), largo: .45 * Math.pow(M, .33) * (plan === 'reptil' ? 1.6 : 1), comidaKgDia: 3.4 * Math.pow(M, .75) * 86400 / 1.6e7 };
+  },
+  /* la marcha que toca a una velocidad (número de Froude con la altura de la cadera) */
+  marcha(v, cadera, g = C.g) { const Fr = v * v / (g * Math.max(.01, cadera)); return Fr < .5 ? 'paso' : Fr < 2.5 ? 'trote' : 'galope'; },
+  crear(id, semilla = 1) { const E = ESPECIES[id]; if (!E) throw new Error('especie desconocida: ' + id); const r = mulberry32(semilla), M = E.masa * (.85 + r() * .3); return Object.assign({ id, especie: E.n, plan: E.plan, masa: M, colores: E.colores, cola: E.cola || .4, envergadura: E.envergadura, semilla }, Animal.alometria(M, E.plan)); },
+  /* criatura inventada: patas, segmentos, alas… y si es verosímil con la gravedad de su planeta (ley cuadrado‑cubo) */
+  criatura(op = {}) {
+    const g = op.gravedad ?? C.g, M = op.masa ?? 80, patas = op.patas ?? 6, seg = op.segmentos ?? 3, r = mulberry32(op.semilla ?? 3), A = Animal.alometria(M, 'cuadrupedo', g);
+    const sigma = 30e6, carga = 3 * M * g / Math.max(1, Math.min(patas, 4)), diam = 2 * Math.sqrt(carga / (Math.PI * sigma)), relDiam = diam / A.cadera;   // hueso que aguanta 3 veces el peso (al correr) con un esfuerzo admisible de 30 MPa (fluencia del hueso ~120 MPa / 4)
+    const verosimil = relDiam < .032;   // un saurópodo de 70 t en la Tierra da ~0,016: el doble es el límite de lo creíble
+    return Object.assign({ id: 'criatura', especie: op.nombre || 'Criatura', plan: 'alien', patas, segmentos: seg, alas: !!op.alas, ojos: op.ojos ?? (2 + (r() * 3 | 0) * 2), masa: M, gravedad: g, colores: op.colores || ['#7e57c2', '#26c6da', '#ffca28'], huesoRelativo: relDiam, verosimil, nota: verosimil ? 'Sus patas aguantan su peso con esta gravedad.' : 'Con esta gravedad sus patas tendrían que ser muy gruesas: hazla más liviana, con más patas o en un planeta de menos gravedad.' }, A);
+  }
+};
+/* dibujo de lado de un animal o criatura: cuerpo, cabeza, patas que se mueven con su marcha, cola, alas o aletas */
+MC.arte.pieles.motor.animalLado = function (g, a, x, y, esc, dir = 1, t = 0, v = 0) {
+  const k = esc, X = u => x + u * k * dir, Y = w => y - w * k, c0 = a.colores[0], c1 = a.colores[1] || tono(c0, -.3), L = a.largo || .5, h = a.cadera || .3;
+  if (a.plan === 'ave' || a.plan === 'insecto_volador') { const e = (a.envergadura || .5) / 2, alt = h + .2, aleteo = Math.sin(t * (a.plan === 'insecto_volador' ? 30 : a.masa < .01 ? 60 : 6)) * e * .8; g.fillStyle = c0; g.beginPath(); g.ellipse(X(0), Y(alt), L * .5 * k, L * .18 * k, 0, 0, TAU); g.fill(); g.strokeStyle = c1; g.lineWidth = Math.max(1, L * .12 * k); g.beginPath(); g.moveTo(X(-e * .2), Y(alt)); g.lineTo(X(-e * .5), Y(alt + aleteo)); g.moveTo(X(e * .1), Y(alt)); g.lineTo(X(-e * .2), Y(alt + aleteo * .9)); g.stroke(); g.fillStyle = c1; g.beginPath(); g.arc(X(L * .45), Y(alt + L * .08), L * .14 * k, 0, TAU); g.fill(); return; }
+  if (a.plan === 'pez') { const o = Math.sin(t * 8) * .1; g.fillStyle = c0; g.beginPath(); g.ellipse(X(0), Y(h), L * .5 * k, L * .18 * k, o * .3, 0, TAU); g.fill(); g.beginPath(); g.moveTo(X(-L * .45), Y(h)); g.lineTo(X(-L * .7), Y(h + L * .15 + o)); g.lineTo(X(-L * .7), Y(h - L * .15 + o)); g.fill(); return; }
+  const patas = a.plan === 'alien' ? a.patas : a.plan === 'ave_suelo' ? 2 : a.plan === 'insecto' ? 6 : 4, fase = t * (2 + v / Math.max(.05, h)) * 1.5, cuerpoY = h + (a.plan === 'reptil' ? -h * .5 : 0);
+  g.lineCap = 'round';
+  for (let i = 0; i < patas; i++) { const u = patas === 2 ? 0 : (i / (patas - 1) - .5) * L * .7, ph = fase + (i % 2) * Math.PI + (patas > 4 ? i * .6 : 0), sw = Math.sin(ph) * h * .35, lev = Math.max(0, Math.cos(ph)) * h * .15; g.strokeStyle = i % 2 ? tono(c0, -.25) : c0; g.lineWidth = Math.max(1, L * .09 * k * (a.huesoRelativo ? 1 + a.huesoRelativo : 1)); g.beginPath(); g.moveTo(X(u), Y(cuerpoY)); g.lineTo(X(u + sw * .5), Y(cuerpoY * .45 + lev)); g.lineTo(X(u + sw), Y(lev)); g.stroke(); }
+  const segs = a.plan === 'alien' ? a.segmentos : 1; g.fillStyle = c0; for (let s = 0; s < segs; s++) { const u = segs === 1 ? 0 : (s / (segs - 1) - .5) * L * .8; g.beginPath(); g.ellipse(X(u), Y(cuerpoY + h * .15), L * .5 / Math.sqrt(segs) * k, Math.max(h * .3, L * .16) * k, 0, 0, TAU); g.fill(); }
+  if (a.cola) { g.strokeStyle = c0; g.lineWidth = Math.max(1, L * .07 * k); g.beginPath(); g.moveTo(X(-L * .45), Y(cuerpoY + h * .2)); g.quadraticCurveTo(X(-L * (.5 + a.cola * .4)), Y(cuerpoY + h * .5 + Math.sin(t * 3) * h * .1), X(-L * (.5 + a.cola * .6)), Y(cuerpoY + h * (.35 + .2 * Math.sin(t * 3)))); g.stroke(); }
+  const hx = L * .52, hy = cuerpoY + h * .45; g.fillStyle = c0; g.beginPath(); g.ellipse(X(hx), Y(hy), L * .17 * k, L * .14 * k, 0, 0, TAU); g.fill();
+  g.fillStyle = '#141414'; const ojos = a.plan === 'alien' ? a.ojos : 1; for (let o = 0; o < ojos; o++) { g.beginPath(); g.arc(X(hx + L * .07), Y(hy + L * .03 + (o - (ojos - 1) / 2) * L * .05), Math.max(1, L * .025 * k), 0, TAU); g.fill(); }
+  if (a.plan === 'ave_suelo') { g.fillStyle = a.colores[2] || '#d92b2b'; g.beginPath(); g.arc(X(hx), Y(hy + L * .14), L * .05 * k, 0, TAU); g.fill(); }
+};
+MC.Seres = { Persona, Animal, Genetica, GENES, PROP, ESPECIES };
+
+/* ---- js/36-taller.js ---- */
+/* =====================================================================
+   TALLER DE VEHÍCULOS · diseñar cualquier vehículo con ingeniería real y manejarlo
+   - Ficha técnica → desempeño calculado: velocidad máxima (potencia = arrastre + rodadura), 0–100 km/h (integrando
+     el par del motor por marchas y el límite de agarre μ·m·g), frenada de 100 a 0, autonomía y CO₂ por km
+     (energía del combustible o de la batería con su eficiencia), velocidad de pérdida de un avión, velocidad de
+     casco de una lancha y potencia humana de una bici (con MC.Seres).
+   - El vehículo diseñado se registra en MC.Vehiculos con sus cifras reales y su modelo de manejo.
+   - Física de carro (modelo de bicicleta con dos ejes): par por marchas, arrastre, rodadura, pendiente, agarre
+     lateral con saturación (las llantas «se rinden» y el carro derrapa), freno de mano para drift y clima (MC.Ambiente).
+   ===================================================================== */
+const Taller = {
+  /* ficha: { id, n, tipo ('carro'|'moto'|'bici'|'avion'|'lancha'|'camion'), masa, potenciaKW, parNm, rpmMax, marchas, final, rueda,
+             cd, area, crr, mu, traccion (0..1 de la masa en el eje motriz), combustible, tanqueL, bateriaKWh, eficiencia,
+             alasM2, clMax, esloraM, ciclista (MC.Seres.Persona) } */
+  disenar(f) {
+    const F = Object.assign({ tipo: 'carro', masa: 1200, potenciaKW: 80, parNm: 150, rpmMax: 6500, marchas: [3.6, 2.1, 1.4, 1.0, .8], final: 3.9, rueda: .31, cd: .32, area: 2.1, crr: .012, mu: .9, traccion: .6, combustible: 'gasolina', tanqueL: 45, eficiencia: null }, f);
+    const P = F.tipo === 'bici' && F.ciclista ? F.ciclista.potencia : F.potenciaKW * 1000, m = F.masa + (F.ciclista ? F.ciclista.masa : F.tipo === 'bici' ? 75 : 75);
+    const vmax = Fis.vmaxPotencia(P * (F.tipo === 'bici' ? 1 : .9), m, F.cd, F.area, F.crr);
+    /* 0–100 km/h: integración con par por marchas (curva parabólica con pico en el 70 % de las rpm) y límite de tracción */
+    const cien = (() => { if (vmax < 27.8) return null; let v = 0, t = 0, mar = 0; const dt = .01; while (v < 27.78 && t < 60) { const rpm = clamp(v / F.rueda * F.marchas[mar] * F.final * 60 / TAU, 1000, F.rpmMax), par = F.parNm * (1 - Math.pow((rpm / F.rpmMax - .7) / .7, 2) * .6), Fm = Math.min(par * F.marchas[mar] * F.final / F.rueda * .9, P / Math.max(v, 1)), Ft = Math.min(Fm, F.mu * m * C.g * F.traccion), Fr = Fis.arrastre(C.rhoAire, v, F.cd, F.area) + Fis.rodadura(F.crr, m); v += (Ft - Fr) / m * dt; t += dt; if (rpm >= F.rpmMax * .97 && mar < F.marchas.length - 1) { mar++; t += .25; } } return t; })();
+    const frenada = Fis.frenada(27.78, F.mu);
+    /* consumo a 90 km/h: potencia en la rueda / eficiencia → energía por km */
+    const v90 = 25, Pr = (Fis.arrastre(C.rhoAire, v90, F.cd, F.area) + Fis.rodadura(F.crr, m)) * v90, efi = F.eficiencia ?? (F.bateriaKWh ? .85 : F.tipo === 'bici' ? .24 : .27), MJkm = Pr / efi / v90 * 1000 / 1e6;
+    let autonomia = null, consumo = null, co2 = null;
+    if (F.bateriaKWh) { autonomia = F.bateriaKWh * 3.6 / MJkm; consumo = MJkm / 3.6 * 100; co2 = 0; }
+    else if (F.tipo !== 'bici' && Quim.COMBUSTIBLES[F.combustible]) { const Q = Quim.COMBUSTIBLES[F.combustible]; consumo = MJkm / Q.MJL * 100; autonomia = F.tanqueL / (consumo / 100); co2 = (Q.CO2kgL || 0) * consumo / 100 * 1000; }
+    else if (F.tipo === 'bici') { consumo = MJkm / 4.184e-3; }   // kcal por km del ciclista
+    const r = { ficha: F, masaTotal: m, vmax, ceroCien: cien, frenada100: frenada, consumo, autonomia, co2gkm: co2, potenciaPeso: P / m };
+    if (F.tipo === 'avion') { const atm = Fis.atmosfera(F.altitud || 0); r.vPerdida = Math.sqrt(2 * m * C.g / (atm.rho * (F.alasM2 || 16) * (F.clMax || 1.6))); }
+    if (F.tipo === 'lancha') r.vCasco = 1.25 * Math.sqrt(F.esloraM || 5);
+    return r;
+  },
+  /* registra el diseño como vehículo jugable del motor (con sus cifras reales y el modelo de manejo) */
+  registrar(d, extra = {}) {
+    const F = d.ficha, clase = { carro: 'auto', moto: 'moto', bici: 'rueda', avion: 'aire', lancha: 'agua', camion: 'pesado' }[F.tipo] || 'auto', base = { auto: 'carro', moto: 'moto', rueda: 'bici', aire: 'avioneta', agua: 'lancha', pesado: 'camion' }[clase];
+    const acc = d.ceroCien ? 27.78 / d.ceroCien : d.potenciaPeso * .25, v = Object.assign({ id: F.id || 'disenado_' + Math.round(F.masa), n: F.n || 'Mi vehículo', de: base, vmax: d.vmax, acc, freno: F.mu * C.g * .9, masa: d.masaTotal, largo: F.largo || (clase === 'auto' ? 4.3 : clase === 'moto' ? 2.1 : 1.8), ancho: F.ancho || (clase === 'auto' ? 1.8 : .8), ficha: F, desempeno: d, dinamica: clase === 'auto' || clase === 'pesado' ? 'carro' : null, color: F.color || '#00e5ff', vmin: d.vPerdida }, extra);
+    return Vehiculos.registrar(v);
+  }
+};
+/* ---------- manejo de carro: modelo de bicicleta con agarre que se satura (derrape) ---------- */
+class ManejoCarro {
+  constructor(v) { const F = v.ficha || {}; this.v = v; this.m = v.masa || 1200; this.L = F.distEjes || 2.6; this.a = this.L * .45; this.b = this.L - this.a; this.Iz = this.m * (this.L * this.L) / 12 * 1.4; this.mu = F.mu || .9; this.Cf = 80000 * this.m / 1200; this.Cr = 90000 * this.m / 1200; this.vx = 0; this.vy = 0; this.r = 0; this.marcha = 1; }
+  /* E: { acel, giro, freno de mano (salto) } · ambiente: { agarre (clima × suelo), pend } · devuelve { avance, lateral, giro } por segundo */
+  paso(dt, C2, E, amb = {}) {
+    const v = this.v, F = v.ficha || {}, mu = this.mu * (amb.agarre ?? 1), N = this.m * C.g, delta = (E.giro || 0) * (.55 - .35 * clamp(Math.abs(this.vx) / 40, 0, 1)), mano = !!E.salto;
+    const Pm = (F.potenciaKW || v.vmax * v.acc * this.m / 1000 * .5) * 1000, Fmotor = (E.acel || 0) > 0 ? Math.min(Pm / Math.max(3, Math.abs(this.vx)), mu * N * (F.traccion || .6)) * E.acel : 0, Ffreno = (E.acel || 0) < 0 ? -E.acel * mu * N * .9 * Math.sign(this.vx || 1) : 0;
+    const Fres = Fis.arrastre(C.rhoAire, this.vx, F.cd || .32, F.area || 2.1) * Math.sign(this.vx) + Fis.rodadura(F.crr || .012, this.m) * Math.sign(this.vx) + Fis.pendiente(this.m, amb.pend || 0);
+    /* ángulos de deriva de cada eje y fuerzas laterales con saturación (μ·carga del eje) */
+    const vx = Math.max(.5, Math.abs(this.vx)) * Math.sign(this.vx || 1), af = Math.atan2(this.vy + this.a * this.r, Math.abs(vx)) - delta * Math.sign(vx), ar = Math.atan2(this.vy - this.b * this.r, Math.abs(vx));
+    const Nf = N * this.b / this.L, Nr = N * this.a / this.L, sat = (Cx, al, Nn) => clamp(-Cx * al, -mu * Nn, mu * Nn), Fyf = sat(this.Cf, af, Nf), Fyr = sat(this.Cr * (mano ? .25 : 1), ar, Nr) * (Math.abs(Fmotor) > mu * Nr * .8 ? .6 : 1);
+    const ax = (Fmotor - Ffreno - Fres - Fyf * Math.sin(delta)) / this.m + this.vy * this.r, ay = (Fyf * Math.cos(delta) + Fyr) / this.m - this.vx * this.r, ar2 = (this.a * Fyf * Math.cos(delta) - this.b * Fyr) / this.Iz;
+    this.vx += ax * dt; this.vy += ay * dt; this.r += ar2 * dt; if (Math.abs(this.vx) < .3 && !E.acel) { this.vx = 0; this.vy *= .8; this.r *= .8; }
+    this.vy *= Math.pow(.2, dt); this.derrape = Math.abs(Math.atan2(this.vy, Math.abs(this.vx) + .1));
+    return { avance: this.vx, lateral: this.vy, giro: this.r, derrape: this.derrape };
+  }
+}
+Object.assign(MC, { Taller, ManejoCarro });
+/* el cuerpo del jugador usa el manejo de carro cuando su vehículo lo pide (sin tocar la física base) */
+Cuerpo.prototype._actualizarBase = Cuerpo.prototype.actualizar;
+Cuerpo.prototype.actualizar = function (dt, E = {}) {
+  const V = this.veh; if (V.dinamica !== 'carro') { this._carro = null; return this._actualizarBase(dt, E); }
+  dt = Math.min(dt, .05); this.eventos.length = 0; if (!this._carro || this._carro.v !== V) { this._carro = new ManejoCarro(V); this._carro.vx = this.v; }
+  let acel = E.acel || 0, giro = E.giro || 0; if (E.dir && E.dir.m > .08) { const d = angDif(this.a, Math.atan2(E.dir.y, E.dir.x)); giro = clamp(d * 2, -1, 1); acel = E.dir.m * (Math.abs(d) > 2.4 ? -.5 : 1); }
+  this.tt = this.mundo.suelo(this.x, this.y); this.pend = this.mundo.pendiente(this.x, this.y, this.a, 12);
+  const agarre = (TT_SUPERFICIE[this.tt] || .5) / (this.tt === TT.CICLO ? 1.3 : 1) * Ambiente.agarre(this.clima), R = this._carro.paso(dt, null, { acel, giro, salto: E.salto || E.turbo && false }, { agarre: clamp(agarre, .1, 1), pend: this.pend });
+  const ca = Math.cos(this.a), sa = Math.sin(this.a), nx = this.x + (ca * R.avance - sa * R.lateral) * dt, ny = this.y + (sa * R.avance + ca * R.lateral) * dt;
+  if (this.puede(nx, ny)) { this.x = nx; this.y = ny; } else { if (Math.abs(R.avance) > 4) { this.eventos.push('choque'); MC.emit('choque', this); } this._carro.vx *= -.2; this._carro.vy = 0; this._carro.r = 0; }
+  this.a += R.giro * dt; this.v = R.avance; this.derrape = R.derrape; this._niveles(dt); this.estado = 'sentado'; return this;
+};
+
 /* ---- js/40-dibujo.js ---- */
 /* =====================================================================
    DIBUJO 2D COMPARTIDO · paleta del motor, losas del suelo en caché y pinceles de edificios y vehículos
@@ -1266,7 +1990,7 @@ Object.assign(MC, { Camara, CAM_PERFIL });
    el pixel, la 3D oblicua, la maqueta 2:1 y el piso de la vista 3D en WebGL.
    Cada juego puede cambiar la paleta (MC.arte.registrar(juego, { suelo: {...}, via: {...} })).
    ===================================================================== */
-const PAL_SUELO = ['#78ad55', '#3f7a3c', '#cdbfa5', '#bdb3a2', '#5d636e', '#565c68', '#c9c4b8', '#4caf63', '#4f9fd0', '#5f9fb8', '#d8cfbd', '#6b7180', '#e7e2d6', '#b9b4a8', '#4d525c', '#a9a395', '#b8a98e'];
+const PAL_SUELO = ['#78ad55', '#3f7a3c', '#cdbfa5', '#bdb3a2', '#5d636e', '#565c68', '#c9c4b8', '#4caf63', '#4f9fd0', '#5f9fb8', '#d8cfbd', '#6b7180', '#e7e2d6', '#b9b4a8', '#4d525c', '#a9a395', '#b8a98e', '#e6d7a8', '#f2f5f9', '#8d8a86'];
 const PAL_VIA = { anden: '#d4cfc3', asfalto: '#4a4f59', avenida: '#444955', autopista: '#3c414b', linea: '#f4f1e6', amarilla: '#f2c400', ciclo: '#3fae5a', cicloBorde: '#e8f5d0', peatonal: '#e3dccb', escalas: '#b8a98e', sendero: '#c9b78f' };
 MC.arte.pieles.motor.suelo = PAL_SUELO; MC.arte.pieles.motor.via = PAL_VIA;
 /* lienzo fuera de pantalla (navegador u OffscreenCanvas; en Node, null) */
@@ -1496,8 +2220,9 @@ const Vista2D = {
     const { g, pr, z, W, H, E } = D; if (z < .35) return; g.font = '700 ' + Math.round(clamp(z * 4, 10, 14)) + 'px system-ui, sans-serif'; g.textAlign = 'center';
     const pon = (t, x, y, col) => { const [sx, sy] = pr(x, y, 8); if (sx < -60 || sx > W + 60 || sy < -20 || sy > H + 20) return; const w = g.measureText(t).width + 10; g.fillStyle = 'rgba(10,35,66,.82)'; g.fillRect(sx - w / 2, sy - 16, w, 18); g.fillStyle = col; g.fillText(t, sx, sy - 3); };
     for (const l of E.transporte ? E.transporte.lineas : []) if (l.clase === 'metro' || l.clase === 'cable' || l.clase === 'tram') for (const s of l.est) { const q = l.T.at(s.s); pon(s.nombre, q.x, q.y, '#ffffff'); }
-    if (z > .9) for (const s of E.mundo.transporte.encicla) pon('🚲 ' + s.nombre, s.x, s.y, '#c4ec7c');
-    for (const L of E.mundo.lugares) if (!L.secreto) pon(L.nombre, L.x, L.y, '#ffd84a');
+    if (z > .9) for (const s of E.mundo.transporte.encicla || []) pon('🚲 ' + s.nombre, s.x, s.y, '#c4ec7c');
+    const lug = []; for (const L of E.mundo.lugares) { if (L.secreto) continue; const [sx, sy] = pr(L.x, L.y, 8); if (sx > -40 && sx < W + 40 && sy > 0 && sy < H + 20) lug.push([Math.hypot(sx - W / 2, sy - H / 2), L]); }
+    lug.sort((a, b) => a[0] - b[0]); for (const [, L] of lug.slice(0, z > 3 ? 14 : 8)) pon(L.nombre, L.x, L.y, '#ffd84a');   // pocas y las del centro: que no tapen el mapa
   }
 };
 MC.Vista2D = Vista2D;
@@ -1591,7 +2316,7 @@ class Panoramica {
     /* emblemáticos: hitos con huella y altura (la aguja del Coltejer, la basílica…) */
     for (const h of M.hitos) { const P = h.huella[0]; let cx = 0, cy = 0; for (let t = 0; t < P.length; t += 2) { cx += P[t]; cy += P[t + 1]; } cx /= P.length / 2; cy /= P.length / 2; if (cx < bx0 - 900 || cx > bx1 + 900 || cy < by0 - 900 || cy > by1 + 900) continue; const p = proyecta(cx, cy); if (p.s < s0 || p.s >= s0 + PANO_BLOQUE || p.d < 0 || p.d > 900) continue; let w = 0; for (let t = 0; t < P.length; t += 2) w = Math.max(w, Math.hypot(P[t] - cx, P[t + 1] - cy)); B.hitos.push({ s: p.s, d: p.d, h: h.alto + (h.corona || 0), w: w * 1.6, clase: h.clase, nombre: h.nombre, cota: M.cota(cx, cy) }); }
     /* estaciones EnCicla y del sistema cerca de la vía */
-    for (const e of M.transporte.encicla) { if (e.x < bx0 - 40 || e.x > bx1 + 40 || e.y < by0 - 40 || e.y > by1 + 40) continue; const p = proyecta(e.x, e.y); if (Math.abs(p.d) < 40 && p.s >= s0 && p.s < s0 + PANO_BLOQUE) B.estaciones.push({ s: p.s, d: p.d, tipo: 'encicla', nombre: e.nombre }); }
+    for (const e of M.transporte.encicla || []) { if (e.x < bx0 - 40 || e.x > bx1 + 40 || e.y < by0 - 40 || e.y > by1 + 40) continue; const p = proyecta(e.x, e.y); if (Math.abs(p.d) < 40 && p.s >= s0 && p.s < s0 + PANO_BLOQUE) B.estaciones.push({ s: p.s, d: p.d, tipo: 'encicla', nombre: e.nombre }); }
     for (const l of M.transporte.lineas) if (l.clase === 'metro' || l.clase === 'tram' || l.clase === 'cable' || l.clase === 'brt') for (const e of l.estaciones) { if (e[1] < bx0 - 250 || e[1] > bx1 + 250 || e[2] < by0 - 250 || e[2] > by1 + 250) continue; const p = proyecta(e[1], e[2]); if (p.d > -30 && p.d < 250 && p.s >= s0 && p.s < s0 + PANO_BLOQUE) B.estaciones.push({ s: p.s, d: p.d, tipo: l.clase, color: l.color, nombre: e[0], linea: l.id, nivel: l.clase === 'metro' ? Math.max(0, M.nivel(e[1], e[2])) : 0, cota: M.cota(e[1], e[2]) }); }
     /* puentes, viaducto y deprimidos: el trazo va encima (alineado) o pasa por debajo (cruce) */
     for (const P of M.pasosEn(bx0 - 60, by0 - 60, bx1 + 60, by1 + 60)) {
@@ -1760,6 +2485,7 @@ class Panoramica {
     if (Cl.lluvia > .05) { g.strokeStyle = 'rgba(220,235,245,' + (.25 + Cl.lluvia * .3) + ')'; g.lineWidth = 1; g.beginPath(); const n = Math.round(40 + Cl.lluvia * 140), vx = Math.cos(Cl.viento.dir) * Cl.viento.v * .6; for (let i = 0; i < n; i++) { const x = ((h2(i, 3, 3) * W + t * (90 + vx * 30)) % W + W) % W, y = (h2(i, 4, 3) * H + t * 700 * (1 + h2(i, 5, 3))) % H; g.moveTo(x, y); g.lineTo(x - 3 - vx, y + 13); } g.stroke(); }
     if (Cl.niebla > .3) { g.fillStyle = 'rgba(200,205,210,' + (Cl.niebla - .3) * .5 + ')'; g.fillRect(0, 0, W, H); }
     if (Cl.rayo > .05) { g.fillStyle = 'rgba(255,255,255,' + Cl.rayo * .55 + ')'; g.fillRect(0, 0, W, H); }
+    if (MC.efectosClima) MC.efectosClima(g, W, H, Cl, t, true);
   }
   /* laderas con barrios (de El Metro, 23-lado.js): casas de ladrillo que trepan desde el valle con monte arriba y
      luces de noche; aquí la densidad sale de lo construido de verdad en esa dirección (capa urb*).
@@ -2009,8 +2735,16 @@ class Vistas {
     if (Cl.lluvia > .05) { g.strokeStyle = 'rgba(210,228,245,' + (.22 + Cl.lluvia * .3) + ')'; g.lineWidth = 1; g.beginPath(); const n = Math.round((40 + Cl.lluvia * 120) * (W * H / 3e5)), vx = Math.cos(Cl.viento.dir) * Cl.viento.v; for (let i = 0; i < n; i++) { const x = ((h2(i, 3, 3) * W + t * 60 * vx) % W + W) % W, y = (h2(i, 4, 3) * H + t * (gl ? 700 : 260) * (1 + h2(i, 5, 3))) % H; g.moveTo(x, y); g.lineTo(x - vx * (gl ? 2 : .6), y + (gl ? 14 : 5)); } g.stroke(); }
     if (!gl && Cl.niebla > .25) { g.fillStyle = 'rgba(205,210,215,' + ((Cl.niebla - .25) * .55).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }
     if (Cl.rayo > .05) { g.fillStyle = 'rgba(255,255,255,' + (Cl.rayo * .5).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }
+    MC.efectosClima(g, W, H, Cl, t, gl);
   }
 }
+/* nieve que cae y se acumula, granizo y calor (los climas de MC.ClimaGlobal) */
+MC.efectosClima = function (g, W, H, Cl, t, perspectiva) {
+  if (Cl.nieveSuelo > .3 && !perspectiva) { g.fillStyle = 'rgba(245,248,252,' + Math.min(.55, Cl.nieveSuelo / 25).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }
+  if (Cl.nieve > .05) { g.fillStyle = 'rgba(255,255,255,.9)'; const n = Math.round((60 + Cl.nieve * 160) * (W * H / 3e5)), vx = Math.cos(Cl.viento.dir) * Cl.viento.v * 6; for (let i = 0; i < n; i++) { const x = ((h2(i, 7, 3) * W + t * vx + Math.sin(t + i) * 12) % W + W) % W, y = (h2(i, 8, 3) * H + t * (35 + h2(i, 9, 3) * 30)) % H, r = 1 + h2(i, 6, 3) * 1.8; g.fillRect(x, y, r, r); } }
+  if (Cl.granizo > .1) { g.fillStyle = 'rgba(235,245,255,.9)'; for (let i = 0; i < 70; i++) { const x = (h2(i, 3, 5) * W + t * 40) % W, y = (h2(i, 4, 5) * H + t * 900) % H; g.fillRect(x, y, 2.2, 2.2); } }
+  if (Cl.calor > .05) { g.fillStyle = 'rgba(255,170,60,' + (Cl.calor * .12).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }
+};
 Object.assign(MC, { Vistas, VISTAS });
 
 /* ---- js/47-seguir.js ---- */
@@ -2077,6 +2811,80 @@ class SeguirRuta {
   get alFin() { return this.rec.cerrado ? this.base + this.rec.largo - this.s : Infinity; }
 }
 MC.SeguirRuta = SeguirRuta;
+
+/* ---- js/48-interiores.js ---- */
+/* =====================================================================
+   INTERIORES PROCEDURALES · cualquier edificio del mundo se puede abrir por dentro
+   - El plano sale de la huella del edificio (su rectángulo orientado) y de su uso: casa (con el patio de las casas
+     paisas), apartamentos, local comercial, oficina, iglesia, colegio, bodega.
+   - Partición binaria (BSP) guiada por un programa de cuartos con áreas reales; puertas entre cuartos vecinos de modo
+     que todo queda conectado desde la entrada (árbol de expansión); ventanas en los muros de afuera.
+   - Muebles con medidas reales contra los muros y con espacio para pasar (cama 1,4×1,9 m, nevera 0,7×0,7 m…).
+   - Choques para caminar adentro (`solido`), y dibujo de planta para la vista cenital y el pixel.
+   Determinista: el mismo edificio tiene siempre el mismo interior.
+   ===================================================================== */
+const PROGRAMAS = {
+  casa: [['sala', 18], ['comedor', 10], ['cocina', 8], ['alcoba', 11], ['alcoba', 9], ['bano', 4], ['patio', 9], ['alcoba', 9], ['ropas', 4]],
+  apartamento: [['sala', 16], ['cocina', 7], ['alcoba', 10], ['alcoba', 8], ['bano', 4], ['balcon', 4]],
+  comercio: [['local', 45], ['bodega', 12], ['bano', 3], ['oficina', 8]],
+  oficina: [['recepcion', 14], ['oficina', 12], ['oficina', 12], ['sala_juntas', 16], ['cocineta', 6], ['bano', 4], ['bano', 4]],
+  iglesia: [['nave', 160], ['altar', 30], ['sacristia', 14], ['bano', 4]],
+  colegio: [['aula', 48], ['aula', 48], ['aula', 48], ['rectoria', 14], ['bano', 8], ['patio', 60]],
+  bodega: [['bodega', 200], ['oficina', 12], ['bano', 4]]
+};
+const PISO_DE = { sala: '#d6b48a', comedor: '#d6b48a', alcoba: '#c49a6c', cocina: '#e8e2d4', bano: '#cfe3ea', patio: '#a8b89a', ropas: '#e0dbcf', balcon: '#cfc6b5', local: '#e6e0d2', bodega: '#bdb8ad', oficina: '#d0c8b8', recepcion: '#e8e2d4', sala_juntas: '#c9b391', cocineta: '#e8e2d4', nave: '#d9c9a8', altar: '#b5542f', sacristia: '#c9b391', aula: '#d8d0bc', rectoria: '#c9b391', pasillo: '#d9d2c2' };
+const MUEBLES = { sala: [['sofa', 2.1, .9], ['mesa_centro', 1, .6], ['tv', 1.4, .4], ['matera', .5, .5]], comedor: [['comedor', 1.6, .9]], cocina: [['estufa', .6, .6], ['nevera', .7, .7], ['lavaplatos', 1.2, .6], ['mesón', 1.6, .6]], alcoba: [['cama', 1.4, 1.9], ['closet', 1.6, .6], ['mesa_noche', .45, .45]], bano: [['inodoro', .4, .65], ['lavamanos', .5, .45], ['ducha', .9, .9]], patio: [['matera', .5, .5], ['matera', .5, .5], ['lavadero', .8, .6]], ropas: [['lavadora', .6, .6]], balcon: [['matera', .5, .5]], local: [['mostrador', 2.4, .7], ['estante', 2, .5], ['estante', 2, .5], ['nevera', .8, .7]], bodega: [['estante', 2.4, .8], ['estante', 2.4, .8], ['estiba', 1.2, 1]], oficina: [['escritorio', 1.4, .7], ['silla', .55, .55], ['archivador', .9, .5]], recepcion: [['mostrador', 2, .7], ['sofa', 1.8, .8]], sala_juntas: [['mesa_juntas', 3, 1.2]], cocineta: [['mesón', 1.6, .6], ['nevera', .7, .7]], nave: [['banca', 3, .5], ['banca', 3, .5], ['banca', 3, .5], ['banca', 3, .5], ['banca', 3, .5], ['banca', 3, .5]], altar: [['altar', 2.4, 1]], sacristia: [['closet', 1.6, .6]], aula: [['tablero', 3, .15], ['pupitre', .7, .5], ['pupitre', .7, .5], ['pupitre', .7, .5], ['pupitre', .7, .5], ['pupitre', .7, .5], ['pupitre', .7, .5]], rectoria: [['escritorio', 1.4, .7]] };
+const Interiores = {
+  PROGRAMAS, PISO_DE, MUEBLES,
+  programaDe(e) { const k = e.clase || ''; if (k === 'iglesia') return 'iglesia'; if (k === 'educativo') return 'colegio'; if (k === 'nave' || k === 'parqueadero' || k === 'techo') return 'bodega'; if (k === 'comercio') return 'comercio'; if (k === 'civico' || k === 'salud' || k === 'transporte') return 'oficina'; if (k === 'edificio' || k === 'torre') return 'apartamento'; return 'casa'; },
+  /* plano local (metros, origen en una esquina, x a lo largo del edificio) */
+  generar(e, op = {}) {
+    const r = mulberry32(op.semilla ?? ((e.s || .5) * 1e9 | 0)), W = Math.max(5, (e.hw || 4) * 2), D = Math.max(5, (e.hd || 4) * 2), prog = op.programa || Interiores.programaDe(e), lista = PROGRAMAS[prog].slice();
+    const areaT = W * D, sumaP = lista.reduce((a, q) => a + q[1], 0), escala = areaT / sumaP, cuartos = [];
+    /* BSP: parte el rectángulo en dos con una proporción que respeta el área pedida de cada lado */
+    const partir = (x, y, w, h, items) => {
+      if (items.length === 1 || w * h < 8) { cuartos.push({ tipo: items[0][0], x, y, w, h }); for (const extra of items.slice(1)) cuartos.push({ tipo: extra[0], x, y, w: 0, h: 0, sinEspacio: true }); return; }
+      const A = items.reduce((a, q) => a + q[1], 0); let mejor = 1, bd = 1e9, acum = 0; for (let i = 1; i < items.length; i++) { acum += items[i - 1][1]; const d = Math.abs(acum / A - .5); if (d < bd) { bd = d; mejor = i; } }
+      const izq = items.slice(0, mejor), der = items.slice(mejor), f = izq.reduce((a, q) => a + q[1], 0) / A, porAncho = w >= h ? true : w * 1.2 > h && r() < .3;
+      if (porAncho) { const c = Math.max(1.6, Math.min(w - 1.6, w * f)); partir(x, y, c, h, izq); partir(x + c, y, w - c, h, der); }
+      else { const c = Math.max(1.6, Math.min(h - 1.6, h * f)); partir(x, y, w, c, izq); partir(x, y + c, w, h - c, der); }
+    };
+    partir(0, 0, W, D, lista.map(q => [q[0], q[1] * escala]));
+    const C2 = cuartos.filter(c => !c.sinEspacio);
+    /* vecinos: comparten un muro de al menos 0,9 m (cabe una puerta) */
+    const muro = (a, b) => { const e2 = .01; if (Math.abs(a.x + a.w - b.x) < e2 || Math.abs(b.x + b.w - a.x) < e2) { const y0 = Math.max(a.y, b.y), y1 = Math.min(a.y + a.h, b.y + b.h); if (y1 - y0 >= .9) return { x: Math.abs(a.x + a.w - b.x) < e2 ? a.x + a.w : a.x, y: (y0 + y1) / 2, vertical: true, largo: y1 - y0 }; } if (Math.abs(a.y + a.h - b.y) < e2 || Math.abs(b.y + b.h - a.y) < e2) { const x0 = Math.max(a.x, b.x), x1 = Math.min(a.x + a.w, b.x + b.w); if (x1 - x0 >= .9) return { x: (x0 + x1) / 2, y: Math.abs(a.y + a.h - b.y) < e2 ? a.y + a.h : a.y, vertical: false, largo: x1 - x0 }; } return null; };
+    /* entrada: el cuarto público más cercano a la fachada (y = 0); puertas por un árbol de expansión desde ahí */
+    const pub = ['sala', 'local', 'recepcion', 'nave', 'aula', 'bodega', 'pasillo'], ent = C2.slice().sort((a, b) => (a.y - b.y) || (pub.includes(b.tipo) - pub.includes(a.tipo)))[0], puertas = [{ x: ent.x + ent.w / 2, y: 0, vertical: false, ancho: prog === 'iglesia' ? 2.4 : 1.1, entrada: true }], dentro = new Set([ent]);
+    while (dentro.size < C2.length) { let par = null; for (const a of dentro) { for (const b of C2) { if (dentro.has(b)) continue; const m2 = muro(a, b); if (m2 && (!par || (b.tipo === 'bano') < (par.b.tipo === 'bano'))) par = { a, b, m: m2 }; } } if (!par) break; dentro.add(par.b); puertas.push({ x: par.m.x, y: par.m.y, vertical: par.m.vertical, ancho: .9 }); }
+    /* ventanas en los muros de afuera de cuartos con luz (no en baños ni bodegas) */
+    const ventanas = []; for (const c of C2) { if (['bano', 'bodega', 'ropas'].includes(c.tipo)) continue; if (c.y < .01 && c !== ent) ventanas.push({ x: c.x + c.w / 2, y: 0, vertical: false, ancho: Math.min(1.8, c.w * .5) }); if (c.y + c.h > D - .01) ventanas.push({ x: c.x + c.w / 2, y: D, vertical: false, ancho: Math.min(1.8, c.w * .5) }); if (c.x < .01) ventanas.push({ x: 0, y: c.y + c.h / 2, vertical: true, ancho: Math.min(1.5, c.h * .4) }); if (c.x + c.w > W - .01) ventanas.push({ x: W, y: c.y + c.h / 2, vertical: true, ancho: Math.min(1.5, c.h * .4) }); }
+    /* muebles contra los muros, sin tapar puertas, con 0,6 m para pasar */
+    const muebles = [], libreDePuerta = (x, y, w, h) => puertas.every(p => Math.hypot(clamp(p.x, x, x + w) - p.x, clamp(p.y, y, y + h) - p.y) > 1.1);
+    for (const c of C2) { const L = (MUEBLES[c.tipo] || []).slice(); let i = 0;
+      for (const [tipo, mw, mh] of L) { let puesto = false; for (let intento = 0; intento < 12 && !puesto; intento++, i++) { const lado = i % 4, rot = lado % 2 === 1, w2 = rot ? mh : mw, h2b = rot ? mw : mh; if (w2 > c.w - .3 || h2b > c.h - .3) continue; const t = r(); let x, y; if (lado === 0) { x = c.x + .1 + t * (c.w - w2 - .2); y = c.y + .1; } else if (lado === 1) { x = c.x + c.w - w2 - .1; y = c.y + .1 + t * (c.h - h2b - .2); } else if (lado === 2) { x = c.x + .1 + t * (c.w - w2 - .2); y = c.y + c.h - h2b - .1; } else { x = c.x + .1; y = c.y + .1 + t * (c.h - h2b - .2); }
+          if (tipo === 'banca' || tipo === 'pupitre' || tipo === 'mesa_centro' || tipo === 'comedor' || tipo === 'mesa_juntas' || tipo === 'estiba') { x = c.x + (c.w - w2) / 2 + (r() - .5) * Math.max(0, c.w - w2 - 1.2); y = c.y + .8 + r() * Math.max(0, c.h - h2b - 1.6); }
+          const choca = muebles.some(m => x < m.x + m.w + .6 && x + w2 + .6 > m.x && y < m.y + m.h + .6 && y + h2b + .6 > m.y); if (!choca && libreDePuerta(x, y, w2, h2b)) { muebles.push({ tipo, x, y, w: w2, h: h2b, cuarto: c.tipo }); puesto = true; } } } }
+    const pisos = Math.max(1, e.pis || 1), plano = { programa: prog, ancho: W, fondo: D, pisos, cuartos: C2, puertas, ventanas, muebles, escaleras: pisos > 1 ? { x: W - 1.3, y: D - 3.2, w: 1.1, h: 3 } : null, edificio: e };
+    plano.solido = (x, y) => { if (x < .15 || y < .15 || x > W - .15 || y > D - .15) return !puertas.some(p => p.entrada && Math.abs(p.x - x) < p.ancho / 2 && y < .3); if (muebles.some(m => x > m.x && x < m.x + m.w && y > m.y && y < m.y + m.h && !['tapete', 'ducha'].includes(m.tipo))) return true; for (const c of C2) for (const b of [[c.x, c.y, c.x + c.w, c.y], [c.x, c.y, c.x, c.y + c.h]]) { const vert = b[0] === b[2]; if (vert ? Math.abs(x - b[0]) < .08 && y > b[1] && y < b[3] : Math.abs(y - b[1]) < .08 && x > b[0] && x < b[2]) { if (!puertas.some(p => p.vertical === vert && (vert ? Math.abs(p.x - b[0]) < .1 && Math.abs(p.y - y) < p.ancho / 2 : Math.abs(p.y - b[1]) < .1 && Math.abs(p.x - x) < p.ancho / 2))) return true; } } return false; };
+    plano.cuartoEn = (x, y) => C2.find(c => x >= c.x && x <= c.x + c.w && y >= c.y && y <= c.y + c.h) || null;
+    return plano;
+  },
+  /* planta vista desde arriba: (x, y) esquina en pantalla, esc px por metro */
+  dibujar(g, P, x, y, esc, op = {}) {
+    g.save(); g.translate(x, y); g.scale(esc, esc); g.lineJoin = 'round';
+    g.fillStyle = '#2b2f38'; g.fillRect(-.25, -.25, P.ancho + .5, P.fondo + .5);
+    for (const c of P.cuartos) { g.fillStyle = PISO_DE[c.tipo] || '#d9d2c2'; g.fillRect(c.x + .06, c.y + .06, c.w - .12, c.h - .12); if (c.tipo === 'bano' || c.tipo === 'cocina') { g.strokeStyle = 'rgba(0,0,0,.08)'; g.lineWidth = .03; for (let q = .3; q < c.w; q += .3) { g.beginPath(); g.moveTo(c.x + q, c.y); g.lineTo(c.x + q, c.y + c.h); g.stroke(); } } }
+    g.strokeStyle = '#2b2f38'; g.lineWidth = .14; for (const c of P.cuartos) g.strokeRect(c.x, c.y, c.w, c.h);
+    for (const p of P.puertas) { g.fillStyle = PISO_DE.pasillo; if (p.vertical) g.fillRect(p.x - .1, p.y - p.ancho / 2, .2, p.ancho); else g.fillRect(p.x - p.ancho / 2, p.y - .1, p.ancho, .2); g.strokeStyle = 'rgba(43,47,56,.5)'; g.lineWidth = .04; g.beginPath(); if (p.vertical) g.arc(p.x, p.y - p.ancho / 2, p.ancho, 0, Math.PI / 2); else g.arc(p.x - p.ancho / 2, p.y, p.ancho, 0, Math.PI / 2); g.stroke(); }
+    for (const v of P.ventanas) { g.fillStyle = '#8cbedc'; if (v.vertical) g.fillRect(v.x - .1, v.y - v.ancho / 2, .2, v.ancho); else g.fillRect(v.x - v.ancho / 2, v.y - .1, v.ancho, .2); }
+    const COL = { cama: '#f2efe8', sofa: '#6d8fb3', closet: '#8d6e63', estufa: '#3b3d42', nevera: '#e9eef3', inodoro: '#ffffff', ducha: '#b7d7e6', lavamanos: '#ffffff', mostrador: '#a1887f', estante: '#8d6e63', banca: '#8d6e63', altar: '#efe8d8', escritorio: '#a1887f', comedor: '#8d6e63', tv: '#1d1f24', matera: '#4a9444', pupitre: '#a1887f', tablero: '#2e5d3a' };
+    for (const m of P.muebles) { g.fillStyle = COL[m.tipo] || '#bcaaa4'; g.fillRect(m.x, m.y, m.w, m.h); g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = .03; g.strokeRect(m.x, m.y, m.w, m.h); if (m.tipo === 'cama') { g.fillStyle = '#c43a26'; g.fillRect(m.x + m.w * .08, m.y + m.h * .3, m.w * .84, m.h * .62); } }
+    if (P.escaleras) { const s2 = P.escaleras; g.fillStyle = '#bdb8ad'; g.fillRect(s2.x, s2.y, s2.w, s2.h); g.strokeStyle = '#7d7f84'; g.lineWidth = .04; for (let q = 0; q < s2.h; q += .28) { g.beginPath(); g.moveTo(s2.x, s2.y + q); g.lineTo(s2.x + s2.w, s2.y + q); g.stroke(); } }
+    if (op.etiquetas !== false && esc > 14) { g.fillStyle = 'rgba(20,24,32,.55)'; g.font = '600 ' + (.42) + 'px system-ui'; g.textAlign = 'center'; for (const c of P.cuartos) if (c.w > 1.8) g.fillText({ bano: 'baño', sala_juntas: 'juntas', recepcion: 'recepción', balcon: 'balcón', rectoria: 'rectoría', sacristia: 'sacristía' }[c.tipo] || c.tipo, c.x + c.w / 2, c.y + c.h / 2); }
+    g.restore();
+  }
+};
+MC.Interiores = Interiores;
 
 /* ---- js/50-run.js ---- */
 /* =====================================================================
@@ -2179,7 +2987,256 @@ const Run = {
 };
 MC.Run = Run;
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","10-mundo.js","11-red.js","20-tiempo.js","21-trafico.js","22-transporte.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","45-gl.js","46-vistas.js","47-seguir.js","50-run.js"];
+/* ---- js/60-musica.js ---- */
+/* =====================================================================
+   MÚSICA PROCEDURAL · electrónica, techno, synthwave, rock, jazz y lo‑fi, más clásicos de dominio público adaptados
+   - COMPOSITOR (puro y determinista, se prueba en Node): armonía por estilo (progresiones reales: I‑V‑vi‑IV, ii‑V‑I…),
+     bajo (contratiempo electrónico, corcheas de rock, walking bass de jazz, notas largas de lo‑fi), batería por patrón
+     de 16 pasos, voces de acordes (power chords, séptimas, novenas) y melodía.
+   - CLÁSICOS (obras de dominio público, transcripción propia): Himno a la alegría y Para Elisa (Beethoven), Minueto en
+     Sol (Petzold, del cuaderno de Ana Magdalena Bach), Canon (Pachelbel), Gimnopedia n.º 1 (Satie), En la gruta del
+     rey de la montaña (Grieg) y La primavera (Vivaldi). El arreglista los reharmoniza y los lleva a cada estilo.
+   - SINTETIZADOR (WebAudio, sin muestras ni internet): piano, pad, lead, bajo, guitarra distorsionada, órgano,
+     batería sintetizada; lo‑fi con filtro, polvo de vinilo y vaivén; electrónica con «sidechain».
+   - ADAPTATIVO: MC.Musica.adaptar({ velocidad, hora, clima, tension }) cambia estilo y energía según el juego.
+   ===================================================================== */
+const NOTA = n => { const m = n.match(/^([A-G])(#|b)?(-?\d)$/); return 12 * (+m[3] + 1) + { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[m[1]] + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0); };
+const ESCALA = { mayor: [0, 2, 4, 5, 7, 9, 11], menor: [0, 2, 3, 5, 7, 8, 10], dorica: [0, 2, 3, 5, 7, 9, 10], mixolidia: [0, 2, 4, 5, 7, 9, 10], pentatonica: [0, 3, 5, 7, 10], blues: [0, 3, 5, 6, 7, 10] };
+/* clásicos: [nota MIDI | null (silencio), duración en tiempos] en compás 4/4 salvo que diga otra cosa */
+const CLASICOS = {
+  himno_alegria: { n: 'Himno a la alegría', autor: 'L. van Beethoven (1824)', tono: 60, modo: 'mayor', notas: [[64, 1], [64, 1], [65, 1], [67, 1], [67, 1], [65, 1], [64, 1], [62, 1], [60, 1], [60, 1], [62, 1], [64, 1], [64, 1.5], [62, .5], [62, 2], [64, 1], [64, 1], [65, 1], [67, 1], [67, 1], [65, 1], [64, 1], [62, 1], [60, 1], [60, 1], [62, 1], [64, 1], [62, 1.5], [60, .5], [60, 2]] },
+  para_elisa: { n: 'Para Elisa', autor: 'L. van Beethoven (1810)', tono: 57, modo: 'menor', notas: [[76, .5], [75, .5], [76, .5], [75, .5], [76, .5], [71, .5], [74, .5], [72, .5], [69, 1.5], [60, .5], [64, .5], [69, .5], [71, 1.5], [64, .5], [68, .5], [71, .5], [72, 1.5], [64, .5], [76, .5], [75, .5], [76, .5], [75, .5], [76, .5], [71, .5], [74, .5], [72, .5], [69, 1.5], [60, .5], [64, .5], [69, .5], [71, 1.5], [64, .5], [72, .5], [71, .5], [69, 2]] },
+  minueto_sol: { n: 'Minueto en Sol', autor: 'C. Petzold (c. 1725)', tono: 55, modo: 'mayor', notas: [[74, 1], [67, .5], [69, .5], [71, .5], [72, .5], [74, 1], [67, 1], [67, 1], [76, 1], [72, .5], [74, .5], [76, .5], [78, .5], [79, 1], [67, 1], [67, 1], [72, 1], [74, .5], [72, .5], [71, .5], [69, .5], [71, 1], [72, .5], [71, .5], [69, .5], [67, .5], [66, 1], [67, .5], [69, .5], [71, .5], [67, .5], [69, 3]] },
+  canon: { n: 'Canon', autor: 'J. Pachelbel (c. 1680)', tono: 62, modo: 'mayor', grados: [0, 4, 5, 2, 3, 0, 3, 4], notas: [[78, 2], [76, 2], [74, 2], [73, 2], [71, 2], [69, 2], [71, 2], [73, 2]] },
+  gimnopedia: { n: 'Gimnopedia n.º 1', autor: 'E. Satie (1888)', tono: 62, modo: 'mayor', metro: 3, grados: [3, 0], notas: [[null, 3], [null, 3], [78, 1], [81, 1], [79, 1], [78, 1], [73, 1], [71, 1], [73, 1], [74, 1], [69, 3], [66, 3]] },
+  rey_montana: { n: 'En la gruta del rey de la montaña', autor: 'E. Grieg (1875)', tono: 59, modo: 'menor', notas: [[71, .5], [73, .5], [74, .5], [76, .5], [78, .5], [74, .5], [78, 1], [77, .5], [73, .5], [77, 1], [76, .5], [72, .5], [76, 1], [71, .5], [73, .5], [74, .5], [76, .5], [78, .5], [74, .5], [78, .5], [83, .5], [81, .5], [78, .5], [74, .5], [78, .5], [81, 2]] },
+  primavera: { n: 'La primavera', autor: 'A. Vivaldi (1725)', tono: 64, modo: 'mayor', notas: [[64, .5], [68, .5], [68, .5], [68, .5], [66, .25], [64, .25], [71, 1.5], [71, .25], [69, .25], [68, .5], [68, .5], [68, .5], [66, .25], [64, .25], [71, 1.5], [71, .25], [69, .25], [68, .5], [69, .25], [71, .25], [69, .5], [68, .5], [66, 2]] }
+};
+const ESTILOS = {
+  electronica: { bpm: 124, swing: 0, modo: 'menor', prog: [[0, 'm7'], [5, 'maj7'], [3, 'maj7'], [4, '7']], bateria: { bombo: 'x...x...x...x...', caja: '....x.......x...', plato: '..x...x...x...x.', abierto: '' }, bajo: 'contra', acordes: 'pad', lead: 'lead', sidechain: true },
+  techno: { bpm: 132, swing: 0, modo: 'menor', prog: [[0, 'm'], [0, 'm'], [6, 'maj'], [5, 'maj']], bateria: { bombo: 'x...x...x...x...', caja: '....x.......x...', plato: 'xxxxxxxxxxxxxxxx', abierto: '..x...x...x...x.' }, bajo: 'pulso', acordes: 'stab', lead: 'lead', sidechain: true },
+  synthwave: { bpm: 100, swing: 0, modo: 'menor', prog: [[0, 'm'], [5, 'maj'], [2, 'maj'], [6, 'maj']], bateria: { bombo: 'x.......x.......', caja: '....x.......x...', plato: 'x.x.x.x.x.x.x.x.', abierto: '' }, bajo: 'octavas', acordes: 'pad', lead: 'lead' },
+  rock: { bpm: 140, swing: 0, modo: 'mayor', prog: [[0, '5'], [4, '5'], [5, '5'], [3, '5']], bateria: { bombo: 'x.....x.x.......', caja: '....x.......x...', plato: 'x.x.x.x.x.x.x.x.', abierto: '' }, bajo: 'corcheas', acordes: 'guitarra', lead: 'guitarra_lead' },
+  jazz: { bpm: 118, swing: .62, modo: 'mayor', prog: [[1, 'm7'], [4, '7'], [0, 'maj7'], [5, '7']], bateria: { bombo: 'x.........x.....', caja: '......x.......x.', plato: 'x..xx..xx..xx..x', abierto: '' }, bajo: 'walking', acordes: 'piano', lead: 'piano' },
+  lofi: { bpm: 78, swing: .58, modo: 'mayor', prog: [[3, 'maj7'], [2, 'm7'], [1, 'm7'], [4, '7']], bateria: { bombo: 'x.....x...x.....', caja: '....x.......x...', plato: 'x.x.x.x.x.x.x.x.', abierto: '' }, bajo: 'largo', acordes: 'piano', lead: 'piano', lofi: true },
+  clasica: { bpm: 84, swing: 0, modo: 'mayor', prog: [[0, 'maj'], [3, 'maj'], [4, 'maj'], [0, 'maj']], bateria: null, bajo: 'largo', acordes: 'cuerdas', lead: 'piano' }
+};
+const ACORDE = { maj: [0, 4, 7], m: [0, 3, 7], '5': [0, 7, 12], maj7: [0, 4, 7, 11], m7: [0, 3, 7, 10], '7': [0, 4, 7, 10], m7b5: [0, 3, 6, 10], sus: [0, 5, 7] };
+const Musica = {
+  NOTA, ESCALA, CLASICOS, ESTILOS, ACORDE,
+  /* acorde diatónico del grado (0..6) en la tonalidad: tríada o séptima según el modo */
+  diatonico(tono, modo, grado, tipo) { const E = ESCALA[modo] || ESCALA.mayor, raiz = tono + E[grado % 7] + 12 * Math.floor(grado / 7); if (tipo) return { raiz, tipo }; const t = [0, 2, 4].map(i => E[(grado + i) % 7] + 12 * Math.floor((grado + i) / 7) - E[grado % 7]); return { raiz, tipo: t[1] === 3 && t[2] === 6 ? 'm7b5' : t[1] === 3 ? 'm' : 'maj' }; },
+  /* armoniza un tema: por compás, el acorde diatónico que más notas del compás contiene */
+  armonizar(tema, metro = 4) {
+    if (tema.grados) return tema.grados.map(g => Musica.diatonico(tema.tono, tema.modo, g));
+    const comp = [], E = ESCALA[tema.modo]; let t = 0, c = [];
+    for (const [n, d] of tema.notas) { if (n != null) c.push(n); t += d; while (t >= metro - 1e-6) { comp.push(c); c = []; t -= metro; } }
+    if (c.length) comp.push(c);
+    return comp.map((notas, i) => { let best = 0, bv = -1; for (let gr = 0; gr < 7; gr++) { const A = Musica.diatonico(tema.tono, tema.modo, gr), set = ACORDE[A.tipo].map(x => (A.raiz + x) % 12), v = notas.filter(n => set.includes(n % 12)).length + (gr === 0 || gr === 4 ? .5 : 0) + (i === comp.length - 1 && gr === 0 ? 2 : 0); if (v > bv) { bv = v; best = gr; } } return Musica.diatonico(tema.tono, tema.modo, best); });
+  },
+  /* COMPONE: { estilo, tema (id de CLASICOS o null), compases, energia (0–1), semilla, tono } → { bpm, swing, eventos: [{ t, d, n, inst, v }] } (t y d en tiempos) */
+  componer(op = {}) {
+    const S = ESTILOS[op.estilo] || ESTILOS.electronica, r = mulberry32(op.semilla ?? 5), en = clamp(op.energia ?? .6, 0, 1), T = op.tema ? CLASICOS[op.tema] : null, metro = (T && T.metro) || 4;
+    const tono = op.tono ?? (T ? T.tono : 57 + ((op.semilla ?? 5) % 7)), modo = T ? T.modo : S.modo;
+    const acordes = T ? Musica.armonizar(T, metro) : S.prog.map(([g, tipo]) => Musica.diatonico(tono, modo, g, tipo)), compases = op.compases || Math.max(8, acordes.length * 2), ev = [];
+    const pon = (t, d, n, inst, v) => { if (n == null || n < 24 || n > 108) return; ev.push({ t, d, n, inst, v: clamp(v, 0, 1) }); };
+    for (let c = 0; c < compases; c++) {
+      const A = acordes[c % acordes.length], base = c * metro, raiz = A.raiz % 12 + 36, voz = ACORDE[op.estilo === 'rock' ? '5' : A.tipo] || ACORDE.maj;
+      /* acordes */
+      if (S.acordes === 'pad' || S.acordes === 'cuerdas') for (const x of voz) pon(base, metro, A.raiz % 12 + 60 + x, S.acordes, .35 + en * .2);
+      else if (S.acordes === 'stab') for (let s = 0; s < 4; s++) if (s % 2 || en > .5) for (const x of voz) pon(base + s + .5, .25, A.raiz % 12 + 60 + x, 'stab', .4);
+      else if (S.acordes === 'guitarra') for (let s = 0; s < metro * 2; s++) for (const x of [0, 7, 12]) pon(base + s / 2, .45, raiz + 12 + x, 'guitarra', .5 + (s % 2 ? 0 : .15));
+      else if (S.acordes === 'piano') { const ritmo = op.estilo === 'jazz' ? [0, 1.5, 2.5] : [0, 2.5]; for (const s of ritmo) for (const x of voz.concat(A.tipo.includes('7') ? [14] : [])) pon(base + s, op.estilo === 'lofi' ? 1.8 : .9, A.raiz % 12 + 60 + x, 'piano', .3 + en * .15); }
+      /* bajo */
+      const B = S.bajo;
+      if (B === 'contra') for (let s = 0; s < 4; s++) pon(base + s + .5, .45, raiz, 'bajo', .7);
+      else if (B === 'pulso') for (let s = 0; s < 16; s++) if (s % 4 !== 0) pon(base + s / 4, .2, raiz, 'bajo', .6);
+      else if (B === 'octavas') for (let s = 0; s < 8; s++) pon(base + s / 2, .45, raiz + (s % 2 ? 12 : 0), 'bajo', .6);
+      else if (B === 'corcheas') for (let s = 0; s < 8; s++) pon(base + s / 2, .45, raiz, 'bajo', .7);
+      else if (B === 'walking') { const sig = acordes[(c + 1) % acordes.length].raiz % 12 + 36, E2 = ESCALA[modo]; for (let s = 0; s < metro; s++) { const n = s === 0 ? raiz : s === metro - 1 ? sig + (r() < .5 ? -1 : 1) : raiz + E2[(s * 2 + (r() * 2 | 0)) % E2.length]; pon(base + s, .9, n, 'bajo', .6); } }
+      else pon(base, metro * .95, raiz, 'bajo', .55);
+      /* batería (16 pasos por compás de 4; en 3/4, 12) */
+      if (S.bateria && !(T && op.estilo === 'clasica')) { const pasos = metro * 4; for (const [pz, pat] of Object.entries(S.bateria)) for (let s = 0; s < pasos; s++) { if (pat[s % pat.length] !== 'x') continue; if (pz === 'plato' && en < .25 && s % 2) continue; if (pz === 'caja' && c % 8 === 7 && s > pasos - 4) continue; pon(base + s / 4, .1, { bombo: 36, caja: 38, plato: 42, abierto: 46 }[pz], pz, pz === 'bombo' ? .9 : .5 + r() * .15); } if (c % 8 === 7) for (let s = pasos - 4; s < pasos; s++) pon(base + s / 4, .1, 38, 'caja', .45 + s * .02); }
+    }
+    /* melodía: el tema clásico (repetido) o una melodía generada sobre la escala con motivos que se repiten */
+    if (T) { const largo = T.notas.reduce((a, q) => a + q[1], 0), vueltas = Math.max(1, Math.floor(compases * metro / largo)); for (let k = 0; k < vueltas; k++) { let t = k * largo; for (const [n, d] of T.notas) { const nn = n == null ? null : n + (op.estilo === 'rock' || op.estilo === 'electronica' || op.estilo === 'techno' ? 0 : 0) + (tono - T.tono); pon(t, d * .92, nn, S.lead, .6 + en * .2); t += d; } } }
+    else { const E2 = ESCALA[S.modo === 'menor' ? 'pentatonica' : 'mayor'], motivo = []; for (let i = 0; i < 8; i++) motivo.push([E2[(r() * E2.length) | 0] + (r() < .3 ? 12 : 0), r() < .3 ? 1 : .5]); for (let c = 0; c < compases; c++) { if (en < .35 && c % 2) continue; let t = c * metro; const var2 = c % 4 === 3; for (const [g, d] of motivo) { if (t >= (c + 1) * metro) break; if (r() < .25 + (1 - en) * .3) { t += d; continue; } pon(t, d * .9, tono + 12 + g + (var2 ? 2 : 0), S.lead, .55 + en * .2); t += d; } } }
+    return { bpm: Math.round(S.bpm * (op.tempo || 1) * (T && op.estilo === 'clasica' ? .85 : 1)), swing: S.swing, lofi: !!S.lofi, sidechain: !!S.sidechain, metro, compases, eventos: ev.sort((a, b) => a.t - b.t), titulo: (T ? T.n + ' · ' : '') + op.estilo };
+  },
+  /* elige estilo y energía según el juego */
+  adaptar({ velocidad = 0, hora = 12, clima = null, tension = 0, zona = '' } = {}) {
+    const noche = hora < 6 || hora >= 20, lluvia = clima && clima.lluvia > .2, v = velocidad * 3.6;
+    let estilo = tension > .6 ? (v > 60 ? 'techno' : 'rock') : v > 70 ? 'electronica' : v > 30 ? (noche ? 'synthwave' : 'electronica') : lluvia ? 'jazz' : noche ? 'lofi' : zona === 'centro' ? 'jazz' : 'lofi';
+    return { estilo, energia: clamp(.25 + v / 120 + tension * .5, 0, 1) };
+  },
+  /* ---------- sintetizador (navegador) ---------- */
+  ctx: null, sonando: null,
+  _ctx() { if (!this.ctx) { const AC = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext); if (!AC) return null; this.ctx = new AC(); this.salida = this.ctx.createGain(); this.salida.gain.value = .5; this.salida.connect(this.ctx.destination); } if (this.ctx.state === 'suspended') this.ctx.resume(); return this.ctx; },
+  volumen(v) { if (this.salida) this.salida.gain.value = clamp(v, 0, 1); },
+  /* toca una pieza compuesta en bucle; devuelve { parar } */
+  tocar(op = {}) {
+    const ac = this._ctx(); if (!ac) return null; this.parar(); const P = op.eventos ? op : Musica.componer(op), spb = 60 / P.bpm, largo = P.compases * P.metro, bus = ac.createGain(), filtro = ac.createBiquadFilter();
+    filtro.type = 'lowpass'; filtro.frequency.value = P.lofi ? 2600 : 18000; bus.connect(filtro); filtro.connect(this.salida); let ruido = null;
+    if (P.lofi) { const b = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() < .0008 ? (Math.random() - .5) * .8 : (Math.random() - .5) * .015; ruido = ac.createBufferSource(); ruido.buffer = b; ruido.loop = true; const gr = ac.createGain(); gr.gain.value = .5; ruido.connect(gr); gr.connect(this.salida); ruido.start(); }
+    const t0 = ac.currentTime + .1, est = { P, bus, filtro, ruido, vuelta: 0, idx: 0, t0, activo: true };
+    const tiempo = t => { const b = Math.floor(t * 2) / 2, f = t * 2 - Math.floor(t * 2); return (b + (f >= .5 - 1e-6 && P.swing ? (P.swing - .5) * 1 + .5 : f) / 2) * spb; };
+    const programar = () => { if (!est.activo) return; const ahora = ac.currentTime, hasta = ahora + .25;
+      while (true) { const e = P.eventos[est.idx]; if (!e) { est.idx = 0; est.vuelta++; continue; } const tt = t0 + est.vuelta * largo * spb + (P.swing ? tiempo(e.t) : e.t * spb); if (tt > hasta) break; if (tt >= ahora - .05) this._nota(ac, bus, e, tt, e.d * spb, P); est.idx++; if (est.idx >= P.eventos.length) { est.idx = 0; est.vuelta++; } }
+      est.timer = setTimeout(programar, 90); };
+    programar(); this.sonando = est; MC.emit('musica', { titulo: P.titulo });
+    return { parar: () => this.parar(), pieza: P };
+  },
+  parar() { const s = this.sonando; if (!s) return; s.activo = false; clearTimeout(s.timer); try { s.bus.disconnect(); if (s.ruido) s.ruido.stop(); } catch (e) { /* ya estaba */ } this.sonando = null; },
+  _nota(ac, bus, e, t, d, P) {
+    const hz = 440 * Math.pow(2, (e.n - 69) / 12), g = ac.createGain(), v = e.v * .5; g.connect(bus);
+    const env = (a, dec, sus, rel) => { g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + a); g.gain.linearRampToValueAtTime(v * sus, t + a + dec); g.gain.setValueAtTime(v * sus, t + Math.max(a + dec, d)); g.gain.linearRampToValueAtTime(0, t + Math.max(a + dec, d) + rel); };
+    const osc = (tipo, f, det = 0) => { const o = ac.createOscillator(); o.type = tipo; o.frequency.value = f; o.detune.value = det; o.start(t); o.stop(t + d + .6); return o; };
+    const ruido = () => { const b = ac.createBuffer(1, ac.sampleRate * .3, ac.sampleRate), x = b.getChannelData(0); for (let i = 0; i < x.length; i++) x[i] = Math.random() * 2 - 1; const s = ac.createBufferSource(); s.buffer = b; s.start(t); return s; };
+    switch (e.inst) {
+      case 'bombo': { const o = osc('sine', 150); o.frequency.exponentialRampToValueAtTime(42, t + .12); o.connect(g); g.gain.setValueAtTime(v * 1.6, t); g.gain.exponentialRampToValueAtTime(.001, t + .35); if (P.sidechain && bus.gain) { bus.gain.setValueAtTime(.35, t); bus.gain.linearRampToValueAtTime(1, t + .22); } break; }
+      case 'caja': { const s = ruido(), f = ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1800; s.connect(f); f.connect(g); const o = osc('triangle', 190); o.connect(g); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + .18); break; }
+      case 'plato': case 'abierto': { const s = ruido(), f = ac.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 7000; s.connect(f); f.connect(g); g.gain.setValueAtTime(v * .35, t); g.gain.exponentialRampToValueAtTime(.001, t + (e.inst === 'abierto' ? .3 : .05)); break; }
+      case 'bajo': { const o = osc(P.lofi ? 'sine' : 'sawtooth', hz), f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 420; o.connect(f); f.connect(g); env(.005, .1, .7, .08); break; }
+      case 'guitarra': case 'guitarra_lead': { const ws = ac.createWaveShaper(), cv = new Float32Array(256); for (let i = 0; i < 256; i++) { const x = i / 128 - 1; cv[i] = Math.tanh(x * 6); } ws.curve = cv; const o = osc('sawtooth', hz), o2 = osc('sawtooth', hz, 9), f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 3200; o.connect(ws); o2.connect(ws); ws.connect(f); f.connect(g); env(.005, .15, .6, .1); break; }
+      case 'piano': { const o = osc('triangle', hz), o2 = osc('sine', hz * 2); const g2 = ac.createGain(); g2.gain.value = .25; o2.connect(g2); g2.connect(g); o.connect(g); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(v * .25, t + .4); g.gain.exponentialRampToValueAtTime(.001, t + d + .5); break; }
+      case 'pad': case 'cuerdas': { for (const det of [-8, 0, 8]) osc('sawtooth', hz, det).connect((() => { const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = e.inst === 'cuerdas' ? 2400 : 1400; f.connect(g); return f; })()); env(e.inst === 'cuerdas' ? .25 : .4, .3, .7, .6); g.gain.value = 0; break; }
+      case 'stab': { osc('square', hz).connect(g); env(.003, .08, .2, .05); break; }
+      default: { const o = osc('square', hz), f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2600; o.connect(f); f.connect(g); env(.01, .1, .6, .12); }
+    }
+  }
+};
+MC.Musica = Musica;
+
+/* ---- js/70-interfaz.js ---- */
+/* =====================================================================
+   INTERFAZ INTEGRADA · las piezas de pantalla que todo juego necesita, con el tema de cada juego
+   - Tema por tokens (colores, letra, radios) en variables CSS: EnCicla verde, El Metro con sus líneas, Motor City neón…
+   - Piezas: barra superior de fichas, velocímetro, barras (energía, agua, gasolina), botones táctiles grandes (≥ 48 px),
+     menú, diálogo con opciones, avisos, panel de misión, minimapa (con las losas del motor) y brújula.
+   - Accesible: etiquetas aria, contraste alto, respeta «reducir movimiento», funciona con teclado y con el dedo.
+   Uso: const ui = MC.UI.crear(document.body, { tema: 'motorcity' }); ui.ficha('hora', '🕐 8:00'); ui.boton({ id, icono, texto, al })
+   ===================================================================== */
+const TEMAS_UI = {
+  motorcity: { fondo: 'rgba(11,16,32,.78)', tinta: '#f4f1e6', acento: '#39ffb3', acento2: '#ff2fb3', borde: 'rgba(255,255,255,.16)', letra: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif", radio: '14px' },
+  encicla: { fondo: 'rgba(10,35,66,.82)', tinta: '#ffffff', acento: '#9bd341', acento2: '#ffd84a', borde: 'rgba(255,255,255,.18)', letra: "'Nunito', system-ui, sans-serif", radio: '16px' },
+  elmetro: { fondo: 'rgba(15,27,45,.85)', tinta: '#ffffff', acento: '#ffd84a', acento2: '#1C5C9C', borde: 'rgba(255,255,255,.15)', letra: "system-ui, sans-serif", radio: '12px' },
+  runscooter: { fondo: 'rgba(14,99,120,.88)', tinta: '#e8e4c4', acento: '#ffc23a', acento2: '#c0191c', borde: 'rgba(232,228,196,.3)', letra: "system-ui, sans-serif", radio: '4px' }
+};
+const UI = {
+  TEMAS: TEMAS_UI,
+  crear(raiz, op = {}) {
+    if (typeof document === 'undefined') return null;
+    const T = Object.assign({}, TEMAS_UI[op.tema || 'motorcity'], op.colores || {}), id = 'mcui-' + Math.random().toString(36).slice(2, 7), capa = document.createElement('div'); capa.className = 'mcui'; capa.id = id; raiz.appendChild(capa);
+    const css = document.createElement('style'); css.textContent = `#${id}{--f:${T.fondo};--t:${T.tinta};--a:${T.acento};--a2:${T.acento2};--b:${T.borde};--r:${T.radio};position:fixed;inset:0;pointer-events:none;font:14px/1.3 ${T.letra};color:var(--t);z-index:20}
+#${id} [hidden]{display:none!important}#${id} .p{pointer-events:auto}#${id} .fichas{position:absolute;top:max(10px,env(safe-area-inset-top));left:10px;right:84px;display:flex;flex-wrap:wrap;gap:6px}
+#${id} .ficha{padding:6px 10px;border-radius:999px;background:var(--f);border:1px solid var(--b);font-weight:700;white-space:nowrap;backdrop-filter:blur(6px)}
+#${id} .botones{position:absolute;right:8px;top:max(10px,env(safe-area-inset-top));display:flex;flex-direction:column;gap:6px}
+#${id} button{min-width:48px;min-height:48px;border-radius:var(--r);border:1px solid var(--b);background:var(--f);color:var(--t);font:700 18px/1 ${T.letra};cursor:pointer}
+#${id} button:focus-visible{outline:3px solid var(--a);outline-offset:2px}#${id} button small{display:block;font-size:10px;opacity:.85;margin-top:2px}
+#${id} .vel{position:absolute;left:12px;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 18px);text-shadow:0 2px 6px #000c}#${id} .vel b{font:900 34px/1 ${T.letra};color:var(--a)}
+#${id} .barras{position:absolute;left:12px;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 68px);display:grid;gap:4px;width:150px}
+#${id} .barra{height:8px;border-radius:6px;background:#ffffff26;overflow:hidden}#${id} .barra i{display:block;height:100%;background:linear-gradient(90deg,var(--a),var(--a2));transition:width .3s}
+#${id} .aviso{position:absolute;top:20%;left:50%;transform:translateX(-50%);padding:8px 14px;border-radius:var(--r);background:var(--f);border:1px solid var(--b);font-weight:800;opacity:0;transition:opacity .3s;text-align:center;max-width:86vw}#${id} .aviso.on{opacity:1}
+#${id} .mision{position:absolute;top:calc(max(10px,env(safe-area-inset-top)) + 44px);left:10px;max-width:min(320px,70vw);padding:8px 12px;border-radius:var(--r);background:var(--f);border-left:4px solid var(--a)}
+#${id} .dialogo{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);width:min(520px,92vw);padding:14px;border-radius:var(--r);background:var(--f);border:1px solid var(--b)}#${id} .dialogo .opts{display:grid;gap:6px;margin-top:10px}#${id} .dialogo button{font-size:15px;text-align:left;padding:10px}
+#${id} .menu{position:absolute;right:66px;top:max(10px,env(safe-area-inset-top));max-height:78vh;overflow:auto;width:min(300px,72vw);padding:8px;border-radius:var(--r);background:var(--f);border:1px solid var(--b);display:grid;gap:4px}#${id} .menu button{text-align:left;font-size:14px;padding:8px 10px}
+#${id} canvas.mini{position:absolute;right:10px;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 96px);width:120px;height:120px;border-radius:50%;border:2px solid var(--b);background:#0006}
+@media (prefers-reduced-motion:reduce){#${id} *{transition:none!important}}`;
+    document.head.appendChild(css);
+    const div = (cls, padre = capa) => { const d = document.createElement('div'); d.className = cls; padre.appendChild(d); return d; };
+    const fichas = div('fichas'), botones = div('botones p'), vel = div('vel'), barras = div('barras'), aviso = div('aviso'), mision = div('mision'); mision.hidden = true; aviso.setAttribute('role', 'status'); aviso.setAttribute('aria-live', 'polite');
+    const F = {}, Bs = {}, Ba = {};
+    const ui = {
+      capa, tema: T,
+      ficha(clave, texto) { if (!F[clave]) { F[clave] = div('ficha', fichas); } F[clave].textContent = texto; return F[clave]; },
+      boton({ id: bid, icono = '', texto = '', al, padre }) { const b = document.createElement('button'); b.className = 'p'; b.innerHTML = icono + (texto ? '<small>' + texto + '</small>' : ''); b.setAttribute('aria-label', texto || bid); b.onclick = e => { e.stopPropagation(); al && al(e); }; (padre || botones).appendChild(b); Bs[bid] = b; return b; },
+      velocidad(ms, extra = '') { vel.innerHTML = '<b>' + Math.round(Math.abs(ms) * 3.6) + '</b> km/h ' + extra; },
+      barra(clave, etiqueta, v) { if (!Ba[clave]) { const w = div('', barras); w.innerHTML = '<small>' + etiqueta + '</small><div class="barra"><i></i></div>'; Ba[clave] = w.querySelector('i'); } Ba[clave].style.width = Math.round(clamp(v, 0, 1) * 100) + '%'; },
+      aviso(texto, ms = 2200) { aviso.textContent = texto; aviso.classList.add('on'); clearTimeout(ui._t); ui._t = setTimeout(() => aviso.classList.remove('on'), ms); },
+      mision(texto) { mision.hidden = !texto; mision.innerHTML = texto || ''; },
+      /* diálogo con opciones: devuelve una promesa con la opción elegida */
+      dialogo(titulo, texto, opciones = ['Listo']) { return new Promise(res => { const d = div('dialogo p'); d.setAttribute('role', 'dialog'); d.innerHTML = '<b>' + titulo + '</b><div>' + texto + '</div><div class="opts"></div>'; opciones.forEach((o, i) => { const b = document.createElement('button'); b.textContent = o; b.onclick = () => { d.remove(); res(i); }; d.querySelector('.opts').appendChild(b); if (!i) setTimeout(() => b.focus(), 50); }); }); },
+      menu(titulo, items, al) { const m = div('menu p'); m.innerHTML = '<b style="padding:4px">' + titulo + '</b>'; for (const it of items) { const b = document.createElement('button'); b.innerHTML = it.texto; b.onclick = () => { m.remove(); al(it.id); }; m.appendChild(b); } const cerrar = () => m.remove(); setTimeout(() => document.addEventListener('keydown', function k(e) { if (e.key === 'Escape') { cerrar(); document.removeEventListener('keydown', k); } }), 0); return m; },
+      /* minimapa redondo con las losas del motor, girado con la cámara */
+      minimapa(vistas) { const c = document.createElement('canvas'); c.className = 'mini'; c.width = c.height = 240; capa.appendChild(c); ui._mini = { c, vistas }; return c; },
+      pintarMinimapa(x, y, yaw = 0, puntos = []) { const M = ui._mini; if (!M) return; const g = M.c.getContext('2d'), L = M.vistas.losas, z = .45, R = 120; g.save(); g.clearRect(0, 0, 240, 240); g.beginPath(); g.arc(R, R, R, 0, TAU); g.clip(); g.translate(R, R); g.rotate(-yaw); g.scale(z, z); g.translate(-x, -y); const s = L.L, gx0 = Math.floor((x - 300) / s), gy0 = Math.floor((y - 300) / s); for (let gy = gy0; gy <= gy0 + 4; gy++) for (let gx = gx0; gx <= gx0 + 4; gx++) { const t = L.losa(gx, gy, .5, true, false) || L.losa(gx, gy, .0625, false, false); if (t) g.drawImage(t, gx * s, gy * s, s, s); } for (const p of puntos) { g.fillStyle = p.color || '#ffc23a'; g.beginPath(); g.arc(p.x, p.y, 12, 0, TAU); g.fill(); } g.restore(); g.fillStyle = '#39ffb3'; g.beginPath(); g.moveTo(R, R - 9); g.lineTo(R + 6, R + 7); g.lineTo(R - 6, R + 7); g.fill(); },
+      quitar() { capa.remove(); css.remove(); }
+    };
+    return ui;
+  }
+};
+MC.UI = UI;
+
+/* ---- js/80-mecanicas.js ---- */
+/* =====================================================================
+   MECÁNICAS · piezas de jugabilidad listas para armar juegos (las guarda y las comparte el motor)
+   - Misión: pasos (ir a, recoger, entregar, esperar, condición) con tiempo límite, recompensa en el libro contable
+     y eventos. - Inventario con masa y volumen reales (lo que cargas pesa: cambia la física del vehículo).
+   - Carrera: puntos de control sobre las calles reales (A*), vueltas, cronómetro y rivales que frenan antes de las
+     curvas con física (v = √(μg/κ)). - Logros y coleccionables. - Diálogos como grafo con condiciones y variables.
+   Todas guardan su estado en un objeto plano (se puede guardar con MC.guardado sin romper nada).
+   ===================================================================== */
+class Mision {
+  /* def: { id, titulo, pasos: [{ tipo: 'ir'|'recoger'|'entregar'|'esperar'|'condicion', x, y, radio, objeto, seg, cond, texto }], limite (s), premio (centavos), libro, cuenta } */
+  constructor(def) { this.def = def; this.paso = 0; this.t = 0; this.estado = 'activa'; this.esperado = 0; }
+  get actual() { return this.def.pasos[this.paso] || null; }
+  actualizar(dt, jugador, inventario) {
+    if (this.estado !== 'activa') return this.estado; this.t += dt; const P = this.actual;
+    if (this.def.limite && this.t > this.def.limite) { this.estado = 'fallida'; MC.emit('mision', { m: this, estado: 'fallida' }); return this.estado; }
+    if (!P) return this.terminar();
+    const cerca = P.x == null || Math.hypot(jugador.x - P.x, jugador.y - P.y) <= (P.radio || 15); let listo = false;
+    if (P.tipo === 'ir') listo = cerca;
+    else if (P.tipo === 'recoger') listo = cerca && (!inventario || inventario.agregar(P.objeto));
+    else if (P.tipo === 'entregar') listo = cerca && (!inventario || inventario.quitar(P.objeto.id));
+    else if (P.tipo === 'esperar') { if (cerca) this.esperado += dt; listo = this.esperado >= (P.seg || 3); }
+    else if (P.tipo === 'condicion') listo = !!(P.cond && P.cond(jugador));
+    if (listo) { this.paso++; this.esperado = 0; MC.emit('mision', { m: this, estado: 'paso', paso: P }); if (this.paso >= this.def.pasos.length) return this.terminar(); }
+    return this.estado;
+  }
+  terminar() { this.estado = 'cumplida'; const D = this.def; if (D.premio && D.libro) D.libro.mover(D.de || 'mundo', D.cuenta || 'jugador', D.premio, 'Misión: ' + D.titulo, false); MC.emit('mision', { m: this, estado: 'cumplida' }); return this.estado; }
+  get restante() { return this.def.limite ? Math.max(0, this.def.limite - this.t) : null; }
+}
+class Inventario {
+  constructor({ masaMax = 20, volumenMax = 60 } = {}) { this.masaMax = masaMax; this.volumenMax = volumenMax; this.items = []; }
+  get masa() { return this.items.reduce((a, o) => a + (o.masa || 0), 0); }
+  get volumen() { return this.items.reduce((a, o) => a + (o.volumen || 0), 0); }
+  /* objeto: { id, n, masa (kg), volumen (L), valor (centavos) } */
+  agregar(o) { if (this.masa + (o.masa || 0) > this.masaMax + 1e-9 || this.volumen + (o.volumen || 0) > this.volumenMax + 1e-9) { MC.emit('inventario', { lleno: true, o }); return false; } this.items.push(o); MC.emit('inventario', { agrega: o }); return true; }
+  quitar(id) { const i = this.items.findIndex(o => o.id === id); if (i < 0) return false; const [o] = this.items.splice(i, 1); MC.emit('inventario', { quita: o }); return true; }
+  tiene(id) { return this.items.some(o => o.id === id); }
+}
+class Carrera {
+  /* op: { mundo, red, puntos: [{x,y}], vueltas, rivales: [{ nombre, vmax, mu }] } — la ruta sale por las calles reales */
+  constructor(op) {
+    this.op = op; const R = op.red || op.mundo.red('rueda'), P = op.puntos, tramos = []; this.vueltas = op.vueltas || 1;
+    for (let i = 0; i < P.length - (op.cerrada ? 0 : 1); i++) { const a = P[i], b = P[(i + 1) % P.length], ca = R.cercana(a.x, a.y, 150), cb = R.cercana(b.x, b.y, 150); const c = ca && cb && R.camino(ca.arista.a, cb.arista.a); if (c) for (const t of c) tramos.push(t); }
+    const pts = []; for (const t of tramos) { const p = t.arista.t.p, n = p.length >> 1; for (let k = 0; k < n; k++) { const j = t.adelante ? k : n - 1 - k; pts.push(p[2 * j], p[2 * j + 1]); } }
+    this.trazo = new Trazo(Float32Array.from(pts.length >= 4 ? pts : [P[0].x, P[0].y, P[1].x, P[1].y])); this.control = P.map(q => this.trazo.proyectar(q.x, q.y).s).sort((a, b) => a - b);
+    this.rivales = (op.rivales || []).map((r, i) => Object.assign({ s: -6 * (i + 1), v: 0, vuelta: 0, termino: null }, r)); this.t = 0; this.jugador = { s: 0, vuelta: 0, cp: 0, termino: null };
+  }
+  /* paso: el jugador avanza por donde esté (se proyecta al trazo); los rivales con física de curvas */
+  actualizar(dt, x, y) {
+    this.t += dt; const L = this.trazo.largo, J = this.jugador, pr = this.trazo.proyectar(x, y);
+    if (pr.d < 30) { if (J.s > L * .8 && pr.s < L * .2) { J.vuelta++; J.cp = 0; } J.s = pr.s; while (J.cp < this.control.length && J.s >= this.control[J.cp] - 5) J.cp++; if (J.vuelta >= this.vueltas && !J.termino) { J.termino = this.t; MC.emit('carrera', { fin: true, tiempo: this.t, puesto: this.puesto() }); } }
+    for (const R of this.rivales) { if (R.termino) continue; const k = this.trazo.curva(clamp(R.s + R.v * 1.5, 0, L), 10), vObj = Math.min(R.vmax, IA.vCurva(k, R.mu || .85)); R.v += clamp(vObj - R.v, -8 * dt, 3 * dt); R.s += R.v * dt; if (R.s >= L) { R.vuelta++; R.s -= L; if (R.vuelta >= this.vueltas) R.termino = this.t; } }
+  }
+  progreso(o) { return (o.vuelta || 0) * this.trazo.largo + o.s; }
+  puesto() { const p = this.progreso(this.jugador); return 1 + this.rivales.filter(r => (r.termino && (!this.jugador.termino || r.termino < this.jugador.termino)) || (!r.termino && this.progreso(r) > p)).length; }
+}
+const Logros = {
+  lista: new Map(), hechos: new Set(),
+  definir(id, n, prueba) { this.lista.set(id, { id, n, prueba }); },
+  revisar(estado) { const nuevos = []; for (const L of this.lista.values()) if (!this.hechos.has(L.id) && L.prueba(estado)) { this.hechos.add(L.id); nuevos.push(L); MC.emit('logro', L); } return nuevos; }
+};
+/* diálogos: { inicio, nodos: { id: { quien, texto, opciones: [{ texto, va, si(vars), hace(vars) }] } } } */
+class Dialogo {
+  constructor(def, vars = {}) { this.def = def; this.vars = vars; this.nodo = def.inicio; }
+  get actual() { const N = this.def.nodos[this.nodo]; if (!N) return null; return Object.assign({}, N, { opciones: (N.opciones || []).filter(o => !o.si || o.si(this.vars)) }); }
+  elegir(i) { const o = this.actual.opciones[i]; if (!o) return null; if (o.hace) o.hace(this.vars); this.nodo = o.va; return this.actual; }
+}
+Object.assign(MC, { Mision, Inventario, Carrera, Logros, Dialogo });
+
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","10-mundo.js","11-red.js","12-generador.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","45-gl.js","46-vistas.js","47-seguir.js","48-interiores.js","50-run.js","60-musica.js","70-interfaz.js","80-mecanicas.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;

@@ -1,5 +1,5 @@
 /* =====================================================================
-   CAPAS COMPARTIDAS DEL MOTOR DEL VALLE (motor-valle/capas/index.mjs · v1.2.0)
+   CAPAS COMPARTIDAS DE MOTOR CITY (tubería 1.x) (motor-valle/capas/index.mjs · v1.2.0)
    Catálogo descriptivo de las capas que comparten Juega EnCicla y El Metro
    sobre el mismo sistema de coordenadas del Valle de Aburrá.
    ===================================================================== */

@@ -55,7 +55,9 @@ const Vehiculos = {
   /* registra (o completa) un vehículo: lo que no diga lo hereda de su base `de` */
   registrar(def) {
     const base = def.de ? this.lista.get(def.de) : null; if (def.de && !base) throw new Error('base desconocida: ' + def.de);
-    const v = Object.assign({ juegos: ['*'] }, base || {}, def); if (base) v.de = def.de; this.lista.set(v.id, v); MC.emit('vehiculo', v); return v;
+    const v = Object.assign({ juegos: ['*'] }, base || {}, def); if (base) v.de = def.de;
+    if (v.suelo && v.suelo.length < 20) { const S = v.suelo.slice(); S[17] = S[17] ?? (v.clase === 'agua' ? 0 : S[0] * .75); S[18] = S[18] ?? (v.clase === 'agua' ? 0 : S[0] * .45); S[19] = S[19] ?? (v.clase === 'agua' ? 0 : S[1] * .8); v.suelo = S; }   // arena, nieve y roca
+    this.lista.set(v.id, v); MC.emit('vehiculo', v); return v;
   },
   get(id) { return this.lista.get(id) || this.lista.get('pie'); },
   /* los que se pueden elegir en un juego (filtro opcional) */

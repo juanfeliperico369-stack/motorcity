@@ -79,7 +79,7 @@ let cruz = 0; for (let s = 0; s < 60; s += 1) if (Tf.luz(n1, S1.eje, s) === 'ver
 for (let i = 0; i < 300; i++) Tf.paso(1 / 15, col.x, col.y, 8 * 3600 + i / 15); ok(Tf.agentes.length >= 25 && Tf.agentes.every(a => isFinite(a.x) && isFinite(a.v)), 'carros, taxis, motos y busetas andando alrededor', Tf.agentes.length);
 
 console.log('8) Personaje, vehículos y física');
-const Vs = [...MC.Vehiculos.lista.values()]; ok(Vs.length >= 34 && Vs.every(v => v.vmax > 0 && (v.suelo || []).length === 17), 'registro único de vehículos con sus cifras', Vs.length);
+const Vs = [...MC.Vehiculos.lista.values()]; ok(Vs.length >= 34 && Vs.every(v => v.vmax > 0 && (v.suelo || []).length === 20), 'registro único de vehículos con sus cifras', Vs.length);
 ok(['pie', 'bici', 'ebike', 'patinete', 'skate', 'patines', 'monopatin', 'moto', 'carro', 'camion', 'avioneta', 'lancha', 'metro', 'cable'].every(id => MC.Vehiculos.lista.has(id)), 'a pie, micromovilidad, motor, aire, agua y transporte');
 ok(MC.Vehiculos.get('ebike').manubrio && MC.Vehiculos.get('ebike').de === 'bici', 'un vehículo hereda lo que no dice de su base');
 ok(['quieto', 'camina', 'corre', 'pedalea', 'impulsa', 'patina', 'tabla', 'sentado', 'salta', 'cae'].every(e => Object.values(MC.Personaje.pose(e, 1.3)).every(v => !Array.isArray(v) || v.every(isFinite))), 'la pose del personaje en todos los estados');
@@ -96,8 +96,52 @@ const VC = MC.ValleCompat.desdeMundo(M, 16); ok(VC.suelo(1477, 2334) === M.suelo
 const vjs = fs.readFileSync(path.join(RAIZ, 'js/valle.js'), 'utf8'); ok(/version: '1\.2\.0'/.test(vjs), 'js/valle.js sigue siendo el lector 1.2.0 que incluye Juega EnCicla');
 const OR = JSON.parse(fs.readFileSync(path.join(RAIZ, 'run/ORIGEN.json'), 'utf8')); ok(OR.parches.length >= 12 && fs.existsSync(path.join(RAIZ, 'run/run-scooter.js')), 'Run Scooter importado con sus parches', OR.commit);
 
+
+console.log('10) Ciencia, química y economía');
+const Q = MC.Quim, Fz = MC.Fis;
+ok(Math.abs(Q.masaMolar('H2O') - 18.015) < .01 && Math.abs(Q.masaMolar('Ca(OH)2') - 74.09) < .02 && Math.abs(Q.masaMolar('C8H18') - 114.23) < .02, 'masa molar de fórmulas (agua, cal apagada, octano)');
+ok(Q.balancear('C8H18 + O2 -> CO2 + H2O').coef.join(',') === '2,25,16,18' && Q.balancear('Fe + O2 -> Fe2O3').coef.join(',') === '4,3,2', 'balanceo exacto de ecuaciones', Q.balancear('C8H18 + O2 -> CO2 + H2O').texto);
+const isa = Fz.atmosfera(1500); ok(Math.abs(isa.rho - 1.058) < .01 && Math.abs(isa.p - 84556) < 200, 'atmósfera estándar a 1.500 m (densidad y presión)', { rho: isa.rho.toFixed(3) });
+ok(Math.abs(Fz.frenada(27.78, .8) - 49.2) < .5 && Math.abs(Q.gas({ V: .0224, n: 1, T: 273.15 }) - 101382) < 200, 'frenada de 100 km/h con μ 0,8 y gas ideal');
+ok(Math.abs(MC.Termo.rocio(25, 60) - 16.7) < .3 && Math.abs(MC.Termo.indiceCalor(32, 70) - 40.6) < 1.5 && MC.Termo.sensacionViento(-5, 30) < -11, 'punto de rocío, índice de calor y sensación térmica');
+const ruido3 = new MC.Ruido(3); let mn = 9, mx = -9; for (let i = 0; i < 2000; i++) { const v = ruido3.fbm(i * .37, i * .11); mn = Math.min(mn, v); mx = Math.max(mx, v); } ok(mn > -1 && mx < 1 && ruido3.n2(1.5, 2.5) === new MC.Ruido(3).n2(1.5, 2.5), 'ruido coherente acotado y determinista');
+const pd = MC.poissonDisco(200, 200, 10, 4); let minD = 1e9; for (let i = 0; i < pd.length; i++) for (let j = i + 1; j < pd.length; j++) minD = Math.min(minD, Math.hypot(pd[i][0] - pd[j][0], pd[i][1] - pd[j][1])); ok(pd.length > 150 && minD >= 10 - 1e-9, 'muestreo de Poisson sin puntos amontonados', pd.length);
+const lib = new MC.Libro(); lib.mover('mundo', 'ana', 500000); lib.mover('ana', 'tienda', 120000); ok(lib.saldo('ana') === 380000 && lib.cuadra() && !lib.mover('ana', 'x', 9e9), 'libro de partida doble: cuadra y no deja sobregiros');
+ok(MC.Dinero.repartir(1000, [1, 1, 1]).reduce((a, b) => a + b) === 1000, 'repartir dinero en partes exactas');
+const mer = new MC.Mercado({ nombre: 'café', a: 100, b: 2, c: 10, d: 1 }); ok(Math.abs(mer.equilibrio().P - 30) < 1e-9 && Math.abs(MC.Finanzas.cuota(1e6, .01, 12) - 88848.79) < .5, 'equilibrio de mercado y cuota de un préstamo');
+const tirv = MC.Finanzas.tir([-1000, 300, 400, 500]); ok(Math.abs(tirv - .0889633947) < 1e-4, 'tasa interna de retorno', tirv.toFixed(4));
+console.log('11) Seres, vehículos, IA, interiores y música');
+const yo = new MC.Seres.Persona({ sexo: 'f', edad: 30, estatura: 1.65, masa: 60, forma: .5 });
+ok(Math.round(yo.tmb) === 1320 && Math.abs(yo.fcMax - 187) < .01 && yo.vCamina > 1.2 && yo.vCamina < 1.7, 'persona: metabolismo (Mifflin), pulso máximo (Tanaka) y paso por Froude', { tmb: Math.round(yo.tmb), camina: yo.vCamina.toFixed(2) });
+const az = MC.mulberry32(5), pa = MC.Seres.Genetica.azar(az, 'm'), ma = MC.Seres.Genetica.azar(az, 'f'), hijo = MC.Seres.Genetica.cruzar(pa, ma, az);
+ok(Object.keys(MC.Seres.GENES).every(k => hijo[k].every((par, i) => pa[k][i].includes(par[0]) && ma[k][i].includes(par[1]))), 'genética: cada alelo del hijo viene del padre o de la madre');
+const perro = MC.Seres.Animal.crear('perro_criollo'), gato = MC.Seres.Animal.crear('gato'); ok(perro.metabolismoW > 20 && perro.metabolismoW < 45 && perro.vmax > gato.vmax && MC.Seres.Animal.marcha(1, .5) === 'paso' && MC.Seres.Animal.marcha(6, .5) === 'galope', 'animales: Kleiber, velocidad por masa y marcha por Froude');
+const al1 = MC.Seres.Animal.criatura({ masa: 200, patas: 6, gravedad: 9.8 }), al2 = MC.Seres.Animal.criatura({ masa: 200000, patas: 2, gravedad: 30 }); ok(al1.verosimil && !al2.verosimil, 'criaturas: ley cuadrado‑cubo con la gravedad');
+const d1 = MC.Taller.disenar({ id: 'prueba_auto', masa: 1200, potenciaKW: 80, cd: .3, area: 2.1 }); ok(d1.vmax * 3.6 > 170 && d1.vmax * 3.6 < 230 && d1.ceroCien > 6 && d1.ceroCien < 16 && d1.consumo > 3 && d1.consumo < 9, 'taller: un carro de 80 kW con cifras reales', { vmax: Math.round(d1.vmax * 3.6), cien: d1.ceroCien.toFixed(1), l100: d1.consumo.toFixed(1) });
+const dA = MC.Taller.disenar({ tipo: 'avion', masa: 750, potenciaKW: 120, alasM2: 16.2, clMax: 1.6, cd: .03, area: 16 }); ok(dA.vPerdida > 18 && dA.vPerdida < 30, 'avioneta: velocidad de pérdida', (dA.vPerdida * 3.6).toFixed(0) + ' km/h');
+const vReg = MC.Taller.registrar(d1); const Bc = new MC.Cuerpo(M, { x: via.x, y: via.y, a: via.ang, veh: vReg.id }); for (let i = 0; i < 200; i++) Bc.actualizar(1 / 30, { acel: 1 }); ok(Bc.v > 5 && isFinite(Bc.x), 'el carro diseñado se maneja con el modelo de bicicleta', Bc.v.toFixed(1) + ' m/s');
+ok(Math.abs(MC.IA.vCurva(1 / 50, .9) - 21.0) < .2 && MC.IA.selector(() => 'falla', () => 'ok')({}) === 'ok', 'IA: velocidad segura en curva y árbol de comportamiento');
+const pobl = new MC.Poblacion(M, { n: 20, centro: col, radio: 500, semilla: 3 }), rel2 = new MC.Reloj({ fecha: '2026-11-24', min: 8 * 60, vel: 1 }); for (let i = 0; i < 120; i++) { pobl.paso(.5, rel2, col.x, col.y); rel2.avanzar(.5); } ok(pobl.gente.length >= 15 && pobl.gente.some(p => p.act === "trabajo" || p.ruta), 'población con rutinas: a las 8 a. m. la gente sale a trabajar', pobl.resumen());
+const ed0 = M.edificiosEn(col.x - 100, col.y - 100, col.x + 100, col.y + 100).find(e => e.hw > 5 && e.hd > 4), pl = MC.Interiores.generar(ed0); const area = pl.cuartos.reduce((a, c) => a + c.w * c.h, 0);
+ok(Math.abs(area - pl.ancho * pl.fondo) < 1 && pl.puertas.length >= pl.cuartos.length && pl.muebles.length > 3, 'interior procedural: los cuartos llenan la planta y todos tienen puerta', { prog: pl.programa, cuartos: pl.cuartos.length, muebles: pl.muebles.length });
+const pz = MC.Musica.componer({ estilo: 'lofi', tema: 'himno_alegria', semilla: 2, compases: 8 }), pz2 = MC.Musica.componer({ estilo: 'lofi', tema: 'himno_alegria', semilla: 2, compases: 8 });
+ok(pz.eventos.length > 50 && JSON.stringify(pz.eventos) === JSON.stringify(pz2.eventos) && pz.eventos.every(e => e.n >= 24 && e.n <= 108 && e.t >= 0), 'música: compone determinista y en rango', { eventos: pz.eventos.length, bpm: pz.bpm });
+ok(['electronica', 'techno', 'synthwave', 'rock', 'jazz', 'lofi', 'clasica'].every(e => MC.Musica.componer({ estilo: e, compases: 4 }).eventos.length > 10) && Object.keys(MC.Musica.CLASICOS).every(t => MC.Musica.componer({ estilo: 'electronica', tema: t, compases: 4 }).eventos.some(e => e.inst === 'lead')), 'siete estilos y siete clásicos de dominio público');
+const ar = MC.Musica.armonizar(MC.Musica.CLASICOS.himno_alegria); ok(ar[0].raiz % 12 === 0 && ar[ar.length - 1].raiz % 12 === 0, 'el arreglista armoniza el Himno a la alegría empezando y terminando en la tónica');
+const mi = new MC.Mision({ titulo: 'x', pasos: [{ tipo: 'ir', x: 0, y: 0, radio: 5 }, { tipo: 'esperar', x: 0, y: 0, seg: 1 }], premio: 5000, libro: lib, cuenta: 'ana' }), s0 = lib.saldo('ana'); mi.actualizar(.1, { x: 1, y: 1 }); mi.actualizar(.6, { x: 1, y: 1 }); mi.actualizar(.6, { x: 1, y: 1 });
+ok(mi.estado === 'cumplida' && lib.saldo('ana') === s0 + 5000, 'misión con pasos y recompensa en el libro');
+console.log('12) Mundos nuevos: generados y craqueados');
+const G1 = MC.Generador.mundo({ semilla: 7, ancho: 384, alto: 384, tipo: 'isla', pueblos: 3 }), G2 = MC.Generador.mundo({ semilla: 7, ancho: 384, alto: 384, tipo: 'isla', pueblos: 3 });
+ok(G1.generado.edificios > 40 && G1.generado.vias > 5 && G1.edificiosEn(0, 0, G1.ancho, G1.alto).length === G1.generado.edificios && G1.red('rueda').aristas.length > 10, 'generador: isla con pueblos, calles, casas y red', { pueblos: G1.generado.pueblos.map(p => p.nombre), edificios: G1.generado.edificios, puentes: G1.generado.puentes });
+ok(G1.capa('suelo').every((v, i) => v === G2.capa('suelo')[i]) && G1.cota(1000, 1000) === G2.cota(1000, 1000), 'la misma semilla da el mismo mundo');
+ok(['valle', 'costa', 'montaña', 'llanura'].every(t => { const g = MC.Generador.mundo({ semilla: 3, ancho: 192, alto: 192, tipo: t, pueblos: 2 }); return g.W === 192 && isFinite(g.cota(500, 500)); }), 'cinco formas de mundo (isla, valle, costa, montaña, llanura)');
+const gu = path.join(RAIZ, 'datos/guatape/mundo.mc4');
+if (fs.existsSync(gu)) { const MG = new MC.Mundo(new Uint8Array(fs.readFileSync(gu))), ce = MG.geoAMetros(6.2338, -75.1590); ok(MG.vias().length > 200 && MG._ed().cuantos > 2000 && MG.cota(ce.x, ce.y) > 1800 && MG.red('rueda').aristas.length > 100 && MG.capa('suelo').filter(v => v === MC.TT.WATER).length > 1e5, 'territorio craqueado: Guatapé con su embalse, sus calles y sus casas', { vias: MG.vias().length, edificios: MG._ed().cuantos, cota: Math.round(MG.cota(ce.x, ce.y)) }); }
+const CG = new MC.ClimaGlobal({ lat: 45, alt: 0 }), RJ = new MC.Reloj({ fecha: '2026-01-15', min: 600 }); CG.forzar('nieve'); for (let i = 0; i < 120; i++) { CG.actualizar(RJ, 1); RJ.avanzar(1); }
+ok(CG.nieve > 0 && CG.nieveSuelo > 0 && MC.Ambiente.agarre(CG) < .6 && MC.Ambiente.estacion(new Date(2026, 0, 15), 45) === 'invierno' && MC.Ambiente.estacion(new Date(2026, 0, 15), -33) === 'verano' && MC.Ambiente.horasLuz(60, 172) > 18, 'clima global: nieve que se acumula, agarre, estaciones por hemisferio y horas de luz', CG.texto());
+
 if (process.argv.includes('--navegador')) {
-  console.log('10) Banco de pruebas en Chromium');
+  console.log('13) Banco de pruebas en Chromium');
   const html = path.join(RAIZ, 'dist/motor-city.html'); let chromium; try { ({ chromium } = require('playwright')); } catch (e) { console.log('  (sin playwright: se salta)'); }
   if (chromium && fs.existsSync(html)) {
     const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'] }), p = await b.newPage({ viewport: { width: 412, height: 860 } }), errs = [];

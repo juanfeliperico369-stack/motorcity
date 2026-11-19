@@ -1,12 +1,12 @@
 /* =====================================================================
    MOTOR CITY · NÚCLEO (MC)
    El motor de mundo abierto que comparten Juega EnCicla, El Metro y los juegos que vienen.
-   Todo el motor vive en un solo cierre y solo publica MC (y, por compatibilidad, Valle/MotorValle).
+   Todo el motor vive en un solo cierre y solo publica MC (y, por compatibilidad con los juegos 1.x, Valle/MotorValle).
    Reglas: un solo HTML, sin internet ni librerías; español de Colombia; ningún dato personal.
    ===================================================================== */
 const MC = {
-  version: '2.0.0',
-  nombre: 'Motor City · Motor del Valle 2.0',
+  version: '2.1.0',
+  nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
   ahora: () => (typeof performance !== 'undefined' ? performance.now() : Date.now())

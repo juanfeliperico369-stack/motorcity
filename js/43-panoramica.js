@@ -44,7 +44,7 @@ class Panoramica {
     /* emblemáticos: hitos con huella y altura (la aguja del Coltejer, la basílica…) */
     for (const h of M.hitos) { const P = h.huella[0]; let cx = 0, cy = 0; for (let t = 0; t < P.length; t += 2) { cx += P[t]; cy += P[t + 1]; } cx /= P.length / 2; cy /= P.length / 2; if (cx < bx0 - 900 || cx > bx1 + 900 || cy < by0 - 900 || cy > by1 + 900) continue; const p = proyecta(cx, cy); if (p.s < s0 || p.s >= s0 + PANO_BLOQUE || p.d < 0 || p.d > 900) continue; let w = 0; for (let t = 0; t < P.length; t += 2) w = Math.max(w, Math.hypot(P[t] - cx, P[t + 1] - cy)); B.hitos.push({ s: p.s, d: p.d, h: h.alto + (h.corona || 0), w: w * 1.6, clase: h.clase, nombre: h.nombre, cota: M.cota(cx, cy) }); }
     /* estaciones EnCicla y del sistema cerca de la vía */
-    for (const e of M.transporte.encicla) { if (e.x < bx0 - 40 || e.x > bx1 + 40 || e.y < by0 - 40 || e.y > by1 + 40) continue; const p = proyecta(e.x, e.y); if (Math.abs(p.d) < 40 && p.s >= s0 && p.s < s0 + PANO_BLOQUE) B.estaciones.push({ s: p.s, d: p.d, tipo: 'encicla', nombre: e.nombre }); }
+    for (const e of M.transporte.encicla || []) { if (e.x < bx0 - 40 || e.x > bx1 + 40 || e.y < by0 - 40 || e.y > by1 + 40) continue; const p = proyecta(e.x, e.y); if (Math.abs(p.d) < 40 && p.s >= s0 && p.s < s0 + PANO_BLOQUE) B.estaciones.push({ s: p.s, d: p.d, tipo: 'encicla', nombre: e.nombre }); }
     for (const l of M.transporte.lineas) if (l.clase === 'metro' || l.clase === 'tram' || l.clase === 'cable' || l.clase === 'brt') for (const e of l.estaciones) { if (e[1] < bx0 - 250 || e[1] > bx1 + 250 || e[2] < by0 - 250 || e[2] > by1 + 250) continue; const p = proyecta(e[1], e[2]); if (p.d > -30 && p.d < 250 && p.s >= s0 && p.s < s0 + PANO_BLOQUE) B.estaciones.push({ s: p.s, d: p.d, tipo: l.clase, color: l.color, nombre: e[0], linea: l.id, nivel: l.clase === 'metro' ? Math.max(0, M.nivel(e[1], e[2])) : 0, cota: M.cota(e[1], e[2]) }); }
     /* puentes, viaducto y deprimidos: el trazo va encima (alineado) o pasa por debajo (cruce) */
     for (const P of M.pasosEn(bx0 - 60, by0 - 60, bx1 + 60, by1 + 60)) {
@@ -213,6 +213,7 @@ class Panoramica {
     if (Cl.lluvia > .05) { g.strokeStyle = 'rgba(220,235,245,' + (.25 + Cl.lluvia * .3) + ')'; g.lineWidth = 1; g.beginPath(); const n = Math.round(40 + Cl.lluvia * 140), vx = Math.cos(Cl.viento.dir) * Cl.viento.v * .6; for (let i = 0; i < n; i++) { const x = ((h2(i, 3, 3) * W + t * (90 + vx * 30)) % W + W) % W, y = (h2(i, 4, 3) * H + t * 700 * (1 + h2(i, 5, 3))) % H; g.moveTo(x, y); g.lineTo(x - 3 - vx, y + 13); } g.stroke(); }
     if (Cl.niebla > .3) { g.fillStyle = 'rgba(200,205,210,' + (Cl.niebla - .3) * .5 + ')'; g.fillRect(0, 0, W, H); }
     if (Cl.rayo > .05) { g.fillStyle = 'rgba(255,255,255,' + Cl.rayo * .55 + ')'; g.fillRect(0, 0, W, H); }
+    if (MC.efectosClima) MC.efectosClima(g, W, H, Cl, t, true);
   }
   /* laderas con barrios (de El Metro, 23-lado.js): casas de ladrillo que trepan desde el valle con monte arriba y
      luces de noche; aquí la densidad sale de lo construido de verdad en esa dirección (capa urb*).

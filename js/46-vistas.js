@@ -60,6 +60,14 @@ class Vistas {
     if (Cl.lluvia > .05) { g.strokeStyle = 'rgba(210,228,245,' + (.22 + Cl.lluvia * .3) + ')'; g.lineWidth = 1; g.beginPath(); const n = Math.round((40 + Cl.lluvia * 120) * (W * H / 3e5)), vx = Math.cos(Cl.viento.dir) * Cl.viento.v; for (let i = 0; i < n; i++) { const x = ((h2(i, 3, 3) * W + t * 60 * vx) % W + W) % W, y = (h2(i, 4, 3) * H + t * (gl ? 700 : 260) * (1 + h2(i, 5, 3))) % H; g.moveTo(x, y); g.lineTo(x - vx * (gl ? 2 : .6), y + (gl ? 14 : 5)); } g.stroke(); }
     if (!gl && Cl.niebla > .25) { g.fillStyle = 'rgba(205,210,215,' + ((Cl.niebla - .25) * .55).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }
     if (Cl.rayo > .05) { g.fillStyle = 'rgba(255,255,255,' + (Cl.rayo * .5).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }
+    MC.efectosClima(g, W, H, Cl, t, gl);
   }
 }
+/* nieve que cae y se acumula, granizo y calor (los climas de MC.ClimaGlobal) */
+MC.efectosClima = function (g, W, H, Cl, t, perspectiva) {
+  if (Cl.nieveSuelo > .3 && !perspectiva) { g.fillStyle = 'rgba(245,248,252,' + Math.min(.55, Cl.nieveSuelo / 25).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }
+  if (Cl.nieve > .05) { g.fillStyle = 'rgba(255,255,255,.9)'; const n = Math.round((60 + Cl.nieve * 160) * (W * H / 3e5)), vx = Math.cos(Cl.viento.dir) * Cl.viento.v * 6; for (let i = 0; i < n; i++) { const x = ((h2(i, 7, 3) * W + t * vx + Math.sin(t + i) * 12) % W + W) % W, y = (h2(i, 8, 3) * H + t * (35 + h2(i, 9, 3) * 30)) % H, r = 1 + h2(i, 6, 3) * 1.8; g.fillRect(x, y, r, r); } }
+  if (Cl.granizo > .1) { g.fillStyle = 'rgba(235,245,255,.9)'; for (let i = 0; i < 70; i++) { const x = (h2(i, 3, 5) * W + t * 40) % W, y = (h2(i, 4, 5) * H + t * 900) % H; g.fillRect(x, y, 2.2, 2.2); } }
+  if (Cl.calor > .05) { g.fillStyle = 'rgba(255,170,60,' + (Cl.calor * .12).toFixed(3) + ')'; g.fillRect(0, 0, W, H); }
+};
 Object.assign(MC, { Vistas, VISTAS });

@@ -1,16 +1,19 @@
 #!/usr/bin/env node
 /* =====================================================================
-   MOTOR CITY · MOTOR DEL VALLE 2.0 · la línea de comandos del motor (fuente de verdad: juanfeliperico369-stack/motorcity).
-   Vive igual en motorcity/ y, copiado con herramientas/sincronizar.mjs, en <juego>/motor-valle/.
+   MOTOR CITY · la línea de comandos del motor (fuente de verdad: juanfeliperico369-stack/motorcity).
+   Vive igual en motorcity/ y, copiado con herramientas/sincronizar.mjs, en <juego>/motor-city/.
    Mundo 2.0 (nuevo):
      node motor.mjs mundo [--encicla RUTA] [--elmetro RUTA]   junta los datos de los dos juegos en datos/<ciudad>/mundo.mc4 (F1)
      node motor.mjs construir                                 dist/motor.js, dist/mundo-<ciudad>.js y el banco de pruebas dist/motor-city.html
      node motor.mjs run [--run ../RunRunZero]                 vuelve a importar Run Scooter (run/run-scooter.js) con sus parches
      node motor.mjs prueba                                    las pruebas del motor (pruebas/prueba.mjs)
-     node motor.mjs sincronizar RUTA_JUEGO [--verificar]      copia el motor a RUTA_JUEGO/motor-valle (o solo compara)
+     node motor.mjs sincronizar RUTA_JUEGO [--verificar]      copia el motor a RUTA_JUEGO/motor-city (o solo compara)
+     node motor.mjs nuevo juego|modulo NOMBRE                  arma un juego o un módulo nuevo desde plantillas
+     node motor.mjs reporte "título"                           abre un reporte de cambios para la IA del motor
+     python3 geo/territorio.py --id ID --bbox=lon0,latS,lon1,latN   craquea cualquier lugar del mundo a datos/ID/mundo.mc4
    Mapa 1.x (sigue igual, para los datos que hoy leen los juegos):
    ---------------------------------------------------------------------
-   MOTOR DEL VALLE · el motor único que crea el mapa de Juega EnCicla y de El Metro.
+   (Tubería 1.x) el mapa que hoy leen Juega EnCicla y El Metro.
    Una sola tubería (motor-valle/geo) y unas mismas fuentes abiertas; cada juego recibe el mapa en su resolución:
      node motor-valle/motor.mjs encicla                  casillas de 10 m → src/data de Juega EnCicla
      node motor-valle/motor.mjs elmetro RUTA_A_ELMETRO    casillas de 20 m → RUTA/src/data/valle.js (formato v3 de El Metro)
@@ -48,6 +51,8 @@ else if (cmd === 'construir') nodo('herramientas/construir.mjs', args.slice(1));
 else if (cmd === 'run') nodo('herramientas/importar-run.mjs', args.slice(1));
 else if (cmd === 'prueba') nodo('pruebas/prueba.mjs', args.slice(1));
 else if (cmd === 'sincronizar') nodo('herramientas/sincronizar.mjs', args.slice(1));
+else if (cmd === 'nuevo') nodo('herramientas/nuevo.mjs', args.slice(1));
+else if (cmd === 'reporte') nodo('herramientas/reporte.mjs', args.slice(1));
 else if (cmd === 'fuentes') { py('fetch.py'); py('oficial.py'); }
 else if (cmd === 'encicla') {
   const out = prueba ? salida('encicla') : path.join(ROOT, 'src', 'data');
@@ -61,7 +66,7 @@ else if (cmd === 'elmetro') {
   exportarElMetro(tmp, prueba ? path.join(salida('elmetro'), 'valle.js') : path.join(em, 'src', 'data', 'valle.js'));
 }
 else if (cmd === 'version') {
-  console.log('Motor del Valle', VERSION.version, '·', VERSION.fecha);
+  console.log('Motor City', VERSION.version, '·', VERSION.fecha);
   for (const f of ['valle.json', 'valle.bin', 'vias.bin', 'sitios.bin', 'sitios.json', 'alturas.json', 'metroplus.json', 'valle.js', 'ciudad.js', 'vias.js', 'puentes.js', 'edificios.js', 'hitos.js', 'metroplus.js', 'metroplus_andenes.js', 'rieles.js', 'rutas_calles.js', 'ajustes.js']) {   /* los datos de los dos juegos (EnCicla y El Metro) */ const p = path.join(ROOT, 'src', 'data', f); if (fs.existsSync(p)) console.log('  ' + f.padEnd(15), sha(p), (fs.statSync(p).size / 1024).toFixed(0) + ' KB'); }
 }
 else { console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 22).join('\n')); }

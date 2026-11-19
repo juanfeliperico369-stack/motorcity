@@ -4,12 +4,12 @@
    Casilla de `tile` m (10 en el valle). Las capas se inflan cuando alguien las pide (perezosas).
    Juega EnCicla dibuja en px (1 m = 1,6 px): MC.Mundo.escala(1.6) le da las mismas consultas en px.
    ===================================================================== */
-const TT = { GRASS: 0, MOUNT: 1, BRICK: 2, BLDG: 3, ROAD: 4, AVE: 5, WALK: 6, CICLO: 7, WATER: 8, CANAL: 9, PLAZA: 10, BRIDGE: 11, STATION: 12, LAND: 13, AUTO: 14, DEPOT: 15, STEPS: 16 };
-const TT_NOMBRE = ['pasto', 'monte', 'ladrillo', 'edificio', 'calle', 'avenida', 'andén', 'ciclorruta', 'agua', 'quebrada', 'plaza', 'puente', 'estación', 'pista', 'autopista', 'patio', 'escalas'];
+const TT = { GRASS: 0, MOUNT: 1, BRICK: 2, BLDG: 3, ROAD: 4, AVE: 5, WALK: 6, CICLO: 7, WATER: 8, CANAL: 9, PLAZA: 10, BRIDGE: 11, STATION: 12, LAND: 13, AUTO: 14, DEPOT: 15, STEPS: 16, ARENA: 17, NIEVE: 18, ROCA: 19 };   // 17–19: mundos generados y otros territorios
+const TT_NOMBRE = ['pasto', 'monte', 'ladrillo', 'edificio', 'calle', 'avenida', 'andén', 'ciclorruta', 'agua', 'quebrada', 'plaza', 'puente', 'estación', 'pista', 'autopista', 'patio', 'escalas', 'arena', 'nieve', 'roca'];
 /* lo que no se atraviesa a pie ni en rueda (los botes sí van por el agua) */
-const TT_SOLIDO = [0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0];
+const TT_SOLIDO = [0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1];
 /* agarre y rodadura de cada suelo (1 = asfalto), como en Juega EnCicla */
-const TT_SUPERFICIE = [.55, .25, .3, .3, 1, 1, .62, 1.3, 0, 0, .8, 1, .75, 0, .92, .9, .42];
+const TT_SUPERFICIE = [.55, .25, .3, .3, 1, 1, .62, 1.3, 0, 0, .8, 1, .75, 0, .92, .9, .42, .4, .3, .35];
 const TT_CALLE = new Set([TT.ROAD, TT.AVE, TT.AUTO, TT.BRIDGE]);
 const TT_URBANO = new Set([TT.BRICK, TT.BLDG, TT.ROAD, TT.AVE, TT.AUTO, TT.WALK, TT.PLAZA, TT.STATION, TT.BRIDGE, TT.CICLO, TT.STEPS, TT.DEPOT]);
 /* tipos de vía del archivo de vectores (VIAS3) */
@@ -52,7 +52,17 @@ class Mundo {
   /* la capa ya inflada (síncrona) */
   capa(nombre) {
     let v = this._c.get(nombre); if (v !== undefined) return v;
-    const c = this.capaInfo(nombre); v = this._tipar(c, inflarSync(this._bytes(c), c.raw)); this._c.set(nombre, v); return v;
+    const c = this.capaInfo(nombre), b = this._bytes(c); v = this._tipar(c, c.z === 0 ? b : inflarSync(b, c.raw)); this._c.set(nombre, v); return v;
+  }
+  /* un mundo armado en memoria (generador procedural, editor o herramientas): capas ya tipadas, sin comprimir.
+     d = { meta: { W, H, tile, lon0, latN, kx, ky, nombre, … }, capas: { suelo: Uint8Array, relieve: {datos: Int16Array, w, h, paso}, … } } */
+  static desdeCapas(d, cfg) {
+    const M = Object.create(Mundo.prototype), meta = Object.assign({ formato: 'MC4', v: 4, unidad: 'm', atribucion: [], capas: {} }, d.meta);
+    M.meta = meta; M.cfg = cfg || null; M._c = new Map(); M.u8 = new Uint8Array(0); M.base = 0;
+    for (const [n, c] of Object.entries(d.capas)) { const info = Object.assign({ o: 0, n: 0, raw: 0, z: 0, tipo: c.tipo || 'json' }, c.info || {}); meta.capas[n] = info; M._c.set(n, c.datos !== undefined ? c.datos : c); }
+    M.W = meta.W; M.H = meta.H; M.tile = meta.tile; M.ancho = meta.W * meta.tile; M.alto = meta.H * meta.tile; M.kx = meta.kx * meta.tile; M.ky = meta.ky * meta.tile;
+    const r = M.capaInfo('relieve'); M.eW = r.w; M.eH = r.h; M.es = r.paso * M.tile; const c2 = M.capaInfo('municipio'); M.mW = c2.w; M.mH = c2.h; M.ms = c2.paso * M.tile;
+    return M;
   }
   async precargar(nombres) { await Promise.all(nombres.filter(n => this.tiene(n) && !this._c.has(n)).map(async n => { const c = this.capaInfo(n); this._c.set(n, this._tipar(c, await inflar(this._bytes(c), c.raw))); })); return this; }
 
@@ -99,6 +109,7 @@ class Mundo {
   /* ---------- vías con nombre (vectores) ---------- */
   vias() {
     if (this._vias) return this._vias;
+    if (this.capaInfo('vias').formato === 'VIASJ') return (this._vias = this.capa('vias').map((v, i) => ({ i, k: v[0], nombre: v[1] || '', nom: '', ancho: v[2] || VIA_ANCHO[v[0]] || 6, p: Float32Array.from(v[3]) })));   // [tipo, nombre, ancho, [x,y,…] metros]
     const c = this.capaInfo('vias'), u8 = this.capa('vias'), dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), n = dv.getUint32(0, true), L = new Array(n), v3 = (c.v || 3) >= 3, K = this.tile / (c.vq || 4), NOM = this.capa('info').calles;
     let o = 4;
     for (let i = 0; i < n; i++) {
@@ -135,6 +146,13 @@ class Mundo {
   _ed() {
     if (this._ED !== undefined) return this._ED;
     if (!this.tiene('edificios')) return (this._ED = null);
+    if (this.capaInfo('edificios').formato === 'EDJ') {   // [x, y, medio largo, medio ancho, ángulo, pisos, clase, polígono|null] en metros
+      const J = this.capa('edificios'), R = this.capaInfo('edificios').R || 320, nx = Math.ceil(this.ancho / R) + 1, ny = Math.ceil(this.alto / R) + 1, reg = new Map();
+      for (const q of J.lista) { const [x, y, hw, hd, an, pis, k, ring] = q, ux = Math.cos(an), uy = Math.sin(an), r = Math.floor(y / R) * nx + Math.floor(x / R); let P = ring ? Float32Array.from(ring) : null;
+        if (P) { let A = 0; const n = P.length / 2; for (let v = 0; v < n; v++) { const w = (v + 1) % n; A += P[2 * v] * P[2 * w + 1] - P[2 * w] * P[2 * v + 1]; } if (A < 0) { const P2 = new Float32Array(P.length); for (let v = 0; v < n; v++) { P2[2 * v] = P[2 * (n - 1 - v)]; P2[2 * v + 1] = P[2 * (n - 1 - v) + 1]; } P = P2; } }
+        (reg.get(r) || reg.set(r, []).get(r)).push({ x, y, hw, hd, ux, uy, h: Mundo.altoEdificio(k, pis), pis, k, clase: J.kinds[k], P, of: 0, s: h2(x * 2 | 0, y * 2 | 0, 9) }); }
+      return (this._ED = { json: true, R, nx, ny, reg, kinds: J.kinds, cuantos: J.lista.length });
+    }
     const E = this.capaInfo('edificios'), b = this.capa('edificios'), nR = E.nx * E.ny, cnt = new Int32Array(nR), i0 = new Int32Array(nR), p0 = new Int32Array(nR), q0 = new Int32Array(nR);
     let o = 0, ci = 0, cp = 0, cq = 0; const rv = () => { let v = 0, sh = 0, c; do { c = b[o++]; v += (c & 127) * 2 ** sh; sh += 7; } while (c & 128); return v; };
     for (let r = 0; r < nR; r++) { cnt[r] = rv(); const pb = rv(), qb = rv(); i0[r] = ci; p0[r] = cp; q0[r] = cq; ci += cnt[r]; cp += pb; cq += qb; }
@@ -151,6 +169,7 @@ class Mundo {
   /* los edificios de una región: { x, y, hw, hd, ux, uy, h, pis, k, clase, P (polígono o null), s (semilla) } */
   edificiosRegion(rx, ry) {
     const E = this._ed(); if (!E || rx < 0 || ry < 0 || rx >= E.nx || ry >= E.ny) return [];
+    if (E.json) return E.reg.get(ry * E.nx + rx) || [];
     const r = ry * E.nx + rx; let L = E.cache.get(r); if (L) { E.cache.delete(r); E.cache.set(r, L); return L; }
     const b = E.b, n = E.cnt[r], R = E.R, Q = E.Q, X0 = rx * R, Y0 = ry * R; L = [];
     let o = E.oPos + E.p0[r], q = E.oPol + E.q0[r], px = 0, py = 0, pa = 0;
@@ -239,12 +258,12 @@ class Mundo {
   /* lugar con postal más cercano */
   lugarCercano(x, y, r = 400) { let best = null, bd = r; for (const L of this.lugares) { const d = Math.hypot(L.x - x, L.y - y); if (d < bd) { bd = d; best = L; } } return best; }
   estacionCercana(x, y, r = 600, clase) { let best = null, bd = r; for (const l of this.transporte.lineas) { if (clase && l.clase !== clase) continue; for (const s of l.estaciones) { const d = Math.hypot(s[1] - x, s[2] - y); if (d < bd) { bd = d; best = { linea: l, nombre: s[0], x: s[1], y: s[2], d }; } } } return best; }
-  enciclaCercana(x, y, r = 600) { let best = null, bd = r; for (const s of this.transporte.encicla) { const d = Math.hypot(s.x - x, s.y - y); if (d < bd) { bd = d; best = s; } } return best; }
+  enciclaCercana(x, y, r = 600) { let best = null, bd = r; for (const s of this.transporte.encicla || []) { const d = Math.hypot(s.x - x, s.y - y); if (d < bd) { bd = d; best = s; } } return best; }
   /* un punto de partida bonito: la estación o el lugar con ese nombre o id */
   buscar(txt) {
     const t = String(txt).toLowerCase();
     for (const L of this.lugares) if (L.id.toLowerCase() === t || L.nombre.toLowerCase() === t) return { x: L.x, y: L.y, nombre: L.nombre };
-    for (const s of this.transporte.encicla) if (s.id === t || s.nombre.toLowerCase() === t) return { x: s.x, y: s.y, nombre: s.nombre };
+    for (const s of this.transporte.encicla || []) if (s.id === t || s.nombre.toLowerCase() === t) return { x: s.x, y: s.y, nombre: s.nombre };
     for (const l of this.transporte.lineas) for (const s of l.estaciones) if (s[0].toLowerCase() === t) return { x: s[1], y: s[2], nombre: s[0] };
     return null;
   }
@@ -254,7 +273,7 @@ function caja(R) { let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const P of
 function dentroPol(P, x, y) { let d = false; const n = P.length / 2; for (let i = 0, j = n - 1; i < n; j = i++) { const xi = P[2 * i], yi = P[2 * i + 1], xj = P[2 * j], yj = P[2 * j + 1]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) d = !d; } return d; }
 Object.assign(MC, { Mundo, TT, TT_NOMBRE, TT_SOLIDO, TT_SUPERFICIE, TT_CALLE, TT_URBANO, VIA, VIA_ANCHO, NIVEL_M, PISO_M, caja, dentroPol });
 
-/* ---------- compatibilidad con el Motor del Valle 1.x (Valle / MotorValle) ----------
+/* ---------- compatibilidad con el lector 1.x de los juegos (Valle / MotorValle) ----------
    Los juegos que ya llaman Valle.decodificar() siguen andando; Valle.mundo2() abre el mundo 2.0. */
 const ValleCompat = {
   version: MC.version,
@@ -278,4 +297,4 @@ const ValleCompat = {
     };
   }
 };
-MC.ValleCompat = ValleCompat;
+MC.ValleCompat = ValleCompat; MC.Compat1 = ValleCompat;

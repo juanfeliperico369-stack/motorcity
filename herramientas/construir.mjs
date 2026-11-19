@@ -53,7 +53,20 @@ if (!process.argv.includes('--sin-sandbox') && fs.existsSync(path.join(RAIZ, 'sa
     .replaceAll('%VERSION%', VER.version);
   fs.writeFileSync(path.join(DIST, 'motor-city.html'), html);
 }
+/* ---------- los juegos de juegos/<id>/ (cada uno con su mundo): dist/juegos/<id>.html ---------- */
+const juegos = [];
+const dirJ = path.join(RAIZ, 'juegos');
+if (fs.existsSync(dirJ) && !process.argv.includes('--sin-juegos')) for (const id of fs.readdirSync(dirJ)) {
+  const jd = path.join(dirJ, id), jj = path.join(jd, 'juego.json'); if (!fs.existsSync(jj)) continue;
+  const J = JSON.parse(fs.readFileSync(jj, 'utf8')), cId = J.mundo || CIUDAD, mc = path.join(RAIZ, 'datos', cId, 'mundo.mc4');
+  if (!fs.existsSync(mc)) { console.warn('⚠ ' + id + ': falta datos/' + cId + '/mundo.mc4'); continue; }
+  const cfgJ = JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades', cId + '.json'), 'utf8')), mundoJ = `var MC_MUNDO = '${fs.readFileSync(mc).toString('base64')}';\nvar MC_CIUDAD = ${JSON.stringify(cfgJ)};\nvar MC_CIUDAD_BASE = ${JSON.stringify({ zonas: cfg.zonas })};\n`;
+  const jsJ = fs.readdirSync(jd).filter(f => f.endsWith('.js')).sort().map(f => fs.readFileSync(path.join(jd, f), 'utf8')).join('\n');
+  const chk = path.join(DIST, '.juego.check.js'); fs.writeFileSync(chk, jsJ); try { execSync('node --check ' + JSON.stringify(chk), { stdio: 'inherit' }); } finally { fs.unlinkSync(chk); }
+  const out = fs.readFileSync(path.join(jd, 'index.html'), 'utf8').replace('/*CSS*/', () => fs.existsSync(path.join(jd, 'estilo.css')) ? fs.readFileSync(path.join(jd, 'estilo.css'), 'utf8') : '').replace('/*MUNDO*/', () => mundoJ).replace('/*MOTOR*/', () => motor).replace('/*JUEGO*/', () => `(function(){'use strict';\n${jsJ}\n})();`).replaceAll('%VERSION%', VER.version);
+  fs.mkdirSync(path.join(DIST, 'juegos'), { recursive: true }); fs.writeFileSync(path.join(DIST, 'juegos', id + '.html'), out); juegos.push(id + ' ' + Math.round(out.length / 1024) + ' KB');
+}
 const sha = b => crypto.createHash('sha1').update(b).digest('hex').slice(0, 8);
 const info = { version: VER.version, motor_kb: Math.round(motor.length / 1024), mundo_kb: Math.round(mundoJS.length / 1024), html_kb: html ? Math.round(html.length / 1024) : null, sha: sha(motor), archivos: lista.length };
 fs.writeFileSync(path.join(DIST, 'construccion.json'), JSON.stringify(info, null, 1));
-console.log(`✓ Motor City ${VER.version}: motor.js ${info.motor_kb} KB (${lista.length} archivos) · mundo ${info.mundo_kb} KB` + (html ? ` · motor-city.html ${info.html_kb} KB` : ''));
+console.log(`✓ Motor City ${VER.version}: motor.js ${info.motor_kb} KB (${lista.length} archivos) · mundo ${info.mundo_kb} KB` + (html ? ` · motor-city.html ${info.html_kb} KB` : '') + (juegos.length ? ' · juegos: ' + juegos.join(', ') : ''));
