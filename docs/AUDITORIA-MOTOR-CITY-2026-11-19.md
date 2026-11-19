@@ -14,7 +14,7 @@ Los adjuntos son documentación del proyecto, no cambios de código que deban ej
 - `MOTOR-CITY-TODO.md`: la misma base ampliada con anexos de manual, contrato MC4, investigación, optimización, negocio, contribución y bitácora.
 - `mandados.html`: artefacto ejecutable autocontenido del minijuego; no contiene una petición separada.
 
-Se respetó la división de esos documentos: auditoría, código y pruebas para Codex; arte final para la IA de arte. La entrega oficial de Gemini se encontró en la rama remota `claude/motor-city-engine-xu7p4y`, commit `f95135d`, y se incorporará a `main` junto con este informe.
+Se respetó la división de esos documentos: auditoría, código y pruebas para Codex; arte final para la IA de arte. La entrega oficial de Gemini se encontró en la rama remota `claude/motor-city-engine-xu7p4y`, commit `f95135d`, y quedó incorporada a `main` junto con este informe.
 
 ## 2. Material leído y verificado
 
