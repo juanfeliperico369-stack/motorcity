@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Motor City</title>
+<meta name="description" content="Motor City: el motor de mundo abierto que convierte cualquier lugar real (o inventado) en un mundo jugable con leyes reales.">
+<style>
+:root{--fondo:#0b1020;--panel:#141b33;--tinta:#f4f1e6;--suave:#a9b0c8;--acento:#39ffb3;--acento2:#ff2fb3;--borde:rgba(255,255,255,.12)}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:radial-gradient(1200px 600px at 80% -10%,#24124a 0,transparent 60%),radial-gradient(900px 500px at -10% 110%,#08324a 0,transparent 60%),var(--fondo);color:var(--tinta);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh;padding:max(16px,env(safe-area-inset-top)) 16px 32px}
+main{max-width:880px;margin:0 auto}
+h1{font-size:clamp(2.2rem,8vw,4rem);line-height:1;margin:.6em 0 .2em;letter-spacing:-.02em}
+h1 span{background:linear-gradient(90deg,var(--acento),var(--acento2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lema{color:var(--suave);font-size:1.1rem;max-width:42em;margin:0 0 1.6em}
+.tarjetas{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+a.t{display:block;background:var(--panel);border:1px solid var(--borde);border-radius:18px;padding:18px 18px 16px;color:inherit;text-decoration:none;transition:transform .15s,border-color .15s}
+a.t:hover,a.t:focus-visible{transform:translateY(-2px);border-color:var(--acento);outline:none}
+a.t b{display:block;font-size:1.15rem;margin-bottom:4px}
+a.t small{color:var(--suave)}
+a.t.prin{border-color:var(--acento);box-shadow:0 0 0 1px var(--acento) inset,0 10px 40px rgba(57,255,179,.12)}
+.pill{display:inline-block;font-size:.75rem;padding:2px 8px;border-radius:99px;background:rgba(57,255,179,.15);color:var(--acento);margin-bottom:8px}
+h2{font-size:1.1rem;margin:2em 0 .6em;color:var(--suave);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+ul{padding-left:1.2em;margin:0}li{margin:.25em 0}
+footer{margin-top:2.5em;color:var(--suave);font-size:.85rem}
+code{background:rgba(255,255,255,.08);padding:1px 6px;border-radius:6px}
+</style>
+</head>
+<body>
+<main>
+  <h1><span>Motor City</span></h1>
+  <p class="lema">El motor de mundo abierto que convierte cualquier lugar real, o uno inventado, en un mundo jugable con leyes reales. Funciona en un solo archivo, sin internet, en cualquier celular.</p>
+  <div class="tarjetas">
+    <a class="t prin" href="dist/juegos/mandados.html"><span class="pill">Minijuego de prueba</span><b>Mandados · Guatapé</b><small>Haz mandados por el pueblo real de Guatapé o por un mundo inventado. Ganas plata, entras a las casas, cambia el clima y la gente vive su día.</small></a>
+    <a class="t" href="dist/motor-city.html"><span class="pill">Banco de pruebas</span><b>Medellín completo</b><small>Las 639.457 casas, el metro y los cables, las 8 vistas, el pixel y Run en la ciclovía. Pesa unos 9 MB y tarda un poco en abrir.</small></a>
+  </div>
+  <h2>Cómo se juega</h2>
+  <ul>
+    <li><b>Celular:</b> arrastra el dedo para moverte, pellizca para acercar y usa los botones de abajo.</li>
+    <li><b>Teclado:</b> flechas o WASD para moverte, <code>V</code> para cambiar de vista, <code>P</code> para pixel, <code>H</code> para la hora y <code>C</code> para el clima.</li>
+  </ul>
+  <h2>Qué trae el motor</h2>
+  <ul>
+    <li>Territorios reales craqueados de datos abiertos, y mundos inventados por semilla.</li>
+    <li>Vistas cenital, 3D, maqueta 2:1, panorámica de perfil, primera y tercera persona, y pixel.</li>
+    <li>Física, química, biología, clima con estaciones y economía con números exactos.</li>
+    <li>Gente con rutinas, tráfico con semáforos, transporte con horario, interiores, música e interfaz.</li>
+  </ul>
+  <footer>Datos © colaboradores de OpenStreetMap (ODbL) vía Overture Maps · relieve SRTM (NASA). Código fuente: <a style="color:var(--acento)" href="https://github.com/juanfeliperico369-stack/motorcity">github.com/juanfeliperico369-stack/motorcity</a>.</footer>
+</main>
+</body>
+</html>
