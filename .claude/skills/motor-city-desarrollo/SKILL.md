@@ -6,7 +6,8 @@ description: Cómo trabajar en el código del motor Motor City (repositorio moto
 
 1. **Lee primero:** `README.md`, `CONTEXTO-IA.md`, `MOTOR.md` (el contrato) y `docs/GUIA.md`. Revisa también `reportes/README.md` (los cambios pendientes de pulir).
 2. **El motor son fragmentos numerados** en `js/NN-nombre.js`. Van en un solo cierre y solo publican `MC`.
-   - Orden: núcleo y ciencia (00–05), mundo (10–12), tiempo, tráfico, transporte e IA (20–25), cuerpo y vehículos (30–36), vistas (40–48), Run (50), música (60), interfaz (70) y mecánicas (80).
+   - Orden: núcleo, ciencia, economía, escala y GPU (00–05); mundo, generador y cosmos (10–13); tiempo, tráfico, transporte, ambiente e IA (20–25); cuerpo, vehículos, seres, taller, manejo y sprites (30–38); vistas, raster, interiores y mi casa (40–49); Run (50); música (60); interfaz (70); mecánicas, lugares e historias (80–85).
+   - **Un solo cierre:** antes de declarar un `const` de nivel superior, busca que el nombre no exista en otro fragmento (`grep -n "const NOMBRE" js/*.js`).
    - `js/valle.js` es el lector 1.x de Juega EnCicla: **no se toca**.
 3. **Construir y probar** (debe quedar todo en verde):
    ```bash

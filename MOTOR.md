@@ -1,8 +1,8 @@
-# Motor City · Motor del Valle 2.0 · el contrato
+# Motor City · el contrato
 
-**Versión 2.0.0 · 19‑nov‑2026.** Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-valle/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`.
+**Versión 2.2.0 · 19‑nov‑2026.** Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-city/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`. Cómo se usa: `docs/MANUAL.md`.
 
-**Qué es.** El motor de mundo abierto único de Medellín y el Valle de Aburrá, y de cualquier otra ciudad que se le dé:
+**Qué es.** El motor de mundo abierto que convierte cualquier lugar real (Medellín, Guatapé, cualquier ciudad) o inventado (un valle, una isla, un planeta) en un mundo jugable con leyes reales:
 
 - **un solo mundo**, en un solo archivo de datos (MC4);
 - **un solo personaje** y **un registro de vehículos**;
@@ -14,7 +14,7 @@ Cada juego conserva lo suyo y solo pone su piel: formas de juego, apartados, art
 
 ## 1. Reglas
 1. **El mundo solo se cambia aquí.** Una corrección del mapa (una calle, un puente, un edificio o una estación) va en `motorcity`: en `geo/`, en `herramientas/fusionar.mjs` o en `ciudades/<id>.json`. Luego se sube la versión y se sincroniza.
-2. **Cada cambio sube la versión** en `VERSION.json` (*semver*). Se copia a los juegos con `node herramientas/sincronizar.mjs ../BicicletasUno` (o `../MetroZero`). Con `--verificar` debe decir «los archivos son iguales».
+2. **Cada cambio sube la versión** en `VERSION.json` (*semver*). Se copia a los juegos con `node herramientas/sincronizar.mjs ../BicicletasUno` (o `../MetroZero`), que lo deja en `motor-city/`. Con `--verificar` debe decir «los archivos son iguales».
 3. **Lo de cada juego no entra al motor:** su trama, sus modos, sus menús y su arte final. El motor ofrece *hooks* (sección 6) y datos. Si un dato sale de las mismas fuentes, puede vivir en el motor para que todos lo usen.
 4. **Un solo HTML por juego, sin internet ni librerías.** El motor es JavaScript puro con Canvas 2D y WebGL 1. Si falta WebGL, Canvas 2D es el respaldo.
 5. **No romper guardados:** con `MC.guardado.completar(guardado, porDefecto)`, los campos nuevos llevan su valor por defecto.
@@ -34,7 +34,10 @@ Cada juego conserva lo suyo y solo pone su piel: formas de juego, apartados, art
 | `node motor.mjs construir` | `dist/motor.js` (el motor), `dist/mundo-<ciudad>.js` (el mundo en base64) y `dist/motor-city.html` (el banco de pruebas jugable). |
 | `node motor.mjs run` | Vuelve a importar Run Scooter de `../RunRunZero` a `run/run-scooter.js`, con sus parches comprobados. |
 | `node motor.mjs prueba [--navegador]` | Las pruebas del motor: datos, consultas, redes, tiempo, transporte, tráfico, física y vehículos. Con `--navegador`, también las 8 vistas, Run y el rendimiento. |
-| `node motor.mjs sincronizar RUTA [--verificar]` | Copia el motor a `RUTA/motor-valle/`, o solo compara. |
+| `node motor.mjs sincronizar RUTA [--verificar]` | Copia el motor a `RUTA/motor-city/`, o solo compara. |
+| `node motor.mjs nuevo juego\|modulo nombre` | Crea un juego o un módulo desde su plantilla. |
+| `node motor.mjs reporte "título" --juego X` | Reporte obligatorio de un cambio hecho desde otro juego. |
+| `python3 geo/territorio.py --id x --bbox=…` | Craquea un lugar real (Overture + SRTM) a `datos/x/mundo.mc4` y `ciudades/x.json`. |
 | `node motor.mjs fuentes \| encicla \| elmetro RUTA \| version` | La tubería 1.x de siempre (`geo/*.py`), que genera los datos que hoy leen los juegos. |
 
 ## 3. Coordenadas
@@ -93,6 +96,31 @@ Se incluye con un `<script>` (o pegado en el HTML único) **antes** del código 
 | Seguir la ruta | `47-seguir.js` | `MC.SeguirRuta(mundo, cuerpo)`: el cuerpo va solo por la vía real (panorámica, Run y paseo). Tiene `paso`, `avanzar`, `girar(±1)` y `cruceProximo()`. |
 | Run | `50-run.js` | `MC.Run.puede(mundo, cuerpo)` y `MC.Run.entrar({ mundo, cuerpo, reloj, clima, aspecto, lienzo, capa, hud, alSalir })` |
 
+**Módulos de la 2.1 y la 2.2:**
+
+| Módulo | Archivo | Lo principal |
+|---|---|---|
+| Ciencia | `02-ciencia.js` | `MC.Ciencia`, `MC.Fis` (ISA, arrastre, sustentación, rodadura, choques, proyectiles), `MC.Termo` (rocío, índice de calor, sensación térmica), `MC.Quim` (masa molar, balanceo exacto, gases, pH, combustibles) |
+| Economía | `03-economia.js` | `MC.Dinero` (centavos), `MC.Libro` (partida doble: `mover`, `saldo`, `cuadra`), `MC.Mercado`, `MC.Finanzas` |
+| Escala | `04-escala.js` | `MC.Escala.MEDIDAS` (medidas reales), `validar()`, `pxPorMetro`, `escalaSprite`, `proporcion` |
+| GPU virtual | `05-gpu.js` | `MC.GPU.perfil()` y `ajustes()`, `MC.ResDinamica`, `MC.Bucle` (paso fijo con interpolación), `MC.resorte` y `resorteAng` |
+| Generador | `12-generador.js` | `MC.Generador.mundo({ semilla, tipo, ancho, alto, pueblos, lat })` |
+| Cosmos | `13-cosmos.js` | `MC.Cosmos.estrella(u, g, n)`, `planeta(E, i)`, `mundoDe(P)`, `criaturaDe(P)`, `altura(semilla, x, y)` (relieve infinito) |
+| Ambiente | `24-ambiente.js` | `MC.ClimaGlobal({ lat, alt })` (estaciones, nieve, niebla, calor), `MC.Ambiente.agarre`, `estacion`, `horasLuz` |
+| IA | `25-ia.js` | `MC.IA` (utilidad, árboles de comportamiento, dirección de Reynolds, `vSegura`), `MC.Poblacion` (gente con rutinas) |
+| Seres | `35-seres.js` | `MC.Seres.Persona` (biología y genética), `MC.Seres.Animal` (alometría, `criatura` con verosimilitud) |
+| Taller | `36-taller.js` | `MC.Taller.disenar(ficha)` → desempeño real; `registrar`; carro con derrape |
+| Manejo | `37-manejo.js` | `MC.Manejo.aplicar(entrada, cuerpo, { camara, esquema, vista, rumboVia, curvaAdelante })`, `curva`, `giroPorVelocidad`, `ESQUEMAS`, `rutaA` y `seguirRuta` (tocar para ir), `activarInclinacion` |
+| Sprites | `38-sprites.js` | `MC.Sprites.atlas(id, { imagen, cuadros, anim, metros })`, `dibujar(g, 'atlas/nombre', x, y, pxm, { t, fase, rumbo, dir, pixel, respaldo })`, `nueve`, `hornear`, `comoArte` |
+| Raster | `44-raster.js` | `new MC.Raster(mundo).dibujar(g, W, H, escena)`: la 3D por software |
+| Interiores | `48-interiores.js` | `MC.Interiores.generar(edificio, { programa, estilo, semilla })`, `ESTILOS` (8), `CATALOGO` (22), `cabe`, `dibujar`; programas de casa, apartamento, comercio, oficina, iglesia, colegio, bodega, taller, tienda, centro comercial, biblioteca y restaurante |
+| Mi casa | `49-hogar.js` | `MC.Direccion.leer(texto)` y `ubicar(mundo, texto)` (nomenclatura colombiana → edificio real); `MC.Hogar.desdeDireccion`, `plano`, `estilo`, `comprar`, `poner`, `mover`, `girar`, `quitar`, `guardar` |
+| Música | `60-musica.js` | `MC.Musica.componer`, `tocar`, `adaptar`, `CLASICOS` |
+| Interfaz | `70-interfaz.js` | `MC.UI.crear(raiz, { tema })`: `ficha`, `boton`, `barra`, `aviso` (en cola), `mision`, `dialogo`, `menu`, `minimapa`, `foco`, `cine`, `zonaLibre`; `MC.UI.verificar(ui)` |
+| Mecánicas | `80-mecanicas.js` | `MC.Mision`, `MC.Inventario`, `MC.Carrera`, `MC.Logros`, `MC.Dialogo` |
+| Lugares | `82-lugares.js` | `MC.Lugares.en`, `cerca`, `hacer(lugar, actividad, ctx)`, `interior`, `TIPOS`; `MC.Desgaste` (usar, reparar, mejorar, aplicar) |
+| Historias | `85-historias.js` | `MC.Historias` (storylets con pilares, `elegir`, `encargo`), `MC.Director` (ritmo y dificultad), `MC.Ocurrencias` (vigilar, rescatar, exportar) |
+
 **La escena** que reciben las vistas: `{ mundo, camara, reloj, clima, cielo, transporte, jugador: { cuerpo, aspecto }, vehiculos, trafico, peatones, cables, pano: { trazo, s, id }, extras: [{ x, y, dibujar }], t }`. El banco de pruebas (`sandbox/10-juego.js`) es el ejemplo completo de un juego sobre el motor, en unas 150 líneas.
 
 ## 6. La piel de cada juego (hooks de arte)
@@ -112,6 +140,7 @@ MC.arte.registrar('encicla', {
 
 ## 7. Las vistas, una por una
 - **Cenital:** losas, objetos encima y techos con sombra. Se gira con dos dedos.
+- **Lateral (2.2):** la misma proyección inclinada de 1,2 a 1,47 rad. Muestra cielo arriba, el corte de la tierra abajo y una franja de calle con profundidad: una casa de muñecas, como *Little Nightmares*. Gira de a 90° con animación (`camara.girar90`), como *FEZ*. La ciudad 3D también se inclina con dos dedos hasta quedar de lado. Lo que tapa al jugador se vuelve transparente (rayos X).
 - **Ciudad 3D:** la misma proyección inclinada. Los edificios se levantan con su huella y su altura reales, y tienen ventanas que se encienden de noche. Lleva puentes y viaducto con pilas, y vehículos con volumen.
 - **Maqueta 2:1:** dimétrica (giro de 45° más múltiplos de 90°, aplastado 0,5 y altura 0,82), como la maqueta de El Metro.
 - **Panorámica de perfil (cuidado especial).** Junta la de El Metro y la de EnCicla:
@@ -161,6 +190,16 @@ MC.arte.registrar('encicla', {
 | **Tráfico** | Agentes alrededor del jugador. Semáforos de 60 s con fase fija por cruce; frenan en amarillo y en rojo, y guardan distancia. |
 | **Huevos** | `MC.huevos.poner({ id, x, y, radio, hora, vehiculo, cond, juegos })`. El motor avisa con `MC.on('huevo')` una sola vez. |
 
+## 9b. Física de niveles (2.2)
+- **Superficies:** el terreno y los tableros (con su rampa) en cada punto.
+- **Apoyo:** el cuerpo se apoya en la más alta que quede a un escalón (0,5 m a pie, 0,35 m con ruedas, más lo que avanza en el cuadro).
+- **Pared:** lo que queda entre los pies y la cabeza no se atraviesa.
+- **Por debajo:** lo que queda arriba de la cabeza se pasa por debajo.
+- **Caída:** sin apoyo, cae con gravedad.
+- **Barandas:** no dejan salir del tablero.
+- **Deprimidos:** solo se entra por sus extremos.
+- **Salto:** tiempo de coyote (0,12 s) y memoria del botón (0,14 s).
+
 ## 10. Hoja de ruta (lo que sigue)
 - **2.1:** precalcular las redes en el MC4 (hoy `red('rueda')` tarda alrededor de 1 s al arrancar). Guardar el ancho y la nomenclatura de las ciclorrutas. Sumar `geo/pasos.py` (niveles firmados de Overture) y conectarlo al GPS de dos niveles.
 - **2.2:** sombras del sol en WebGL. Agua animada del río. Ventanas con textura. Árboles por especie. Atlas del arte que entreguen Gemini y ChatGPT (`MC.arte`).
@@ -173,4 +212,6 @@ MC.arte.registrar('encicla', {
 | 1.0.0 | 18‑nov‑2026 | Una tubería con dos resoluciones, el exportador a El Metro, el sincronizador y el contrato (BicicletasUno). |
 | 1.1.0 | 18/19‑nov‑2026 | Túneles y deprimidos; el lector `valle.js`; la fachada de El Metro. |
 | 1.2.0 | 19‑nov‑2026 | Une las dos 1.1.0 con la fuente de verdad en BicicletasUno. |
+| **2.2.0** | 19‑nov‑2026 | GPU virtual (perfil, resolución dinámica, bucle de paso fijo y raster 3D por software). Física de niveles por superficies. Cámara con resortes, brazo con choque, FOV por velocidad y trauma. **Vista lateral.** Manejo (curvas, esquemas y asistencias), sprites, escala real, interfaz por zonas, interiores con 8 estilos y catálogo, **Mi casa** desde la dirección, lugares jugables y desgaste, historias con director, ocurrencias y cosmos. 103 pruebas. |
+| **2.1.0** | 19‑nov‑2026 | Nombre: solo «Motor City» (carpeta `motor-city/`). Ciencia, economía, generador de mundos, territorios (`geo/territorio.py`), clima global, seres, taller, IA y población, interiores, música, interfaz y mecánicas. Minijuego Mandados, plantillas, reportes y skills. 80 pruebas. |
 | **2.0.0** | 19‑nov‑2026 | **Motor City.** La fuente de verdad pasa a `motorcity`.<br>• Mundo 2.0 en un solo archivo (MC4), con todas las huellas, sitios, pasos con nivel, transporte, lugares y tráfico.<br>• El motor en el navegador: personaje, vehículos, física, controles, cámara, 8 vistas más pixel, panorámica de perfil, WebGL, reglas del mundo y Run en la ciclovía.<br>• Banco de pruebas jugable y 54 pruebas.<br>• La tubería 1.x sigue igual (y ya lee cualquier ventana de ciudad). |

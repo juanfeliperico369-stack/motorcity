@@ -1,5 +1,48 @@
 # Bitácora de Motor City
 
+## 19‑nov‑2026 · 2.2.0 · GPU virtual, mi casa, lugares, historias y vista lateral (Claude Code)
+**Pedido del autor:**
+- una solución a la tarjeta gráfica;
+- mejor física en puentes y cámara;
+- ver las vistas centrales de lado, estudiando FEZ, Little Nightmares y Monument Valley;
+- sprites;
+- interfaz con psicología, que no estorbe;
+- estudiar los mejores motores;
+- historia con diversión, reflexión y conciencia;
+- ocurrencias;
+- manual, optimización y tipos de controles;
+- la casa del jugador por su dirección, con interiores únicos y diseñables;
+- talleres, tiendas y más lugares;
+- historias procedurales, No Man's Sky y tamaños proporcionales.
+
+**Lo que se hizo** (todo con pruebas; 103 en verde, también en Chromium):
+1. **GPU virtual** (`05-gpu`, `44-raster`):
+   - perfil del aparato;
+   - resolución dinámica PI y bucle de paso fijo;
+   - **3D por software en Canvas 2D**: 15–25 ms, contra 70–90 ms del WebGL por software.
+2. **Física de niveles por superficies:** se sube por la rampa y se pasa por debajo, probado en 5 puentes reales. Tiempo de coyote y memoria del salto.
+3. **Cámara** con resortes críticamente amortiguados, brazo con choque (edificios, cerros y tableros), FOV por velocidad, trauma y giros animados.
+4. **Vista lateral:** casa de muñecas, giro de a 90° (FEZ) y rayos X. La ciudad 3D también se inclina hasta quedar de lado.
+5. **Manejo** (curvas, giro según la velocidad, asistencias y 7 esquemas), **sprites**, **escala real** (los 35 vehículos validados) e **interfaz** por zonas: columna arriba, atenuación, cola de avisos, foco y cine. `MC.UI.verificar` prueba que nada tape el centro.
+6. **Interiores** con 8 estilos, cuartos opcionales, decoración, catálogo de 22 muebles y lugares nuevos (taller, tienda, centro comercial, biblioteca y restaurante).
+7. **Mi casa** (`49-hogar`):
+   - lee la nomenclatura colombiana y la ubica en las calles reales, sin internet;
+   - acierta «Calle 50 # 52‑20» en La Candelaria y elige el municipio correcto si se dice;
+   - el jugador diseña su casa y la compra cuadra en el libro.
+8. **Lugares jugables y desgaste** (`82-lugares`): 195 lugares en Guatapé, con talleres que reparan y mejoran, tiendas con energía y bibliotecas con datos reales.
+9. **Historias** (`85-historias`): storylets en tres pilares, director de ritmo, encargos procedurales y **ocurrencias** con corrección y reporte sin datos personales.
+10. **Cosmos** (`13-cosmos`): estrellas con abundancias reales, planetas con Kepler, gravedad, temperatura y atmósfera, mundo jugable, criaturas verosímiles y relieve infinito.
+11. **Mandados** con todo lo anterior.
+12. **Documentos:** `docs/MANUAL.md`, `INVESTIGACION.md`, `OPTIMIZACION.md`, `PLAN-IAS.md` y las peticiones 2.2 a Gemini y ChatGPT.
+13. **Web:** portada `index.html` + `.nojekyll` en `main`, porque Pages sirve `main`. La 2.0 se fusionó a `main` con el PR #1 del autor.
+
+**Falta:** las entregas de Gemini y ChatGPT, medir en un celular real, la migración de cada juego a `motor-city/` (sus IAs) y la 2.3 (ver `docs/PLAN-IAS.md`).
+
+## 19‑nov‑2026 · 2.1.0 · Motor City crece (Claude Code)
+- Nombre: solo «Motor City»; los juegos lo reciben en `motor-city/`.
+- Ciencia, economía, generador de mundos, territorios (`geo/territorio.py` con Guatapé), clima global, seres, taller, IA y población, interiores, música, interfaz y mecánicas.
+- Minijuego Mandados; plantillas, `nuevo`, `reporte`, skills `motor-city-*` y `CONTRIBUIR.md`. 80 pruebas.
+
 ## 19‑nov‑2026 · 2.0.0 · nace Motor City (Claude Code)
 **Pedido del autor:**
 - Hacer un solo motor de mundo abierto según el *Plan del Mundo Abierto del Valle*, en el repo nuevo `motorcity`.

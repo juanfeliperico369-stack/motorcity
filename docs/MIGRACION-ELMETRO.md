@@ -1,11 +1,14 @@
 # El Metro → Motor City 2.0 · guía para su IA
 
+> **Desde la 2.1 el motor llega a `motor-city/`** (con `node motor-city/sincronizar.mjs` o `node herramientas/sincronizar.mjs` desde `motorcity`). La carpeta vieja `motor-valle/` (1.2.0) se queda como está hasta que termines la migración; bórrala solo cuando todo pase. Lo nuevo de la 2.2 que conviene usar: `MC.Manejo`, `MC.UI` con zonas, `MC.Lugares`, `MC.Hogar`, `MC.Historias`, `MC.Ocurrencias`, la vista `lateral` y `MC.Raster` (ver `docs/PLAN-IAS.md`).
+
+
 > Antes de nada, sigue tu `CLAUDE.md`: el protocolo de 7 pasos, el cuestionario y la bitácora.
 
 **Lo que ya está hecho:**
-- `motor-valle/` de MetroZero trae el motor 2.0 (sincronizado desde `motorcity`, la nueva fuente de verdad).
+- `motor-city/` de MetroZero trae el motor 2.0 (sincronizado desde `motorcity`, la nueva fuente de verdad).
 - Reemplaza a tu copia 1.1.0.
-- **El juego no cambió:** tu `tools/build.mjs` no incluye nada de `motor-valle/`, y `tools/test.mjs 100` sigue en 0 errores.
+- **El juego no cambió:** tu `tools/build.mjs` no incluye nada de `motor-city/`, y `tools/test.mjs 100` sigue en 0 errores.
 
 ## Qué te trae el motor
 - **El mismo mundo en metros** (tu unidad). Tu `valle.js` es de 20 m; el mundo 2.0 es de 10 m y además trae:
@@ -28,7 +31,7 @@
 - WebGL (tercera y primera persona, dron y cine), maqueta 2:1, pixel, clima, cielo con sol y luna, tráfico con semáforos y Run en la ciclovía.
 
 ## Pasos sugeridos
-1. **Incluir** `motor-valle/dist/motor.js` en `tools/build.mjs` (va en su cierre; solo publica `MC`). Mide el tamaño: tu HTML ya pesa 8,5 MB.
+1. **Incluir** `motor-city/dist/motor.js` en `tools/build.mjs` (va en su cierre; solo publica `MC`). Mide el tamaño: tu HTML ya pesa 8,5 MB.
 2. **Leer el mundo 2.0** en vez de `valle.js` (20 m), `edificios.js`, `puentes.js` y `rieles.js`. Son los mismos datos, de una sola fuente. Así baja el tamaño del HTML.
    - `MAP.tileM(x, y)` → `mundo.suelo(x, y)`
    - `MAP.elevM` → `mundo.cota`

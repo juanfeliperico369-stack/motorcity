@@ -1,16 +1,19 @@
 # Juega EnCicla → Motor City 2.0 · guía para su IA
 
+> **Desde la 2.1 el motor llega a `motor-city/`** (con `node motor-city/sincronizar.mjs` o `node herramientas/sincronizar.mjs` desde `motorcity`). La carpeta vieja `motor-valle/` (1.2.0) se queda como está hasta que termines la migración; bórrala solo cuando todo pase. Lo nuevo de la 2.2 que conviene usar: `MC.Manejo`, `MC.UI` con zonas, `MC.Lugares`, `MC.Hogar`, `MC.Historias`, `MC.Ocurrencias`, la vista `lateral` y `MC.Raster` (ver `docs/PLAN-IAS.md`).
+
+
 **Lo que ya está hecho:**
-- `motor-valle/` de BicicletasUno trae el motor 2.0 completo (sincronizado desde `motorcity`).
-- **El juego no cambió:** su `tools/build.js` sigue incluyendo `motor-valle/js/valle.js` (el lector 1.2.0) y sus pruebas siguen en verde.
+- `motor-city/` de BicicletasUno trae el motor 2.0 completo (sincronizado desde `motorcity`).
+- **El juego no cambió:** su `tools/build.js` sigue incluyendo `motor-city/js/valle.js` (el lector 1.2.0) y sus pruebas siguen en verde.
 
 Lo que sigue lo decide la IA de EnCicla, paso a paso. Cada paso debe dejar el juego andando.
 
 ## Paso 1 · Incluir el motor (sin cambiar nada más)
-1. En `tools/build.js`, pega `motor-valle/dist/motor.js` **antes** de los `src/js/NN-*.js`. Va en su propio cierre y solo publica `MC`; no choca con `JE`, `TT`, `clamp`…
+1. En `tools/build.js`, pega `motor-city/dist/motor.js` **antes** de los `src/js/NN-*.js`. Va en su propio cierre y solo publica `MC`; no choca con `JE`, `TT`, `clamp`…
 2. Pega también el mundo. Hay dos opciones:
-   - generar `dist/mundo-medellin.js` con `node motor-valle/motor.mjs construir --sin-sandbox`;
-   - incrustar `motor-valle/datos/medellin/mundo.mc4` en base64 en el HTML.
+   - generar `dist/mundo-medellin.js` con `node motor-city/motor.mjs construir --sin-sandbox`;
+   - incrustar `motor-city/datos/medellin/mundo.mc4` en base64 en el HTML.
 3. Mide: `node tests/run.js`, el tamaño del HTML (hoy 5 MB; el mundo suma unos 8 MB en base64) y la mediana con la CPU 4× más lenta.
 
 > **Para no crecer de más**, el mundo 2.0 puede **reemplazar** a `valle.bin`, `vias.bin`, `sitios.*` y `alturas.json`, porque los trae todos. Así el HTML queda casi igual que hoy.

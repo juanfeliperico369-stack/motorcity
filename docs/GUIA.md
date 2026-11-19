@@ -149,3 +149,13 @@ Funciona en **un solo archivo HTML, sin internet ni librerías**: en el celular,
 - La 3D es «low‑poly» (cajas y prismas), no realista. Para *Extremo* hacen falta sombras, materiales y animación de personaje más fina (ver `docs/SIGUIENTES-PASOS.md`).
 - El craqueo de territorios deja la ciudad muy bien de calles, edificios y agua, pero **sin transporte ni emblemáticos modelados**. Eso se agrega a mano o con más fuentes (GTFS, modelos de los edificios famosos).
 - La música es de sintetizador (chiptune elegante, no orquesta). Se puede mejorar con instrumentos muestreados si se acepta que el HTML pese más.
+
+## 11. Lo nuevo de la 2.2
+- **GPU virtual:** el motor mide el aparato, baja la resolución antes que los cuadros y, si no hay WebGL o es lento, dibuja la 3D por software (`MC.Raster`).
+- **Vista lateral:** la ciudad de lado, como una casa de muñecas, que gira de a 90° como FEZ. Lo que tapa al jugador se vuelve transparente.
+- **Puentes y niveles bien resueltos:** superficies, rampas, pasar por debajo y tiempo de coyote. **Cámara con resortes** que no atraviesa edificios.
+- **Mi casa:** tu dirección real → tu casa en el juego, que diseñas con muebles reales (sin internet; la dirección no sale del celular).
+- **Lugares jugables:** talleres, tiendas, restaurantes, centros comerciales, bibliotecas y parques. **Historias** con diversión, reflexión y conciencia, y un **director de ritmo**.
+- **Ocurrencias:** lo imprevisto se corrige solo y se anota. **Cosmos:** planetas con leyes reales.
+- **Manejo** con curvas y asistencias, **sprites**, **escala real** e **interfaz** que no tapa el centro.
+- **Más documentos:** el manual (`docs/MANUAL.md`), la investigación (`docs/INVESTIGACION.md`), la optimización (`docs/OPTIMIZACION.md`) y el plan de cada IA (`docs/PLAN-IAS.md`).
