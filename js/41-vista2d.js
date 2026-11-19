@@ -31,7 +31,7 @@ const Vista2D = {
     E._caja = [x0, y0, x1, y1];
     /* ---------- suelo ---------- */
     const sinTechos = modo !== 'cenital', pixel = !!op.pixel, Ls = z < .22 ? E.losasLejos : E.losas, Ld = Ls.L;
-    let res = z * (op.dpr || 1); const RES = [.0625, .125, .25, .5, 1, 2, 3]; res = RES.find(r => r >= res * (pixel ? .9 : .8)) || 3; if (Ls === E.losasLejos) res = Math.min(res, .25);
+    let res = z; const RES = [.0625, .125, .25, .5, 1, 2, 3, 4, 6]; res = RES.find(r => r >= res * (pixel ? .9 : .7)) || 6;   /* z ya está en píxeles del lienzo por metro; de cerca, losas de hasta 6 px/m */ if (Ls === E.losasLejos) res = Math.min(res, .25);
     g.save(); g.fillStyle = '#5e8c4a'; g.fillRect(0, 0, W, H);
     if (E._franja) {   /* de lado: cielo arriba de la franja y el corte de la tierra abajo (casa de muñecas) */
       const Rp = E._franja.Rp, yF = H / 2 + oy - Rp * z * P.k, yC = H / 2 + oy + Rp * z * P.k, cie = E.cielo || { top: [.4, .6, .9], hor: [.8, .88, .95] };
@@ -155,6 +155,9 @@ const Vista2D = {
     const { g, pr, z, P } = D, C = j.cuerpo, A = j.aspecto, V = C.veh, [x, y] = pr(C.x, C.y, C.zPaso + C.z), fn = MC.arte.f('jugador');
     if (fn && fn(g, j, x, y, z, P, D) !== false) return;
     g.fillStyle = 'rgba(0,0,0,.3)'; const [sx, sy] = pr(C.x, C.y, C.zPaso); g.beginPath(); g.ellipse(sx, sy, Math.max(2, z * .7), Math.max(1.2, z * .4 * P.k), 0, 0, TAU); g.fill();
+    /* marca del jugador (como en GTA): un anillo y una flecha de rumbo, para encontrarse siempre en el mapa */
+    if (D.E.marcaJugador !== false) { const t = D.E.t || 0, r = Math.max(10, z * 1.2) * (1 + .07 * Math.sin(t * 4)), kk = D.modo === 'cenital' ? 1 : Math.max(.25, P.k), [fx, fy] = pr(C.x + Math.cos(C.a), C.y + Math.sin(C.a), C.zPaso), dl = Math.hypot(fx - sx, fy - sy) || 1, ux = (fx - sx) / dl, uy = (fy - sy) / dl;
+      g.save(); g.strokeStyle = 'rgba(57,255,179,.9)'; g.lineWidth = Math.max(2, z * .14); g.beginPath(); g.ellipse(sx, sy, r, r * kk, 0, 0, TAU); g.stroke(); g.fillStyle = '#39ffb3'; const ax = sx + ux * (r + 4), ay = sy + uy * (r * kk + 4), w = Math.max(6, r * .45); g.beginPath(); g.moveTo(ax + ux * w, ay + uy * w); g.lineTo(ax - uy * w * .6, ay + ux * w * .6); g.lineTo(ax + uy * w * .6, ay - ux * w * .6); g.closePath(); g.fill(); g.restore(); }
     if (D.modo === 'cenital') {
       g.save(); g.translate(x, y); g.rotate(C.a + P.yaw); g.scale(z, z);
       if (V.clase !== 'pie') { if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') { Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); g.restore(); return; } g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.25, V.largo * .6, .5); }

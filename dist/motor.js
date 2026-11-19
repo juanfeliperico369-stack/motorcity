@@ -1,4 +1,4 @@
-/* Motor City 2.5.0 · 2026-11-19 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 2.5.1 · 2026-11-19 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -11,7 +11,7 @@
    Reglas: un solo HTML, sin internet ni librerías; español de Colombia; ningún dato personal.
    ===================================================================== */
 const MC = {
-  version: '2.5.0',
+  version: '2.5.1',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -3044,19 +3044,20 @@ function estiloEdificio(mundo, e) {
 }
 /* ---------- losas del suelo ---------- */
 class Losas {
-  constructor(mundo, op = {}) { this.mundo = mundo; this.L = op.lado || 160; this.cache = new Map(); this.max = op.max || 140; this.version = 0; this.pend = []; }
-  limpiar() { this.cache.clear(); this.version++; }
+  constructor(mundo, op = {}) { this.mundo = mundo; this.L = op.lado || 160; this.cache = new Map(); this.max = op.max || 140; this.version = 0; this.pend = []; this.px = 0; this.maxPx = op.maxPx || (GPU.perfil().nivel === 'alta' ? 40e6 : 22e6); }   // presupuesto de píxeles: las losas nítidas de cerca pesan más
+  limpiar() { this.cache.clear(); this.px = 0; this.version++; }
+  _poner(k, c) { this.cache.set(k, c); if (c) this.px += c.width * c.height; while (this.cache.size > this.max || this.px > this.maxPx) { const k0 = this.cache.keys().next().value, c0 = this.cache.get(k0); if (c0) this.px -= c0.width * c0.height; this.cache.delete(k0); if (k0 === k) break; } }
   /* borra las losas de una caja (cuando la ciudad crece o cambia) */
-  invalidar(x0, y0, x1, y1) { const L = this.L; for (const k of [...this.cache.keys()]) { const [gx, gy] = k.split(',').map(Number); if ((gx + 1) * L >= x0 && gx * L <= x1 && (gy + 1) * L >= y0 && gy * L <= y1) this.cache.delete(k); } this.version++; }
+  invalidar(x0, y0, x1, y1) { const L = this.L; for (const k of [...this.cache.keys()]) { const [gx, gy] = k.split(',').map(Number); if ((gx + 1) * L >= x0 && gx * L <= x1 && (gy + 1) * L >= y0 && gy * L <= y1) { const c0 = this.cache.get(k); if (c0) this.px -= c0.width * c0.height; this.cache.delete(k); } } this.version++; }
   /* la losa (gx, gy) a res px por metro; se pinta si no está (o se pone en cola si `diferir`) */
   losa(gx, gy, res, diferir, sinTechos) {
     const k = gx + ',' + gy + ',' + res + ',' + (sinTechos ? 1 : 0) + ',' + MC.arte.activa; let c = this.cache.get(k);
     if (c) { this.cache.delete(k); this.cache.set(k, c); return c; }
     if (diferir) { if (!this.pend.includes(k)) this.pend.push(k); return null; }
-    c = this.pintar(gx, gy, res, sinTechos); this.cache.set(k, c); while (this.cache.size > this.max) this.cache.delete(this.cache.keys().next().value); return c;
+    c = this.pintar(gx, gy, res, sinTechos); this._poner(k, c); return c;
   }
   /* pinta las losas pendientes con un presupuesto de milisegundos */
-  trabajar(ms = 6) { const t0 = MC.ahora(); while (this.pend.length && MC.ahora() - t0 < ms) { const k = this.pend.shift(), [gx, gy, res, st] = k.split(',').map(Number); if (!this.cache.has(k)) this.cache.set(k, this.pintar(gx, gy, res, !!st)); } }
+  trabajar(ms = 6) { const t0 = MC.ahora(); while (this.pend.length && MC.ahora() - t0 < ms) { const k = this.pend.shift(), [gx, gy, res, st] = k.split(',').map(Number); if (!this.cache.has(k)) this._poner(k, this.pintar(gx, gy, res, !!st)); } }
   pintar(gx, gy, res, sinTechos) {
     const M = this.mundo, L = this.L, T = M.tile, n = Math.round(L / T), px = Math.max(8, Math.round(L * res)), cv = lienzo(px, px); if (!cv) return null;
     const g = cv.getContext('2d'), x0 = gx * L, y0 = gy * L, S = MC.arte.dato('suelo', PAL_SUELO), V = Object.assign({}, PAL_VIA, MC.arte.dato('via', {}));
@@ -3169,7 +3170,7 @@ const Vista2D = {
     E._caja = [x0, y0, x1, y1];
     /* ---------- suelo ---------- */
     const sinTechos = modo !== 'cenital', pixel = !!op.pixel, Ls = z < .22 ? E.losasLejos : E.losas, Ld = Ls.L;
-    let res = z * (op.dpr || 1); const RES = [.0625, .125, .25, .5, 1, 2, 3]; res = RES.find(r => r >= res * (pixel ? .9 : .8)) || 3; if (Ls === E.losasLejos) res = Math.min(res, .25);
+    let res = z; const RES = [.0625, .125, .25, .5, 1, 2, 3, 4, 6]; res = RES.find(r => r >= res * (pixel ? .9 : .7)) || 6;   /* z ya está en píxeles del lienzo por metro; de cerca, losas de hasta 6 px/m */ if (Ls === E.losasLejos) res = Math.min(res, .25);
     g.save(); g.fillStyle = '#5e8c4a'; g.fillRect(0, 0, W, H);
     if (E._franja) {   /* de lado: cielo arriba de la franja y el corte de la tierra abajo (casa de muñecas) */
       const Rp = E._franja.Rp, yF = H / 2 + oy - Rp * z * P.k, yC = H / 2 + oy + Rp * z * P.k, cie = E.cielo || { top: [.4, .6, .9], hor: [.8, .88, .95] };
@@ -3293,6 +3294,9 @@ const Vista2D = {
     const { g, pr, z, P } = D, C = j.cuerpo, A = j.aspecto, V = C.veh, [x, y] = pr(C.x, C.y, C.zPaso + C.z), fn = MC.arte.f('jugador');
     if (fn && fn(g, j, x, y, z, P, D) !== false) return;
     g.fillStyle = 'rgba(0,0,0,.3)'; const [sx, sy] = pr(C.x, C.y, C.zPaso); g.beginPath(); g.ellipse(sx, sy, Math.max(2, z * .7), Math.max(1.2, z * .4 * P.k), 0, 0, TAU); g.fill();
+    /* marca del jugador (como en GTA): un anillo y una flecha de rumbo, para encontrarse siempre en el mapa */
+    if (D.E.marcaJugador !== false) { const t = D.E.t || 0, r = Math.max(10, z * 1.2) * (1 + .07 * Math.sin(t * 4)), kk = D.modo === 'cenital' ? 1 : Math.max(.25, P.k), [fx, fy] = pr(C.x + Math.cos(C.a), C.y + Math.sin(C.a), C.zPaso), dl = Math.hypot(fx - sx, fy - sy) || 1, ux = (fx - sx) / dl, uy = (fy - sy) / dl;
+      g.save(); g.strokeStyle = 'rgba(57,255,179,.9)'; g.lineWidth = Math.max(2, z * .14); g.beginPath(); g.ellipse(sx, sy, r, r * kk, 0, 0, TAU); g.stroke(); g.fillStyle = '#39ffb3'; const ax = sx + ux * (r + 4), ay = sy + uy * (r * kk + 4), w = Math.max(6, r * .45); g.beginPath(); g.moveTo(ax + ux * w, ay + uy * w); g.lineTo(ax - uy * w * .6, ay + ux * w * .6); g.lineTo(ax + uy * w * .6, ay - ux * w * .6); g.closePath(); g.fill(); g.restore(); }
     if (D.modo === 'cenital') {
       g.save(); g.translate(x, y); g.rotate(C.a + P.yaw); g.scale(z, z);
       if (V.clase !== 'pie') { if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') { Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); g.restore(); return; } g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.25, V.largo * .6, .5); }
@@ -4596,13 +4600,13 @@ const UI = {
     if (typeof document === 'undefined') return null;
     const T = Object.assign({}, TEMAS_UI[op.tema || 'motorcity'], op.colores || {}), id = 'mcui-' + Math.random().toString(36).slice(2, 7), capa = document.createElement('div'); capa.className = 'mcui'; capa.id = id; raiz.appendChild(capa);
     const css = document.createElement('style'); css.textContent = `#${id}{--f:${T.fondo};--t:${T.tinta};--a:${T.acento};--a2:${T.acento2};--b:${T.borde};--r:${T.radio};position:fixed;inset:0;pointer-events:none;font:14px/1.3 ${T.letra};color:var(--t);z-index:20}
-#${id} [hidden]{display:none!important}#${id} .p{pointer-events:auto}#${id} .izq{position:absolute;top:max(10px,env(safe-area-inset-top));left:10px;right:84px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}#${id} .fichas{display:flex;flex-wrap:wrap;gap:6px;max-height:76px;overflow:hidden}#${id} .ficha{max-width:52vw;overflow:hidden;text-overflow:ellipsis}#${id} .mision{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}#${id} .aviso.on{-webkit-line-clamp:3}
+#${id} [hidden]{display:none!important}#${id} .p{pointer-events:auto}#${id} .izq{position:absolute;top:max(10px,env(safe-area-inset-top));left:10px;right:84px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}#${id} .fichas{display:flex;flex-wrap:wrap;gap:6px;max-height:76px;overflow:hidden}#${id} .ficha{max-width:52vw;overflow:hidden;text-overflow:ellipsis}#${id} .mision{overflow:hidden}#${id} .mision .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#${id} .mision .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}#${id} .aviso.on{-webkit-line-clamp:3}
 #${id} .ficha{padding:6px 10px;border-radius:999px;background:var(--f);border:1px solid var(--b);font-weight:700;white-space:nowrap;backdrop-filter:blur(6px)}
 #${id} .botones{position:absolute;right:8px;top:max(10px,env(safe-area-inset-top));display:flex;flex-direction:column;flex-wrap:wrap-reverse;align-content:flex-start;max-height:calc(100vh - 170px);gap:6px}
 #${id} button{min-width:48px;min-height:48px;border-radius:var(--r);border:1px solid var(--b);background:var(--f);color:var(--t);font:700 18px/1 ${T.letra};cursor:pointer}
 #${id} button:focus-visible{outline:3px solid var(--a);outline-offset:2px}#${id} button small{display:block;font-size:10px;opacity:.85;margin-top:2px}
-#${id} .vel{position:absolute;left:12px;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 18px);text-shadow:0 2px 6px #000c}#${id} .vel b{font:900 34px/1 ${T.letra};color:var(--a)}
-#${id} .barras{position:absolute;left:12px;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 68px);display:grid;gap:4px;width:150px}
+#${id} .vel{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(max(14px,env(safe-area-inset-bottom)) + 8px);text-shadow:0 2px 6px #000c;white-space:nowrap}#${id} .vel b{font:900 30px/1 ${T.letra};color:var(--a)}
+#${id} .barras{display:flex;flex-wrap:wrap;gap:4px 10px;max-width:100%}#${id} .barras>div{display:flex;align-items:center;gap:4px;font-size:12px;text-shadow:0 1px 3px #000c}#${id} .barras small{font-size:12px}#${id} .barras .barra{width:46px;height:7px}
 #${id} .barra{height:8px;border-radius:6px;background:#ffffff26;overflow:hidden}#${id} .barra i{display:block;height:100%;background:linear-gradient(90deg,var(--a),var(--a2));transition:width .3s}
 #${id} .aviso{padding:8px 14px;border-radius:var(--r);background:var(--f);border:1px solid var(--b);border-left:4px solid var(--a2);font-weight:800;opacity:0;transition:opacity .3s;max-width:min(340px,72vw);max-height:0;overflow:hidden}#${id} .aviso.on{opacity:1;max-height:200px}
 #${id} .mision{max-width:min(320px,70vw);padding:8px 12px;border-radius:var(--r);background:var(--f);border-left:4px solid var(--a)}
@@ -4610,11 +4614,17 @@ const UI = {
 #${id} .menu{position:absolute;right:66px;top:max(10px,env(safe-area-inset-top));max-height:78vh;overflow:auto;width:min(300px,72vw);padding:8px;border-radius:var(--r);background:var(--f);border:1px solid var(--b);display:grid;gap:4px}#${id} .menu button{text-align:left;font-size:14px;padding:8px 10px}
 #${id} canvas.mini{position:absolute;right:10px;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 96px);width:120px;height:120px;border-radius:50%;border:2px solid var(--b);background:#0006}
 #${id} .fichas>*,#${id} .botones>*,#${id} .mision,#${id} .vel,#${id} .barras{transition:opacity .6s}#${id} .dim{opacity:.38}#${id}.foco .fichas,#${id}.foco .botones,#${id}.foco .mision,#${id}.foco .barras{opacity:.18}#${id} .izq .aviso{pointer-events:none}#${id}.cine>*{opacity:0!important;pointer-events:none!important}
-@media (orientation:landscape){#${id} .izq{right:auto;max-width:24vw}#${id} .fichas{max-height:58px}#${id} .ficha{max-width:23vw}#${id} .mision{-webkit-line-clamp:2}}@media (orientation:landscape) and (max-height:500px){#${id} .ficha{padding:4px 8px;font-size:12px}#${id} .mision,#${id} .aviso{font-size:12px}}
+@media (orientation:landscape){#${id} .izq{right:auto;max-width:24vw}#${id} .fichas{max-height:66px}#${id} .ficha{max-width:23vw}#${id} .mision .d{-webkit-line-clamp:1}}@media (orientation:landscape) and (max-height:500px){#${id} .ficha{padding:4px 8px;font-size:12px}#${id} .mision,#${id} .aviso{font-size:12px}}
+#${id} .joy{position:absolute;left:0;top:0;width:124px;height:124px;margin:-62px 0 0 -62px;border-radius:50%;border:3px solid rgba(255,255,255,.45);background:radial-gradient(circle,rgba(255,255,255,.10),rgba(255,255,255,.03));transition:opacity .3s;will-change:transform}
+#${id} .joy i{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:var(--a);opacity:.85;box-shadow:0 2px 10px #0006;will-change:transform}
+#${id} .joy small{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:6px;white-space:nowrap;font-weight:800;text-shadow:0 1px 4px #000c}
+#${id} .acciones{position:absolute;right:12px;bottom:max(14px,env(safe-area-inset-bottom));display:flex;gap:10px;align-items:flex-end}
+#${id} .acciones button{width:66px;height:66px;border-radius:50%;font-size:26px;background:var(--f);border:2px solid var(--b)}#${id} .acciones button.on{background:var(--a);color:#000}
+#${id} canvas.mini{bottom:calc(max(16px,env(safe-area-inset-bottom)) + 86px)}
 @media (prefers-reduced-motion:reduce){#${id} *{transition:none!important}}`;
     document.head.appendChild(css);
     const div = (cls, padre = capa) => { const d = document.createElement('div'); d.className = cls; padre.appendChild(d); return d; };
-    const izq = div('izq'), fichas = div('fichas', izq), mision = div('mision', izq), aviso = div('aviso', izq), botones = div('botones p'), vel = div('vel'), barras = div('barras');   // arriba a la izquierda, en columna: nada se monta encima de nada mision.hidden = true; aviso.setAttribute('role', 'status'); aviso.setAttribute('aria-live', 'polite');
+    const izq = div('izq'), fichas = div('fichas', izq), barras = div('barras', izq), mision = div('mision', izq), aviso = div('aviso', izq), botones = div('botones p'), vel = div('vel');   // arriba se informa (fichas, barras, misión, avisos); abajo a la izquierda solo va el pulgar   // arriba a la izquierda, en columna: nada se monta encima de nada mision.hidden = true; aviso.setAttribute('role', 'status'); aviso.setAttribute('aria-live', 'polite');
     const F = {}, Bs = {}, Ba = {};
     const ui = {
       capa, tema: T,
@@ -4633,13 +4643,23 @@ const UI = {
       barraVisible(clave, v) { if (Ba[clave]) Ba[clave]._w.hidden = !v; },
       aviso(texto, ms = 2200) { const C = ui._cola || (ui._cola = []); if (C.some(q => q[0] === texto) || aviso.textContent === texto && aviso.classList.contains('on')) return; C.push([texto, ms]); if (!ui._av) ui._sig(); },
       _sig() { const q = (ui._cola || []).shift(); if (!q) { ui._av = false; return; } ui._av = true; aviso.textContent = q[0]; aviso.classList.add('on'); clearTimeout(ui._t); ui._t = setTimeout(() => { aviso.classList.remove('on'); setTimeout(() => ui._sig(), 320); }, q[1]); },
-      mision(texto) { mision.hidden = !texto; mision.innerHTML = texto || ''; },
+      mision(texto) { mision.hidden = !texto; const [t, ...d] = String(texto || '').split('<br>'); mision.innerHTML = '<div class="t">' + t + '</div>' + (d.length ? '<div class="d">' + d.join(' ') + '</div>' : ''); },   // título en una línea; el detalle, en dos como mucho (nunca medio renglón cortado)
       /* diálogo con opciones: devuelve una promesa con la opción elegida */
       dialogo(titulo, texto, opciones = ['Listo']) { return new Promise(res => { const d = div('dialogo p'); d.setAttribute('role', 'dialog'); d.innerHTML = '<b>' + titulo + '</b><div>' + texto + '</div><div class="opts"></div>'; opciones.forEach((o, i) => { const b = document.createElement('button'); b.textContent = o; b.onclick = () => { d.remove(); res(i); }; d.querySelector('.opts').appendChild(b); if (!i) setTimeout(() => b.focus(), 50); }); }); },
       menu(titulo, items, al) { const m = div('menu p'); m.innerHTML = '<b style="padding:4px">' + titulo + '</b>'; for (const it of items) { const b = document.createElement('button'); b.innerHTML = it.texto; b.onclick = () => { m.remove(); al(it.id); }; m.appendChild(b); } const cerrar = () => m.remove(); setTimeout(() => document.addEventListener('keydown', function k(e) { if (e.key === 'Escape') { cerrar(); document.removeEventListener('keydown', k); } }), 0); return m; },
       /* minimapa redondo con las losas del motor, girado con la cámara */
       minimapa(vistas) { const c = document.createElement('canvas'); c.className = 'mini'; c.width = c.height = 240; capa.appendChild(c); ui._mini = { c, vistas }; return c; },
       pintarMinimapa(x, y, yaw = 0, puntos = []) { const M = ui._mini; if (!M) return; const g = M.c.getContext('2d'), L = M.vistas.losas, z = .45, R = 120; g.save(); g.clearRect(0, 0, 240, 240); g.beginPath(); g.arc(R, R, R, 0, TAU); g.clip(); g.translate(R, R); g.rotate(-yaw); g.scale(z, z); g.translate(-x, -y); const s = L.L, gx0 = Math.floor((x - 300) / s), gy0 = Math.floor((y - 300) / s); for (let gy = gy0; gy <= gy0 + 4; gy++) for (let gx = gx0; gx <= gx0 + 4; gx++) { const t = L.losa(gx, gy, .5, true, false) || L.losa(gx, gy, .0625, false, false); if (t) g.drawImage(t, gx * s, gy * s, s, s); } for (const p of puntos) { g.fillStyle = p.color || '#ffc23a'; g.beginPath(); g.arc(p.x, p.y, 12, 0, TAU); g.fill(); } g.restore(); g.fillStyle = '#39ffb3'; g.beginPath(); g.moveTo(R, R - 9); g.lineTo(R + 6, R + 7); g.lineTo(R - 6, R + 7); g.fill(); },
+      /* joystick visible: donde se pone el dedo aparece la base y la perilla; quieto, una guía abajo a la izquierda */
+      joystick(ctl, op = {}) { const j = div('joy'), k = document.createElement('i'), t = document.createElement('small'); j.appendChild(k); j.appendChild(t); t.textContent = op.texto ?? 'Arrastra para moverte'; ui._joy = { j, k, t, ctl, usado: false, t0: Date.now() }; return j; },
+      pintarJoystick() { const J = ui._joy; if (!J) return; const S = J.ctl.stick, r = J.ctl.el.getBoundingClientRect();
+        if (S.activo) { J.usado = true; J.j.style.opacity = 1; J.j.style.transform = 'translate(' + (r.left + S.ox) + 'px,' + (r.top + S.oy) + 'px)'; const dx = clamp(S.px - S.ox, -52, 52), dy = clamp(S.py - S.oy, -52, 52); J.k.style.transform = 'translate(' + dx + 'px,' + dy + 'px)'; J.t.hidden = true; }
+        else { const x = r.left + Math.min(110, r.width * .2), y = r.top + r.height - Math.max(150, r.height * .2); J.j.style.transform = 'translate(' + x + 'px,' + y + 'px)'; J.k.style.transform = 'translate(0,0)'; J.j.style.opacity = J.usado ? .22 : .7; J.t.hidden = J.usado; } },
+      /* botones de acción grandes abajo a la derecha (donde llega el pulgar); mantener = mientras está oprimido */
+      accion({ id: aid, icono = '', texto = '', mantener = false, ctl, al }) {
+        if (!ui._acc) ui._acc = div('acciones p'); const b = document.createElement('button'); b.innerHTML = icono; b.setAttribute('aria-label', texto || aid); b.title = texto; ui._acc.appendChild(b);
+        const on = e => { e.preventDefault(); e.stopPropagation(); b.classList.add('on'); if (ctl) ctl.boton(aid, true); if (al && !mantener) al(e); }, off = e => { b.classList.remove('on'); if (ctl) ctl.boton(aid, false); if (al && mantener && e && e.type === 'pointerup') al(e); };
+        b.addEventListener('pointerdown', on); for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, off); return b; },
       quitar() { capa.remove(); css.remove(); }
     };
     return ui;
@@ -4656,6 +4676,16 @@ UI.verificar = function (ui) {
 };
 /* los principios de la interfaz del motor (resumen de docs/INVESTIGACION.md) */
 UI.PRINCIPIOS = ['El centro es del juego', 'Arriba se informa, abajo se actúa', 'Los botones donde llega el pulgar (≥ 48 px)', 'Lo que no cambia se atenúa', 'Un aviso a la vez, corto', 'Se aprende jugando, no leyendo', 'Todo con el dedo, el teclado y el mando', 'Respetar «reducir movimiento» y el contraste'];
+/* indicador del objetivo sobre el lienzo: si se ve, un pin que rebota; si no, una flecha en el borde que apunta hacia él */
+UI.indicador = function (g, W, H, sx, sy, op = {}) {
+  const k = op.escala || 1, m = 46 * k, t = (op.t || 0), col = op.color || '#ffc23a', R = op.rect || [m, m * 1.8, W - m, H - m * 2.2], dentro = sx > R[0] && sy > R[1] && sx < R[2] && sy < R[3];
+  g.save(); g.font = '800 ' + Math.round(13 * k) + 'px system-ui, sans-serif'; g.textAlign = 'center';
+  if (dentro) { const b = Math.abs(Math.sin(t * 3)) * 8 * k, y = sy - 20 * k - b; g.fillStyle = col; g.strokeStyle = '#1a1a1a'; g.lineWidth = 2 * k; g.beginPath(); g.moveTo(sx, y + 14 * k); g.arc(sx, y, 10 * k, Math.PI * .8, Math.PI * .2); g.closePath(); g.fill(); g.stroke(); g.fillStyle = '#1a1a1a'; g.beginPath(); g.arc(sx, y, 4 * k, 0, TAU); g.fill(); if (op.texto) { g.fillStyle = '#fff'; g.strokeStyle = '#000a'; g.lineWidth = 4 * k; g.strokeText(op.texto, sx, y - 16 * k); g.fillText(op.texto, sx, y - 16 * k); } }
+  else { const cx = (R[0] + R[2]) / 2, cy = (R[1] + R[3]) / 2, a = Math.atan2(sy - cy, sx - cx), hx = (R[2] - R[0]) / 2, hy = (R[3] - R[1]) / 2, f = Math.min(hx / Math.max(1e-6, Math.abs(Math.cos(a))), hy / Math.max(1e-6, Math.abs(Math.sin(a)))), ex = cx + Math.cos(a) * f, ey = cy + Math.sin(a) * f, s2 = 1 + .08 * Math.sin(t * 5);   /* en el borde de la zona libre, nunca encima de la interfaz */
+    g.translate(ex, ey); g.save(); g.rotate(a); g.scale(s2, s2); g.fillStyle = col; g.strokeStyle = '#1a1a1a'; g.lineWidth = 2 * k; g.beginPath(); g.moveTo(18 * k, 0); g.lineTo(-10 * k, -13 * k); g.lineTo(-4 * k, 0); g.lineTo(-10 * k, 13 * k); g.closePath(); g.fill(); g.stroke(); g.restore();
+    if (op.texto) { g.fillStyle = '#fff'; g.strokeStyle = '#000a'; g.lineWidth = 4 * k; const ty = ey > H / 2 ? -22 * k : 30 * k; g.strokeText(op.texto, 0, ty); g.fillText(op.texto, 0, ty); } }
+  g.restore();
+};
 MC.UI = UI;
 
 /* ---- js/80-mecanicas.js ---- */

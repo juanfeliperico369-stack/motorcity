@@ -285,6 +285,21 @@ if (process.argv.includes('--navegador')) {
   }
   /* el minijuego Mandados: mi casa, diseño, lugares, historias y que la interfaz no tape el centro */
   const mh = path.join(RAIZ, 'dist/juegos/mandados.html');
+  /* 2.5.1: jugable en un celular de verdad (táctil): tutorial, joystick visible que mueve, cámara legible, todo libre y el primer mandado cerca */
+  if (chromium && fs.existsSync(mh)) {
+    const b = await chromium.launch(), ctx = await b.newContext({ viewport: { width: 412, height: 860 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true }), p = await ctx.newPage(), errs = [];
+    p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+    await p.goto('file://' + mh); await p.tap('#jugar'); await p.waitForFunction(() => window.MANDADOS && window.MANDADOS.mision, null, { timeout: 120000 }); await p.waitForTimeout(1200);
+    const tuto = await p.$('.dialogo button'); if (tuto) await tuto.tap(); await p.waitForTimeout(300);
+    const a = await p.evaluate(() => { const G = window.MANDADOS, P = G.mision.actual, j = document.querySelector('.joy'); return { x: G.cuerpo.x, y: G.cuerpo.y, libre: G.libre, vehiculos: G.vehiculos, pxPorMetro: +(G.camara.zoom / Math.min(2, devicePixelRatio)).toFixed(1), joystick: !!j && j.getBoundingClientRect().width > 80, primerMandado: Math.round(Math.hypot(P.x - G.cuerpo.x, P.y - G.cuerpo.y)) }; });
+    const cdp = await ctx.newCDPSession(p), sx = 412 * .25, sy = 860 * .8;
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: sx, y: sy, id: 1 }] });
+    for (let i = 1; i <= 10; i++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: sx, y: sy - i * 6, id: 1 }] }); await p.waitForTimeout(30); }
+    await p.waitForTimeout(2000); const movio = await p.evaluate(c => +Math.hypot(MANDADOS.cuerpo.x - c.x, MANDADOS.cuerpo.y - c.y).toFixed(1), a); await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    const r = { tutorial: !!tuto, libre: a.libre, vehiculos: a.vehiculos, pxPorMetro: a.pxPorMetro, joystick: a.joystick, primerMandado: a.primerMandado, movio };
+    ok(r.tutorial && r.libre && r.vehiculos >= 30 && r.pxPorMetro >= 8 && r.joystick && r.primerMandado < 900 && r.movio > 2 && !errs.length, 'Mandados en un celular táctil: tutorial, todo libre y gratis, joystick visible que mueve, cámara legible y el primer mandado cerca', r);
+    await b.close();
+  }
   if (chromium && fs.existsSync(mh)) {
     const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 412, height: 860 } }), errs = [];
     p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });

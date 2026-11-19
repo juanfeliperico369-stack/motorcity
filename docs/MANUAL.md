@@ -1,4 +1,4 @@
-# Manual de Motor City 2.5
+# Manual de Motor City 2.5.1
 
 > **Para todas las IAs:** el documento único `docs/DOCUMENTO-UNICO.md` tiene el contexto, el código exacto y el plan de cada una.
 
@@ -35,12 +35,17 @@ Funciona en **un solo HTML**, sin internet y en cualquier celular.
 | **Adentro** | `MC.Interiores`, `MC.Hogar`, `MC.Direccion` | Interiores con estilos, **tu casa desde tu dirección** y diseño. |
 | **A dónde ir** | `MC.Lugares`, `MC.Desgaste` | Talleres, tiendas, restaurantes, bibliotecas y parques; reparar y mejorar. |
 | **Qué pasa** | `MC.Mision`, `MC.Inventario`, `MC.Carrera`, `MC.Logros`, `MC.Dialogo`, `MC.Historias`, `MC.Director`, `MC.Ocurrencias` | Misiones, carreras, historias con pilares, ritmo y lo imprevisto. |
-| **Pantalla y sonido** | `MC.UI`, `MC.Musica`, `MC.Paisaje` | Interfaz con zonas y atenuación; música procedural y clásicos; sonido ambiente del lugar. |
+| **Pantalla y sonido** | `MC.UI`, `MC.Musica`, `MC.Paisaje` | Interfaz con zonas y atenuación; **joystick visible**, **botones de acción** y **flecha al objetivo** (2.5.1); música procedural y clásicos; sonido ambiente del lugar. |
 | **Terreno y agua (2.4–2.5)** | `MC.Terreno`, `MC.Naturaleza`, `cuerpo.bajarse`, `montar`, `embarcar` y `desembarcar` | Agua por tipo y profundidad; entrar al agua dejando el vehículo en la orilla; nadar y bucear con aire; lancha. Pendientes, roca, monte, arena y nieve; quién pasa por dónde y por qué. |
 | **Ciudad (2.3)** | `MC.Urbe`, `MC.Sombras`, `MC.Mobiliario`, `MC.Ondas`, `MC.Autotile`, `MC.RejillaIrregular`, `MC.Necesidades`, `MC.Habitante` | Zonas, demanda, valor del suelo y capas de datos; sombras del sol; postes, árboles y cebras; fachadas por reglas; casas habitadas. |
 
 ## 3. Cómo se usa (cinco recetas)
-**a) Jugar o mostrar.** Abre <https://juanfeliperico369-stack.github.io/motorcity/> en el celular.
+**a) Jugar o mostrar.** Abre <https://juanfeliperico369-stack.github.io/motorcity/> en el celular. El minijuego **Mandados** se juega así:
+- **moverse:** arrastra en cualquier parte de la mitad izquierda; el joystick aparece donde pongas el dedo. En computador, flechas o WASD;
+- **acciones:** ⤒ saltar y ⚡ turbo, abajo a la derecha. En el agua o en el aire aparecen 🔽 bajar y 🔼 subir;
+- **a dónde ir:** la flecha amarilla con los metros. El mapa pequeño muestra el punto;
+- **todo es gratis** en el **modo libre**, que viene prendido. Se cambia en ⚙️ Ajustes, donde también están «Cómo se juega», los controles y el rescate;
+- **🗺️ Vista** cambia la cámara (cenital, 3D, maqueta, lateral…) y el pixel; **🚲 Vehículo** abre el garaje con los 34 vehículos.
 
 **b) Un juego nuevo con una IA.** Dile a la IA:
 > «Lee `AGENTS.md` del repositorio motorcity y haz un juego de [idea] sobre el mundo [guatape|medellin|generado]».
@@ -106,7 +111,7 @@ new MC.Bucle({
 | Comando | Qué hace |
 |---|---|
 | `node motor.mjs construir` | Arma el motor, los mundos y los juegos (`dist/`). |
-| `node motor.mjs prueba --navegador` | Corre las 117 pruebas, también en Chromium. |
+| `node motor.mjs prueba --navegador` | Corre las 118 pruebas, también en Chromium. |
 | `node motor.mjs documento` | Arma `dist/MOTOR-CITY-TODO.md` (el documento único con anexos). |
 | `node motor.mjs nuevo juego\|modulo nombre` | Crea un juego o un módulo desde su plantilla. |
 | `node motor.mjs reporte "título" --juego X` | Deja el reporte de un cambio hecho desde otro juego. |

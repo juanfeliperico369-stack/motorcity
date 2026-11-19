@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 2.5.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 2.5.1 · no se edita a mano: edita los documentos de origen -->
 
 # MOTOR CITY · Documento único
 
@@ -8,10 +8,11 @@
 >
 > | | |
 > |---|---|
-> | Versión | **Motor City 2.5.0** · 19‑nov‑2026 |
+> | Versión | **Motor City 2.5.1** · 19‑nov‑2026 |
 > | Repositorio | `juanfeliperico369-stack/motorcity` (rama `claude/motor-city-engine-xu7p4y`; la web sale de `main`) |
 > | Web | <https://juanfeliperico369-stack.github.io/motorcity/> |
 > | Minijuego | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html> |
+> | **¿Está todo lo pedido?** | `docs/PEDIDOS.md`: cada pedido del autor, su estado y el archivo donde quedó |
 
 ## Índice
 1. Qué es Motor City
@@ -59,12 +60,13 @@
 | **2.2** | Solución a la tarjeta gráfica; puentes y cámara; vistas de lado (FEZ, Little Nightmares, Monument Valley); sprites; interfaz con psicología; los mejores motores; historia con 3 pilares; ocurrencias; manual; optimización; controles; **casa del jugador por su dirección**; talleres y tiendas; No Man's Sky; proporciones | GPU virtual y 3D por software (`MC.Raster`). Física por superficies. Cámara con resortes. **Vista lateral.** `MC.Manejo` con 7 esquemas. `MC.Sprites`. `MC.Escala`. Interfaz por zonas. **Mi casa** (`MC.Direccion` + `MC.Hogar`, 8 estilos y 22 muebles). `MC.Lugares` y `MC.Desgaste`. `MC.Historias` con director. `MC.Ocurrencias`. `MC.Cosmos`. Web en GitHub Pages. 103 pruebas. |
 | **2.3** | Estudiar **SimCity, Los Sims, Cities: Skylines y Townscaper**: cómo crean entornos, ambientes, sombras y detalles de ciudad. Un **documento único** con todo y el código a usar | **Sombras del sol** por hora en todas las vistas. **Mobiliario urbano** y luces de noche. **Fachadas por reglas** (WFC). **`MC.Urbe`**: zonas, demanda RCI, valor del suelo, servicios, contaminación, crecimiento, niveles, recursos, presupuesto y **capas de datos**. **Objetos inteligentes** y necesidades (`MC.Habitante`). **`MC.Ondas`**, `MC.Autotile` y `MC.RejillaIrregular`. **`MC.Paisaje`** (sonido ambiente). Mandados con **modo alcalde** y casa habitada. 109 pruebas. Este documento. |
 | **2.4** | Montañas, rocas y tipos de terreno; agua en **lagos, ríos, playa y mar**; **límites de paso verosímiles** («el personaje pasa por encima de cosas que no debería») | **`MC.Terreno`**: agua por tipo y profundidad; material y pendiente; **reglas de paso** por vehículo con su motivo (vadear, nadar, barrancos, roca, monte, arena, nieve, borde del mundo); **obstáculos reales** (emblemáticos, árboles de las losas, postes, bancas, rocas, tráfico y gente). **`MC.Naturaleza`**: rocas, palmas, frailejones, arbustos y juncos. **Lagos** en los mundos generados (llenado por prioridad) y mar a nivel 0. **Agua y roca en las losas**: color por profundidad, espuma en la orilla y roca en las laderas empinadas. Brillos del agua. El personaje se ve vadeando o nadando. 115 pruebas. |
-| **2.5** (esta) | «Añade la capacidad de poder entrar en el agua» | **Entrar al agua de verdad:**<ul><li>con un vehículo, al empujar hacia el agua honda (o con «🏊 Al agua») uno se baja, el vehículo queda **parqueado en la orilla** y se entra nadando;</li><li>se **bucea** («🤿», o Z/Ctrl) con **aire limitado** (~35 s); sin aire se sube sola;</li><li>el cuerpo tiene pose de **nado** (crol) y de **buceo** (rana);</li><li>bajo el agua todo se tiñe de azul, con rayos de luz y burbujas;</li><li>se sale por la orilla y se **vuelve a subir** al vehículo;</li><li>**lancha**: embarcar en el agua honda más cercana y «⚓ A tierra» (queda amarrada).</li></ul>117 pruebas. |
+| **2.5** | «Añade la capacidad de poder entrar en el agua» | **Entrar al agua de verdad:**<ul><li>con un vehículo, al empujar hacia el agua honda (o con «🏊 Al agua») uno se baja, el vehículo queda **parqueado en la orilla** y se entra nadando;</li><li>se **bucea** («🤿», o Z/Ctrl) con **aire limitado** (~35 s); sin aire se sube sola;</li><li>el cuerpo tiene pose de **nado** (crol) y de **buceo** (rana);</li><li>bajo el agua todo se tiñe de azul, con rayos de luz y burbujas;</li><li>se sale por la orilla y se **vuelve a subir** al vehículo;</li><li>**lancha**: embarcar en el agua honda más cercana y «⚓ A tierra» (queda amarrada).</li></ul>117 pruebas. |
+| **2.5.1** (esta) | «El minijuego es injugable: no hay controles de verdad, no se puede mover nada; hay que pagar cosas. Mejóralo con lo nuevo. ¿Ya están todos los pedidos?» | **Lo que pasaba:** el personaje sí se movía, pero la cámara estaba tan lejos que medía 3 píxeles y el joystick no se veía. **Lo que se hizo:**<ul><li>**cámara cerca**: unos 45 m en el lado corto de la pantalla;</li><li>**marca del jugador** (anillo y flecha);</li><li>**joystick visible** con guía, y **botones de acción** para el pulgar: ⤒ saltar, ⚡ turbo, y 🔽 🔼 en el agua o en el aire;</li><li>**flecha al objetivo** con la distancia, siempre en la zona libre;</li><li>**tutorial** al empezar;</li><li>**modo libre** por defecto: todo gratis, con los 34 vehículos (pie, bici, moto, carro, bus, avión y lancha);</li><li>menús **Vista** y **Ajustes**;</li><li>el **primer mandado cerca**;</li><li>en computador, flechas o WASD;</li><li>la lista **`docs/PEDIDOS.md`**.</li></ul>118 pruebas, con una nueva que juega en un celular táctil. |
 
 ## 3. Estado actual
 | | |
 |---|---|
-| **Pruebas** | **117 en verde** (`node motor.mjs prueba --navegador`): 111 en Node y 6 en Chromium. |
+| **Pruebas** | **118 en verde** (`node motor.mjs prueba --navegador`): 111 en Node y 7 en Chromium. Una de ellas juega Mandados en un celular táctil. |
 | **Medido**<br>(Chromium, CPU 4× más lenta, 412 × 860; mediana del dibujo con sombras y mobiliario) | cenital 8–10 ms · ciudad 3D ~15 ms · maqueta ~27 ms · lateral 14–20 ms · panorámica ~9–12 ms. La 3D por software va en 15–25 ms, contra 70–90 ms del WebGL por software. |
 | **Mundos** | Medellín (MC4, 6 MB); Guatapé craqueado (0,2 MB, 195 lugares jugables); mundos generados por semilla; planetas. |
 | **Juegos** | EnCicla y El Metro tienen el motor en `motor-city/`; su `motor-valle/` quedó como estaba y siguen en verde. Run Scooter, sin cambios. |
@@ -147,7 +149,18 @@ ui.menu('Garaje', [{ id: 'bici', texto: '🚲 Bici' }], id => cuerpo.setVeh(id))
 const i = await ui.dialogo('Título', 'Texto', ['Sí', 'No']);
 ui.foco(Math.abs(cuerpo.v) > 11);                       // al ir rápido, solo lo vital
 console.assert(MC.UI.verificar(ui).length === 0);       // nada tapa el centro
+
+// 2.5.1 · controles que se ven (abajo a la izquierda el pulgar izquierdo; abajo a la derecha el derecho)
+ui.joystick(ctl, { texto: 'Arrastra para moverte' });  // en cada cuadro: ui.pintarJoystick()
+ui.accion({ id: 'salto', icono: '⤒', texto: 'Saltar', mantener: true, ctl });   // mantener → ctl.boton('salto', true|false)
+ui.accion({ id: 'turbo', icono: '⚡', texto: 'Turbo', mantener: true, ctl });
+// el objetivo: pin si se ve, flecha en el borde de la zona libre si no
+const [sx, sy] = E._pr(meta.x, meta.y, 0), Z = ui.zonaLibre(), k = W / innerWidth;
+MC.UI.indicador(g, W, H, sx, sy, { texto: '120 m', escala: k, t, rect: [Z.x0 * k, Z.y0 * k, Z.x1 * k, Z.y1 * k] });
+// la cámara: ~45 m en el lado corto, para que el jugador mida más de 10 px
+const camara = new MC.Camara({ zoom: Math.max(9, Math.min(18, Math.min(innerWidth, innerHeight) / 45)) * devicePixelRatio, mundo: M });
 ```
+> **Lección de la 2.5.1:** un juego de prueba se juega **sin pagar** (modo libre) y con **controles que se ven**. Si el jugador no ve su personaje ni el joystick, cree que no se mueve, aunque se mueva.
 
 ### 5.4 Arte: sprites y ganchos de dibujo
 ```js
@@ -245,7 +258,7 @@ MC.Terreno.aguaHonda(M, x, y, r, min); MC.Terreno.tierraFirme(M, x, y, r);
 
 ### 5.10 Probar y medir
 ```bash
-node motor.mjs construir && node motor.mjs prueba --navegador     # 109 en verde
+node motor.mjs construir && node motor.mjs prueba --navegador     # 118 en verde
 node motor.mjs reporte "Lo que cambié" --juego encicla --autor "IA de EnCicla"
 node motor.mjs documento                                          # arma dist/MOTOR-CITY-TODO.md (este documento + anexos)
 ```
@@ -386,7 +399,7 @@ MC.arte.registrar('motor', { prop: (g, p, x, y, pxm) => MC.Sprites.dibujar(g, 'g
 Son «la IA de ese juego» (9.3 a 9.5): misma rama, mismas pruebas y reporte.
 
 ### 9.7 Claude (la IA del motor) · lo que sigue
-1. Unir las entregas: 2.4.
+1. Unir las entregas de Gemini y ChatGPT: 2.6.
 2. Carreras de *Motor City* sobre la red real (`MC.Carrera`), con repeticiones.
 3. *Extremo*: física de tabla, de bici de montaña y de surf.
 4. Agentes con propósito en `MC.Urbe`.
@@ -468,7 +481,8 @@ Son «la IA de ese juego» (9.3 a 9.5): misma rama, mismas pruebas y reporte.
 - **Todas:** informen en 5–10 líneas: qué hicieron, cómo lo probaron, qué aprendieron y qué falta.
 
 ## 12. Lo que necesita el autor
-1. **Probar en un celular real** de gama media: qué se siente lento o confuso.
+1. **Probar en un celular real** de gama media, con Mandados: qué se siente lento o confuso.
+   - Lo pedido y su estado: `docs/PEDIDOS.md`.
 2. **Pasar este documento** a cada IA y traer sus entregas.
 3. **Elegir la licencia** del motor antes de mostrarlo a empresas (ver `docs/NEGOCIO-Y-USOS.md`).
 4. **Permisos de marca** si un juego usará logos del Metro o de EnCicla comercialmente.
@@ -500,6 +514,117 @@ No hace falta conectar ninguna aplicación.
 **Terreno:** Barnes, Lehman y Mulla, «Priority-Flood: An Optimal Depression-Filling and Watershed-Labeling Algorithm» (2014), para los lagos.
 
 **Las anteriores** (FEZ, Monument Valley, Little Nightmares, No Man's Sky, storylets, Left 4 Dead, cámaras y diseño de interfaz) están en `docs/INVESTIGACION.md`.
+
+
+---
+
+# ANEXO 0. Todos los pedidos y su estado (`docs/PEDIDOS.md`)
+
+
+> **Para qué sirve:** responder «¿ya está todo lo que pedí en el repositorio?».
+>
+> Cada pedido aparece con su estado y con el archivo donde vive. Se actualiza en cada sesión.
+>
+> **Estados:**
+> - ✅ está en el repositorio y tiene prueba;
+> - 🟡 está hecho, pero falta algo que no depende del código (un celular real, otra IA);
+> - ⏳ todavía no está, y se dice a quién le toca.
+
+Versión **2.5.1** · 19‑nov‑2026 · **118 pruebas en verde** (`node motor.mjs prueba --navegador`).
+
+### Resumen
+- **Hechos:** 55 pedidos ✅.
+- **Hechos, pero falta algo de afuera:** 2 🟡. El motor ya está copiado en EnCicla y El Metro, pero sus IAs todavía no lo usan. Y falta probar en un celular real.
+- **Pendientes:** 3 ⏳:
+  - los juegos *Motor City* (carreras) y *Extremo*;
+  - las entregas de Gemini y ChatGPT;
+  - la licencia.
+
+  Ninguno es un olvido. Cada uno está en el plan (§9 y §12 del documento único).
+
+### 1. El motor y el repositorio (2.0–2.1)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Un solo motor para todos los juegos, según el plan del mundo abierto | ✅ | `js/` → `dist/motor.js` · `docs/VISION-MOTOR-CITY.md` |
+| Repositorio nuevo y llamarlo solo «Motor City» | ✅ | `juanfeliperico369-stack/motorcity` |
+| Craquear territorios reales (país, ciudad, pueblo o lugar) | ✅ | `geo/territorio.py` · Guatapé en `datos/guatape` · skill `motor-city-territorio` |
+| Crear mundos nuevos | ✅ | `js/12-generador.js` (isla, valle, costa, montaña, llanura) |
+| Física fiel a la realidad | ✅ | `js/02-ciencia.js` (`MC.Fis`), `js/32-fisica.js` |
+| Química fiel | ✅ | `js/02-ciencia.js` (`MC.Quim`, balanceo exacto) |
+| Economía fiel | ✅ | `js/03-economia.js` (partida doble, mercado, finanzas) |
+| Matemáticas | ✅ | `js/02-ciencia.js` (ruido, integradores, unidades SI) |
+| Biología y personajes | ✅ | `js/35-seres.js`, `js/30-personaje.js` |
+| Vehículos | ✅ | `js/31-vehiculos.js` (35), `js/36-taller.js` |
+| Animales y alienígenas | ✅ | `js/35-seres.js`, `js/13-cosmos.js` |
+| Interfaces | ✅ | `js/70-interfaz.js` |
+| Música | ✅ | `js/60-musica.js` (procedural y clásicos de dominio público) |
+| Mundo vivo | ✅ | `js/20-tiempo.js`, `21-trafico`, `22-transporte`, `24-ambiente`, `25-ia` |
+| Interiores procedurales únicos | ✅ | `js/48-interiores.js` |
+| Skills para las IAs | ✅ | `.claude/skills/` (desarrollo, territorio, juegos, ciencia, arte) |
+| Usos y cómo venderlo | ✅ | `docs/NEGOCIO-Y-USOS.md` |
+| Plan para Gemini y para GPT | ✅ | `docs/DOCUMENTO-UNICO.md` §9 y §10 |
+| Contexto para las IAs de cada juego | ✅ | `CONTEXTO-IA.md`, `AGENTS.md`, `CLAUDE.md` y `docs/CONTEXTO-MOTOR-CITY.md` en cada juego |
+| Repositorio abierto a las IAs, con reportes | ✅ | `reportes/`, `CONTRIBUIR.md`, `node motor.mjs reporte` |
+| Minijuego en un HTML y su link | ✅ | `juegos/mandados` → [mandados.html](https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html) |
+| Que EnCicla y El Metro usen el motor | 🟡 | El motor ya está copiado en `motor-city/` de cada juego, y la guía paso a paso está en `docs/MIGRACION-*.md`. **Falta:** la migración, que la hace la IA de cada juego (§9.3 y §9.4). |
+| Run Scooter dentro de los juegos | ✅ | `js/50-run.js` («Run en la ciclovía») |
+| Los juegos *Motor City* (carreras) y *Extremo* | ⏳ | Son juegos futuros. Las piezas ya existen (`MC.Carrera`, física y tráfico). **Le toca:** a Claude, que lo tiene en su plan (§9.7). |
+
+### 2. Gráficos, controles y lugares (2.2)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Solución a la tarjeta gráfica («crea una si es posible») | ✅ | `js/05-gpu.js` (nivel y resolución dinámica), `js/44-raster.js` (3D por software) |
+| Física de puentes | ✅ | `js/32-fisica.js` (superficies y niveles), `js/red-niveles.mjs` |
+| Mejor cámara | ✅ | `js/34-camara.js` (resortes y sacudida) |
+| Vista lateral (FEZ, Little Nightmares, Monument Valley) | ✅ | `js/41-vista2d.js` (lateral), `js/42-vehiculos-lado.js` · `docs/INVESTIGACION.md` |
+| Sprites | ✅ | `js/38-sprites.js` (atlas, 8 direcciones, 9‑slice, fondo magenta) |
+| Psicología de la interfaz | ✅ | `js/70-interfaz.js` (zonas, atenuación, un aviso a la vez, `MC.UI.verificar`) |
+| Los mejores motores, estudiados | ✅ | `docs/INVESTIGACION.md` |
+| Historia con diversión, reflexión y conciencia | ✅ | `js/85-historias.js` (`MC.Historias` y director de ritmo) |
+| Ocurrencias (lo imprevisto) | ✅ | `js/85-historias.js` (`MC.Ocurrencias`) |
+| Manual de uso | ✅ | `docs/MANUAL.md` |
+| Optimización | ✅ | `docs/OPTIMIZACION.md` |
+| Tipos de controles | ✅ | `js/33-controles.js`, `js/37-manejo.js` (7 esquemas) |
+| Información en pantalla que no estorbe | ✅ | `js/70-interfaz.js` |
+| La casa del jugador desde su dirección, con diseño de interiores | ✅ | `js/49-hogar.js` (`MC.Direccion` y `MC.Hogar`). La dirección no sale del celular. |
+| Más lugares: talleres, compras, restaurantes… | ✅ | `js/82-lugares.js`, `js/36-taller.js` |
+| Historias procedurales | ✅ | `js/85-historias.js` |
+| Generación como No Man's Sky | ✅ | `js/13-cosmos.js` (estrellas, planetas y relieve infinito) |
+| Tamaños proporcionados | ✅ | `js/04-escala.js` (`MC.Escala.validar`) |
+
+### 3. La ciudad (2.3)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Cómo hacen SimCity y Cities: Skylines las ciudades | ✅ | `js/26-urbe.js` (zonas, demanda RCI, valor del suelo, servicios, presupuesto, capas de datos) |
+| Sombras | ✅ | `js/39-sombras.js` (sol según la hora, en todas las vistas) |
+| Detalles de ciudad | ✅ | `js/27-mobiliario.js` (postes, árboles, bancas, paraderos, cebras) |
+| Los Sims | ✅ | `js/86-necesidades.js` (objetos inteligentes y necesidades) |
+| Townscaper | ✅ | `js/14-ondas.js` (WFC, autotile, rejilla irregular) |
+| Ambiente sonoro | ✅ | `js/61-sonido.js` (`MC.Paisaje`) |
+| Un solo documento con todo: contexto, código a usar y plan de cada IA | ✅ | `docs/DOCUMENTO-UNICO.md` → `dist/MOTOR-CITY-TODO.md` |
+
+### 4. Terreno y agua (2.4–2.5)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Montañas, rocas y tipos de terreno | ✅ | `js/15-terreno.js`, `js/28-naturaleza.js` |
+| Agua en lagos, ríos, playa y mar | ✅ | `js/15-terreno.js`, `js/12-generador.js` (lagos), `js/40-dibujo.js` (color por profundidad) |
+| Límites verosímiles («el personaje pasa por encima de cosas») | ✅ | `MC.Terreno.paso` y los obstáculos en `js/32-fisica.js` |
+| Poder entrar al agua | ✅ | `js/32-fisica.js` (bajarse, nadar, bucear con aire, montar, lancha) |
+
+### 5. El minijuego jugable (2.5.1, esta sesión)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| «No hay controles de verdad, no se puede mover nada» | ✅ | El problema no era el movimiento: la cámara estaba muy lejos y el joystick no se veía. Ahora hay **joystick visible** (`ui.joystick`), **botones de acción** (`ui.accion`), **cámara cerca** (unos 45 m en el lado corto), **marca del jugador**, **flecha al objetivo** (`MC.UI.indicador`) y **tutorial**. En computador funcionan las flechas y WASD. |
+| «No está completamente liberado porque hay que pagar» | ✅ | **Modo libre**, prendido por defecto: los 34 vehículos (bici, moto, carro, bus, avión, lancha…), la casa, los lugares y la ciudad son gratis. Se apaga en ⚙️ Ajustes. |
+| «Mejóralo con lo nuevo» | ✅ | Agua (al agua, bucear, lancha), terreno, sombras, ciudad (modo alcalde), mi casa, lugares, historias y paisaje sonoro. El primer mandado empieza cerca. |
+| Que no se rompa otra vez | ✅ | Prueba nueva en `pruebas/prueba.mjs`: un celular táctil abre el juego, arrastra el joystick y se mueve. |
+
+### 6. Lo que falta, y a quién le toca
+| Qué | Estado | A quién le toca |
+|---|---|---|
+| Probar en un **celular real** de gama media | 🟡 | Al autor. Anota el modelo y lo que se siente lento o confuso. |
+| Arte de Gemini (G‑M0…G‑M15) y código de ChatGPT (C‑M1…C‑M15) | ⏳ | Al autor, que les pasa el documento único (§9 y §10), y a cada IA. |
+| Licencia del motor | ⏳ | Al autor (`docs/NEGOCIO-Y-USOS.md`). |
 
 
 ---
@@ -542,12 +667,17 @@ Funciona en **un solo HTML**, sin internet y en cualquier celular.
 | **Adentro** | `MC.Interiores`, `MC.Hogar`, `MC.Direccion` | Interiores con estilos, **tu casa desde tu dirección** y diseño. |
 | **A dónde ir** | `MC.Lugares`, `MC.Desgaste` | Talleres, tiendas, restaurantes, bibliotecas y parques; reparar y mejorar. |
 | **Qué pasa** | `MC.Mision`, `MC.Inventario`, `MC.Carrera`, `MC.Logros`, `MC.Dialogo`, `MC.Historias`, `MC.Director`, `MC.Ocurrencias` | Misiones, carreras, historias con pilares, ritmo y lo imprevisto. |
-| **Pantalla y sonido** | `MC.UI`, `MC.Musica`, `MC.Paisaje` | Interfaz con zonas y atenuación; música procedural y clásicos; sonido ambiente del lugar. |
+| **Pantalla y sonido** | `MC.UI`, `MC.Musica`, `MC.Paisaje` | Interfaz con zonas y atenuación; **joystick visible**, **botones de acción** y **flecha al objetivo** (2.5.1); música procedural y clásicos; sonido ambiente del lugar. |
 | **Terreno y agua (2.4–2.5)** | `MC.Terreno`, `MC.Naturaleza`, `cuerpo.bajarse`, `montar`, `embarcar` y `desembarcar` | Agua por tipo y profundidad; entrar al agua dejando el vehículo en la orilla; nadar y bucear con aire; lancha. Pendientes, roca, monte, arena y nieve; quién pasa por dónde y por qué. |
 | **Ciudad (2.3)** | `MC.Urbe`, `MC.Sombras`, `MC.Mobiliario`, `MC.Ondas`, `MC.Autotile`, `MC.RejillaIrregular`, `MC.Necesidades`, `MC.Habitante` | Zonas, demanda, valor del suelo y capas de datos; sombras del sol; postes, árboles y cebras; fachadas por reglas; casas habitadas. |
 
 ### 3. Cómo se usa (cinco recetas)
-**a) Jugar o mostrar.** Abre <https://juanfeliperico369-stack.github.io/motorcity/> en el celular.
+**a) Jugar o mostrar.** Abre <https://juanfeliperico369-stack.github.io/motorcity/> en el celular. El minijuego **Mandados** se juega así:
+- **moverse:** arrastra en cualquier parte de la mitad izquierda; el joystick aparece donde pongas el dedo. En computador, flechas o WASD;
+- **acciones:** ⤒ saltar y ⚡ turbo, abajo a la derecha. En el agua o en el aire aparecen 🔽 bajar y 🔼 subir;
+- **a dónde ir:** la flecha amarilla con los metros. El mapa pequeño muestra el punto;
+- **todo es gratis** en el **modo libre**, que viene prendido. Se cambia en ⚙️ Ajustes, donde también están «Cómo se juega», los controles y el rescate;
+- **🗺️ Vista** cambia la cámara (cenital, 3D, maqueta, lateral…) y el pixel; **🚲 Vehículo** abre el garaje con los 34 vehículos.
 
 **b) Un juego nuevo con una IA.** Dile a la IA:
 > «Lee `AGENTS.md` del repositorio motorcity y haz un juego de [idea] sobre el mundo [guatape|medellin|generado]».
@@ -613,7 +743,7 @@ new MC.Bucle({
 | Comando | Qué hace |
 |---|---|
 | `node motor.mjs construir` | Arma el motor, los mundos y los juegos (`dist/`). |
-| `node motor.mjs prueba --navegador` | Corre las 117 pruebas, también en Chromium. |
+| `node motor.mjs prueba --navegador` | Corre las 118 pruebas, también en Chromium. |
 | `node motor.mjs documento` | Arma `dist/MOTOR-CITY-TODO.md` (el documento único con anexos). |
 | `node motor.mjs nuevo juego\|modulo nombre` | Crea un juego o un módulo desde su plantilla. |
 | `node motor.mjs reporte "título" --juego X` | Deja el reporte de un cambio hecho desde otro juego. |
@@ -626,7 +756,7 @@ new MC.Bucle({
 # ANEXO B. Contrato técnico (`MOTOR.md`)
 
 
-**Versión 2.5.0 · 19‑nov‑2026.** Documento único con todo: `docs/DOCUMENTO-UNICO.md`. Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-city/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`. Cómo se usa: `docs/MANUAL.md`.
+**Versión 2.5.1 · 19‑nov‑2026.** Documento único con todo: `docs/DOCUMENTO-UNICO.md`. Fuente de verdad: `juanfeliperico369-stack/motorcity`. Copias: `motor-city/` de Juega EnCicla y de El Metro, con `herramientas/sincronizar.mjs`. Cómo se usa: `docs/MANUAL.md`.
 
 **Qué es.** El motor de mundo abierto que convierte cualquier lugar real (Medellín, Guatapé, cualquier ciudad) o inventado (un valle, una isla, un planeta) en un mundo jugable con leyes reales:
 
@@ -847,6 +977,7 @@ MC.arte.registrar('encicla', {
 | 1.0.0 | 18‑nov‑2026 | Una tubería con dos resoluciones, el exportador a El Metro, el sincronizador y el contrato (BicicletasUno). |
 | 1.1.0 | 18/19‑nov‑2026 | Túneles y deprimidos; el lector `valle.js`; la fachada de El Metro. |
 | 1.2.0 | 19‑nov‑2026 | Une las dos 1.1.0 con la fuente de verdad en BicicletasUno. |
+| **2.5.1** | 19‑nov‑2026 | **Jugable en el celular:**<ul><li>`ui.joystick(ctl, op)` y `ui.pintarJoystick()`: joystick visible que sigue al dedo, con guía «Arrastra para moverte»;</li><li>`ui.accion({ id, icono, texto, mantener, ctl, al })`: botones redondos para el pulgar, que al mantenerse alimentan `ctl.boton`;</li><li>`ui.barraVisible`;</li><li>`MC.UI.indicador(g, W, H, sx, sy, op)`: el pin o la flecha al objetivo, con `op.rect` para no tapar la interfaz;</li><li>`ui.mision` con el título en una línea y el detalle en dos;</li><li>marca del jugador en las vistas 2D (`E.marcaJugador`);</li><li>`Losas`: resolución hasta 6 y presupuesto de píxeles.</li></ul>Mandados: cámara de unos 45 m en el lado corto, modo libre (todo gratis, 34 vehículos), menú Vista y menú Ajustes, tutorial, y el primer mandado cerca. 118 pruebas. |
 | **2.5.0** | 19‑nov‑2026 | **Entrar al agua:** `cuerpo.bajarse`, `montar` y `puedeMontar` (vehículo parqueado en la orilla, también solo al empujar hacia lo hondo), nado con **buceo** y **aire** (`buceando`, `aire`, `pulmones`, evento `sinAire`), poses `nada` y `bucea`, `embarcar` y `desembarcar` (lancha), `Terreno.aguaHonda` y `tierraFirme`. Tono bajo el agua, burbujas y vehículo parqueado en las vistas. 117 pruebas. |
 | **2.4.0** | 19‑nov‑2026 | Terreno y límites verosímiles: agua por tipo y profundidad (vadear, nadar; lancha con calado), pendiente máxima fuera de las vías, roca, monte, arena y nieve por vehículo, obstáculos reales (emblemáticos, árboles de las losas, mobiliario, rocas, tráfico y gente) y edificios también sobre la calle si uno se mete de verdad. Naturaleza. Lagos por llenado de prioridad en el generador y mar a nivel 0. Agua por profundidad, espuma y roca de acantilado en las losas; brillos del agua; vadear y nadar visibles. 115 pruebas. |
 | **2.3.0** | 19‑nov‑2026 | Lo aprendido de SimCity, Los Sims, Cities: Skylines y Townscaper: sombras del sol por hora (2D y raster), mobiliario urbano y luces de noche, fachadas por reglas (WFC), `MC.Urbe` (zonas, demanda RCI, valor del suelo, servicios, contaminación, crecimiento, niveles, recursos, presupuesto y capas de datos), objetos inteligentes y `MC.Habitante`, `MC.Ondas`, `MC.Autotile`, `MC.RejillaIrregular` y `MC.Paisaje`. Ganchos de arte `prop`, `fachadaModulo` y `mueble`. Documento único. 109 pruebas. |
@@ -959,7 +1090,7 @@ El motor debe quedar como **terreno fértil** para esas semillas. Ver `docs/VISI
 ```bash
 cd motorcity
 node motor.mjs mundo && node motor.mjs run && node motor.mjs construir
-node motor.mjs prueba --navegador                 # debe decir «✓ TODAS LAS PRUEBAS PASARON · 117 bien»
+node motor.mjs prueba --navegador                 # debe decir «✓ TODAS LAS PRUEBAS PASARON · 118 bien»
 node motor.mjs sincronizar ../BicicletasUno --verificar   # «los archivos son iguales»
 node motor.mjs sincronizar ../MetroZero --verificar
 cd ../BicicletasUno && node tools/build.js && node tests/run.js      # «✓ TODAS LAS PRUEBAS PASARON»
@@ -1528,6 +1659,40 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 19‑nov‑2026 · 2.5.1 · Mandados jugable de verdad (Claude Code)
+**Pedido:** «Traté de probar el minijuego pero es injugable. No hay controles de verdad, no se puede mover nada. No está completamente liberado porque hay que pagar cosas. Mejóralo con lo nuevo. ¿Ya están todos los pedidos en el repositorio?»
+
+**Lo que pasaba:**
+- El personaje sí se movía, pero la cámara estaba tan lejos que en un celular medía unos 3 píxeles.
+- El joystick era invisible.
+- Por eso parecía que nada respondía.
+- Además, casi todo costaba plata.
+
+**Lo que se hizo:**
+1. **Cámara cerca:** unos 45 m en el lado corto de la pantalla, en celular y en computador. El jugador tiene un **anillo verde con flecha**.
+2. **Joystick visible** abajo a la izquierda (`ui.joystick`), con la guía «Arrastra para moverte» (en computador: «Flechas o WASD»).
+3. **Botones de acción** redondos abajo a la derecha (`ui.accion`): ⤒ saltar y ⚡ turbo; 🔽 bajar y 🔼 subir aparecen en el agua o en el aire.
+4. **Flecha al objetivo** con la distancia (`MC.UI.indicador`), siempre dentro de la zona libre, sin tapar la interfaz.
+5. **Modo libre**, prendido por defecto: los 34 vehículos, la lancha, la gasolina, la casa, los lugares y el modo alcalde son gratis. Se apaga en ⚙️ Ajustes.
+6. **Tutorial** «Cómo se juega» al empezar, y otra vez desde Ajustes. Los menús quedaron en **Vista** (vistas, pixel y zoom) y **Ajustes** (modo libre, controles y rescate).
+7. **El primer mandado empieza cerca**, y la distancia crece con cada entrega.
+8. La interfaz:
+   - las barras pasaron arriba y la velocidad, abajo al centro;
+   - la tarjeta del mandado lleva el título en una línea y, primero, la distancia y el tiempo.
+9. **`docs/PEDIDOS.md`:** cada pedido del autor, su estado y dónde quedó. Hay 55 hechos, 2 que dependen de afuera y 3 pendientes con dueño.
+
+**Probado** (118 pruebas). La nueva, en un celular táctil emulado (412 × 860), comprueba:
+- aparece el tutorial;
+- todo es libre y gratis, con 34 vehículos;
+- el joystick se ve;
+- arrastrarlo mueve al personaje unos 4 m en 2 s;
+- la cámara da 9 px por metro;
+- el primer mandado está a menos de 900 m.
+
+En computador, las flechas y WASD mueven y giran.
+
+**Falta:** probarlo en un celular real.
 
 ### 19‑nov‑2026 · 2.5.0 · Entrar al agua (Claude Code)
 **Pedido:** «Añade la capacidad de poder entrar en el agua».
