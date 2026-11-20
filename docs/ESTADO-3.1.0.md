@@ -40,3 +40,6 @@ Las entregas están **publicadas en la rama de la PR**, no equivalen a `main` ni
 3. Dispositivos reales: sin fallos bloqueantes, percentil 95 aceptable y sin degradación térmica no controlada.
 4. EnCicla, El Metro y Run Scooter tienen contratos y pruebas de compatibilidad; no solamente documentación que afirma haberlos sincronizado.
 5. Cada asset tiene autoría/licencia y dimensiones verificadas; nada presentado como metraje real si fue una representación conceptual.
+
+## Expansión NUEVA: TURNO CERO / MANHATTAN (preproducción)
+**Paquete publicado en esta rama:** análisis de 13 referencias comerciales (`docs/REFERENCIAS-MANHATTAN-13.md`), biblia narrativa adulta y técnica (`docs/GETAWAY-MANHATTAN-BIBLIA.md`), JSON de máquina, dos guías SVG originales y `juegos/getaway/prototipo.html` con controles offline y narrativa experimental. El prototipo **no usa mapa real de Manhattan** y no debe publicarse como tal. La prueba específica `pruebas/getaway-prototipo.mjs` está integrada a CI, cuya ejecución debe verificarse.

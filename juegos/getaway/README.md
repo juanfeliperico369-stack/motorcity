@@ -14,6 +14,9 @@
 - El render 2D y 3D usan una única simulación; toda mecánica común se añade a MC, no al juego.
 - No publicar nueva arquitectura como «integrada en main» mientras solo exista una PR.
 
+## Prototipo jugable offline
+Abrir directamente [`prototipo.html`](prototipo.html): es un **minijuego preliminar con ciudad ficticia**, vehículo, persecución simple y dos decisiones. No es un duplicado comercial ni integra todavía MC4; la misión real de Manhattan sigue condicionada al pipeline geográfico.
+
 ## Primera prueba de aceptación
 Un jugador adulto entra a una misión opcional de entrega nocturna, maneja por una cuadrícula *de demostración* (NO la real), acepta o rechaza la difusión de un recibo, evita una patrulla, encuentra un taller y puede reiniciar. La verdadera ciudad sigue pendiente de datos GIS + licencias + streamer.
 
