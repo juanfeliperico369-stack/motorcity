@@ -61,8 +61,10 @@ jobs:
         run: node motor.mjs construir
       - name: QA en Chromium
         run: node motor.mjs prueba --navegador
-      - name: Público simulado (prueba breve)
-        run: node motor.mjs publico --seg 20
+      - name: G-H1 · 14 capturas de revisión
+        run: node motor.mjs capturas
+      - name: Público simulado (ventana completa)
+        run: node motor.mjs publico --seg 45
       - name: Guardar métricas de QA
         uses: actions/upload-artifact@v4
         if: always()
@@ -71,6 +73,7 @@ jobs:
           path: |
             dist/publico.md
             dist/publico.json
+            dist/capturas/
             dist/construccion.json
           if-no-files-found: ignore
           retention-days: 7
