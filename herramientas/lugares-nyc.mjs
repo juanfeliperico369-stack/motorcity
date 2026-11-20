@@ -21,9 +21,9 @@ function visitable(tipo,nombre) {
  const n=nombre.toUpperCase();
  if(NO_DESTINO.test(n))return false;
  if(tipo==='museo')return /MUSEUM|GALLERY|CULTURAL CENTER|ART CENTER|ANNE FRANK CENTER|HISTORICAL SOCIETY|INSTITUTE OF ART/.test(n);
- if(tipo==='parque')return /(?:PARK|GARDEN|PLAYGROUND|GREENWAY|SQUARE|ESPLANADE|PROMENADE|RECREATION AREA)$/.test(n);
+ if(tipo==='parque')return !/STATUE|CAROUSEL|MAINTENANCE|BUILDING|STORAGE|RESTROOM/.test(n) && /(?:PARK|GARDEN|PLAYGROUND|GREENWAY|SQUARE|ESPLANADE|PROMENADE|RECREATION AREA)$/.test(n);
  if(tipo==='puente')return /BRIDGE/.test(n) && !/\b(?:RB|RP|RAMP|APPROACH|ENTRANCE|EXIT|EB|WB|EASTBOUND|WESTBOUND|SERVICE ROAD)\b/.test(n);
- if(tipo==='garaje')return !/DPR|POLICE|FIRE DEPT|RAMBLE|NYC DOT|CITY SERVICE|MUNICIPAL/.test(n);
+ if(tipo==='garaje')return /PARKING GARAGE|PUBLIC PARKING|COMMERCIAL GARAGE/.test(n) && !/DSNY|DPR|FDNY|NYPD|POLICE|SANITATION|FIRE DEPT|RAMBLE|NYC DOT|CITY SERVICE|MUNICIPAL|OPERATIONS/.test(n);
  if(tipo==='mirador')return /OBSERVATION|OBSERVATORY|LOOKOUT|VIEWPOINT|OVERLOOK/.test(n);
  if(tipo==='muelle')return !/BROOKLYN BRIDGE PARK|STATEN ISLAND|JERSEY CITY|HOBOKEN/.test(n);
  if(tipo==='monumento')return /MONUMENT|MEMORIAL|STATUE|LANDMARK|HISTORIC SITE/.test(n);
@@ -47,7 +47,7 @@ function transformar(filas) {
   const [lon,lat]=p.map(Number);
   if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<40.68||lat>40.88||lon< -74.03||lon> -73.90)continue;
   const k=n.toLowerCase();if(nombres.has(k))continue;nombres.add(k);
-  a.push({nombre:n,lat:+lat.toFixed(7),lon:+lon.toFixed(7),tipo:t,id:String(x.placeid),fuente:FUENTE});
+  a.push({nombre:n,lat:+lat.toFixed(7),lon:+lon.toFixed(7),tipo:t,id:String(x.placeid),fuente:FUENTE,acceso:'por_verificar'});
  }
  a.sort((x,y)=>Number(CLAVES.test(y.nombre.toUpperCase()))-Number(CLAVES.test(x.nombre.toUpperCase()))||x.nombre.localeCompare(y.nombre,'en'));
  const seleccion=[],ids=new Set(),claves=new Set();
@@ -72,7 +72,7 @@ function transformar(filas) {
 if(process.argv.includes('--probar')) {
  const tip=[['3','4','Museum'],['4','1','Park'],['6','8','Bridge'],['6','7','Ferry Landing'],['13','1','Memorial'],['7','4','Garage'],['4','1','Observation Deck']];
  const d=Array.from({length:140},(_,i)=>{const [facility_type,facility_domains,n]=tip[i%tip.length];return {facility_type,facility_domains,feature_name:n+' '+i,boroughcode:'1',placeid:String(i+1),the_geom:{coordinates:[-73.97,40.75]}}});
- const v=transformar(d);if(v.length!==50||new Set(v.map(x=>x.id)).size!==50||v.some(x=>/MAINTENANCE|DEPOT|STORAGE/.test(x.nombre)))throw Error('Selección incorrecta');console.log('✓ 50 puntos válidos (autoprueba sin internet)');
+ const v=transformar(d);if(v.length!==50||new Set(v.map(x=>x.id)).size!==50||v.some(x=>/MAINTENANCE|DEPOT|STORAGE|\bDSNY\b/.test(x.nombre)))throw Error('Selección incorrecta');console.log('✓ 50 puntos válidos (autoprueba sin internet)');
 }else {
  const where=new URL(API);where.searchParams.set('$select','the_geom,feature_name,placeid,facility_type,facility_domains,boroughcode');where.searchParams.set('$where',"boroughcode='1'");where.searchParams.set('$limit','50000');
  let res=await fetch(where,{signal:AbortSignal.timeout(60000)});

@@ -14,3 +14,8 @@ La primera ejecución del importador obtuvo exactamente 50 puntos oficiales, per
 Se añadieron filtros de nombres incompatibles con destinos públicos (mantenimiento, instalaciones técnicas, rampas), criterios de museo/parque/monumento y claves de unicidad de puente. La selección reparte los tipos por bandas geográficas para no concentrarse solo en Central Park o Battery Park. **Aun así, la etiqueta de categoría y la accesibilidad física requieren una verificación de campo o fuente adicional.**
 
 La versión nueva de `herramientas/lugares-nyc.mjs` se ejecuta desde GitHub Actions para regenerar el JSON; este informe no declara el nuevo resultado aprobado hasta observar su ejecución y revisar el fichero.
+
+## Tercera pasada: restricción de acceso (G-H18)
+La segunda generación cumplió **50/50** registros oficiales distribuidos territorialmente y sin duplicados evidentes de rampas. Sin embargo, conservaba **tres garajes del Departamento de Sanidad (DSNY)**. Su localización municipal no autoriza convertirlos en misiones ni garajes públicos. Se filtran dependencias de DSNY/DPR/FDNY/NYPD y solo se admiten nombres explícitos de estacionamientos comerciales o públicos, sin afirmar acceso real; si no hay suficientes, el catálogo completa 50 con otras categorías verificadas. Cada registro incorpora ahora `acceso: "por_verificar"` para no confundir geolocalización con permiso de entrada.
+
+Se descartan también las estatuas y edificios de servicio clasificados dentro de parques; se preserva la fuente oficial. Verificar el nuevo JSON publicado antes de declarar el trabajo concluido.
