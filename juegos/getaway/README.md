@@ -1,6 +1,6 @@
 # TURNO CERO · Manhattan — preproducción
 
-**No confundir con el juego final ni con un Manhattan MC4 real.** Esta carpeta recopila los contratos de historia/arte/sistemas del nuevo juego de mafia adulto. El motor mantiene Mandados y sus archivos sin cambios.
+**No confundir con el juego final ni con un Manhattan MC4 real.** La visión nueva es un juego **3D de acción y espionaje contemporáneo (2026)** con mafia, gadgets, combate a pie y persecuciones; la conducción 2D existente queda como una prueba de mecánicas. Esta carpeta recopila los contratos de historia/arte/sistemas del nuevo juego de mafia adulto. El motor mantiene Mandados y sus archivos sin cambios.
 
 ## Abrir primero
 - `../../docs/REFERENCIAS-MANHATTAN-13.md`: 13 videojuegos comerciales, diferencias y no-copias.
@@ -27,3 +27,8 @@ Un jugador adulto entra a una misión opcional de entrega nocturna, maneja por u
 4. Integrar `MC.Persecucion`, `MC.Cuerpo`, `MC.Objetos` y `MC.GuardadoSectores` sin forks.
 5. Añadir cinco capítulos, decisiones y tres finales.
 6. Probar Chromium + teléfonos reales antes de proponer fusión y captura comercial.
+
+## Adenda 3D: espionaje contemporáneo
+- [Biblia revisada: acción, dispositivos especiales, 3D, misiones y calidad](../../docs/GETAWAY-ESPIONAJE-3D.md).
+- Los modelos GLB generados en un paquete externo son **proxies de preproducción**, todavía sin rigging, PBR o animación; no confundir con assets finales ni con la escena jugable integrada.
+- La prioridad pasa a ser **una única ciudad 3D** con cámaras de acción, vehículos y gadgets, no un juego de sprites.
