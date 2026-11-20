@@ -83,7 +83,7 @@ TC.HISTORIA = [
           decision: { pregunta: 'Adentro hay una hoja de rutas que no cuadra con el manifiesto. ¿Qué haces?', opciones: [
             { texto: 'Leer la hoja de rutas', rep: { nadia: 6 }, flags: { leyo: true }, evidencia: 1, respuesta: [['mara', 'Turnos que no existen. Conductores que firmaron entregas desde el hospital. Salarios que salen y no llegan…'], ['mara', 'Esto no es una ruta. Es un robo con horario.']] },
             { texto: 'Entregar tarde, sin mirar', rep: { ward: 6 }, dinero: 120, respuesta: [['mara', 'Lo que no se sabe no se puede contar.']] }] } } },
-      { tipo: 'ir', a: 'ny_nadia', texto: 'Recoge a Nadia Bell en Water Street antes de que cierre el muelle', limite: 210,
+      { tipo: 'ir', a: 'ny_nadia', texto: 'Recoge a Nadia Bell en Water Street antes de que cierre el muelle', limite: 330,
         llamada: [['nadia', '¿Mara Vega? Soy Nadia Bell, del sindicato. Usted tiene mi expediente: Ward se lo robó a mi archivo. Recójame en Water Street. Ya. Me están siguiendo.']],
         alLlegar: { escena: [['nadia', 'Gracias. Ese papel es la prueba de que Argenta Quay borra salarios de conductores y los manda a cuentas de la Cámara de Rutas.'], ['nadia', 'Y alguien más lo quiere. No son de la Cámara. Son más callados. Mire el retrovisor.']],
           heat: 2, causa: 'una camioneta sin placas avisó a la policía' } },
