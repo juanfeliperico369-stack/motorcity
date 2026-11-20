@@ -2,17 +2,59 @@
 
 > **La regla:** de las obras con derechos se toman las **técnicas**, nunca imágenes, personajes ni logos. El arte «de verdad» que se recopila y adapta es de **dominio público**: sus paletas están en `arte/dominio-publico/`, con fuente y licencia.
 
-## 1. Las referencias del autor (reels de Instagram, nov‑2026)
-De los 14 enlaces se pudieron leer 4 sin iniciar sesión:
+## 1. Las referencias del autor: la entrega maestra (nov‑2026)
+El autor reunió los 14 reels, los videos y el análisis de ChatGPT y de Gemini en un solo documento: **`docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md`**. Tiene:
+- 25 fichas (R01–R25);
+- el registro de los 14 enlaces;
+- el sistema de peso y el de vida;
+- la arquitectura portable y el rendimiento en móvil;
+- el plan por fases.
 
-| Reel | Qué es | Qué tomamos |
-|---|---|---|
-| `De64QQuCsyG` (vandalnet) | Un RPG independiente inspirado en **Dragon Ball** | Estética **anime**: cel shading, contorno, colores vivos y onomatopeyas. → estilo `anime` y `comic`. |
-| `DfJFFGQRG2N` (elreagamingok) | ***Cairn***, un simulador de escalada y supervivencia | **Peso**: el cuerpo pesa, cada apoyo cuenta. → `MC.Vida`: aterrizajes con aplastamiento, sacudida y polvo. |
-| `DfpsKcEKZNx` (patricio.incoders) | Un vehículo tipo *rover* en la web | Vehículos con suspensión que **se sienten**. → cabeceo al acelerar y al frenar. |
-| `Dfkim-zvyVB` (mamon.xx) | Carreras **cinematográficas** tipo Dakar: agua, nubes, contacto de llantas | Para *Motor City* (carreras): cámara de cine, polvo y salpicaduras. → partículas de `MC.Vida` y vista `cine`. |
+**Qué es comprobado y qué no:**
+- 17 fichas se vieron en video.
+- 1 se identificó de forma indirecta (*Town Brush*).
+- 7 dependen solo del informe de Gemini.
+- Las cifras de las fichas («1000 NPC», «0,08 s», «60 FPS en cualquier celular») son **hipótesis del informe, no hechos**.
 
-**Los otros 10 reels** (`Dfaux2QFsay`, `DfvyT1QIFIQ`, `De9tpl3yakv`, `De7qMG8iZdh`, `Dfpb3_vHFPb`, `Dc_s5CPsstT`, `De9ZhRAIOhJ`, `DdwLGJmjjvQ`, `DfRe6pQzWzS` y la publicación `DfDkDxQiQS7`) piden iniciar sesión. Describirlos es la tarea **G‑H7** de Gemini, que puede ver videos.
+### Las 25 fichas y dónde quedaron en Motor City
+| Ficha | Referencia | Lo que tomamos (la técnica, nunca el arte) | Estado |
+|---|---|---|---|
+| R01 | *The Sound of Fury* | Hitstop, contornos y efectos de tinta | ✅ `MC.Vida.impacto`, estilos `comic` y `novela` |
+| R02 | Arte sci-fi con semitono | Semitono en las sombras, niebla de distancia | ✅ semitono · ⏳ niebla de distancia (C‑M17) |
+| R03 | Calle cyberpunk pictórica | Pixel, neones y reflejos en charcos | ✅ modo pixel · ⏳ reflejos con lluvia (C‑M17) |
+| R04 | *KnoxMap* (OSM → mapa jugable) | Lugares reales craqueados de datos abiertos | ✅ `geo/territorio.py`, `MC.Lugares` e interiores |
+| R05 | Películas en estilo PS2 | *Mid‑poly* con texturas pintadas | ⏳ arte de ChatGPT (C‑A) y Godot (C‑M18) |
+| R06 | *Project Zomboid* en 3.ª persona | Animaciones cotidianas (abrir, reparar, sentarse) | ⏳ Codex (C‑M21) |
+| R07 | *Fable Rover* | Telemetría física; suspensión por rueda | ✅ `MC.Telemetria` · ⏳ suspensión (C‑M21) |
+| R08 | *Mythictale* | Hitstop, polvo, sprites 2D en un mundo 3D | ✅ `MC.Vida`, `MC.Sprites` y onomatopeyas |
+| R09 | *Motor Town* | Física de conducción; inclinación de la carrocería; lluvia | ✅ cabeceo y día/noche · ⏳ balanceo y suspensión (C‑M21) y lluvia (C‑M17) |
+| R10 | *Town Brush* | El toque que despierta el mundo; viento; *pop* al colocar | ✅ viento en las copas y aplastamiento · ⏳ pincel de mundo (C‑M20) |
+| R11 | *Cairn* | Apoyos y esfuerzo legibles | ✅ aterrizaje con peso · ⏳ IK de pies (C‑M21) |
+| R12 | 4×4 en la playa (Godot) | **Fauna que huye**, surcos y cosas que se rompen | ✅ **palomas que alzan vuelo**, **huellas** · ⏳ props rompibles (C‑M21) |
+| R13 | Pixel 3D nocturno | **Faros** y tablero en primera persona | ✅ **faros y luces de freno** · ⏳ tablero (C‑M21) |
+| R14 | *Still The Game* (24 h) | Ventanas y farolas que se encienden, rutinas | ✅ reloj, ventanas, farolas y población |
+| R15 | Ciudades en pixel art | Minijuegos sobre el mismo mapa | ✅ Run en la ciclovía y Mandados · ⏳ carreras de *Motor City* |
+| R16 | *CityRT* | *Cel* con contorno, bajar a caminar, emergencias | ✅ estilos con tinta y modo alcalde · ⏳ emergencias (C‑M14) |
+| R17 | *Miniopolis* | **Filtros intercambiables** | ✅ **11 estilos**, con **vintage** y **CRT** |
+| R18 | *VoxPix* (API para agentes) | Construir barrios por código | ✅ contratos y esquemas (`schemas/`) · ⏳ API de construcción (C‑M20) |
+| R19 | *Still The Game* (nieve) | Huellas y faros de noche | ✅ huellas en nieve, arena, tierra y barro; faros |
+| R20 | *Induction Bench* | Laboratorio de física en vivo | ✅ telemetría en Ajustes · ⏳ gráficas (C‑M21) |
+| R21 | *AngioSim* | Rayos X para inspeccionar | ✅ rayos X de edificios · ⏳ taller con rayos X (C‑M21) |
+| R22 | *FireTrace* | Mapa táctico, dron y **visión térmica** | ✅ vista dron, capas de datos y estilo **térmico** |
+| R23 | *Ballpoint Gambit* | Interfaz de libreta dibujada | ⏳ ChatGPT (C‑A11) |
+| R24 | Haikus en código | Efectos procedurales en Canvas | ✅ todo el motor (Canvas, sin imágenes pesadas) |
+| R25 | Letra a mano → fuente | Tipografía propia | ⏳ ChatGPT (C‑A10) |
+
+**Los 14 enlaces:**
+- **Sin verificar todavía:** 13, que siguen pidiendo iniciar sesión (tarea G‑H7 de Gemini, que puede ver videos).
+- **Identificado de forma indirecta:** el 03 (*Town Brush*).
+
+**Las decisiones de la entrega que el motor adopta:**
+1. Primero credibilidad física, después complejidad visual.
+2. La vida nace de las relaciones: el viento mueve las copas y la lluvia vuelve barro el pasto.
+3. No atar las reglas a los gráficos: la calidad cambia el aspecto, nunca la frenada.
+4. Contratos de datos versionados: `schemas/` y `MC.Contratos`.
+5. Medir en un celular real con percentiles: `MC.Telemetria`.
 
 ## 2. Peso y vida («game feel»)
 | Fuente | La técnica | En el motor |

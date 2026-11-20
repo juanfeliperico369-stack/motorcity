@@ -1,5 +1,36 @@
 # Bitácora de Motor City
 
+## 20‑nov‑2026 · 2.8.0 · La entrega maestra de referencias, al motor (Claude Code)
+**Pedido:** el autor trajo `MOTOR-CITY-ENTREGA-MAESTRA.md` («prepara todo»). Reúne los 14 reels, los videos y el análisis de ChatGPT y de Gemini:
+- 25 fichas;
+- el peso y la vida;
+- la arquitectura portable;
+- el rendimiento en móvil y las fases.
+
+**Lo que se hizo:**
+1. La entrega quedó en `docs/referencias/` y como anexo del documento único. Su resumen, ficha por ficha y con lo que ya está en el motor, está en `docs/INSPIRACION-VISUAL.md` §1.
+2. **Vida (R12, R19):**
+   - palomas que comen en plazas, andenes y parques, y alzan vuelo cuando el jugador se acerca rápido (evento `fauna`);
+   - huellas de llantas y pisadas en arena, tierra, nieve y barro (con lluvia, también en el pasto), que duran 4 minutos.
+3. **Peso y luz (R13, R19):** faros de noche y luces de freno del jugador. El hitstop también corre en el bucle de Mandados.
+4. **Filtros (R17, R22):** los estilos vintage, CRT y visión térmica, para 11 en total.
+5. **Accesibilidad (§10.3, §13):** `MC.opciones.sacudida` y `particulas`, en Ajustes.
+6. **Medir (§13, §14, R20):** `MC.Telemetria` con fps y tiempos de cuadro en p50, p95 y p99; en Ajustes → Telemetría, con la física del jugador. También calidad automática, baja, media o alta.
+7. **Contratos (§12.3, §16):** `schemas/` (escena, puente y entidad, `schema_version: 1`) y `MC.Contratos.validar`. La tabla de los contratos mínimos de la entrega y dónde están en Motor City está en `docs/MOTORES-POTENTES.md`.
+8. **Repartido en `TAREAS-IA.md`:**
+   - Codex: C‑M20 (API de construcción por código y pincel de mundo), C‑M21 (suspensión, balanceo, cosas que se rompen, IK, tablero y taller con rayos X) y C‑M22 (guardado versionado y sectores);
+   - ChatGPT: C‑A10 (tipografía propia) y C‑A11 (interfaz de libreta);
+   - Gemini: G‑H7 (verificar las 13 URL y las 7 fichas que solo describe su informe) y G‑H9 (medición en un celular real con la telemetría).
+
+**Probado:** 125 pruebas:
+- huellas y palomas;
+- partículas apagadas por accesibilidad;
+- telemetría en percentiles;
+- la escena, el puente y la entidad pasan su esquema y uno roto no;
+- los 11 estilos en Mandados.
+
+Además se hizo una revisión visual de noche (faros), de las palomas y de los filtros nuevos.
+
 ## 20‑nov‑2026 · 2.7.0 · Estilos gráficos, peso y vida, y motores potentes (Claude Code)
 **Pedido:**
 - 14 reels de referencia;

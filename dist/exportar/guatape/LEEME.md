@@ -1,4 +1,4 @@
-# Guatapé y la Piedra del Peñol · exportado de Motor City 2.7.0
+# Guatapé y la Piedra del Peñol · exportado de Motor City 2.8.0
 
 Caja: 2186, 1341, 2786, 1941 (metros del mundo; 600 × 600 m alrededor de 2486, 1641).
 - `mundo.glb`: glTF 2.0, con terreno, 300 edificios, 66 vías y 1396 árboles. Un material con colores por vértice; +Y arriba, en metros, y el origen en el centro de la caja.

@@ -1,4 +1,4 @@
-/* Motor City 2.7.0 · 2026-11-20 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 2.8.0 · 2026-11-20 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -11,7 +11,7 @@
    Reglas: un solo HTML, sin internet ni librerías; español de Colombia; ningún dato personal.
    ===================================================================== */
 const MC = {
-  version: '2.7.0',
+  version: '2.8.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -52,6 +52,8 @@ MC.falla = (donde, e) => { const m = donde + ': ' + (e && e.message || e); if (M
    MC.arte.usar('encicla') → las vistas llaman MC.arte.f('personaje', …) y, si el juego no la trae, usan la del motor. */
 /* estilo de dibujo del motor: 'realista' (2.6, por defecto: texturas, desgaste, árboles con volumen) o 'clasico' (plano y limpio) */
 MC.estilo = 'realista';
+/* 2.8 · accesibilidad (entrega maestra §10.3 y §13): cuánto se sacude la cámara y cuántas partículas hay, de 0 a 1 */
+MC.opciones = { sacudida: 1, particulas: 1 };
 MC.arte = {
   pieles: { motor: {} }, activa: 'motor',
   registrar(juego, piel) { this.pieles[juego] = Object.assign(this.pieles[juego] || {}, piel); return this; },
@@ -1422,6 +1424,7 @@ Object.assign(MC, { Terreno });
    Las PALETAS de ukiyo-e, novela y acuarela salen de obras de DOMINIO PÚBLICO (Hokusai, Hiroshige, Doré, Winslow
    Homer…), con su fuente en arte/dominio-publico/paletas.json. Del resto (Spider‑Verse, Arcane, Ghibli, Shinkai,
    Sin City, Moebius) se toman las TÉCNICAS, nunca imágenes ni personajes (docs/INSPIRACION-VISUAL.md).
+   2.8: vintage (sepia, papel y viñeta) y CRT (líneas de barrido), como los filtros de Miniopolis (entrega maestra, R17).
    Uso: MC.estilo = 'comic' · MC.Estilo.p (el estilo activo) · MC.Estilo.col('#c25f37') · MC.Estilo.lista()
    ===================================================================== */
 const PAL_DP = {
@@ -1437,6 +1440,9 @@ const ESTILOS_GRAF = {
   anime: { n: 'Anime', icono: '🌸', saturar: 1.22, brillo: 1.05, niveles: 6, tinta: 1, tintaColor: '#2b2740', arbol: 'cel', sombra: [70, 50, 150, .32], lineas: '#ffffff', onomatopeyas: false, cielo: [[.16, .4, .92], [.8, .93, 1]] },
   novela: { n: 'Novela gráfica (noir)', icono: '🌃', umbral: [.3, .62], tonos: ['#0d0c0b', '#6a655c', '#ece5d3'], acento: '#b3201c', tinta: 2.6, tintaColor: '#000000', trama: 'rayado', arbol: 'silueta', sombra: [0, 0, 0, .72], lineas: '#000000', onomatopeyas: true, cielo: [[.07, .07, .08], [.5, .48, .45]] },
   ukiyoe: { n: 'Ukiyo-e (Hokusai)', icono: '🌊', paleta: 'hokusai', mezcla: .82, niveles: 5, tinta: 1.6, tintaColor: '#1d2a3f', trama: 'papel', arbol: 'cel', sombra: [30, 50, 90, .28], cielo: [[.17, .33, .54], [.96, .9, .78]] },
+  vintage: { n: 'Vintage', icono: '📼', saturar: .55, contraste: .92, tinte: [.66, .52, .36], tinteK: .28, trama: 'papel', arbol: 'cel', sombra: [60, 40, 20, .3], final: 'vineta', cielo: [[.72, .62, .48], [.95, .88, .74]] },   // 2.8: foto vieja (entrega maestra, R17)
+  crt: { n: 'CRT (pantalla vieja)', icono: '📺', saturar: 1.25, contraste: 1.08, niveles: 7, arbol: 'cel', sombra: [10, 20, 40, .36], final: 'crt', cielo: [[.1, .3, .6], [.6, .8, .95]] },   // 2.8: líneas de barrido y borde oscuro
+  termica: { n: 'Visión térmica', icono: '🌡️', gradiente: ['#2b0b57', '#7a1fa2', '#e5383b', '#ff9f1c', '#ffea00'], arbol: 'cel', sombra: [20, 0, 60, .3], cielo: [[.1, .03, .25], [.35, .1, .45]] },   // 2.8: FireTrace (R22), paleta del informe de Gemini
   acuarela: { n: 'Acuarela', icono: '🎨', paleta: 'acuarela', mezcla: .3, saturar: .9, brillo: 1.08, trama: 'papel', arbol: 'acuarela', sombra: [60, 70, 110, .24], cielo: [[.55, .7, .86], [.97, .95, .9]] }
 };
 const Estilo = {
@@ -1450,7 +1456,9 @@ const Estilo = {
     let r = c[0], g = c[1], b = c[2];
     if (S.saturar || S.gris) { const l = .299 * r + .587 * g + .114 * b, k = S.gris ? 0 : S.saturar; r = l + (r - l) * k; g = l + (g - l) * k; b = l + (b - l) * k; }
     if (S.brillo) { r *= S.brillo; g *= S.brillo; b *= S.brillo; }
+    if (S.tinte) { const l = .299 * r + .587 * g + .114 * b, k = S.tinteK ?? .3; r += (S.tinte[0] * l * 1.6 - r) * k; g += (S.tinte[1] * l * 1.6 - g) * k; b += (S.tinte[2] * l * 1.6 - b) * k; }   // tono sepia
     if (S.contraste) { const k = S.contraste; r = (r - .5) * k + .5; g = (g - .5) * k + .5; b = (b - .5) * k + .5; }
+    if (S.gradiente) { const G = S._g || (S._g = S.gradiente.map(hex3)), l = clamp(.299 * r + .587 * g + .114 * b, 0, 1) * (G.length - 1), i = Math.min(G.length - 2, Math.floor(l)), u = l - i; return mez3(G[i], G[i + 1], u); }   // mapa de calor por luminancia
     if (S.umbral) {   // novela gráfica: tres tonos de papel y tinta, y el rojo como acento (el «color selectivo» del noir)
       if (r > .38 && r > g * 1.45 && r > b * 1.45) return hex3(S.acento);
       const l = .299 * r + .587 * g + .114 * b; return hex3(S.tonos[l < S.umbral[0] ? 0 : l < S.umbral[1] ? 1 : 2]);
@@ -1486,7 +1494,15 @@ const Estilo = {
   /* ---------- pase final (por cuadro, barato): manga en grises y líneas de velocidad ---------- */
   final(g, W, H, E) {
     const S = this.p; if (S.final === 'gris') { g.save(); g.globalCompositeOperation = 'saturation'; g.fillStyle = '#808080'; g.fillRect(0, 0, W, H); g.restore(); }
+    else if (S.final === 'vineta' || S.final === 'crt') { const c = this._capa(S.final, W, H); if (c) g.drawImage(c, 0, 0); }   // horneado una vez por tamaño de pantalla
     const C = E.jugador && E.jugador.cuerpo, v = C ? Math.abs(C.v || 0) : 0; if (S.lineas && v > 8.5) this.lineas(g, W, H, Math.min(1, (v - 8.5) / 14), E.t || 0, S.lineas);
+  },
+  _capas: {},
+  _capa(tipo, W, H) {
+    const k = tipo + W + 'x' + H; if (this._capas[k] !== undefined) return this._capas[k]; const c = lienzo(W, H); if (!c) return (this._capas[k] = null); const g = c.getContext('2d');
+    const gr = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .35, W / 2, H / 2, Math.hypot(W, H) * .58); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, tipo === 'crt' ? 'rgba(0,0,0,.55)' : 'rgba(40,24,10,.45)'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    if (tipo === 'crt') { g.fillStyle = 'rgba(0,0,0,.16)'; for (let y = 0; y < H; y += 3) g.fillRect(0, y, W, 1); }   // líneas de barrido
+    for (const q in this._capas) if (q.startsWith(tipo) && q !== k) delete this._capas[q]; return (this._capas[k] = c);
   },
   /* líneas de velocidad del manga: desde el borde hacia el centro, sin tocar el centro (el juego es del centro) */
   lineas(g, W, H, k, t, col) {
@@ -2333,7 +2349,7 @@ const Arboleda = {
   dePie(D, t) {
     const { g, pr, z, P, noche } = D, fa = MC.arte.f('arbol'); if (fa) { const [ax, ay] = pr(t.x, t.y, 0); if (fa(g, t, 'lado', ax, ay, z, D) === true) return; } let sp = this.sprite(t.e, t.v, 'lado', noche > .4); if (!sp) return; const E = this.ESPECIES[t.e] || this.ESPECIES.urapan, [x, y] = pr(t.x, t.y, 0);
     sp = this.mip(sp, (t.r * E.ancho * z) / sp._rx); const kx = (t.r * E.ancho * z) / sp._rx, ky = (t.h * z * P.hk) / sp._alto, w = sp.width * kx, h = sp.height * ky; if (h < 3) return;
-    const vi = z >= 5 ? Math.sin((D.E.t || 0) * 1.3 + t.x * .21 + t.y * .13) * .045 * (D.E.viento ?? .6) : 0;   /* 2.7 · vida: el viento mece la copa (de cerca); el pie no se mueve */
+    const vi = z >= 5 ? Math.sin((D.E.t || 0) * 1.3 + t.x * .21 + t.y * .13) * .045 * (D.E.viento ?? (D.E.clima && D.E.clima.viento ? clamp(D.E.clima.viento.v / 6, .2, 1.6) : .6)) : 0;   /* 2.7 · vida: el viento mece la copa (de cerca); el pie no se mueve */
     if (t.espejo || vi) { g.save(); g.translate(x, y); if (vi) g.transform(1, 0, -vi, 1, 0, 0); if (t.espejo) g.scale(-1, 1); g.drawImage(sp, -w / 2, -sp._base[1] * ky, w, h); g.restore(); } else g.drawImage(sp, x - w / 2, y - sp._base[1] * ky, w, h);
   },
   /* desde arriba, en pantalla (árboles de calle en la cenital) */
@@ -2781,7 +2797,7 @@ class Camara {
   girarA(yaw) { this.yawObj = yaw; return this; }
   inclinarA(p) { this.pitchObj = clamp(p, ...this.limites.pitch); return this; }
   /* golpe de cámara por «trauma» (0..1): la sacudida es trauma², con ruido suave, y se apaga sola */
-  sacudir(k = .4) { this.trauma = clamp((this.trauma || 0) + k, 0, 1); return this; }
+  sacudir(k = .4) { k *= MC.opciones ? MC.opciones.sacudida ?? 1 : 1; this.trauma = clamp((this.trauma || 0) + k, 0, 1); return this; }   // 2.8: se puede bajar o apagar (accesibilidad)
   /* objetivo: { x, y, z (altura de los pies en m), a (rumbo), v, zPaso, mundo } · dt en s */
   actualizar(dt, o) {
     dt = Math.min(dt || 0, .1); this._t = (this._t || 0) + dt;
@@ -3502,6 +3518,7 @@ const Vista2D = {
     if (dePie) { const cap = Math.round(150 + 420 * cal); let AR = Arboleda.en(E.mundo, x0 - 8, y0 - 8, x1 + 8, y1 + 8, 5000).filter(t => !delante(t.x, t.y)); if (AR.length > cap) { const q = cap / AR.length; AR = AR.filter(t => (t.s * 7.31 + t.r) % 1 < q); }   /* si son demasiados, se ralea parejo (no se corta media pantalla) */ if (z >= 6) Arboleda.sombras(dibCtx, AR, conSombra ? sv : null); for (const t of AR) objs.push({ y: dy(t.x, t.y), t: 10, q: t }); }
     /* mobiliario urbano (postes, árboles de calle, bancas, paraderos, cebras): solo de cerca */
     if (z > .9 && cal > .35 && op.mobiliario !== false) { const L = Mobiliario.en(E.mundo, x0, y0, x1, y1, Math.round(120 + 480 * cal * Math.min(1, z / 2))).filter(p => !delante(p.x, p.y)); Mobiliario.piso(dibCtx, L); for (const p of L) if (p.t !== 'cebra') objs.push({ y: dy(p.x, p.y), t: 7, q: p }); }
+    if (MC.Vida && op.vida !== false) MC.Vida.piso(dibCtx);   /* 2.8: huellas de llantas y pisadas en el suelo blando */
     /* capa de información (valor del suelo, ruido, contaminación…: las «vistas de datos» de SimCity y Cities: Skylines) */
     if (E.capaInfo && E.capaInfo.dibujar) E.capaInfo.dibujar(g, a, b, c, d, e, f, dibCtx);
     for (const q of E.mundo.pasosEn(x0, y0, x1, y1)) if (q.nivel > 0) objs.push({ y: dy((q.caja[0] + q.caja[2]) / 2, (q.caja[1] + q.caja[3]) / 2) + 1e4 * 0, t: 1, q, cen: modo === 'cenital' });
@@ -3589,6 +3606,12 @@ const Vista2D = {
     if (D.modo === 'cenital') { const J = Personaje.pose('camina', p.fase); J.fase = p.fase; MC.arte.f('personajeArriba')(g, J, A, x, y, z, p.a + P.yaw); return; }
     const J = Personaje.pose('camina', p.fase, { alto: A.alto }), dir = Math.cos(p.a + P.yaw) >= 0 ? 1 : -1; (MC.arte.f('personajeLado'))(g, J, A, x, y, z * P.hk, dir);
   },
+  /* 2.8 · faros: un cono de luz cálida en el piso delante del vehículo, de noche (se suma a la luz, no tapa) */
+  faros(D, C, V) {
+    const { g, pr, z } = D, L = 16 + Math.abs(C.v || 0) * .6, ab = .42, ca = Math.cos(C.a), sa = Math.sin(C.a), fx = C.x + ca * (V.largo || 4) * .5, fy = C.y + sa * (V.largo || 4) * .5, [x0, y0] = pr(fx, fy, 0);
+    const P1 = pr(fx + Math.cos(C.a - ab) * L, fy + Math.sin(C.a - ab) * L, 0), P2 = pr(fx + Math.cos(C.a + ab) * L, fy + Math.sin(C.a + ab) * L, 0), [xm, ym] = pr(fx + ca * L, fy + sa * L, 0);
+    g.save(); g.globalCompositeOperation = 'lighter'; const gr = g.createLinearGradient(x0, y0, xm, ym); gr.addColorStop(0, 'rgba(255,236,190,' + (.32 * D.noche).toFixed(3) + ')'); gr.addColorStop(1, 'rgba(255,220,160,0)'); g.fillStyle = gr; g.beginPath(); g.moveTo(x0, y0); g.lineTo(P1[0], P1[1]); g.quadraticCurveTo(xm, ym, P2[0], P2[1]); g.closePath(); g.fill(); g.restore();
+  },
   /* 2.7 · peso: al aterrizar el cuerpo se aplasta y vuelve (squash and stretch), desde los pies */
   jugador(D, j) {
     const C = j.cuerpo, q = C && C._squash; if (!q) return this._jugador(D, j);
@@ -3604,7 +3627,7 @@ const Vista2D = {
       g.save(); g.strokeStyle = 'rgba(57,255,179,.9)'; g.lineWidth = Math.max(2, z * .14); g.beginPath(); g.ellipse(sx, sy, r, r * kk, 0, 0, TAU); g.stroke(); g.fillStyle = '#39ffb3'; const ax = sx + ux * (r + 4), ay = sy + uy * (r * kk + 4), w = Math.max(6, r * .45); g.beginPath(); g.moveTo(ax + ux * w, ay + uy * w); g.lineTo(ax - uy * w * .6, ay + ux * w * .6); g.lineTo(ax + uy * w * .6, ay - ux * w * .6); g.closePath(); g.fill(); g.restore(); }
     if (D.modo === 'cenital') {
       g.save(); g.translate(x, y); g.rotate(C.a + P.yaw); g.scale(z, z);
-      if (V.clase !== 'pie') { if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') { Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); g.restore(); return; } g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.25, V.largo * .6, .5); }
+      if (V.clase !== 'pie') { if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') { const frena = (C._acel || 0) < -2.2 && Math.abs(C.v) > .8, nocheJ = (D.noche || 0) > .4; Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, frena, nocheJ); g.restore(); if (nocheJ) this.faros(D, C, V); return; }   /* 2.8: luces de freno y faros (entrega maestra §11.2, R13 y R19) */ g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.25, V.largo * .6, .5); }
       g.restore(); const J = Personaje.pose(C.estado || 'quieto', C.fase); J.fase = C.fase; MC.arte.f('personajeArriba')(g, J, A, x, y, z, C.a + P.yaw);
       if (C.nadando || C.vadeando) { g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = Math.max(1, z * .08); for (const k of [1, 1.6]) { g.beginPath(); g.arc(x, y, z * (.5 * k + .1 * Math.sin((D.E.t || 0) * 3 + k)), 0, TAU); g.stroke(); } if (C.buceando) { g.fillStyle = 'rgba(30,95,140,.55)'; g.beginPath(); g.arc(x, y, z * .9, 0, TAU); g.fill(); this.burbujas(g, x, y - z * .2, y + z * .4, z * 1.5, D.E.t || 0); } }
       return;
@@ -5427,11 +5450,17 @@ MC.Pieles = Pieles;
      agua y polvo en la tierra. Todo en un fondo común de 260 partículas, sin crear objetos por cuadro.
    Lo llama MC.Vista2D al final de cada dibujo: MC.Vida.dibujar(D). Se apaga con op.vida = false.
    ===================================================================== */
+/* 2.8 · de la entrega maestra de referencias (docs/referencias/MOTOR-CITY-ENTREGA-MAESTRA.md):
+   - FAUNA QUE REACCIONA (R12, la playa en Godot): palomas en el piso que comen y alzan vuelo cuando el jugador se
+     acerca rápido; se vuelven una bandada que se aleja.
+   - HUELLAS QUE QUEDAN (R12 y R19, arena y nieve): surcos de las llantas y pisadas en arena, tierra, nieve y barro
+     (pasto mojado cuando llueve). Duran unos minutos y se desvanecen; son marcas, no deformación de la malla (§16.5).
+   - ACCESIBILIDAD (§10.3 y §13): MC.opciones.particulas (0 a 1) baja el polvo, el agua y las hojas. */
 const Vida = {
-  MAX: 260, P: [], aves: [], onos: [], _t: null, _pv: null,
+  MAX: 260, P: [], aves: [], onos: [], palomas: [], marcas: [], MAXM: 700, _t: null, _pv: null,
   /* partículas: polvo, agua, hoja o chispa en metros del mundo (z = altura) */
   emitir(tipo, x, y, n = 6, op = {}) {
-    for (let i = 0; i < n; i++) {
+    n = Math.round(n * (MC.opciones ? MC.opciones.particulas ?? 1 : 1)); for (let i = 0; i < n; i++) {
       if (this.P.length >= this.MAX) this.P.shift(); const a = Math.random() * TAU, s = (op.vel ?? 1.5) * (.4 + Math.random() * .8);
       this.P.push({ tipo, x: x + (Math.random() - .5) * (op.r ?? .6), y: y + (Math.random() - .5) * (op.r ?? .6), z: op.z ?? .1, vx: Math.cos(a) * s + (op.vx || 0), vy: Math.sin(a) * s + (op.vy || 0), vz: (op.vz ?? 1.2) * (.5 + Math.random()), t: 0, vida: op.vida ?? (tipo === 'hoja' ? 4 : tipo === 'agua' ? .7 : 1.1), r: op.tam ?? (tipo === 'polvo' ? .35 : .12), fase: Math.random() * TAU });
     }
@@ -5447,12 +5476,48 @@ const Vida = {
     if (!C.enAire && !C.nadando && Math.abs(C._acel) > 6 && Math.abs(C.v) > 2.5 && Math.random() < .5) { const b = Math.sign(C.v) * -1; this.emitir('polvo', C.x + Math.cos(C.a) * b * .8, C.y + Math.sin(C.a) * b * .8, 1, { vel: .6, vz: .4 }); }   // frenazo o arrancón
     if ((C.nadando || C.vadeando) && Math.abs(C.v) > .6) { pv.agua -= dt; if (pv.agua <= 0) { pv.agua = .12; this.emitir('agua', C.x, C.y, 3, { vel: 1.2, vz: 1.8 }); } }
     pv.aire = !!C.enAire; pv.vz = C.vz || 0; pv.v = C.v || 0;
+    this._huellas(E, C);
+  },
+  /* el suelo blando guarda la marca: arena, tierra del monte, nieve, y el pasto o la tierra cuando llueve (barro) */
+  suelo(E, x, y) {
+    const M = E.mundo; if (!M || !M.suelo) return null; const tt = M.suelo(x, y), llueve = E.clima && /lluvia|tormenta|aguacero/.test(String(E.clima.estado || ''));
+    return tt === TT.ARENA ? 'arena' : tt === TT.NIEVE ? 'nieve' : tt === TT.MOUNT ? (llueve ? 'barro' : 'tierra') : tt === TT.GRASS && llueve ? 'barro' : null;
+  },
+  _huellas(E, C) {
+    if (C.enAire || C.nadando || C.vadeando) { C._uh = null; return; } const s = this.suelo(E, C.x, C.y); if (!s) { C._uh = null; return; }
+    const u = C._uh; if (u && Math.hypot(C.x - u.x, C.y - u.y) < .55) return; C._uh = { x: C.x, y: C.y };
+    const V = C.veh || {}, pie = V.clase === 'pie' || !V.clase, nx = -Math.sin(C.a), ny = Math.cos(C.a), t = E.t || 0;
+    if (pie) { const lado = (this._paso = !this._paso) ? 1 : -1; this.marcas.push({ x: C.x + nx * .14 * lado, y: C.y + ny * .14 * lado, a: C.a, w: .12, l: .26, s, t, pie: true }); }
+    else if (u) { const w = Math.max(.12, (V.ancho || .6) * .18), off = (V.ancho || .6) * .38, dos = V.clase !== 'rueda' && V.clase !== 'moto'; for (const k of dos ? [-1, 1] : [0]) this.marcas.push({ x0: u.x + nx * off * k, y0: u.y + ny * off * k, x1: C.x + nx * off * k, y1: C.y + ny * off * k, w, s, t }); }
+    if (this.marcas.length > this.MAXM) this.marcas.splice(0, this.marcas.length - this.MAXM);
+  },
+  /* las huellas en el piso, antes de los objetos (las llama MC.Vista2D) */
+  piso(D) {
+    const { g, pr, z, E } = D; if (!this.marcas.length || z < .9) return; const t = E.t || 0, COL = { arena: '92,70,40', tierra: '58,42,26', barro: '44,30,18', nieve: '120,135,165' };
+    g.save(); g.lineCap = 'round';
+    for (let i = this.marcas.length - 1; i >= 0; i--) { const m = this.marcas[i], edad = t - m.t; if (edad > 240) { this.marcas.splice(0, i + 1); break; } const a = (m.s === 'nieve' ? .5 : .32) * clamp(1 - edad / 240, 0, 1);
+      if (m.pie) { const [x, y] = pr(m.x, m.y, 0); g.fillStyle = 'rgba(' + COL[m.s] + ',' + a.toFixed(3) + ')'; g.beginPath(); g.ellipse(x, y, Math.max(.6, m.l * z * .5), Math.max(.5, m.w * z * .5 * (D.P.k || 1)), m.a + (D.P.yaw || 0), 0, TAU); g.fill(); }
+      else { const [x0, y0] = pr(m.x0, m.y0, 0), [x1, y1] = pr(m.x1, m.y1, 0); g.strokeStyle = 'rgba(' + COL[m.s] + ',' + a.toFixed(3) + ')'; g.lineWidth = Math.max(1, m.w * z); g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); } }
+    g.restore();
+  },
+  /* palomas en el piso cerca del jugador; alzan vuelo si se acerca rápido */
+  _palomas(E, dt) {
+    const C = E.jugador && E.jugador.cuerpo, M = E.mundo; if (!C || !M || !M.suelo) return; const t = E.t || 0;
+    if (this.palomas.length < 3 && Math.random() < dt * .5) { const a = Math.random() * TAU, d = 35 + Math.random() * 30, x = C.x + Math.cos(a) * d, y = C.y + Math.sin(a) * d, tt = M.suelo(x, y);
+      if ((tt === TT.PLAZA || tt === TT.WALK || tt === TT.GRASS || tt === TT.BRICK) && !(M.edificioEn && M.edificioEn(x, y, 1))) { const n = 4 + (Math.random() * 6 | 0), m = []; for (let i = 0; i < n; i++) m.push({ dx: (Math.random() - .5) * 4, dy: (Math.random() - .5) * 4, a: Math.random() * TAU, f: Math.random() * TAU }); this.palomas.push({ x, y, m, t0: t }); } }
+    for (let i = this.palomas.length - 1; i >= 0; i--) { const p = this.palomas[i], d = Math.hypot(C.x - p.x, C.y - p.y), v = Math.abs(C.v || 0);
+      if (d > 110) { this.palomas.splice(i, 1); continue; }
+      if (d < 5 + v * .7 && (v > 1.2 || d < 2.5)) {   // ¡se asustan! la bandada sale en contra del jugador
+        const a = Math.atan2(p.y - C.y, p.x - C.x) + (Math.random() - .5) * .6, b = { x: p.x, y: p.y, z: 1, sube: true, asustada: true, a, v: 9 + Math.random() * 3, n: p.m.length, garza: false, m: p.m.map((q, k) => [q.dx, q.dy, q.f]) };
+        this.aves.push(b); this.palomas.splice(i, 1); this.emitir('pluma', p.x, p.y, 3, { vel: 1.2, vz: 1.5, tam: .1, vida: 1.6 }); MC.emit('fauna', { tipo: 'palomas', x: p.x, y: p.y }); continue; }
+      for (const q of p.m) { q.a += (Math.random() - .5) * dt * 2; if (Math.random() < dt * .4) { q.dx += Math.cos(q.a) * .3; q.dy += Math.sin(q.a) * .3; } }
+    }
   },
   /* bandadas: unas pocas, siempre cerca de la cámara (garzas y palomas sobre el pueblo) */
   _aves(E, dt) {
     const Cm = E.camara; if (!Cm) return; const R = 260;
-    while (this.aves.length < 3) { const a = Math.random() * TAU, n = 4 + (Math.random() * 6 | 0), cx = Cm.x - Math.cos(a) * R, cy = Cm.y - Math.sin(a) * R, rumbo = a + (Math.random() - .5) * .6, b = { x: cx, y: cy, z: 22 + Math.random() * 25, a: rumbo, v: 7 + Math.random() * 4, n, garza: Math.random() < .35, m: [] }; for (let i = 0; i < n; i++) b.m.push([(-Math.floor((i + 1) / 2)) * 2.2, (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 1.7, Math.random() * TAU]); this.aves.push(b); }
-    for (let i = this.aves.length - 1; i >= 0; i--) { const b = this.aves[i]; b.a += Math.sin((E.t || 0) * .3 + i) * .05 * dt; b.x += Math.cos(b.a) * b.v * dt; b.y += Math.sin(b.a) * b.v * dt; if (Math.hypot(b.x - Cm.x, b.y - Cm.y) > R * 1.3) this.aves.splice(i, 1); }
+    while (this.aves.filter(b => b.n > 0 && !b.asustada).length < 3 && this.aves.length < 8) { const a = Math.random() * TAU, n = 4 + (Math.random() * 6 | 0), cx = Cm.x - Math.cos(a) * R, cy = Cm.y - Math.sin(a) * R, rumbo = a + (Math.random() - .5) * .6, b = { x: cx, y: cy, z: 22 + Math.random() * 25, a: rumbo, v: 7 + Math.random() * 4, n, garza: Math.random() < .35, m: [] }; for (let i = 0; i < n; i++) b.m.push([(-Math.floor((i + 1) / 2)) * 2.2, (i % 2 ? 1 : -1) * Math.ceil(i / 2) * 1.7, Math.random() * TAU]); this.aves.push(b); }
+    for (let i = this.aves.length - 1; i >= 0; i--) { const b = this.aves[i]; if (b.sube) { b.z = Math.min(18, b.z + dt * 7); if (b.z >= 18) b.sube = false; } b.a += Math.sin((E.t || 0) * .3 + i) * .05 * dt; b.x += Math.cos(b.a) * b.v * dt; b.y += Math.sin(b.a) * b.v * dt; if (Math.hypot(b.x - Cm.x, b.y - Cm.y) > R * 1.3) this.aves.splice(i, 1); }
   },
   _hojas(E, dt) {
     const C = E.jugador && E.jugador.cuerpo; if (!C || !MC.Arboleda || Math.random() > dt * 1.2) return; const L = MC.Arboleda.en(E.mundo, C.x - 25, C.y - 25, C.x + 25, C.y + 25, 30); if (!L.length) return;
@@ -5460,9 +5525,9 @@ const Vida = {
   },
   actualizar(E) {
     const t = E.t || 0, dt = this._t == null ? 0 : clamp(t - this._t, 0, .1); this._t = t; if (!dt) return;
-    this._jugador(E, dt); this._aves(E, dt); this._hojas(E, dt);
+    this._jugador(E, dt); this._aves(E, dt); this._hojas(E, dt); this._palomas(E, dt);
     for (let i = this.P.length - 1; i >= 0; i--) { const p = this.P[i]; p.t += dt; if (p.t > p.vida) { this.P.splice(i, 1); continue; }
-      if (p.tipo === 'hoja') { p.vz = -.7; p.vx = Math.sin(p.t * 2.3 + p.fase) * .9; p.vy = Math.cos(p.t * 1.7 + p.fase) * .4; } else { p.vz -= 9.8 * dt * (p.tipo === 'polvo' ? .15 : 1); p.vx *= 1 - dt * 2; p.vy *= 1 - dt * 2; }
+      if (p.tipo === 'hoja' || p.tipo === 'pluma') { p.vz = p.t < .3 && p.tipo === 'pluma' ? .5 : -.7; p.vx = Math.sin(p.t * 2.3 + p.fase) * .9; p.vy = Math.cos(p.t * 1.7 + p.fase) * .4; } else { p.vz -= 9.8 * dt * (p.tipo === 'polvo' ? .15 : 1); p.vx *= 1 - dt * 2; p.vy *= 1 - dt * 2; }
       p.x += p.vx * dt; p.y += p.vy * dt; p.z = Math.max(0, p.z + p.vz * dt); if (p.z === 0 && p.tipo === 'hoja') { p.vx = p.vy = 0; } }
     for (let i = this.onos.length - 1; i >= 0; i--) if ((this.onos[i].t += dt) > .8) this.onos.splice(i, 1);
   },
@@ -5470,8 +5535,11 @@ const Vida = {
     const { g, pr, z, P, E, modo } = D; this.actualizar(E); const cen = modo === 'cenital', noche = D.noche || 0;
     /* partículas */
     for (const p of this.P) { const [x, y] = pr(p.x, p.y, p.z), k = 1 - p.t / p.vida, r = Math.max(.8, p.r * z * (p.tipo === 'polvo' ? 1 + p.t * 1.6 : 1));
-      if (p.tipo === 'polvo') g.fillStyle = 'rgba(150,130,100,' + (.32 * k).toFixed(3) + ')'; else if (p.tipo === 'agua') g.fillStyle = 'rgba(225,240,255,' + (.75 * k).toFixed(3) + ')'; else if (p.tipo === 'hoja') g.fillStyle = noche > .4 ? '#3d4a2a' : (p.fase > 3 ? '#8a9a3a' : '#c4a23a'); else g.fillStyle = 'rgba(255,220,120,' + k.toFixed(3) + ')';
-      g.beginPath(); if (p.tipo === 'hoja') g.ellipse(x, y, r * 1.4, r * .7, p.fase + p.t * 3, 0, TAU); else g.arc(x, y, r, 0, TAU); g.fill(); }
+      if (p.tipo === 'polvo') g.fillStyle = 'rgba(150,130,100,' + (.32 * k).toFixed(3) + ')'; else if (p.tipo === 'agua') g.fillStyle = 'rgba(225,240,255,' + (.75 * k).toFixed(3) + ')'; else if (p.tipo === 'hoja') g.fillStyle = noche > .4 ? '#3d4a2a' : (p.fase > 3 ? '#8a9a3a' : '#c4a23a'); else if (p.tipo === 'pluma') g.fillStyle = 'rgba(200,204,212,' + k.toFixed(3) + ')'; else g.fillStyle = 'rgba(255,220,120,' + k.toFixed(3) + ')';
+      g.beginPath(); if (p.tipo === 'hoja' || p.tipo === 'pluma') g.ellipse(x, y, r * 1.4, r * .7, p.fase + p.t * 3, 0, TAU); else g.arc(x, y, r, 0, TAU); g.fill(); }
+    /* palomas comiendo en el piso: cabecean (a dos cuadros) */
+    if (z > 1.2) for (const p of this.palomas) for (const q of p.m) { const [x, y] = pr(p.x + q.dx, p.y + q.dy, 0), s = Math.max(1.6, z * .16), pico = Math.floor((E.t || 0) * 6 + q.f * 3) % 4 === 0 ? s * .5 : 0;
+      g.fillStyle = 'rgba(10,14,26,.18)'; g.beginPath(); g.ellipse(x, y + s * .3, s * 1.1, s * .45, 0, 0, TAU); g.fill(); g.fillStyle = noche > .4 ? '#2a2d36' : '#8a8f9a'; g.beginPath(); g.ellipse(x, y - s * .4, s * 1.1, s * .7, q.a, 0, TAU); g.fill(); g.fillStyle = noche > .4 ? '#3a3e48' : '#6b7280'; g.beginPath(); g.arc(x + Math.cos(q.a) * s * .9, y - s * .6 + pico, s * .45, 0, TAU); g.fill(); }
     /* pájaros: su sombra en el piso (si hay sol) y el ave aleteando a dos cuadros (como Spider‑Verse) */
     if (z > .5) { const sv = D.sv, t2 = Math.floor((E.t || 0) * 12) / 12;
       for (const b of this.aves) for (const [dx, dy, fa] of b.m) {
@@ -5523,7 +5591,7 @@ const Exportar = {
     const vias = M.vias().filter(v => { for (let i = 0; i < v.p.length; i += 2) if (dentro(v.p[i], v.p[i + 1])) return true; return false; }).map(v => ({ tipo: VN[v.k] || v.k, nombre: v.nombre || '', ancho: v.ancho, p: Array.from(v.p, r1) }));
     const arboles = Arboleda.en(M, x0, y0, x1, y1, op.maxArboles || 20000).map(t => ({ x: r1(t.x), y: r1(t.y), base: r1(M.cota(t.x, t.y)), especie: t.e, alto: r1(t.h), copa: r1(t.r * (Arboleda.ESPECIES[t.e] || {}).ancho || t.r) }));
     const lugares = (M.lugares || []).filter(l => dentro(l.x, l.y)).map(l => ({ nombre: l.nombre, x: r1(l.x), y: r1(l.y), tipo: l.dibujo || l.tipo || '' }));
-    return { motor: 'Motor City ' + MC.version, mundo: (M.cfg && M.cfg.id) || '', nombre: (M.cfg && M.cfg.nombre) || '', unidades: 'metros', ejes: 'mundo: x oriente, y sur, h arriba · glTF: X = x, Y = h, Z = y', caja, edificios, vias, arboles, lugares };
+    return { schema_version: 1, motor: 'Motor City ' + MC.version, mundo: (M.cfg && M.cfg.id) || '', nombre: (M.cfg && M.cfg.nombre) || '', unidades: 'metros', ejes: 'mundo: x oriente, y sur, h arriba · glTF: X = x, Y = h, Z = y', caja, edificios, vias, arboles, lugares };
   },
   /* ---------- geometría ---------- */
   _malla() { return { p: [], n: [], c: [], i: [] }; },
@@ -5600,14 +5668,70 @@ const Puente = {
   aGltf(x, y, h = 0) { return [x, h, y]; },
   instantanea(E, op = {}) {
     const r1 = v => Math.round((v || 0) * 100) / 100, J = E.jugador && E.jugador.cuerpo;
-    return { t: r1(E.t), hora: E.reloj ? r1(E.reloj.hora) : null, clima: E.clima ? (E.clima.estado || null) : null, estilo: MC.estilo,
+    return { schema_version: 1, t: r1(E.t), hora: E.reloj ? r1(E.reloj.hora) : null, clima: E.clima ? (E.clima.estado || null) : null, estilo: MC.estilo,
       jugador: J ? { x: r1(J.x), y: r1(J.y), z: r1((J.zPaso || 0) + (J.z || 0)), a: r1(J.a), v: r1(J.v), vehiculo: J.veh && J.veh.id, estado: J.estado || null, nadando: !!J.nadando } : null,
       vehiculos: (E.vehiculos || []).slice(0, op.max || 400).map(v => ({ x: r1(v.x), y: r1(v.y), a: r1(v.a), tipo: v.tipo || v.id || '' })), peatones: (E.peatones || []).slice(0, op.max || 400).map(p => ({ x: r1(p.x), y: r1(p.y), a: r1(p.a) })) };
   }
 };
 MC.Exportar = Exportar; MC.Puente = Puente;
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-naturaleza.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js"];
+/* ---- js/90-telemetria.js ---- */
+/* =====================================================================
+   TELEMETRÍA · lo que hay que medir en un celular real (2.8; entrega maestra §13, §14 y R20)
+   - Tiempos de cuadro en PERCENTILES (p50, p95, p99), no solo un promedio que esconde los tirones.
+   - Tiempo de dibujo de la vista y FPS.
+   - El estado físico del jugador para calibrar el peso: velocidad, aceleración, suelo y si está en el aire.
+   - Sin datos personales: es solo para el reporte del autor y de las IAs.
+   Uso: MC.Telemetria.registro(msDibujo, dtCuadro) en cada cuadro · MC.Telemetria.resumen() · MC.Telemetria.linea(E)
+   ===================================================================== */
+const Telemetria = {
+  N: 360, cuadro: [], dibujo: [],
+  registro(msDibujo, dt) {
+    if (dt > 0 && dt < 1) { this.cuadro.push(dt * 1000); if (this.cuadro.length > this.N) this.cuadro.shift(); }
+    if (msDibujo >= 0) { this.dibujo.push(msDibujo); if (this.dibujo.length > this.N) this.dibujo.shift(); }
+  },
+  percentil(L, p) { if (!L.length) return 0; const S = L.slice().sort((a, b) => a - b); return S[Math.min(S.length - 1, Math.floor(p * (S.length - 1) + .5))]; },
+  resumen() {
+    const c = this.cuadro, d = this.dibujo, r1 = v => Math.round(v * 10) / 10, p50 = this.percentil(c, .5);
+    return { n: c.length, fps: p50 ? Math.round(1000 / p50) : 0, cuadro_p50: r1(p50), cuadro_p95: r1(this.percentil(c, .95)), cuadro_p99: r1(this.percentil(c, .99)), dibujo_p50: r1(this.percentil(d, .5)), dibujo_p95: r1(this.percentil(d, .95)), gpu: MC.GPU && MC.GPU.perfil ? (MC.GPU.perfil().nivel || '?') : '?' };
+  },
+  /* una línea corta para la pantalla: rendimiento + física del jugador */
+  linea(E) {
+    const R = this.resumen(), C = E && E.jugador && E.jugador.cuerpo; let f = '';
+    if (C) { const s = MC.Vida && MC.Vida.suelo ? MC.Vida.suelo(E, C.x, C.y) : null; f = ' · ' + Math.round(Math.abs(C.v || 0) * 3.6) + ' km/h · a ' + (C._acel || 0).toFixed(1) + ' m/s²' + (C.enAire ? ' · en el aire' : '') + (s ? ' · ' + s : ''); }
+    return '📈 ' + R.fps + ' fps · p95 ' + R.cuadro_p95 + ' ms · dibujo ' + R.dibujo_p95 + ' ms' + f;
+  },
+  limpiar() { this.cuadro.length = 0; this.dibujo.length = 0; }
+};
+MC.Telemetria = Telemetria;
+
+/* ---- js/91-contratos.js ---- */
+/* =====================================================================
+   CONTRATOS · datos versionados para que el mundo y el estado viajen entre motores (2.8; entrega maestra §12.3 y §16)
+   - Cada formato que sale del motor lleva `schema_version` y tiene su esquema JSON en schemas/:
+       escena.schema.json (MC.Exportar.escena) · puente.schema.json (MC.Puente.instantanea) · entidad.schema.json
+   - MC.Contratos.validar(dato, esquema) revisa un subconjunto de JSON Schema (type, required, properties, items,
+     enum, minimum, maximum, minItems, const) sin librerías, para que lo que produzca una IA pase antes de entrar.
+   - La física y el estado no cambian con la calidad gráfica: el contrato describe el mundo, no cómo se ve.
+   Uso: const errores = MC.Contratos.validar(MC.Exportar.escena(M, caja), esquema)   // [] si está bien
+   ===================================================================== */
+const Contratos = {
+  VERSION: 1,
+  tipoDe(v) { return v === null ? 'null' : Array.isArray(v) ? 'array' : Number.isInteger(v) ? 'integer' : typeof v; },
+  validar(v, S, ruta = '$', err = [], max = 50) {
+    if (!S || err.length >= max) return err;
+    if (S.const !== undefined && v !== S.const) err.push(ruta + ': debe ser ' + JSON.stringify(S.const));
+    if (S.enum && !S.enum.includes(v)) err.push(ruta + ': no es uno de ' + S.enum.join(', '));
+    if (S.type) { const t = this.tipoDe(v), ok = [].concat(S.type).some(x => x === t || (x === 'number' && t === 'integer')); if (!ok) { err.push(ruta + ': se esperaba ' + [].concat(S.type).join('|') + ' y llegó ' + t); return err; } }
+    if (typeof v === 'number') { if (S.minimum !== undefined && v < S.minimum) err.push(ruta + ': menor que ' + S.minimum); if (S.maximum !== undefined && v > S.maximum) err.push(ruta + ': mayor que ' + S.maximum); }
+    if (Array.isArray(v)) { if (S.minItems !== undefined && v.length < S.minItems) err.push(ruta + ': menos de ' + S.minItems + ' elementos'); if (S.maxItems !== undefined && v.length > S.maxItems) err.push(ruta + ': más de ' + S.maxItems + ' elementos'); if (S.items) for (let i = 0; i < v.length && err.length < max; i++) this.validar(v[i], S.items, ruta + '[' + i + ']', err, max); }
+    if (v && typeof v === 'object' && !Array.isArray(v)) { for (const k of S.required || []) if (!(k in v)) err.push(ruta + ': falta «' + k + '»'); if (S.properties) for (const [k, s2] of Object.entries(S.properties)) if (k in v) this.validar(v[k], s2, ruta + '.' + k, err, max); }
+    return err;
+  }
+};
+MC.Contratos = Contratos;
+
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-naturaleza.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js","90-telemetria.js","91-contratos.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;

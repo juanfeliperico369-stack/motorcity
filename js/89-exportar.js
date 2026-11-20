@@ -30,7 +30,7 @@ const Exportar = {
     const vias = M.vias().filter(v => { for (let i = 0; i < v.p.length; i += 2) if (dentro(v.p[i], v.p[i + 1])) return true; return false; }).map(v => ({ tipo: VN[v.k] || v.k, nombre: v.nombre || '', ancho: v.ancho, p: Array.from(v.p, r1) }));
     const arboles = Arboleda.en(M, x0, y0, x1, y1, op.maxArboles || 20000).map(t => ({ x: r1(t.x), y: r1(t.y), base: r1(M.cota(t.x, t.y)), especie: t.e, alto: r1(t.h), copa: r1(t.r * (Arboleda.ESPECIES[t.e] || {}).ancho || t.r) }));
     const lugares = (M.lugares || []).filter(l => dentro(l.x, l.y)).map(l => ({ nombre: l.nombre, x: r1(l.x), y: r1(l.y), tipo: l.dibujo || l.tipo || '' }));
-    return { motor: 'Motor City ' + MC.version, mundo: (M.cfg && M.cfg.id) || '', nombre: (M.cfg && M.cfg.nombre) || '', unidades: 'metros', ejes: 'mundo: x oriente, y sur, h arriba · glTF: X = x, Y = h, Z = y', caja, edificios, vias, arboles, lugares };
+    return { schema_version: 1, motor: 'Motor City ' + MC.version, mundo: (M.cfg && M.cfg.id) || '', nombre: (M.cfg && M.cfg.nombre) || '', unidades: 'metros', ejes: 'mundo: x oriente, y sur, h arriba · glTF: X = x, Y = h, Z = y', caja, edificios, vias, arboles, lugares };
   },
   /* ---------- geometría ---------- */
   _malla() { return { p: [], n: [], c: [], i: [] }; },
@@ -107,7 +107,7 @@ const Puente = {
   aGltf(x, y, h = 0) { return [x, h, y]; },
   instantanea(E, op = {}) {
     const r1 = v => Math.round((v || 0) * 100) / 100, J = E.jugador && E.jugador.cuerpo;
-    return { t: r1(E.t), hora: E.reloj ? r1(E.reloj.hora) : null, clima: E.clima ? (E.clima.estado || null) : null, estilo: MC.estilo,
+    return { schema_version: 1, t: r1(E.t), hora: E.reloj ? r1(E.reloj.hora) : null, clima: E.clima ? (E.clima.estado || null) : null, estilo: MC.estilo,
       jugador: J ? { x: r1(J.x), y: r1(J.y), z: r1((J.zPaso || 0) + (J.z || 0)), a: r1(J.a), v: r1(J.v), vehiculo: J.veh && J.veh.id, estado: J.estado || null, nadando: !!J.nadando } : null,
       vehiculos: (E.vehiculos || []).slice(0, op.max || 400).map(v => ({ x: r1(v.x), y: r1(v.y), a: r1(v.a), tipo: v.tipo || v.id || '' })), peatones: (E.peatones || []).slice(0, op.max || 400).map(p => ({ x: r1(p.x), y: r1(p.y), a: r1(p.a) })) };
   }

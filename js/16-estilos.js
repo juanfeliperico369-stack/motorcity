@@ -13,6 +13,7 @@
    Las PALETAS de ukiyo-e, novela y acuarela salen de obras de DOMINIO PÚBLICO (Hokusai, Hiroshige, Doré, Winslow
    Homer…), con su fuente en arte/dominio-publico/paletas.json. Del resto (Spider‑Verse, Arcane, Ghibli, Shinkai,
    Sin City, Moebius) se toman las TÉCNICAS, nunca imágenes ni personajes (docs/INSPIRACION-VISUAL.md).
+   2.8: vintage (sepia, papel y viñeta) y CRT (líneas de barrido), como los filtros de Miniopolis (entrega maestra, R17).
    Uso: MC.estilo = 'comic' · MC.Estilo.p (el estilo activo) · MC.Estilo.col('#c25f37') · MC.Estilo.lista()
    ===================================================================== */
 const PAL_DP = {
@@ -28,6 +29,9 @@ const ESTILOS_GRAF = {
   anime: { n: 'Anime', icono: '🌸', saturar: 1.22, brillo: 1.05, niveles: 6, tinta: 1, tintaColor: '#2b2740', arbol: 'cel', sombra: [70, 50, 150, .32], lineas: '#ffffff', onomatopeyas: false, cielo: [[.16, .4, .92], [.8, .93, 1]] },
   novela: { n: 'Novela gráfica (noir)', icono: '🌃', umbral: [.3, .62], tonos: ['#0d0c0b', '#6a655c', '#ece5d3'], acento: '#b3201c', tinta: 2.6, tintaColor: '#000000', trama: 'rayado', arbol: 'silueta', sombra: [0, 0, 0, .72], lineas: '#000000', onomatopeyas: true, cielo: [[.07, .07, .08], [.5, .48, .45]] },
   ukiyoe: { n: 'Ukiyo-e (Hokusai)', icono: '🌊', paleta: 'hokusai', mezcla: .82, niveles: 5, tinta: 1.6, tintaColor: '#1d2a3f', trama: 'papel', arbol: 'cel', sombra: [30, 50, 90, .28], cielo: [[.17, .33, .54], [.96, .9, .78]] },
+  vintage: { n: 'Vintage', icono: '📼', saturar: .55, contraste: .92, tinte: [.66, .52, .36], tinteK: .28, trama: 'papel', arbol: 'cel', sombra: [60, 40, 20, .3], final: 'vineta', cielo: [[.72, .62, .48], [.95, .88, .74]] },   // 2.8: foto vieja (entrega maestra, R17)
+  crt: { n: 'CRT (pantalla vieja)', icono: '📺', saturar: 1.25, contraste: 1.08, niveles: 7, arbol: 'cel', sombra: [10, 20, 40, .36], final: 'crt', cielo: [[.1, .3, .6], [.6, .8, .95]] },   // 2.8: líneas de barrido y borde oscuro
+  termica: { n: 'Visión térmica', icono: '🌡️', gradiente: ['#2b0b57', '#7a1fa2', '#e5383b', '#ff9f1c', '#ffea00'], arbol: 'cel', sombra: [20, 0, 60, .3], cielo: [[.1, .03, .25], [.35, .1, .45]] },   // 2.8: FireTrace (R22), paleta del informe de Gemini
   acuarela: { n: 'Acuarela', icono: '🎨', paleta: 'acuarela', mezcla: .3, saturar: .9, brillo: 1.08, trama: 'papel', arbol: 'acuarela', sombra: [60, 70, 110, .24], cielo: [[.55, .7, .86], [.97, .95, .9]] }
 };
 const Estilo = {
@@ -41,7 +45,9 @@ const Estilo = {
     let r = c[0], g = c[1], b = c[2];
     if (S.saturar || S.gris) { const l = .299 * r + .587 * g + .114 * b, k = S.gris ? 0 : S.saturar; r = l + (r - l) * k; g = l + (g - l) * k; b = l + (b - l) * k; }
     if (S.brillo) { r *= S.brillo; g *= S.brillo; b *= S.brillo; }
+    if (S.tinte) { const l = .299 * r + .587 * g + .114 * b, k = S.tinteK ?? .3; r += (S.tinte[0] * l * 1.6 - r) * k; g += (S.tinte[1] * l * 1.6 - g) * k; b += (S.tinte[2] * l * 1.6 - b) * k; }   // tono sepia
     if (S.contraste) { const k = S.contraste; r = (r - .5) * k + .5; g = (g - .5) * k + .5; b = (b - .5) * k + .5; }
+    if (S.gradiente) { const G = S._g || (S._g = S.gradiente.map(hex3)), l = clamp(.299 * r + .587 * g + .114 * b, 0, 1) * (G.length - 1), i = Math.min(G.length - 2, Math.floor(l)), u = l - i; return mez3(G[i], G[i + 1], u); }   // mapa de calor por luminancia
     if (S.umbral) {   // novela gráfica: tres tonos de papel y tinta, y el rojo como acento (el «color selectivo» del noir)
       if (r > .38 && r > g * 1.45 && r > b * 1.45) return hex3(S.acento);
       const l = .299 * r + .587 * g + .114 * b; return hex3(S.tonos[l < S.umbral[0] ? 0 : l < S.umbral[1] ? 1 : 2]);
@@ -77,7 +83,15 @@ const Estilo = {
   /* ---------- pase final (por cuadro, barato): manga en grises y líneas de velocidad ---------- */
   final(g, W, H, E) {
     const S = this.p; if (S.final === 'gris') { g.save(); g.globalCompositeOperation = 'saturation'; g.fillStyle = '#808080'; g.fillRect(0, 0, W, H); g.restore(); }
+    else if (S.final === 'vineta' || S.final === 'crt') { const c = this._capa(S.final, W, H); if (c) g.drawImage(c, 0, 0); }   // horneado una vez por tamaño de pantalla
     const C = E.jugador && E.jugador.cuerpo, v = C ? Math.abs(C.v || 0) : 0; if (S.lineas && v > 8.5) this.lineas(g, W, H, Math.min(1, (v - 8.5) / 14), E.t || 0, S.lineas);
+  },
+  _capas: {},
+  _capa(tipo, W, H) {
+    const k = tipo + W + 'x' + H; if (this._capas[k] !== undefined) return this._capas[k]; const c = lienzo(W, H); if (!c) return (this._capas[k] = null); const g = c.getContext('2d');
+    const gr = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .35, W / 2, H / 2, Math.hypot(W, H) * .58); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, tipo === 'crt' ? 'rgba(0,0,0,.55)' : 'rgba(40,24,10,.45)'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    if (tipo === 'crt') { g.fillStyle = 'rgba(0,0,0,.16)'; for (let y = 0; y < H; y += 3) g.fillRect(0, y, W, 1); }   // líneas de barrido
+    for (const q in this._capas) if (q.startsWith(tipo) && q !== k) delete this._capas[q]; return (this._capas[k] = c);
   },
   /* líneas de velocidad del manga: desde el borde hacia el centro, sin tocar el centro (el juego es del centro) */
   lineas(g, W, H, k, t, col) {

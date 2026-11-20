@@ -72,6 +72,7 @@ const Vista2D = {
     if (dePie) { const cap = Math.round(150 + 420 * cal); let AR = Arboleda.en(E.mundo, x0 - 8, y0 - 8, x1 + 8, y1 + 8, 5000).filter(t => !delante(t.x, t.y)); if (AR.length > cap) { const q = cap / AR.length; AR = AR.filter(t => (t.s * 7.31 + t.r) % 1 < q); }   /* si son demasiados, se ralea parejo (no se corta media pantalla) */ if (z >= 6) Arboleda.sombras(dibCtx, AR, conSombra ? sv : null); for (const t of AR) objs.push({ y: dy(t.x, t.y), t: 10, q: t }); }
     /* mobiliario urbano (postes, árboles de calle, bancas, paraderos, cebras): solo de cerca */
     if (z > .9 && cal > .35 && op.mobiliario !== false) { const L = Mobiliario.en(E.mundo, x0, y0, x1, y1, Math.round(120 + 480 * cal * Math.min(1, z / 2))).filter(p => !delante(p.x, p.y)); Mobiliario.piso(dibCtx, L); for (const p of L) if (p.t !== 'cebra') objs.push({ y: dy(p.x, p.y), t: 7, q: p }); }
+    if (MC.Vida && op.vida !== false) MC.Vida.piso(dibCtx);   /* 2.8: huellas de llantas y pisadas en el suelo blando */
     /* capa de información (valor del suelo, ruido, contaminación…: las «vistas de datos» de SimCity y Cities: Skylines) */
     if (E.capaInfo && E.capaInfo.dibujar) E.capaInfo.dibujar(g, a, b, c, d, e, f, dibCtx);
     for (const q of E.mundo.pasosEn(x0, y0, x1, y1)) if (q.nivel > 0) objs.push({ y: dy((q.caja[0] + q.caja[2]) / 2, (q.caja[1] + q.caja[3]) / 2) + 1e4 * 0, t: 1, q, cen: modo === 'cenital' });
@@ -159,6 +160,12 @@ const Vista2D = {
     if (D.modo === 'cenital') { const J = Personaje.pose('camina', p.fase); J.fase = p.fase; MC.arte.f('personajeArriba')(g, J, A, x, y, z, p.a + P.yaw); return; }
     const J = Personaje.pose('camina', p.fase, { alto: A.alto }), dir = Math.cos(p.a + P.yaw) >= 0 ? 1 : -1; (MC.arte.f('personajeLado'))(g, J, A, x, y, z * P.hk, dir);
   },
+  /* 2.8 · faros: un cono de luz cálida en el piso delante del vehículo, de noche (se suma a la luz, no tapa) */
+  faros(D, C, V) {
+    const { g, pr, z } = D, L = 16 + Math.abs(C.v || 0) * .6, ab = .42, ca = Math.cos(C.a), sa = Math.sin(C.a), fx = C.x + ca * (V.largo || 4) * .5, fy = C.y + sa * (V.largo || 4) * .5, [x0, y0] = pr(fx, fy, 0);
+    const P1 = pr(fx + Math.cos(C.a - ab) * L, fy + Math.sin(C.a - ab) * L, 0), P2 = pr(fx + Math.cos(C.a + ab) * L, fy + Math.sin(C.a + ab) * L, 0), [xm, ym] = pr(fx + ca * L, fy + sa * L, 0);
+    g.save(); g.globalCompositeOperation = 'lighter'; const gr = g.createLinearGradient(x0, y0, xm, ym); gr.addColorStop(0, 'rgba(255,236,190,' + (.32 * D.noche).toFixed(3) + ')'); gr.addColorStop(1, 'rgba(255,220,160,0)'); g.fillStyle = gr; g.beginPath(); g.moveTo(x0, y0); g.lineTo(P1[0], P1[1]); g.quadraticCurveTo(xm, ym, P2[0], P2[1]); g.closePath(); g.fill(); g.restore();
+  },
   /* 2.7 · peso: al aterrizar el cuerpo se aplasta y vuelve (squash and stretch), desde los pies */
   jugador(D, j) {
     const C = j.cuerpo, q = C && C._squash; if (!q) return this._jugador(D, j);
@@ -174,7 +181,7 @@ const Vista2D = {
       g.save(); g.strokeStyle = 'rgba(57,255,179,.9)'; g.lineWidth = Math.max(2, z * .14); g.beginPath(); g.ellipse(sx, sy, r, r * kk, 0, 0, TAU); g.stroke(); g.fillStyle = '#39ffb3'; const ax = sx + ux * (r + 4), ay = sy + uy * (r * kk + 4), w = Math.max(6, r * .45); g.beginPath(); g.moveTo(ax + ux * w, ay + uy * w); g.lineTo(ax - uy * w * .6, ay + ux * w * .6); g.lineTo(ax + uy * w * .6, ay - ux * w * .6); g.closePath(); g.fill(); g.restore(); }
     if (D.modo === 'cenital') {
       g.save(); g.translate(x, y); g.rotate(C.a + P.yaw); g.scale(z, z);
-      if (V.clase !== 'pie') { if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') { Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); g.restore(); return; } g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.25, V.largo * .6, .5); }
+      if (V.clase !== 'pie') { if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') { const frena = (C._acel || 0) < -2.2 && Math.abs(C.v) > .8, nocheJ = (D.noche || 0) > .4; Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, frena, nocheJ); g.restore(); if (nocheJ) this.faros(D, C, V); return; }   /* 2.8: luces de freno y faros (entrega maestra §11.2, R13 y R19) */ g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.25, V.largo * .6, .5); }
       g.restore(); const J = Personaje.pose(C.estado || 'quieto', C.fase); J.fase = C.fase; MC.arte.f('personajeArriba')(g, J, A, x, y, z, C.a + P.yaw);
       if (C.nadando || C.vadeando) { g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = Math.max(1, z * .08); for (const k of [1, 1.6]) { g.beginPath(); g.arc(x, y, z * (.5 * k + .1 * Math.sin((D.E.t || 0) * 3 + k)), 0, TAU); g.stroke(); } if (C.buceando) { g.fillStyle = 'rgba(30,95,140,.55)'; g.beginPath(); g.arc(x, y, z * .9, 0, TAU); g.fill(); this.burbujas(g, x, y - z * .2, y + z * .4, z * 1.5, D.E.t || 0); } }
       return;

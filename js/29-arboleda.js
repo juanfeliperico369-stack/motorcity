@@ -127,7 +127,7 @@ const Arboleda = {
   dePie(D, t) {
     const { g, pr, z, P, noche } = D, fa = MC.arte.f('arbol'); if (fa) { const [ax, ay] = pr(t.x, t.y, 0); if (fa(g, t, 'lado', ax, ay, z, D) === true) return; } let sp = this.sprite(t.e, t.v, 'lado', noche > .4); if (!sp) return; const E = this.ESPECIES[t.e] || this.ESPECIES.urapan, [x, y] = pr(t.x, t.y, 0);
     sp = this.mip(sp, (t.r * E.ancho * z) / sp._rx); const kx = (t.r * E.ancho * z) / sp._rx, ky = (t.h * z * P.hk) / sp._alto, w = sp.width * kx, h = sp.height * ky; if (h < 3) return;
-    const vi = z >= 5 ? Math.sin((D.E.t || 0) * 1.3 + t.x * .21 + t.y * .13) * .045 * (D.E.viento ?? .6) : 0;   /* 2.7 · vida: el viento mece la copa (de cerca); el pie no se mueve */
+    const vi = z >= 5 ? Math.sin((D.E.t || 0) * 1.3 + t.x * .21 + t.y * .13) * .045 * (D.E.viento ?? (D.E.clima && D.E.clima.viento ? clamp(D.E.clima.viento.v / 6, .2, 1.6) : .6)) : 0;   /* 2.7 · vida: el viento mece la copa (de cerca); el pie no se mueve */
     if (t.espejo || vi) { g.save(); g.translate(x, y); if (vi) g.transform(1, 0, -vi, 1, 0, 0); if (t.espejo) g.scale(-1, 1); g.drawImage(sp, -w / 2, -sp._base[1] * ky, w, h); g.restore(); } else g.drawImage(sp, x - w / 2, y - sp._base[1] * ky, w, h);
   },
   /* desde arriba, en pantalla (árboles de calle en la cenital) */

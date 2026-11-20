@@ -271,7 +271,7 @@ console.log('17) Estilos gráficos, vida y exportación a motores potentes (2.7)
   MC.estilo = 'novela'; const nr = E.rgb(rojo), ng = E.rgb(verde); r.novelaAcento = MC.css3(nr) === MC.css3(MC.hex3(E.p.acento)); r.novelaTonos = E.p.tonos.map(t => MC.css3(MC.hex3(t))).includes(MC.css3(ng));
   MC.estilo = 'ukiyoe'; const u = E.rgb(verde); r.ukiyoe = E.paleta('hokusai').some(q => Math.hypot(q[0] - u[0], q[1] - u[1], q[2] - u[2]) < .25);
   MC.estilo = 'comic'; r.alfa = /,0\.5\)$/.test(E.col('rgba(10,20,30,0.5)')); r.estilos = E.lista().length; MC.estilo = antes; r.realistaIgual = E.col('#123456') === '#123456';
-  ok(r.manga && r.novelaAcento && r.novelaTonos && r.ukiyoe && r.alfa && r.estilos >= 8 && r.realistaIgual, 'estilos: manga en grises, novela con tres tonos y un rojo de acento, ukiyo-e con la paleta de Hokusai, y la transparencia se respeta', r); }
+  ok(r.manga && r.novelaAcento && r.novelaTonos && r.ukiyoe && r.alfa && r.estilos >= 10 && r.realistaIgual, 'estilos: manga en grises, novela con tres tonos y un rojo de acento, ukiyo-e con la paleta de Hokusai, y la transparencia se respeta', r); }
 { /* vida: partículas que nacen y se apagan, bandadas cerca de la cámara, aterrizaje con peso */
   const V = MC.Vida, E = { t: 0, camara: { x: 500, y: 500, sacudir() { this.s = 1; } }, mundo: M, jugador: { cuerpo: { x: 500, y: 500, a: 0, v: 0, vz: -7, enAire: true } } };
   V.P.length = 0; V.aves.length = 0; V._t = null; V._pv = null; V.actualizar(E); E.t = .05; V.actualizar(E); E.jugador.cuerpo.enAire = false; E.jugador.cuerpo.vz = 0; E.t = .1; V.actualizar(E);
@@ -282,6 +282,21 @@ console.log('17) Estilos gráficos, vida y exportación a motores potentes (2.7)
   let idxOk = true; const bin = glb.subarray(28 + jl); for (const me of J.meshes) { const pr = me.primitives[0], ai = J.accessors[pr.indices], ap = J.accessors[pr.attributes.POSITION], bv = J.bufferViews[ai.bufferView], I = new Uint32Array(bin.buffer.slice(bin.byteOffset + bv.byteOffset, bin.byteOffset + bv.byteOffset + bv.byteLength)); for (const k of I) if (k >= ap.count) { idxOk = false; break; } }
   const A = MC.Exportar.alturas(M, c0, 8), r16 = MC.Exportar.r16(A), esc = MC.Exportar.escena(M, c0);
   ok(dv.getUint32(0, true) === 0x46546C67 && dv.getUint32(4, true) === 2 && dv.getUint32(8, true) === glb.length && binL === J.buffers[0].byteLength && J.meshes.length >= 3 && idxOk && r16.length === A.w * A.h * 2 && esc.edificios.length > 10 && esc.vias.length > 0, 'exportar: un GLB (glTF 2.0) bien formado, con terreno, edificios, vías y árboles; alturas RAW 16 y escena en JSON', { kb: Math.round(glb.length / 1024), mallas: J.meshes.map(m => m.name), edificios: esc.edificios.length, alturas: A.w + '×' + A.h }); }
+
+console.log('18) Entrega maestra de referencias: fauna, huellas, telemetría y contratos (2.8)');
+{ /* huellas en suelo blando y palomas que huyen; las partículas respetan la accesibilidad */
+  const V = MC.Vida, mundoArena = { suelo: () => MC.TT.ARENA, edificioEn: () => null }, C = { x: 0, y: 0, a: 0, v: 3, veh: { clase: 'auto', ancho: 1.8 } }, E = { t: 0, mundo: mundoArena, jugador: { cuerpo: C } };
+  V.marcas.length = 0; for (let i = 0; i < 12; i++) { C.x += .7; E.t += .1; V._huellas(E, C); } const llantas = V.marcas.length; C.veh = { clase: 'pie' }; for (let i = 0; i < 6; i++) { C.x += .7; V._huellas(E, C); } const pisadas = V.marcas.filter(m => m.pie).length;
+  const llueve = V.suelo({ mundo: { suelo: () => MC.TT.GRASS }, clima: { estado: 'lluvia' } }, 0, 0), seco = V.suelo({ mundo: { suelo: () => MC.TT.GRASS }, clima: { estado: 'despejado' } }, 0, 0);
+  V.palomas.length = 0; V.aves.length = 0; V.palomas.push({ x: 4, y: 0, m: [{ dx: 0, dy: 0, a: 0, f: 0 }, { dx: 1, dy: 1, a: 0, f: 0 }], t0: 0 }); const Cp = { x: 0, y: 0, v: 5 }; V._palomas({ t: 1, mundo: { suelo: () => MC.TT.PLAZA }, jugador: { cuerpo: Cp } }, .016); const huyen = V.aves.filter(b => b.asustada).length;
+  const antes = MC.opciones.particulas; MC.opciones.particulas = 0; V.P.length = 0; V.emitir('polvo', 0, 0, 20); const sinParticulas = V.P.length === 0; MC.opciones.particulas = antes;
+  ok(llantas >= 20 && pisadas >= 5 && llueve === 'barro' && seco === null && huyen === 1 && V.palomas.length === 0 && sinParticulas, 'vida 2.8: surcos de llantas y pisadas en suelo blando (barro con lluvia), palomas que alzan vuelo y partículas que se apagan por accesibilidad', { llantas, pisadas, llueve, huyen }); }
+{ /* telemetría en percentiles y contratos de datos versionados */
+  const T = MC.Telemetria; T.limpiar(); for (let i = 0; i < 100; i++) T.registro(5, i < 95 ? 1 / 60 : .1); const R = T.resumen();
+  const esq = n => JSON.parse(fs.readFileSync(path.join(RAIZ, 'schemas', n + '.schema.json'), 'utf8')), L0 = M.lugares[0], esc = MC.Exportar.escena(M, [L0.x - 120, L0.y - 120, L0.x + 120, L0.y + 120].map(Math.round));
+  const eEsc = MC.Contratos.validar(esc, esq('escena')), eMal = MC.Contratos.validar({ schema_version: 2, motor: 1 }, esq('escena')), ins = MC.Puente.instantanea({ t: 3, jugador: { cuerpo: { x: 1, y: 2, a: 0, v: 3, veh: { id: 'bici' } } }, vehiculos: [], peatones: [] }), ePuente = MC.Contratos.validar(ins, esq('puente'));
+  const ent = { schema_version: 1, entity_id: 'vehiculo_0001', arquetipo: 'carro', transform: { posicion_m: [0, 0, 0], rumbo_rad: 0 }, superficie: 'asfalto', persistente: true }, eEnt = MC.Contratos.validar(ent, esq('entidad'));
+  ok(R.fps === 60 && R.cuadro_p95 >= 16 && R.cuadro_p99 === 100 && eEsc.length === 0 && eMal.length >= 3 && ePuente.length === 0 && eEnt.length === 0 && esc.schema_version === 1, 'telemetría con percentiles (p95, p99) y contratos versionados: la escena, el puente y la entidad pasan su esquema; uno roto no', { fps: R.fps, p95: R.cuadro_p95, p99: R.cuadro_p99, errorDelRoto: eMal[0] }); }
 
 if (process.argv.includes('--navegador')) {
   console.log('16) Banco de pruebas en Chromium');
@@ -325,7 +340,7 @@ if (process.argv.includes('--navegador')) {
     const r = { tutorialOpcional: !tuto && opcional, libre: a.libre, vehiculos: a.vehiculos, pxPorMetro: a.pxPorMetro, joystick: a.joystick, primerMandado: a.primerMandado, movio, arte };
     const est = await p.evaluate(async () => { const out = {}; for (const e of MC.Estilo.lista().map(q => q.id)) { MANDADOS.ponEstilo(e); for (const v of ['maqueta', 'cenital']) { MANDADOS.ponVista(v); await new Promise(q => setTimeout(q, 350)); } out[e] = +MANDADOS.vistas.ms.toFixed(1); } MANDADOS.ponEstilo('realista'); return out; });
     r.estilos = est;
-    ok(Object.keys(est).length >= 8 && Object.values(est).every(x => x >= 0 && x < 60) && !errs.length, 'Mandados: los 8 estilos gráficos (realista, clásico, cómic, manga, anime, novela gráfica, ukiyo-e y acuarela) dibujan sin errores', est);
+    ok(Object.keys(est).length >= 11 && Object.values(est).every(x => x >= 0 && x < 60) && !errs.length, 'Mandados: los 11 estilos gráficos (realista, clásico, cómic, manga, anime, novela gráfica, ukiyo-e, acuarela, vintage, CRT y térmico) dibujan sin errores', est);
     ok(r.tutorialOpcional && arte.arboles > 0 && r.libre && r.vehiculos >= 30 && r.pxPorMetro >= 8 && r.joystick && r.primerMandado < 900 && r.movio > 2 && arte.piel === 'gemini' && arte.atlas >= 10 && arte.faltan === 0 && arte.icono && !errs.length, 'Mandados en un celular táctil: el tutorial es opcional, todo libre y gratis, árboles de pie, joystick visible que mueve, cámara legible, el primer mandado cerca y el arte de Gemini cargado (de día y de noche)', r);
     await b.close();
   }
