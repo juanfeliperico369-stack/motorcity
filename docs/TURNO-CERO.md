@@ -8,6 +8,8 @@
 >
 > **Después:** «adapta todo lo nuevo que se agregó». Codex subió *Turno Cero: Manhattan* (espionaje en 2026, artefactos T01–T12 y 42 modelos GLB), y este juego toma ese canon y lo lleva al planeta.
 
+![Capturas de Turno Cero](img/turno-cero-capturas.png)
+
 **Jugar:** `dist/juegos/getaway.html`, también en la página del motor. **Código:** `juegos/getaway/` (`10-contenido.js`, `20-juego.js`, `30-historia.js`, `40-dibujo.js`, `90-inicio.js`). **Pruebas:** `node motor.mjs prueba --navegador`, secciones 19, 20 y la prueba «Turno Cero en Chromium móvil».
 
 ## 1. Qué es
