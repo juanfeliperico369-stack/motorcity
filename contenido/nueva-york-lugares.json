@@ -1,0 +1,409 @@
+{
+  "version": 1,
+  "cantidad": 50,
+  "fecha_consulta": "2026-11-20",
+  "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr",
+  "nota": "Puntos oficiales aproximados a lugares, no garantía de acceso público.",
+  "lugares": [
+    {
+      "nombre": "CENTRAL PARK RAMBLE AREA PARKING LOT",
+      "lat": 40.7784373,
+      "lon": -73.9677129,
+      "tipo": "garaje",
+      "id": "1002183",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "DPR 5 BORO COMPLEX & GARAGE",
+      "lat": 40.7993995,
+      "lon": -73.9228369,
+      "tipo": "garaje",
+      "id": "1007297",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "DPR FIVE BORO GARAGE STORAGE",
+      "lat": 40.7987332,
+      "lon": -73.9230719,
+      "tipo": "garaje",
+      "id": "1007296",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "EDGE OBSERVATION DECK",
+      "lat": 40.7538359,
+      "lon": -74.0002114,
+      "tipo": "mirador",
+      "id": "1033408",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "FT PARK BILLINGS TERRACE OVERLOOK",
+      "lat": 40.8601207,
+      "lon": -73.9349507,
+      "tipo": "mirador",
+      "id": "1024225",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "FT TRYON PARK ANNE LOFTUS OVERLOOK",
+      "lat": 40.8653519,
+      "lon": -73.9303012,
+      "tipo": "mirador",
+      "id": "1024146",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "AFRICAN BURIAL GROUND NATIONAL MONUMENT",
+      "lat": 40.714499,
+      "lon": -74.0043585,
+      "tipo": "monumento",
+      "id": "1022704",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "ARSENAL NORTH BUILDING",
+      "lat": 40.7932976,
+      "lon": -73.9514052,
+      "tipo": "monumento",
+      "id": "1020004",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "BATTERY PARK CITY FERRY LANDING",
+      "lat": 40.7150749,
+      "lon": -74.0175995,
+      "tipo": "muelle",
+      "id": "1029968",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "BATTERY PARK SLIP 6 FERRY LANDING",
+      "lat": 40.7036103,
+      "lon": -74.017837,
+      "tipo": "muelle",
+      "id": "1035993",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "BROOKLYN BRIDGE PARK PIER 6 FERRY LANDING",
+      "lat": 40.6922938,
+      "lon": -74.0018781,
+      "tipo": "muelle",
+      "id": "1035937",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "9/11 MEMORIAL MUSEUM",
+      "lat": 40.7114285,
+      "lon": -74.0126587,
+      "tipo": "museo",
+      "id": "1010586",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "AMERICAN MUSEUM OF NATURAL HISTORY",
+      "lat": 40.7810731,
+      "lon": -73.9735608,
+      "tipo": "museo",
+      "id": "7586",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "AMSTERDAM DEPOT",
+      "lat": 40.8144594,
+      "lon": -73.9543153,
+      "tipo": "museo",
+      "id": "1009268",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "ANNE FRANK CENTER USA",
+      "lat": 40.7211437,
+      "lon": -73.9996322,
+      "tipo": "museo",
+      "id": "1008813",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "ASIA SOCIETY & MUSEUM",
+      "lat": 40.7698228,
+      "lon": -73.9643331,
+      "tipo": "museo",
+      "id": "1018407",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "CHAIM GROSS STUDIO MUSEUM",
+      "lat": 40.7284847,
+      "lon": -73.9988516,
+      "tipo": "museo",
+      "id": "5427",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "CHILDREN'S MUSEUM OF MANHATTAN",
+      "lat": 40.7859232,
+      "lon": -73.9772998,
+      "tipo": "museo",
+      "id": "5942",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "CHILDRENS MUSEUM OF THE ARTS",
+      "lat": 40.72764,
+      "lon": -74.0080294,
+      "tipo": "museo",
+      "id": "1028952",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "COOPER HEWITT SMITHSONIAN DESIGN MUSEUM",
+      "lat": 40.7843773,
+      "lon": -73.957859,
+      "tipo": "museo",
+      "id": "14221",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "DAHESH MUSEUM OF ART",
+      "lat": 40.7251253,
+      "lon": -74.0048014,
+      "tipo": "museo",
+      "id": "1031856",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "MET CLOISTERS MUSEUM METROPOLITAN MUSEUM OF ART",
+      "lat": 40.8648628,
+      "lon": -73.9318657,
+      "tipo": "museo",
+      "id": "9907",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "METROPOLITAN MUSEUM OF ART",
+      "lat": 40.7788317,
+      "lon": -73.9636737,
+      "tipo": "museo",
+      "id": "5403",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "SOLOMON R GUGGENHEIM MUSEUM",
+      "lat": 40.7829732,
+      "lon": -73.9590031,
+      "tipo": "museo",
+      "id": "5793",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "WHITNEY MUSEUM OF AMERICAN ART",
+      "lat": 40.7395532,
+      "lon": -74.0091602,
+      "tipo": "museo",
+      "id": "1028672",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "BATTERY PARK",
+      "lat": 40.7030529,
+      "lon": -74.0156704,
+      "tipo": "parque",
+      "id": "1512",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "BATTERY PARK AT SOUTH STREET",
+      "lat": 40.7009378,
+      "lon": -74.0151392,
+      "tipo": "parque",
+      "id": "17574",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "BATTERY PARK AT WEST STREET",
+      "lat": 40.7041228,
+      "lon": -74.0175196,
+      "tipo": "parque",
+      "id": "435",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "BATTERY PARK CITY ESPLANADE",
+      "lat": 40.711381,
+      "lon": -74.0179792,
+      "tipo": "parque",
+      "id": "1030170",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "BATTERY PARK SEAGLASS CAROUSEL",
+      "lat": 40.7021717,
+      "lon": -74.0149969,
+      "tipo": "parque",
+      "id": "1029508",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "BRYANT PARK",
+      "lat": 40.7535049,
+      "lon": -73.982965,
+      "tipo": "parque",
+      "id": "1036072",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "BRYANT PARK CAROUSEL",
+      "lat": 40.7534179,
+      "lon": -73.9838785,
+      "tipo": "parque",
+      "id": "1030310",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "CENTRAL PARK",
+      "lat": 40.7823774,
+      "lon": -73.9652398,
+      "tipo": "parque",
+      "id": "1010265",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "CENTRAL PARK 79 ST MAINTENANCE YARD",
+      "lat": 40.7804677,
+      "lon": -73.9711644,
+      "tipo": "parque",
+      "id": "1024329",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "CENTRAL PARK ALEXANDER HAMILTON STATUE",
+      "lat": 40.7810317,
+      "lon": -73.964563,
+      "tipo": "parque",
+      "id": "1035087",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "CENTRAL PARK ALICE IN WONDERLAND STATUE",
+      "lat": 40.7750378,
+      "lon": -73.9665322,
+      "tipo": "parque",
+      "id": "1002126",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "CENTRAL PARK ARSENAL BUILDING",
+      "lat": 40.7677188,
+      "lon": -73.9712678,
+      "tipo": "parque",
+      "id": "1142",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "CENTRAL PARK ARTHUR ROSS PINETUM",
+      "lat": 40.7834242,
+      "lon": -73.966688,
+      "tipo": "parque",
+      "id": "1133",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "CENTRAL PARK BELVEDERE CASTLE",
+      "lat": 40.7794215,
+      "lon": -73.9690815,
+      "tipo": "parque",
+      "id": "1002128",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "CENTRAL PARK BETHESDA FOUNTAIN",
+      "lat": 40.7743196,
+      "lon": -73.9708309,
+      "tipo": "parque",
+      "id": "18808",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "CENTRAL PARK BETHESDA TERRACE",
+      "lat": 40.7739447,
+      "lon": -73.9709996,
+      "tipo": "parque",
+      "id": "1028449",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "CENTRAL PARK BURNETT MEMORIAL FOUNTAIN",
+      "lat": 40.7932146,
+      "lon": -73.9527506,
+      "tipo": "parque",
+      "id": "15054",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "BROOKLYN BRIDGE EB RB",
+      "lat": 40.7077291,
+      "lon": -73.9990168,
+      "tipo": "puente",
+      "id": "1031142",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "BROOKLYN BRIDGE EN RP FDR DR",
+      "lat": 40.7084942,
+      "lon": -73.9994479,
+      "tipo": "puente",
+      "id": "1034053",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "BROOKLYN BRIDGE EN RP PEARL ST",
+      "lat": 40.7096103,
+      "lon": -74.0016511,
+      "tipo": "puente",
+      "id": "1034052",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "BROOKLYN BRIDGE PEDESTRIAN",
+      "lat": 40.7079978,
+      "lon": -73.9992523,
+      "tipo": "puente",
+      "id": "1026932",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "BROOKLYN BRIDGE WB RB",
+      "lat": 40.7078016,
+      "lon": -73.9988965,
+      "tipo": "puente",
+      "id": "1031141",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "CENTRAL PARK BOW BRIDGE",
+      "lat": 40.7757837,
+      "lon": -73.9717858,
+      "tipo": "puente",
+      "id": "1002127",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "MANHATTAN BRIDGE BIKE PATH",
+      "lat": 40.7096534,
+      "lon": -73.9917452,
+      "tipo": "puente",
+      "id": "1026944",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    },
+    {
+      "nombre": "MANHATTAN BRIDGE EASTBOUND RB",
+      "lat": 40.7092415,
+      "lon": -73.9918764,
+      "tipo": "puente",
+      "id": "1031144",
+      "fuente": "https://data.cityofnewyork.us/City-Government/CommonPlace/t95h-5fsr"
+    }
+  ]
+}
