@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 2.9.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 2.9.1 · no se edita a mano: edita los documentos de origen -->
 
 # MOTOR CITY · Documento único
 
@@ -1015,6 +1015,22 @@ new MC.Bucle({
 | `node motor.mjs reporte "título" --juego X` | Deja el reporte de un cambio hecho desde otro juego. |
 | `node motor.mjs sincronizar ../Juego` | Copia el motor a `Juego/motor-city/`. |
 | `python3 geo/territorio.py …` | Craquea un lugar real. |
+
+### Guardado por sectores
+
+`MC.GuardadoSectores` guarda cambios JSON asociados a IDs estables y a sectores del mundo. La aplicación decide qué objetos crear o retirar cuando `actualizar` informa las claves que despiertan y duermen. Cada instantánea tiene `schema_version`, identificador del mundo y lado del sector en metros.
+
+```js
+const sectores = new MC.GuardadoSectores({ mundo: 'guatape', lado: 128 });
+const id = MC.GuardadoSectores.id('guatape', 'valla', 'calle-27-valla-1');
+sectores.cambiar(70, 20, id, { rota: true });
+const actividad = sectores.actualizar(70, 20, 1);
+sectores.guardar('mi-juego.sectores');
+const vuelta = MC.GuardadoSectores.leer('mi-juego.sectores');
+console.log(vuelta.obtener(70, 20, id));
+```
+
+`guardar` devuelve `false` si el almacenamiento falla. `leer` devuelve `null` si no existe el dato y lanza un error para datos inválidos o versiones futuras. Para migrar una versión previa se pasa a `leer` o `restaurar` un objeto de funciones por número de versión. Cada función recibe una copia y debe aumentar `schema_version` exactamente en uno. El administrador conserva cambios, mientras el juego debe conectar los eventos y aplicar los datos al despertar cada sector.
 
 
 ---
@@ -2813,6 +2829,13 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 ---
 
 # ANEXO I. Bitácora (`BITACORA.md`)
+
+
+### 20 de noviembre de 2026 · 2.9.1 · Persistencia por sectores
+
+Se añadió `MC.GuardadoSectores`, con claves estables, cambios JSON por sector, transición entre sectores activos y dormidos, guardado atómico y migradores versionados. Las pruebas verifican retorno, migración y fallo de almacenamiento. La integración de esos cambios con los objetos y huellas de Mandados sigue pendiente.
+
+La auditoría de los enlaces nuevos y las tareas abiertas está en `ENTREGA-CHATGPT-MOTOR-CITY-2.6.md`.
 
 
 ### 20‑nov‑2026 · 2.9.0 · Unión de la 2.8 (Claude) con la 2.7.1 (ChatGPT/Codex) (Claude Code)

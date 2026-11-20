@@ -1,5 +1,12 @@
 # Bitácora de Motor City
 
+## 20 de noviembre de 2026 · 2.9.1 · Persistencia por sectores
+
+Se añadió `MC.GuardadoSectores`, con claves estables, cambios JSON por sector, transición entre sectores activos y dormidos, guardado atómico y migradores versionados. Las pruebas verifican retorno, migración y fallo de almacenamiento. La integración de esos cambios con los objetos y huellas de Mandados sigue pendiente.
+
+La auditoría de los enlaces nuevos y las tareas abiertas está en `ENTREGA-CHATGPT-MOTOR-CITY-2.6.md`.
+
+
 ## 20‑nov‑2026 · 2.9.0 · Unión de la 2.8 (Claude) con la 2.7.1 (ChatGPT/Codex) (Claude Code)
 Codex entregó la 2.7.1 en paralelo con la 2.8:
 - 6 atlas de ChatGPT, con 676 cuadros;
