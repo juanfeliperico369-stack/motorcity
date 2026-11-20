@@ -1,0 +1,35 @@
+name: NYC · lugares oficiales G-H18
+on:
+  push:
+    branches: [claude/motor-city-engine-xu7p4y]
+    paths: [herramientas/lugares-nyc.mjs, .github/workflows/nueva-york-lugares.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  generar:
+    if: github.ref == 'refs/heads/claude/motor-city-engine-xu7p4y'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node herramientas/lugares-nyc.mjs --probar
+      - run: node herramientas/lugares-nyc.mjs
+      - name: Publicar archivo verificado en la rama
+        run: |
+          node -e "const x=require('./contenido/nueva-york-lugares.json');if(x.cantidad!==50||new Set(x.lugares.map(o=>o.id)).size!==50)process.exit(1)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add contenido/nueva-york-lugares.json
+          if ! git diff --cached --quiet; then
+            git commit -m "data: 50 lugares oficiales de Manhattan G-H18"
+            git push origin HEAD:$GITHUB_REF_NAME
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: manhattan-50
+          path: contenido/nueva-york-lugares.json
+          if-no-files-found: error
