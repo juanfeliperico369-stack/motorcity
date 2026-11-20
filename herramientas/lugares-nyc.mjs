@@ -14,27 +14,65 @@ function clase(r) {
  if(t==='13'&&d==='1')return 'monumento';return null;
 }
 const CLAVES=/CENTRAL PARK|BRYANT PARK|BATTERY PARK|RIVERSIDE PARK|WASHINGTON SQUARE|FORT TRYON|HIGH LINE|BROOKLYN BRIDGE|MANHATTAN BRIDGE|WILLIAMSBURG BRIDGE|METROPOLITAN|GUGGENHEIM|WHITNEY|NATURAL HISTORY|MADISON SQUARE/;
+/* El tipo oficial identifica instalaciones, no siempre destinos visitables: filtrar accesos privados,
+   rampas como puentes y subservicios que distorsionaban el catálogo de lugares. */
+const NO_DESTINO=/MAINTENANCE|STORAGE|DEPOT|SERVICE BUILDING|UTILITY|COMFORT STATION|RESTROOM|OPERATIONS CENTER|ELECTRICAL|PUMP HOUSE|FIELD HOUSE|TOILET/;
+function visitable(tipo,nombre) {
+ const n=nombre.toUpperCase();
+ if(NO_DESTINO.test(n))return false;
+ if(tipo==='museo')return /MUSEUM|GALLERY|CULTURAL CENTER|ART CENTER|ANNE FRANK CENTER|HISTORICAL SOCIETY|INSTITUTE OF ART/.test(n);
+ if(tipo==='parque')return /(?:PARK|GARDEN|PLAYGROUND|GREENWAY|SQUARE|ESPLANADE|PROMENADE|RECREATION AREA)$/.test(n);
+ if(tipo==='puente')return /BRIDGE/.test(n) && !/\b(?:RB|RP|RAMP|APPROACH|ENTRANCE|EXIT|EB|WB|EASTBOUND|WESTBOUND|SERVICE ROAD)\b/.test(n);
+ if(tipo==='garaje')return !/DPR|POLICE|FIRE DEPT|RAMBLE|NYC DOT|CITY SERVICE|MUNICIPAL/.test(n);
+ if(tipo==='mirador')return /OBSERVATION|OBSERVATORY|LOOKOUT|VIEWPOINT|OVERLOOK/.test(n);
+ if(tipo==='muelle')return !/BROOKLYN BRIDGE PARK|STATEN ISLAND|JERSEY CITY|HOBOKEN/.test(n);
+ if(tipo==='monumento')return /MONUMENT|MEMORIAL|STATUE|LANDMARK|HISTORIC SITE/.test(n);
+ return false;
+}
+function lugarUnico(item) {
+ const n=item.nombre.toUpperCase();
+ if(item.tipo==='puente') {
+   const q=n.match(/^(.+? BRIDGE)\b/);
+   return item.tipo+':' +(q?q[1]:n);
+ }
+ if(item.tipo==='parque')return item.tipo+':'+n.replace(/\b(?:NORTH|SOUTH|EAST|WEST)\s+(?:ENTRANCE|EXIT|SIDE)$/,'').trim();
+ return item.tipo+':'+n;
+}
+
 function transformar(filas) {
  const a=[],nombres=new Set();
  for(const x of filas){
   const t=clase(x),p=x.the_geom?.coordinates,n=String(x.feature_name||'').trim().replace(/\s+/g,' ');
-  if(String(x.boroughcode)!=='1'||!t||!p||!x.placeid||n.length<4)continue;
+  if(String(x.boroughcode)!=='1'||!t||!p||!x.placeid||n.length<4||!visitable(t,n))continue;
   const [lon,lat]=p.map(Number);
   if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<40.68||lat>40.88||lon< -74.03||lon> -73.90)continue;
   const k=n.toLowerCase();if(nombres.has(k))continue;nombres.add(k);
   a.push({nombre:n,lat:+lat.toFixed(7),lon:+lon.toFixed(7),tipo:t,id:String(x.placeid),fuente:FUENTE});
  }
  a.sort((x,y)=>Number(CLAVES.test(y.nombre.toUpperCase()))-Number(CLAVES.test(x.nombre.toUpperCase()))||x.nombre.localeCompare(y.nombre,'en'));
- const seleccion=[],ids=new Set(),incluir=x=>{if(!ids.has(x.id)){ids.add(x.id);seleccion.push(x)}};
- for(const [tipo,max] of Object.entries(CUOTAS))a.filter(x=>x.tipo===tipo).slice(0,max).forEach(incluir);
+ const seleccion=[],ids=new Set(),claves=new Set();
+ const incluir=x=>{
+  const clave=lugarUnico(x);
+  if(!ids.has(x.id)&&!claves.has(clave)){ids.add(x.id);claves.add(clave);seleccion.push(x)}
+ };
+ /* Priorizar hitos reconocibles y elegir municipios/latitudes diferentes cuando hay oferta. */
+ for(const [tipo,max] of Object.entries(CUOTAS)) {
+   const opciones=a.filter(x=>x.tipo===tipo), grupos=[[],[],[],[],[]];
+   for(const p of opciones)grupos[Math.max(0,Math.min(4,Math.floor((p.lat-40.68)/.04)))].push(p);
+   const antes=seleccion.length;
+   for(let i=0;i<opciones.length && seleccion.length-antes<max;i++){
+     const g=grupos[i%5]; if(g.length)incluir(g.shift());
+   }
+   for(const p of opciones){if(seleccion.length-antes>=max)break;incluir(p);}
+ }
  for(const x of a){if(seleccion.length>=50)break;incluir(x);}
  if(seleccion.length!==50)throw Error('CommonPlace no devolvió 50: '+seleccion.length);
  return seleccion.sort((a,b)=>a.tipo.localeCompare(b.tipo,'es')||a.nombre.localeCompare(b.nombre,'en'));
 }
 if(process.argv.includes('--probar')) {
- const tip=[['3','4','Museo'],['4','1','Parque'],['6','8','Puente'],['6','7','Muelle'],['13','1','Monumento'],['7','4','Garage'],['4','1','Observation']];
+ const tip=[['3','4','Museum'],['4','1','Park'],['6','8','Bridge'],['6','7','Ferry Landing'],['13','1','Memorial'],['7','4','Garage'],['4','1','Observation Deck']];
  const d=Array.from({length:140},(_,i)=>{const [facility_type,facility_domains,n]=tip[i%tip.length];return {facility_type,facility_domains,feature_name:n+' '+i,boroughcode:'1',placeid:String(i+1),the_geom:{coordinates:[-73.97,40.75]}}});
- const v=transformar(d);if(v.length!==50||new Set(v.map(x=>x.id)).size!==50)throw Error('Selección incorrecta');console.log('✓ 50 puntos válidos (autoprueba sin internet)');
+ const v=transformar(d);if(v.length!==50||new Set(v.map(x=>x.id)).size!==50||v.some(x=>/MAINTENANCE|DEPOT|STORAGE/.test(x.nombre)))throw Error('Selección incorrecta');console.log('✓ 50 puntos válidos (autoprueba sin internet)');
 }else {
  const where=new URL(API);where.searchParams.set('$select','the_geom,feature_name,placeid,facility_type,facility_domains,boroughcode');where.searchParams.set('$where',"boroughcode='1'");where.searchParams.set('$limit','50000');
  let res=await fetch(where,{signal:AbortSignal.timeout(60000)});
