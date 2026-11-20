@@ -34,7 +34,7 @@ function jugar() {
   const lat = generado ? 6.2 : 6.234, centro = generado ? M.generado.pueblos[0] : M.geoAMetros(6.2338, -75.1592), c0 = M.viaCercana(centro.x, centro.y, 400) || { x: centro.x, y: centro.y, ang: 0 };
   /* zoom legible en cualquier pantalla: ~7 px de pantalla por metro (una persona mide ~12 px; un carro, ~30) */
   const dpr0 = Math.min(2, devicePixelRatio || 1);
-  const reloj = new MC.Reloj({ vel: 1.5 }), clima = new MC.ClimaGlobal({ lat, alt: M.cota(c0.x, c0.y) }), vistas = new MC.Vistas(M), camara = new MC.Camara({ zoom: Math.max(9, Math.min(18, Math.min(innerWidth, innerHeight) / 45)) * dpr0, mundo: M }); camara.limites.zoom = [.08 * dpr0, 18 * dpr0];
+  const reloj = new MC.Reloj({ vel: 1.5 }), clima = new MC.ClimaGlobal({ lat, alt: M.cota(c0.x, c0.y) }), vistas = new MC.Vistas(M), camara = new MC.Camara({ zoom: Math.max(9, Math.min(18, Math.min(innerWidth, innerHeight) / 45)) * dpr0, mundo: M }); camara.limites.zoom = [2.6 * dpr0, 22 * dpr0];   /* 3.0: tope de lejanía y de cercanía (para ver todo está el mapa) */
   /* MODO LIBRE (por defecto): todo desbloqueado y gratis para probar el motor; se puede apagar en ⚙️ Ajustes */
   let libre = leerG().libre ?? true; const pagar = (de, a, c, concepto) => libre || libro.mover(de, a, c, concepto);
   const yo = new MC.Seres.Persona({ edad: 24, forma: .55, semilla: (Math.random() * 1e6) | 0 }), cuerpo = new MC.Cuerpo(M, { x: c0.x, y: c0.y, a: c0.ang, veh: 'bici' }); cuerpo.clima = clima;
@@ -104,7 +104,10 @@ function jugar() {
     $('#casaOk').onclick = () => { const t = $('#casaTxt').value.trim(); if (!t) return; const R = MC.Hogar.desdeDireccion(M, t, { guardaDireccion: $('#casaRec').checked }); if (!R.ok) { ui.aviso('No encontré esa dirección en el mapa. Prueba con «Calle 31 # 28-15».', 3500); return; }
       hogar = R.hogar; F.hidden = true; if (!generado) escribirG({ hogar: hogar.guardar() }); const q = { exacta: 'exacta', calle: 'sobre esa calle', lugar: 'cerca de ese lugar' }[R.ubicacion.calidad] || ''; ui.aviso('🏠 Tu casa: ' + M.lugarTexto(hogar.d.x, hogar.d.y) + ' (' + q + ')', 4000); }; };
   ui.capa.querySelector('[aria-label="Mi casa"]').addEventListener('contextmenu', e => { e.preventDefault(); pedirDireccion(); });
-  ui.minimapa(vistas);
+  /* 3.0: el minimapa abre el mapa grande (ver todo sin alejar la cámara del juego); al llegar al tope de lejanía, se avisa */
+  const miniCv = ui.minimapa(vistas); miniCv.style.pointerEvents = 'auto'; miniCv.style.cursor = 'pointer'; miniCv.setAttribute('aria-label', 'Abrir el mapa');
+  const abrirMapa = () => { const P = mision && mision.actual; ui.abrirMapa(vistas, M, (P && P.x != null ? [{ x: P.x, y: P.y, color: '#ffc23a', texto: P.texto }] : []).concat(hogar ? [{ x: hogar.d.x, y: hogar.d.y, color: '#ff7a59', texto: 'Mi casa' }] : []), { x: cuerpo.x, y: cuerpo.y, a: cuerpo.a }); };
+  miniCv.addEventListener('click', abrirMapa); MC.on('zoomTope', q => { if (q === 'lejos') ui.aviso('🗺️ Para ver todo el pueblo, toca el minimapa', 2600, 'mapa'); });
   /* controles a la vista: joystick que aparece bajo el dedo y botones grandes de acción (mantener oprimido) */
   /* 2.5.1: el arte de Gemini (G‑M0…G‑M15) como piel opcional; lo que no esté o no haya cargado se dibuja procedural */
   MC.estilo = leerG().estilo || 'realista';   // 2.6: realista (texturas, desgaste y árboles de pie) o clásico (plano y limpio)
@@ -224,7 +227,7 @@ function jugar() {
     cuerpo.escala = humano ? .55 + .45 * yo.rendimiento : sinGas ? .08 : 1;
     const x0 = cuerpo.x, y0 = cuerpo.y;
     if (vistas.actual.tipo === 'pano' && seguir) { seguir.paso(dt, { acel: Math.abs(ent.stick.x) > .2 ? ent.stick.x * (vistas.pano.lado < 0 ? 1 : -1) : ent.acel, salto: ent.salto, turbo: ent.turbo }); E.pano = { trazo: seguir.trazo, s: seguir.s, id: seguir.id }; }
-    else { const gl = vistas.actual.tipo === 'gl', via = V.clase !== 'pie' ? M.viaCercana(cuerpo.x, cuerpo.y, 12) : null, entrada = MC.Manejo.aplicar(ent, cuerpo, { camara, esquema, vista: gl ? 'volante' : 'mundo', rumboVia: via ? via.ang : null }); entrada.correr = ent.stick.m > .92; if (bucear) entrada.baja = true; if (subirT > 0) { subirT -= dt; entrada.sube = true; } if (!cuerpo.nadando) bucear = false;
+    else { const gl = vistas.actual.control === 'volante', via = V.clase !== 'pie' ? M.viaCercana(cuerpo.x, cuerpo.y, 12) : null, entrada = MC.Manejo.aplicar(ent, cuerpo, { camara, esquema, vista: gl ? 'volante' : 'mundo', rumboVia: via ? via.ang : null }); entrada.correr = ent.stick.m > .92; if (bucear) entrada.baja = true; if (subirT > 0) { subirT -= dt; entrada.sube = true; } if (!cuerpo.nadando) bucear = false;
       if (ruta) { const sg = MC.Manejo.seguirRuta(cuerpo, ruta); if (!sg || sg.llego) { ruta = null; ui.aviso('📍 Llegaste'); } else if (ent.stick.m > .3) ruta = null; else Object.assign(entrada, sg); }
       entrada.lluvia = clima.lluvia; cuerpo.actualizar(impacto ? 0 : dt, entrada); }
     const ds = Math.hypot(cuerpo.x - x0, cuerpo.y - y0), st = V.clase !== 'pie' ? (desg[V.id] || (desg[V.id] = MC.Desgaste.nuevo(V))) : null; if (st) { MC.Desgaste.usar(st, ds, cuerpo.eventos.includes('choque') ? 1 : 0, clima); cuerpo.escala *= .82 + .18 * st.estado; } if (tanque[V.id] != null && !libre) tanque[V.id] = Math.max(0, tanque[V.id] - ds * garaje[V.id].consumo / 100 / 1000 * 1.4);
@@ -234,7 +237,9 @@ function jugar() {
     if (cuerpo.bloqueo && cuerpo.bloqueo !== ultBloqueo) { ultBloqueo = cuerpo.bloqueo; const b = cuerpo.bloqueo; ui.aviso((/agua|quebrada|pando/.test(b) ? '🌊 ' : /empinado|barranco/.test(b) ? '⛰️ ' : /árbol|palma/.test(b) ? '🌳 ' : /roca/.test(b) ? '🪨 ' : /borde/.test(b) ? '🧭 ' : '🚧 ') + b[0].toUpperCase() + b.slice(1)); } else if (!cuerpo.bloqueo) ultBloqueo = null;
     if (cuerpo.nadando && !nadaba) ui.aviso('🏊 Nadando: cansa rápido'); nadaba = cuerpo.nadando;
     if (mision) mision.actualizar(dt, cuerpo);
-    camara.actualizar(dt, { x: cuerpo.x, y: cuerpo.y, z: cuerpo.alturaSuelo, a: cuerpo.a, v: cuerpo.v, zCuerpo: cuerpo.z, zPaso: cuerpo.zPaso });
+    /* 3.0: contra reloj (queda menos de un cuarto del tiempo del mandado), la cámara entra en «persecución»: se aleja, se inclina y se mece */
+    camara.persecucion = mision && mision.estado === 'activa' && mision.def.limite ? MC.clamp((.3 - (mision.def.limite - mision.t) / mision.def.limite) / .3, 0, 1) : 0;
+    camara.actualizar(dt, { x: cuerpo.x, y: cuerpo.y, z: cuerpo.alturaSuelo, a: cuerpo.a, v: cuerpo.v, zCuerpo: cuerpo.z, zPaso: cuerpo.zPaso, mundo: M });
     ocu.vigilar(dt, { cuerpo, mundo: M, libro, entrada: ent, ms: vistas.ms });
     if (urbe && urbe.zonas.size && (urbeT += dt) > 6) { urbeT = 0; const r = urbe.avanzar(1); if (r.nuevos) ui.aviso('🏗️ Se construyeron ' + r.nuevos + ' edificios nuevos · ' + r.pob.toLocaleString('es-CO') + ' habitantes'); if (capaId) E.capaInfo = urbe.capa(capaId); }
     if (ambienteOn && (sonT += dt) > 1) { sonT = 0; MC.Paisaje.actualizar(ctxSonido()); } hist.paso(dt); if (mision && mision.restante < 25 && mision.estado === 'activa') hist.director.sumar('prisa', dt * .02);
@@ -246,7 +251,7 @@ function jugar() {
     if (!interior) { densidad.activa = MC.opciones.densidad !== false; redensificar(densidad.medir(dt, vistas.actual.id + (vistas.pixel ? '_px' : ''))); }
     vistas.dibujar(g, W, H, E, dt); ui.pintarJoystick(); MC.Telemetria.registro(vistas.ms, dt); if (tele && (teleT -= dt) <= 0) { teleT = .25; ui.ficha('tele', MC.Telemetria.linea(E)).hidden = false; }   /* 2.8: telemetría (percentiles) */
     /* la flecha al objetivo del mandado (en las vistas 2D): pin si se ve, flecha en el borde si no */
-    const Pm = mision && mision.actual; if (Pm && Pm.x != null && E._pr && vistas.actual.tipo === '2d') { let [sx, sy] = E._pr(Pm.x, Pm.y, 0); if (vistas.pixel) { sx *= vistas.escalaPixel; sy *= vistas.escalaPixel; } const Z = ui.zonaLibre(), d2 = W / innerWidth; MC.UI.indicador(g, W, H, sx, sy, { texto: Math.round(Math.hypot(Pm.x - cuerpo.x, Pm.y - cuerpo.y)) + ' m', escala: dEf, t: E.t, rect: [Z.x0 * d2 + 20 * dEf, Z.y0 * d2 + 10 * dEf, Z.x1 * d2 - 20 * dEf, Z.y1 * d2] }); }
+    const Pm = mision && mision.actual; const spm = Pm && Pm.x != null ? vistas.aPantalla(E, Pm.x, Pm.y, 0) : null; if (spm && vistas.actual.tipo !== 'pano') { const [sx, sy] = spm; const Z = ui.zonaLibre(), d2 = W / innerWidth; MC.UI.indicador(g, W, H, sx, sy, { texto: Math.round(Math.hypot(Pm.x - cuerpo.x, Pm.y - cuerpo.y)) + ' m', escala: dEf, t: E.t, rect: [Z.x0 * d2 + 20 * dEf, Z.y0 * d2 + 10 * dEf, Z.x1 * d2 - 20 * dEf, Z.y1 * d2] }); }
     if ((adapt += dt) > 20 && tocando) { adapt = 0; const A = MC.Musica.adaptar({ velocidad: Math.abs(cuerpo.v), hora: reloj.hora, clima }); if (A.estilo !== tocando.pieza.titulo.split(' · ').pop()) tocando = MC.Musica.tocar({ estilo: A.estilo, tema: TEMAS[temaI], energia: A.energia, compases: 16 }); }
     if ((hud -= dt) <= 0) { hud = .25;
       ui.ficha('hora', '🕐 ' + reloj.texto()); ui.ficha('clima', clima.texto()); ui.ficha('plata', libre ? '🆓 ' + cop(libro.saldo('jugador')) : '💰 ' + cop(libro.saldo('jugador'))); ui.ficha('lugar', '📍 ' + (M.calle(cuerpo.x, cuerpo.y) || M.meta.nombre));
