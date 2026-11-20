@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 4.0.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 4.0.1 · no se edita a mano: edita los documentos de origen -->
 
 # Documento de relevo · Motor City y *Turno Cero*
 
@@ -14,7 +14,7 @@
 > 3. **Nunca borres la entrada de otra IA.** Este documento es un relevo: se suma, no se reescribe.
 > 4. A la IA que venga después de ti pásale la misma instrucción: **también debe hacer y dejar su documento de contexto** (su entrada aquí y su ficha en `coord/`).
 
-**Última actualización:** 20‑nov‑2026, Claude (motor 4.0.x). **Rama de trabajo:** `claude/motor-city-engine-xu7p4y` en los cuatro repositorios. `main` de `motorcity` se avanza en rápido para GitHub Pages.
+**Última actualización:** 20‑nov‑2026, Claude (motor 4.0.1). **Rama de trabajo:** `claude/motor-city-engine-xu7p4y` en los cuatro repositorios. `main` de `motorcity` se avanza en rápido para GitHub Pages.
 
 ---
 
@@ -42,10 +42,10 @@
 | Juegos | `node motor.mjs sincronizar ../BicicletasUno` y `../MetroZero`. Después, en cada juego, sus pruebas:<ul><li>EnCicla: `node tools/build.js && node tests/run.js`;</li><li>El Metro: `node tools/build.mjs && node tools/test.mjs 100 && node tools/todo.mjs`;</li><li>Run: `node tools/build.mjs && node tools/sim.mjs 100 240`.</li></ul> |
 
 ## 3. Estado (20‑nov‑2026)
-- **Motor 4.0.0**, 64 fragmentos y 150 pruebas en verde. Ya trae:
+- **Motor 4.0.1**, 64 fragmentos y más de 150 pruebas en verde. Ya trae:
   - **`MC.Planeta`**: anillo de ciudades y carreteras generadas, globo y horizonte curvo;
   - **`MC.Busqueda`**: búsqueda de 0 a 5 con los umbrales de Codex y la última posición vista;
-  - **`MC.Modelos`**: lector GLB, con piel y animación glTF;
+  - **`MC.Modelos`**: lector GLB, con piel y animación glTF, faros de noche y abolladuras por zona;
   - **juegos con varios mundos**.
 - **Turno Cero, jugable de punta a punta:**
   - cinco actos, siete misiones y finales A, B y C;
@@ -64,7 +64,7 @@
 | 2.0–2.11 | El mundo MC4 y el craqueo de territorios (`geo/territorio.py`), física, vehículos, clima, tráfico, transporte con horario, vistas 2D, estilos, `MC.Vida`, telemetría y guardado por sectores. Ver `BITACORA.md`. |
 | 3.0–3.1 | Mundo único 3D con cámaras aéreas, fachadas, árboles low-poly, `MC.Objetos`, mapa grande; `MC.Persecucion` (Codex) y sombras solares (Codex) |
 | 4.0 | Todo lo de § 3, más Manhattan craqueado y `docs/TURNO-CERO.md` |
-| 4.0.x (este turno) | Ver la entrada de Claude en § 8 |
+| 4.0.1 | Relevo (este documento y `coord/`), luces y abolladuras de los GLB, motor y Doppler, dron policial 3D, reducción no letal, alejar hasta el planeta, eventos de carretera, contratos nuevos y arte de portada |
 
 ## 5. Falta (en orden de valor) y a quién le toca
 | # | Qué | Quién | Detalle |
@@ -76,7 +76,9 @@
 | 5 | **LOD de los GLB y más actores con esqueleto** | Codex (C‑M33) | Faltan Nadia, Noah, Cross, El Contador y transeúntes |
 | 6 | **Verificar los 19 lugares de la historia y el filtro de lenguaje** | Gemini (G‑H21, G‑H23) | — |
 | 7 | **Los pedidos adaptados a los juegos** | Codex | Bici a Guatapé (EnCicla), bus a Guatapé (El Metro) y Run por la carretera de la nada |
-| 8 | **El globo en WebGL continuo**: hoy es un lienzo 2D con transición | Codex (C‑M31) | `Planeta.globo` |
+| 8 | **El globo en WebGL continuo**. Ya se llega al globo alejando la cámara, con animación; falta que sea la misma escena 3D. | Codex (C‑M31) | `Planeta.globo` |
+| 9 | **Daño por piezas, segunda parte**: humo y fuego en 3D, puertas y capó que se sueltan. Las abolladuras por zona ya están. | Codex (C‑M35) | `js/45-glb.js` (`op.dano`) |
+| 10 | **Combate a pie más allá de reducir**: cobertura, guardias que persiguen a pie, esquivar | Codex (C‑M32) | Ya están ✊ Reducir y los conos |
 
 ## 6. Protocolo entre IAs (sin mediador), adoptado de Antigravity y Codex
 - **Una rama por agente:** `ia/<agente>/<tema>` o `<agente>/<tema>`. Nunca `push --force` sobre la rama de otro, ni sobre `main` ni sobre `gh-pages`.
@@ -118,8 +120,27 @@
 - **Riesgo que dejo:**
   - el HTML de Turno Cero pesa unos 26 MB, por las tres ciudades;
   - la carga de Medellín tarda varios segundos;
-  - en la noche los GLB oscuros se ven poco (en la 4.0.x se suma luz propia);
-  - no hay medición en celular.
+  - no hay medición en celular;
+  - los recorridos son largos a propósito (16 km de carretera ≈ 8–9 min).
+
+### Claude · 20‑nov‑2026 · 4.0.1
+- **Hecho:**
+  - este documento y el protocolo `coord/` en el motor;
+  - luces y abolladuras de los GLB;
+  - sonido de motor y Doppler;
+  - dron policial 3D;
+  - ✊ reducción no letal a pie;
+  - alejar la cámara hasta el planeta;
+  - eventos de carretera en Calle libre y 3 contratos nuevos;
+  - arte de portada (SVG);
+  - versión 4.0.1.
+- **Probé:**
+  - la suite completa del motor;
+  - el bot de la historia completa (final A, sin errores);
+  - capturas de la portada, la noche en 3D, el carro abollado y el sigilo a pie;
+  - EnCicla y El Metro con sus pruebas.
+- **No toqué** el `src/` de los juegos: Antigravity y Codex trabajan allí en sus ramas (`ia/antigravity/…`, `codex/encicla-motorcity`). Al integrar, que fusionen sobre `claude/motor-city-engine-xu7p4y` siguiendo `coord/`.
+- **A la IA que siga:** empieza por § 5. Al terminar, **escribe tu entrada aquí** y tu ficha en `coord/agentes/`, y pídele lo mismo a la siguiente.
 - **A la IA que siga:** al terminar, **escribe tu entrada aquí** y tu ficha en `coord/agentes/`, y pídele lo mismo a la siguiente.
 
 # MOTOR CITY · Documento único
@@ -739,6 +760,8 @@ No hace falta conectar ninguna aplicación.
 > 2. El contexto completo, el código exacto y las reglas están en `docs/DOCUMENTO-UNICO.md` (léelo entero). Lo que ya se hizo y lo que falta está en `docs/PEDIDOS.md`.
 > 3. Al terminar, informa en 5–10 líneas: qué hiciste, cómo lo probaste, qué aprendiste y qué falta.
 
+**Primero lee `CONTEXTO-RELEVO.md`** (el relevo entre IAs) y, al terminar, deja tu entrada en su § 8 y tu ficha en `coord/agentes/`.
+
 **Novedades de la 4.0 (20‑nov‑2026): el planeta y *Turno Cero*.** Lee `docs/TURNO-CERO.md`.
 - **El planeta** (`MC.Planeta`): Manhattan, Medellín y el Valle y Guatapé, unidos por carreteras de 12 a 16 km «en medio de la nada». Tiene horizonte curvo y vista de globo.
 - **El juego adulto *Turno Cero*** (`juegos/getaway/`) toma el canon de Codex y lo lleva a las tres ciudades.
@@ -812,12 +835,12 @@ De las obras con derechos se toman las **técnicas**; el arte que se copia es de
 #### ChatGPT · Codex («astra») · fuertes
 | Id | Tarea | Contrato | Entrega |
 |---|---|---|---|
-| **C‑M31** | **El globo en WebGL y la transición continua** | Al alejar la cámara más allá del mapa, el mundo se vuelve esfera sin corte. Debe tener:<ul><li>biomas de `MC.Planeta.BIOMAS`;</li><li>dispersión de Rayleigh simple;</li><li>las estrellas de `MC.Cosmos`.</li></ul>Con respaldo al lienzo actual (`Planeta.globo`). | `js/` + prueba |
+| **C‑M31** | **El globo en WebGL y la transición continua**. Alejar hasta el globo ya funciona, con animación (4.0.1); falta la esfera WebGL dentro de la misma escena. | Al alejar la cámara más allá del mapa, el mundo se vuelve esfera sin corte. Debe tener:<ul><li>biomas de `MC.Planeta.BIOMAS`;</li><li>dispersión de Rayleigh simple;</li><li>las estrellas de `MC.Cosmos`.</li></ul>Con respaldo al lienzo actual (`Planeta.globo`). | `js/` + prueba |
 | **C‑M32** | **Pasa tu escena 3D de acción** (`turno-cero-accion-3d.html`) **al motor**: a pie, cobertura tras `MC.Objetos`, guardias que patrullan y van a la última posición vista, combate no letal | Reusa `MC.Busqueda` (rivales a pie), `MC.Modelos.posar` (tus rigs ya se animan) y los conos del sigilo de `juegos/getaway/30-historia.js`, para que funcione en Manhattan, Medellín y Guatapé reales. Sin gore y sin instrucciones reales. | `js/` + paso «a pie» en Turno Cero |
 | **C‑M33** | **LOD de los GLB y más actores con esqueleto** | **Ya hecho por Claude:** `MC.Modelos.posar` reproduce tus rigs (12 huesos y 8 clips) en el juego.<br>**Falta:**<ul><li>LOD1 y LOD2 de vehículos y actores;</li><li>Nadia, Noah, Cross, El Contador y transeúntes con esqueleto;</li><li>pesos suaves en codos y rodillas.</li></ul> | `arte/modelos/turno-cero/` + `js/45-glb.js` |
 | **C‑M34** | **Manhattan por sectores de 1 km** (era C‑M22) | El MC4 de 10 MB por sectores alrededor del jugador, con `MC.GuardadoSectores` | Herramienta + prueba de memoria |
-| **C‑M35** | **Daño por piezas en los carros GLB**: capó, puertas y llantas | Deformar vértices por zona según `Busqueda` y los choques. Humo y fuego en 3D. | `js/45-glb.js` |
-| **C‑M36** | **Audio de persecución**: motor por capas de rpm y sirena con Doppler y oclusión aproximada | Sin samples con derechos; Web Audio | `js/61-sonido.js` |
+| **C‑M35** | **Daño por piezas en los carros GLB**: capó, puertas y llantas. **Ya hecho por Claude (4.0.1):** abolladuras por zona y faro roto (`op.dano`). Falta que las piezas se suelten, y humo y fuego en 3D. | Deformar vértices por zona según `Busqueda` y los choques. Humo y fuego en 3D. | `js/45-glb.js` |
+| **C‑M36** | **Audio de persecución**: motor por capas de rpm y sirena con Doppler y oclusión aproximada. **Ya hecho por Claude (4.0.1)** en Turno Cero; falta la oclusión y pasarlo a `js/61-sonido.js` para todos los juegos. | Sin samples con derechos; Web Audio | `js/61-sonido.js` |
 | **C‑A16** | **Texturas PBR de bajo polígono** para 6 vehículos y 6 personajes | UV más un atlas de 1024 px por familia, sin marcas, con la paleta de tu biblia | `arte/modelos/turno-cero/texturas/` |
 | **C‑A17** | **Portada vertical de Turno Cero** (1080×1920) y **5 láminas de acto** | Sin texto (la tipografía la pone el juego): Manhattan de noche, la carretera del desierto, Medellín desde el metro, la autopista con helicóptero y el embalse al amanecer | `arte/chatgpt/turno-cero/` |
 
@@ -1775,7 +1798,7 @@ MC.arte.registrar('encicla', {
   - `B.sacar()` entrega los eventos `nivel`, `embestida`, `disparo`, `herido`, `fuera`, `pinchado`, `bloqueo`, `puas`, `atrapado` y `perdidos`.
 - **`MC.Modelos`:**
   - `MC.Modelos.registrar(id, glb | base64)` y `MC.Modelos.paquete(MC_MODELOS)`;
-  - `malla.modelo(Mo, x, y, z, a, { largo | k, tinte, oscuro })`;
+  - `malla.modelo(Mo, x, y, z, a, { largo | k, tinte, oscuro, dano: { f, b, l, r } })`, con las abolladuras por zona; de noche se encienden los faros y hay luz propia (`MC.Modelos.brillo`);
   - `MC.Modelos.vehiculo(v)` elige el modelo de un vehículo del tráfico;
   - `E.modelos3d = [{ id, x, y, a, k, clip }]` pone modelos en el mundo;
   - `MC.Modelos.posar(Mo, clip, t)` anima modelos con piel glTF, y `E.jugador.modelo` anima al jugador a pie.
@@ -3400,6 +3423,30 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 ---
 
 # ANEXO I. Bitácora (`BITACORA.md`)
+
+
+### 20-nov-2026 · 4.0.1 · Relevo entre IAs y mejoras de los pedidos 4.0
+- **Pedido del autor:** «Retoma, continúa y termina: el HTML, el link, todo actualizado y siempre un documento de contexto con todo el plan, lo hecho y lo que falta (y que la otra IA haga el suyo). Retoma las nuevas peticiones y mejora el motor, el juego de prueba, el arte y la tecnología».
+- **Relevo:**
+  - `CONTEXTO-RELEVO.md` contiene el plan, el estado, lo hecho, lo que falta (con dueño), las reglas y la entrada de cada IA;
+  - es obligatorio que cada IA deje la suya y le pida lo mismo a la siguiente;
+  - se adoptó en el motor el protocolo `coord/` de Antigravity y Codex (ficha por agente y buzón donde solo se suma);
+  - el documento único empieza por el relevo.
+- **Motor:**
+  - **luces de los GLB:** los faros y las luces traseras se encienden de noche, y cada modelo tiene un mínimo de luz propia (`Modelos.brillo`);
+  - **abolladuras por zona** en los carros 3D (`op.dano` = frente, atrás, izquierda, derecha), con faro roto, a partir de los golpes;
+  - `MC.Busqueda` guarda dónde se abolló cada rival y avisa al jugador (`abolladura`);
+  - la sirena se apaga en el rival aturdido.
+  - Esto avanza C‑M35.
+- **Turno Cero:**
+  - sonido de motor por capas de rpm y sirena con efecto Doppler (C‑M36);
+  - dron policial en 3D con el modelo de Codex;
+  - **reducción no letal a pie** de los guardias (✊), con la animación de golpe de Codex;
+  - al alejar la cámara más allá del tope se pasa al planeta con animación (C‑M31, primera parte);
+  - eventos de carretera al azar en Calle libre (banda, retén, emboscada, un camionero que paga);
+  - tres contratos nuevos, uno de ellos contrarreloj;
+  - arte de portada: ilustración SVG procedural con Manhattan, el Metrocable, la Piedra del Peñol y la carretera.
+- **Pruebas:** en Node, faros y abolladuras; el bot de la historia completa sin errores; las capturas.
 
 
 ### 20-nov-2026 · 4.0.0 · El planeta y *Turno Cero*

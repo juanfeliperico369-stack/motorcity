@@ -12,7 +12,7 @@
 > 3. **Nunca borres la entrada de otra IA.** Este documento es un relevo: se suma, no se reescribe.
 > 4. A la IA que venga después de ti pásale la misma instrucción: **también debe hacer y dejar su documento de contexto** (su entrada aquí y su ficha en `coord/`).
 
-**Última actualización:** 20‑nov‑2026, Claude (motor 4.0.x). **Rama de trabajo:** `claude/motor-city-engine-xu7p4y` en los cuatro repositorios. `main` de `motorcity` se avanza en rápido para GitHub Pages.
+**Última actualización:** 20‑nov‑2026, Claude (motor 4.0.1). **Rama de trabajo:** `claude/motor-city-engine-xu7p4y` en los cuatro repositorios. `main` de `motorcity` se avanza en rápido para GitHub Pages.
 
 ---
 
@@ -40,10 +40,10 @@
 | Juegos | `node motor.mjs sincronizar ../BicicletasUno` y `../MetroZero`. Después, en cada juego, sus pruebas:<ul><li>EnCicla: `node tools/build.js && node tests/run.js`;</li><li>El Metro: `node tools/build.mjs && node tools/test.mjs 100 && node tools/todo.mjs`;</li><li>Run: `node tools/build.mjs && node tools/sim.mjs 100 240`.</li></ul> |
 
 ## 3. Estado (20‑nov‑2026)
-- **Motor 4.0.0**, 64 fragmentos y 150 pruebas en verde. Ya trae:
+- **Motor 4.0.1**, 64 fragmentos y más de 150 pruebas en verde. Ya trae:
   - **`MC.Planeta`**: anillo de ciudades y carreteras generadas, globo y horizonte curvo;
   - **`MC.Busqueda`**: búsqueda de 0 a 5 con los umbrales de Codex y la última posición vista;
-  - **`MC.Modelos`**: lector GLB, con piel y animación glTF;
+  - **`MC.Modelos`**: lector GLB, con piel y animación glTF, faros de noche y abolladuras por zona;
   - **juegos con varios mundos**.
 - **Turno Cero, jugable de punta a punta:**
   - cinco actos, siete misiones y finales A, B y C;
@@ -62,7 +62,7 @@
 | 2.0–2.11 | El mundo MC4 y el craqueo de territorios (`geo/territorio.py`), física, vehículos, clima, tráfico, transporte con horario, vistas 2D, estilos, `MC.Vida`, telemetría y guardado por sectores. Ver `BITACORA.md`. |
 | 3.0–3.1 | Mundo único 3D con cámaras aéreas, fachadas, árboles low-poly, `MC.Objetos`, mapa grande; `MC.Persecucion` (Codex) y sombras solares (Codex) |
 | 4.0 | Todo lo de § 3, más Manhattan craqueado y `docs/TURNO-CERO.md` |
-| 4.0.x (este turno) | Ver la entrada de Claude en § 8 |
+| 4.0.1 | Relevo (este documento y `coord/`), luces y abolladuras de los GLB, motor y Doppler, dron policial 3D, reducción no letal, alejar hasta el planeta, eventos de carretera, contratos nuevos y arte de portada |
 
 ## 5. Falta (en orden de valor) y a quién le toca
 | # | Qué | Quién | Detalle |
@@ -74,7 +74,9 @@
 | 5 | **LOD de los GLB y más actores con esqueleto** | Codex (C‑M33) | Faltan Nadia, Noah, Cross, El Contador y transeúntes |
 | 6 | **Verificar los 19 lugares de la historia y el filtro de lenguaje** | Gemini (G‑H21, G‑H23) | — |
 | 7 | **Los pedidos adaptados a los juegos** | Codex | Bici a Guatapé (EnCicla), bus a Guatapé (El Metro) y Run por la carretera de la nada |
-| 8 | **El globo en WebGL continuo**: hoy es un lienzo 2D con transición | Codex (C‑M31) | `Planeta.globo` |
+| 8 | **El globo en WebGL continuo**. Ya se llega al globo alejando la cámara, con animación; falta que sea la misma escena 3D. | Codex (C‑M31) | `Planeta.globo` |
+| 9 | **Daño por piezas, segunda parte**: humo y fuego en 3D, puertas y capó que se sueltan. Las abolladuras por zona ya están. | Codex (C‑M35) | `js/45-glb.js` (`op.dano`) |
+| 10 | **Combate a pie más allá de reducir**: cobertura, guardias que persiguen a pie, esquivar | Codex (C‑M32) | Ya están ✊ Reducir y los conos |
 
 ## 6. Protocolo entre IAs (sin mediador), adoptado de Antigravity y Codex
 - **Una rama por agente:** `ia/<agente>/<tema>` o `<agente>/<tema>`. Nunca `push --force` sobre la rama de otro, ni sobre `main` ni sobre `gh-pages`.
@@ -116,6 +118,25 @@
 - **Riesgo que dejo:**
   - el HTML de Turno Cero pesa unos 26 MB, por las tres ciudades;
   - la carga de Medellín tarda varios segundos;
-  - en la noche los GLB oscuros se ven poco (en la 4.0.x se suma luz propia);
-  - no hay medición en celular.
+  - no hay medición en celular;
+  - los recorridos son largos a propósito (16 km de carretera ≈ 8–9 min).
+
+### Claude · 20‑nov‑2026 · 4.0.1
+- **Hecho:**
+  - este documento y el protocolo `coord/` en el motor;
+  - luces y abolladuras de los GLB;
+  - sonido de motor y Doppler;
+  - dron policial 3D;
+  - ✊ reducción no letal a pie;
+  - alejar la cámara hasta el planeta;
+  - eventos de carretera en Calle libre y 3 contratos nuevos;
+  - arte de portada (SVG);
+  - versión 4.0.1.
+- **Probé:**
+  - la suite completa del motor;
+  - el bot de la historia completa (final A, sin errores);
+  - capturas de la portada, la noche en 3D, el carro abollado y el sigilo a pie;
+  - EnCicla y El Metro con sus pruebas.
+- **No toqué** el `src/` de los juegos: Antigravity y Codex trabajan allí en sus ramas (`ia/antigravity/…`, `codex/encicla-motorcity`). Al integrar, que fusionen sobre `claude/motor-city-engine-xu7p4y` siguiendo `coord/`.
+- **A la IA que siga:** empieza por § 5. Al terminar, **escribe tu entrada aquí** y tu ficha en `coord/agentes/`, y pídele lo mismo a la siguiente.
 - **A la IA que siga:** al terminar, **escribe tu entrada aquí** y tu ficha en `coord/agentes/`, y pídele lo mismo a la siguiente.
