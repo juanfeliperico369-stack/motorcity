@@ -9,11 +9,11 @@
 > - 🟡 está hecho, pero falta algo que no depende del código (un celular real, otra IA);
 > - ⏳ todavía no está, y se dice a quién le toca.
 
-Versión **3.0.0** · 20‑nov‑2026 · **137 pruebas en verde** (`node motor.mjs prueba --navegador`).
+Versión **3.0.0** en `main`; **3.0.1 propuesta en la PR #5** · 20‑nov‑2026 · **138 pruebas en verde en Chromium para el commit f976776** ([ejecución](https://github.com/juanfeliperico369-stack/motorcity/actions/runs/44750220010)).
 
 ## Resumen
 - **Hechos:** 76 pedidos ✅.
-- **Hechos, pero falta algo de afuera:** 5 🟡. Los 10 reels que piden iniciar sesión los describe Gemini. El motor ya está copiado en EnCicla y El Metro, pero sus IAs todavía no lo usan. Y falta probar en un celular real.
+- **Hechos, pero falta algo de afuera:** 5 🟡. Los 10 reels que piden iniciar sesión los describe Gemini. La documentación decía que el motor estaba copiado en EnCicla y El Metro, pero la auditoría de las ramas `main` no encontró `motor-city/` en sus raíces (ver `docs/AUDITORIA-ECOSISTEMA-2026-11-20.md`). Y falta probar en un celular real.
 - **Pendientes:** 6 ⏳:
   - los juegos *Motor City* (carreras) y *Extremo*;
   - bajar la maqueta de 40 ms en cualquier máquina;
@@ -185,3 +185,8 @@ Versión **3.0.0** · 20‑nov‑2026 · **137 pruebas en verde** (`node motor.m
 ## 20-nov-2026 · Entrega ChatGPT (rama de integración)
 - **C-M29 / G-H17 · Parcial funcional:** 30 objetos con parámetros de juego, guardado por sector original e IDs estables; restauración en Mandados.
 - **Pendiente:** arte y modelos detallados, streaming de objetos por sectores, prueba móvil y ejecución integral de Playwright desde un clon.
+
+## 20-nov-2026 · Nueva ronda de IA y diseño
+- **C-M25:** portada editorial sin neón ni tarjetas genéricas, con prueba en Chromium `pruebas/portada.mjs`; ejecución CI pendiente de inspección en el commit correspondiente.
+- **G-H19, parcial:** investigación documental de persecuciones de tres juegos. No se inventan minutos/segundos ni conteo de policías; `reportes/2026-11-20-gemini-persecuciones.md`.
+- **G-H18:** pendiente de catálogo de 50 puntos de Manhattan basado en una fuente geográfica consultable; no se fabricarán coordenadas.
