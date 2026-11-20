@@ -1,5 +1,23 @@
 # Bitácora de Motor City
 
+## 20‑nov‑2026 · 2.9.0 · Unión de la 2.8 (Claude) con la 2.7.1 (ChatGPT/Codex) (Claude Code)
+Codex entregó la 2.7.1 en paralelo con la 2.8:
+- 6 atlas de ChatGPT, con 676 cuadros;
+- el agua precalculada en los MC4;
+- el gancho `textura` y los charcos;
+- el estilo de 1 bit con ruido azul;
+- la caché de fachadas en la maqueta;
+- los adaptadores de Godot y three.js probados;
+- la auditoría C‑M1, con sus arreglos.
+
+Se unió todo en la rama sin perder nada:
+- las huellas y las palomas de la 2.8 conviven con los charcos de Codex;
+- los faros y las luces de freno funcionan también con el vehículo de la piel de ChatGPT (`vehiculoArriba`);
+- la cubierta sobre columnas y las ventanas de las casas de un piso pasan por la caché de fachadas;
+- el hitstop se combina con la lluvia en el bucle de Mandados.
+
+Son 12 estilos. Versión 2.9.0.
+
 ## 20‑nov‑2026 · 2.8.0 · La entrega maestra de referencias, al motor (Claude Code)
 **Pedido:** el autor trajo `MOTOR-CITY-ENTREGA-MAESTRA.md` («prepara todo»). Reúne los 14 reels, los videos y el análisis de ChatGPT y de Gemini:
 - 25 fichas;
@@ -42,6 +60,13 @@
 - los 11 estilos en Mandados.
 
 Además se hizo una revisión visual de noche (faros), de las palomas y de los filtros nuevos.
+
+## 20 de noviembre de 2026 · 2.7.1 · Arte a escala y adaptadores
+
+Mandados incorpora seis atlas de ChatGPT con 676 cuadros. Los 997 cuadros del paquete de Gemini pasan el revisor tras reparar los recortes y márgenes. Guatapé y Medellín cargan su hidrografía desde MC4. Godot 4 y three.js abrieron escenas del motor.
+
+El banco integrado pasó 130 pruebas. La maqueta midió 34,9 ms con CPU 4×, por encima de la meta de 20 ms. El informe enlaza las pruebas de los tres juegos, las capturas y los pendientes. [Entrega del motor compartido](ENTREGA-CHATGPT-MOTOR-CITY-2.6.md)
+
 
 ## 20‑nov‑2026 · 2.7.0 · Estilos gráficos, peso y vida, y motores potentes (Claude Code)
 **Pedido:**

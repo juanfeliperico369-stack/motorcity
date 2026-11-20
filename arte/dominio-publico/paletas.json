@@ -558,5 +558,65 @@
    0.108
   ],
   "curaduria": "Gemini G-H8"
+ },
+ {
+  "id": "col_12",
+  "autor": "José María Espinosa, 1840 (f. 1883)",
+  "obra": "Batalla de Boyacá",
+  "anio": null,
+  "archivo": "Batalla de Boyacá por José María Espinosa (1840).jpg",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Batalla_de_Boyac%C3%A1_por_Jos%C3%A9_Mar%C3%ADa_Espinosa_(1840).jpg",
+  "licencia": "Public domain",
+  "colores": [
+   "#c9c8c0",
+   "#6f6243",
+   "#564b31",
+   "#8a7d5c",
+   "#3d321f",
+   "#e6dec6",
+   "#b9b5aa",
+   "#a59c86"
+  ],
+  "pesos": [
+   0.144,
+   0.13,
+   0.129,
+   0.125,
+   0.119,
+   0.118,
+   0.118,
+   0.116
+  ],
+  "curaduria": "Gemini G-H8"
+ },
+ {
+  "id": "col_14",
+  "autor": "Ricardo Acevedo Bernal, c. 1910 (f. 1930)",
+  "obra": "Retrato de Francisco Antonio Cano",
+  "anio": null,
+  "archivo": "Francisco Antonio Cano by Ricardo Acevedo Bernal.jpg",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Francisco_Antonio_Cano_by_Ricardo_Acevedo_Bernal.jpg",
+  "licencia": "Public domain",
+  "colores": [
+   "#907789",
+   "#352b39",
+   "#0f0506",
+   "#494054",
+   "#191216",
+   "#77566a",
+   "#bba0a7",
+   "#2e181d"
+  ],
+  "pesos": [
+   0.171,
+   0.164,
+   0.145,
+   0.122,
+   0.112,
+   0.105,
+   0.097,
+   0.083
+  ],
+  "curaduria": "Gemini G-H8"
  }
 ]

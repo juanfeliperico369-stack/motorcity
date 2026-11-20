@@ -108,16 +108,26 @@ function jugar() {
   /* 2.5.1: el arte de Gemini (G‑M0…G‑M15) como piel opcional; lo que no esté o no haya cargado se dibuja procedural */
   MC.estilo = leerG().estilo || 'realista';   // 2.6: realista (texturas, desgaste y árboles de pie) o clásico (plano y limpio)
   let arte = leerG().arte || 'gemini'; const hayGemini = !!(window.MC_ARTE && MC_ARTE.gemini);
-  if (hayGemini) MC.Pieles.instalar('gemini', MC_ARTE.gemini, { partes: ['prop', 'fachada', 'mueble'], arboles: false, pixel: () => vistas.pixel, usar: arte === 'gemini' }).catch(e => ocu.anotar && ocu.anotar('arte', String(e)));
-  const cambiarArte = () => { arte = MC.arte.activa === 'gemini' ? 'motor' : 'gemini'; MC.arte.usar(arte); escribirG({ arte }); ui.aviso(arte === 'gemini' ? '🎨 Arte de Gemini: postes, bancas, paraderos, fachadas y muebles' : '🎨 Arte del motor (procedural)', 2500); };
+  const pieles = ['motor', ...Object.keys(window.MC_ARTE || {})];
+  if (!pieles.includes(arte)) arte = 'motor';
+  for (const id of pieles.slice(1)) {
+    const opciones = id === 'gemini' ? { partes: ['prop', 'fachada', 'mueble'], arboles: false } : { respetarAspecto: true, recorte: [0,0,1,1] };
+    MC.Pieles.instalar(id, MC_ARTE[id], { ...opciones, pixel: () => vistas.pixel }).then(() => {
+      if (arte === id) { MC.arte.usar(id); vistas.losas.limpiar(); vistas.losasLejos.limpiar(); }
+    }).catch(e => ocu.anotar && ocu.anotar('arte', String(e)));
+  }
+  const cambiarArte = () => {
+    arte = pieles[(pieles.indexOf(arte) + 1) % pieles.length];
+    MC.arte.usar(arte); escribirG({ arte }); ui.aviso('🎨 Arte · ' + arte, 2500);
+  };
   ui.joystick(ctl, { texto: matchMedia('(pointer: fine)').matches && !('ontouchstart' in window) ? 'Flechas o WASD · o arrastra' : 'Arrastra para moverte' });
   ui.accion({ id: 'salto', icono: '⤒', texto: 'Saltar', ctl }); ui.accion({ id: 'turbo', icono: '⚡', texto: 'Turbo (mantener)', mantener: true, ctl });
   const bBaja = ui.accion({ id: 'baja', icono: '🔽', texto: 'Bajar / bucear (mantener)', mantener: true, ctl }), bSube = ui.accion({ id: 'sube', icono: '🔼', texto: 'Subir (mantener)', mantener: true, ctl }); bBaja.hidden = bSube.hidden = true;
   /* 2.7: estilos gráficos (realista, clásico, cómic, manga, anime, novela gráfica, ukiyo-e y acuarela) */
-  const DESC_ESTILO = { realista: 'asfalto gastado, tejas y árboles de pie', clasico: 'plano y limpio', comic: 'tinta, semitono y onomatopeyas', manga: 'blanco y negro, tramado y líneas de velocidad', anime: 'cel shading y cielos de Shinkai', novela: 'noir: tinta, sombras negras y un rojo', ukiyoe: 'paleta de Hokusai sobre papel', vintage: 'foto vieja: sepia, papel y viñeta', crt: 'pantalla vieja con líneas de barrido', termica: 'el calor del mundo, como un dron térmico', acuarela: 'pigmento y papel, como la Comisión Corográfica' };
+  const DESC_ESTILO = { realista: 'asfalto gastado, tejas y árboles de pie', clasico: 'plano y limpio', comic: 'tinta, semitono y onomatopeyas', unbit: '1 bit: blanco y negro con trama de ruido azul, como Obra Dinn', manga: 'blanco y negro, tramado y líneas de velocidad', anime: 'cel shading y cielos de Shinkai', novela: 'noir: tinta, sombras negras y un rojo', ukiyoe: 'paleta de Hokusai sobre papel', vintage: 'foto vieja: sepia, papel y viñeta', crt: 'pantalla vieja con líneas de barrido', termica: 'el calor del mundo, como un dron térmico', acuarela: 'pigmento y papel, como la Comisión Corográfica' };
   const ponEstilo = id => { MC.estilo = id; escribirG({ estilo: id }); ui.aviso('🖌️ ' + MC.Estilo.p.n + ': ' + (DESC_ESTILO[id] || ''), 2500, 'estilo'); };
   const menuEstilo = () => ui.menu('🖌️ Estilo', MC.Estilo.lista().map(e => ({ id: e.id, texto: e.icono + ' ' + e.n + (MC.estilo === e.id ? ' ✓' : '') })), ponEstilo);
-  const menuVista = () => ui.menu('Vista', MC.VISTAS.map(v => ({ id: v.id, texto: v.icon + ' ' + v.n + (vistas.actual.id === v.id ? ' ✓' : '') })).concat([{ id: 'pixel', texto: '👾 Pixel: ' + (vistas.pixel ? 'sí' : 'no') }].concat([{ id: 'estilo', texto: '🖌️ Estilo: ' + MC.Estilo.p.icono + ' ' + MC.Estilo.p.n }], hayGemini ? [{ id: 'arte', texto: '🎨 Arte: ' + (MC.arte.activa === 'gemini' ? 'de Gemini' : 'del motor') }] : []), [{ id: 'mas', texto: '🔍 Acercar' }, { id: 'menos', texto: '🔎 Alejar' }]), id => { if (id === 'pixel') vistas.pixel = !vistas.pixel; else if (id === 'arte') cambiarArte(); else if (id === 'estilo') menuEstilo(); else if (id === 'mas') camara.zoom = Math.min(camara.limites.zoom[1], camara.zoom * 1.5); else if (id === 'menos') camara.zoom = Math.max(camara.limites.zoom[0], camara.zoom / 1.5); else { iv = Math.max(0, VIST.indexOf(id)); ponVista(id); } });
+  const menuVista = () => ui.menu('Vista', MC.VISTAS.map(v => ({ id: v.id, texto: v.icon + ' ' + v.n + (vistas.actual.id === v.id ? ' ✓' : '') })).concat([{ id: 'pixel', texto: '👾 Pixel: ' + (vistas.pixel ? 'sí' : 'no') }].concat([{ id: 'estilo', texto: '🖌️ Estilo: ' + MC.Estilo.p.icono + ' ' + MC.Estilo.p.n }], hayGemini ? [{ id: 'arte', texto: '🎨 Arte: ' + MC.arte.activa }] : []), [{ id: 'mas', texto: '🔍 Acercar' }, { id: 'menos', texto: '🔎 Alejar' }]), id => { if (id === 'pixel') vistas.pixel = !vistas.pixel; else if (id === 'arte') cambiarArte(); else if (id === 'estilo') menuEstilo(); else if (id === 'mas') camara.zoom = Math.min(camara.limites.zoom[1], camara.zoom * 1.5); else if (id === 'menos') camara.zoom = Math.max(camara.limites.zoom[0], camara.zoom / 1.5); else { iv = Math.max(0, VIST.indexOf(id)); ponVista(id); } });
   const ayuda = () => ui.dialogo('🎮 Cómo se juega', '<div style="text-align:left;line-height:1.5">' +
     '• <b>Moverte:</b> pon el pulgar abajo a la izquierda y arrastra (o flechas / WASD).<br>• <b>Saltar ⤒ y turbo ⚡:</b> abajo a la derecha (o espacio y Shift).<br>' +
     '• <b>Mirar:</b> arrastra a la derecha para girar la cámara; pellizca o usa la rueda para acercar.<br>• <b>Mandados:</b> sigue la <b style="color:#ffc23a">flecha amarilla</b>; al llegar, «🚪 Entrar» y entrega en la mano.<br>' +
@@ -211,7 +221,7 @@ function jugar() {
     if (vistas.actual.tipo === 'pano' && seguir) { seguir.paso(dt, { acel: Math.abs(ent.stick.x) > .2 ? ent.stick.x * (vistas.pano.lado < 0 ? 1 : -1) : ent.acel, salto: ent.salto, turbo: ent.turbo }); E.pano = { trazo: seguir.trazo, s: seguir.s, id: seguir.id }; }
     else { const gl = vistas.actual.tipo === 'gl', via = V.clase !== 'pie' ? M.viaCercana(cuerpo.x, cuerpo.y, 12) : null, entrada = MC.Manejo.aplicar(ent, cuerpo, { camara, esquema, vista: gl ? 'volante' : 'mundo', rumboVia: via ? via.ang : null }); entrada.correr = ent.stick.m > .92; if (bucear) entrada.baja = true; if (subirT > 0) { subirT -= dt; entrada.sube = true; } if (!cuerpo.nadando) bucear = false;
       if (ruta) { const sg = MC.Manejo.seguirRuta(cuerpo, ruta); if (!sg || sg.llego) { ruta = null; ui.aviso('📍 Llegaste'); } else if (ent.stick.m > .3) ruta = null; else Object.assign(entrada, sg); }
-      cuerpo.actualizar(impacto ? 0 : dt, entrada); }
+      entrada.lluvia = clima.lluvia; cuerpo.actualizar(impacto ? 0 : dt, entrada); }
     const ds = Math.hypot(cuerpo.x - x0, cuerpo.y - y0), st = V.clase !== 'pie' ? (desg[V.id] || (desg[V.id] = MC.Desgaste.nuevo(V))) : null; if (st) { MC.Desgaste.usar(st, ds, cuerpo.eventos.includes('choque') ? 1 : 0, clima); cuerpo.escala *= .82 + .18 * st.estado; } if (tanque[V.id] != null && !libre) tanque[V.id] = Math.max(0, tanque[V.id] - ds * garaje[V.id].consumo / 100 / 1000 * 1.4);
     if (mision && mision.paquete) { const carga = mision.paso >= 2 && mision.estado === 'activa'; cuerpo.escala *= carga ? MC.clamp(1 - mision.paquete.masa / (V.clase === 'pie' ? 25 : V.clase === 'rueda' ? 60 : 900), .5, 1) : 1; }
     yo.vivir(dt * 6, cuerpo.nadando ? 'corre' : cuerpo.estado || 'quieto', Math.abs(cuerpo.v), clima);   // nadar cansa como correr

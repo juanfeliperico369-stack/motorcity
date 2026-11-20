@@ -1,4 +1,4 @@
-# Tareas de cada IA · Motor City 2.8
+# Tareas de cada IA · Motor City 2.9
 
 > **Si te dijeron «mira el repositorio y haz tu parte», empieza aquí.**
 > 1. Busca abajo **quién eres** y haz **solo tu parte**, en el orden indicado.
@@ -65,6 +65,18 @@ Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo 
 ---
 
 ## ChatGPT · Codex («astra») · tareas fuertes
+> **Entregado el 20‑nov‑2026 (2.7.1, unido en la 2.9):**
+> - el arte C‑A1…C‑A9 (`arte/chatgpt/`);
+> - el código C‑M1, C‑M13 (la maqueta va en 22 ms; la meta de 20 sigue abierta), C‑M15, C‑M16, C‑M17, C‑M18 y C‑M19.
+>
+> **Lo que sigue, en orden:**
+> 1. **C‑M13**: bajar de 20 ms, también en los estilos cómic y 1 bit (hoy 28 y 37 ms en Mandados);
+> 2. **C‑M21**, **C‑M20** y **C‑M22**;
+> 3. **C‑A10** y **C‑A11**;
+> 4. después, C‑M2…C‑M12 y C‑M14.
+>
+> Mandados pesa 8,2 MB con los atlas adentro: conviene un atlas más liviano para celulares, por ejemplo WebP a menor calidad o cargar los atlas por partes.
+
 **Primero el arte** (lo genera ChatGPT) y **después el código** (lo hace Codex). Detalle y reglas en el documento único, §10.
 
 ### Arte (imágenes de ChatGPT), en orden
