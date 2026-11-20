@@ -1,0 +1,14 @@
+{
+ "ancho": 151,
+ "alto": 151,
+ "paso_m": 4,
+ "min_m": 1875.35,
+ "max_m": 1936.85,
+ "caja": [
+  2186,
+  1341,
+  2786,
+  1941
+ ],
+ "formato": "RAW 16 bits sin signo, little endian; altura = min + valor / 65535 × (max − min)"
+}
