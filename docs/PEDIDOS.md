@@ -182,6 +182,17 @@ Versión **3.0.0** en `main`; **3.0.1 propuesta en la PR #5** · 20‑nov‑2026
 | Pedidos nuevos para Gemini y ChatGPT | Hecho | G‑H14 a G‑H17, y C‑M26 a C‑M29, C‑A13 y C‑A14, en `TAREAS-IA.md`. |
 
 
+## 14. «Empieza con el monstruo, nada de *family friendly*; todo en un planeta, con caminos largos en medio de la nada»; y luego «adapta todo lo nuevo» (4.0, esta sesión)
+| Pedido | Estado |
+|---|---|
+| El juego grande y adulto | ✅ *Turno Cero* (`juegos/getaway/`), con el canon de Codex. Ver `docs/TURNO-CERO.md`. |
+| Guatapé, la mejor versión de Medellín y el Valle, y Nueva York en un solo planeta | ✅ `MC.Planeta`: anillo de 3 ciudades y 3 carreteras, con globo y horizonte curvo |
+| Caminos largos en medio de la nada para llegar a cada ciudad | ✅ 16, 12 y 15 km generados, con biomas, paradas, letrero de km y viaje ×3 |
+| Los modos, vehículos y transporte de Medellín, adaptados | ✅ Metro, cables, tranvía y Metroplús (subirse y perder a la policía), EnCicla, lancha del embalse y robo de carros |
+| Lo nuevo de Codex: espionaje 2026, artefactos y GLB | ✅ Artefactos T01, T02, T03, T05, T06, T08, T09, T11 y T04 en el juego; los 42 GLB en la cámara 3D (`MC.Modelos`) |
+| Lo nuevo de Codex: acción a pie, esqueletos y texturas | ⏳ C‑M32, C‑M33 y C‑A16 (`TAREAS-IA.md` § 4.0) |
+| Medir en un celular real | ⏳ G‑H20 y G‑H24 |
+
 ## 20-nov-2026 · Entrega ChatGPT (rama de integración)
 - **C-M29 / G-H17 · Parcial funcional:** 30 objetos con parámetros de juego, guardado por sector original e IDs estables; restauración en Mandados.
 - **Pendiente:** arte y modelos detallados, streaming de objetos por sectores, prueba móvil y ejecución integral de Playwright desde un clon.

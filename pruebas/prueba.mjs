@@ -599,15 +599,15 @@ if (process.argv.includes('--navegador')) {
     p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
     await p.goto(urlPrueba(tc)); await p.waitForFunction(() => window.TURNO_LISTO, null, { timeout: 120000 });
     const portada = await p.evaluate(() => ({ adultos: /18\+/.test(document.querySelector('.sello').textContent), modelos: MC.Modelos.L.size, mundos: Object.keys(MC_CIUDADES) }));
-    await p.click('#bHistoria'); await p.waitForFunction(() => TURNO.M && !TURNO.transicion && TURNO.hist && TURNO.hist.p, null, { timeout: 120000 }).catch(() => {});
-    for (let i = 0; i < 30; i++) { const d = await p.$('.dialogo button'); if (d) await d.click().catch(() => {}); else if (await p.evaluate(() => TURNO.hist && TURNO.hist.p && !TURNO.pausa)) break; await p.waitForTimeout(150); }
+    await p.click('#bHistoria'); await p.waitForFunction(() => window.TURNO && TURNO.M && !TURNO.transicion, null, { timeout: 120000 });
+    for (let i = 0; i < 120; i++) { const d = await p.$('.dialogo button'); if (d) await d.click({ timeout: 3000 }).catch(() => {}); else if (await p.evaluate(() => !!(TURNO.hist && TURNO.hist.p && !TURNO.pausa))) break; await p.waitForTimeout(150); }
     const r = await p.evaluate(async () => {
       const G = TURNO, H = G.hist, espera = ms => new Promise(q => setTimeout(q, ms)), paso0 = H.p && H.p.tipo, obj = !!G.objetivo, tapa = MC.UI.verificar(G.ui);
-      const m = H.est.meta; Object.assign(G.cuerpo, { x: m.x, y: m.y, v: 0 }); await espera(3500); const dialogo = !!document.querySelector('.dialogo');
+      const m = H && H.est.meta; if (m) Object.assign(G.cuerpo, { x: m.x, y: m.y, v: 0 }); await espera(3500); const dialogo = !!document.querySelector('.dialogo');
       /* el planeta: salir de Manhattan por el puente George Washington, recorrer la carretera y llegar a Medellín */
-      G.hist = null; H.p = null; G.busq.limpiar(); document.querySelectorAll('.dialogo button').forEach(x => x.click()); await espera(300); document.querySelectorAll('.dialogo button').forEach(x => x.click()); G.pausa = false;
-      const Q = G.planeta.puertas('nueva_york', G.M).siguiente; G.planeta.llegadaT = 0; Object.assign(G.cuerpo, { x: Q.x + Math.cos(Q.a) * 3, y: Q.y + Math.sin(Q.a) * 3 }); for (let i = 0; i < 80 && G.id !== 'ruta_atlantico'; i++) await espera(100); while (G.transicion) await espera(100);
-      const enRuta = G.id, letrero = document.querySelector('#viaje').textContent, c = G.M.carretera; G.planeta.llegadaT = 0; Object.assign(G.cuerpo, { x: c.centro(c.largo - 12), y: c.largo - 12 }); for (let i = 0; i < 200 && G.id !== 'medellin'; i++) await espera(100); while (G.transicion) await espera(100);
+      G.hist = null; if (H) H.p = null; G.busq.limpiar(); for (let k = 0; k < 8; k++) { document.querySelectorAll('.dialogo button').forEach(x => x.click()); await espera(200); } G.pausa = false;
+      const Q = G.planeta.puertas('nueva_york', G.M).siguiente; G.planeta.llegadaT = 0; Object.assign(G.cuerpo, { x: Q.x + Math.cos(Q.a) * 3, y: Q.y + Math.sin(Q.a) * 3 }); for (let i = 0; i < 150 && G.id !== 'ruta_atlantico'; i++) await espera(100); for (let i = 0; i < 300 && G.transicion; i++) await espera(100);
+      const enRuta = G.id, letrero = document.querySelector('#viaje').textContent, c = G.M.carretera; G.planeta.llegadaT = 0; Object.assign(G.cuerpo, { x: c.centro(c.largo - 12), y: c.largo - 12 }); for (let i = 0; i < 400 && G.id !== 'medellin'; i++) await espera(100); for (let i = 0; i < 600 && G.transicion; i++) await espera(100);
       const medellin = G.id, metro = !!G.transporte && G.transporte.lineas.some(l => l.clase === 'metro'), modelos3d = MC.Modelos.L.size;
       G.Artefactos.cebo(); G.busq.ponerNivel(3); await espera(1500); const persigue = G.busq.rivales.length, tapa2 = MC.UI.verificar(G.ui);
       return { paso0, obj, tapa, dialogo, enRuta, letrero: letrero.slice(0, 40), medellin, metro, modelos3d, persigue, tapa2, errores: MC.errores.length };
