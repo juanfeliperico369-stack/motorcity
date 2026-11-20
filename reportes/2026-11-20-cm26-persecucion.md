@@ -19,3 +19,6 @@ Las comprobaciones automáticas nuevas cubren apertura, aparición fuera de 20 m
 
 ## QA E2E añadida
 Se integra un escenario Chromium real con viewport móvil 412×860: entrar en Mandados, seleccionar carro, pulsar el botón «Persecución», comprobar patrullas visibles y que la interfaz no invada el área libre, cancelar con el mismo botón y verificar estado inactivo. **Este escenario debe pasar en el CI final antes de declarar el reto probado de punta a punta**.
+
+## Corrección de accesibilidad y zona libre
+La ejecución de Chromium #44758066009 mostró que el botón «Persecución», por su etiqueta larga, estiró toda la columna flotante hasta x=322 px (viewport 412), invadiendo 7–8 px la zona libre. El reto y las patrullas funcionaron, pero fallaron dos validaciones de UI. Se fija la columna con ancho responsive 48–66 px según el viewport y el texto visual se recorta con puntos suspensivos; su etiqueta ARIA completa sigue disponible. Se requiere volver a ejecutar el E2E para confirmar que los controles ya no invaden la escena.
