@@ -1,0 +1,76 @@
+name: Motor City · compilación y calidad
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: ["claude/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: motor-city-qa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  nucleo:
+    name: Núcleo, atlas y construcción
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Construir HTML y el motor
+        run: node motor.mjs construir
+      - name: Pruebas Node
+        run: node motor.mjs prueba
+      - name: Revisar arte Gemini
+        run: node motor.mjs revisar-arte arte/gemini
+      - name: Revisar arte ChatGPT
+        run: node motor.mjs revisar-arte arte/chatgpt
+      - name: Metadatos de construcción
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: motor-city-construccion
+          path: dist/construccion.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+  navegador:
+    name: Chromium móvil y público simulado
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    needs: nucleo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Instalar Playwright en el runner
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Construir HTML offline
+        run: node motor.mjs construir
+      - name: QA en Chromium
+        run: node motor.mjs prueba --navegador
+      - name: Público simulado (prueba breve)
+        run: node motor.mjs publico --seg 20
+      - name: Guardar métricas de QA
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: motor-city-publico
+          path: |
+            dist/publico.md
+            dist/publico.json
+            dist/construccion.json
+          if-no-files-found: ignore
+          retention-days: 7
