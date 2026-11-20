@@ -64,9 +64,21 @@
       .cabecera { padding-block: 15px; }
       .marca { font-size: 1rem; }
       .enlace-codigo { font-size: .79rem; }
-      h1 { font-size: 2.68rem; }
+      h1 { font-size: 2.34rem; }
+      .hero { padding-block: 28px 38px; }
+      .contexto { margin-bottom: 12px; }
+      .presentacion { margin: 16px 0 18px; font-size: .95rem; line-height: 1.45; }
       .acciones { align-items: stretch; gap: 8px; }
       .jugar, .secundario { width: 100%; }
+    }
+    @media (max-height: 520px) and (min-width: 600px) {
+      .cabecera { padding-block: 10px; }
+      .hero { padding-block: 18px 20px; align-items: start; }
+      .contexto { margin-bottom: 8px; }
+      h1 { font-size: clamp(1.75rem,3.8vw,2.55rem); line-height: 1.06; }
+      .presentacion { font-size: .88rem; line-height: 1.4; margin: 10px 0 12px; }
+      .nota { margin: 0; padding-bottom: 0; }
+      .jugar { min-height: 46px; }
     }
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }

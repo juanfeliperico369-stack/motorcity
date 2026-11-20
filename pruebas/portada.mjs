@@ -22,7 +22,7 @@ try {
       const links = [...document.querySelectorAll('a')];
       return {
         overflow: document.documentElement.scrollWidth > innerWidth + 1,
-        actionVisible: r.top < innerHeight && r.width >= 44 && r.height >= 44,
+        actionVisible: r.top >= 0 && r.bottom <= innerHeight && r.width >= 44 && r.height >= 44,
         actionText: play.textContent.trim(),
         background: s.backgroundColor, text: s.color,
         skipLink: !!document.querySelector('a[href="#contenido"]'),

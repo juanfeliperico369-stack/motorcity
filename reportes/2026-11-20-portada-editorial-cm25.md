@@ -23,3 +23,6 @@ La portada previa tenía dos fondos radiales púrpura/cian, titular con degradad
 6. Las capturas PNG de 412 y 1440 quedan en `dist/capturas/`, dentro del artefacto de CI.
 
 **Estado:** no se declara «sloplint --render» aprobado porque no se ejecutó esa herramienta. La prueba de navegador integrada ofrece comprobaciones propias; se recomienda además la revisión humana de ambas capturas antes de fusionar.
+
+## Regresión encontrada y corrección
+La primera ejecución de GitHub Actions de la portada (`44752235751`) falló en 860×412: el botón estaba bajo el primer pliegue. Se añadió una composición compacta horizontal con alto menor de 520 px y se redujo el encabezado a 320 px de ancho. El test pasó de verificar solo que `top < innerHeight` a exigir que `bottom <= innerHeight`. **No se afirma que la corrección pasó CI hasta comprobar la nueva ejecución.**
