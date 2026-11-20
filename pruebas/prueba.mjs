@@ -437,6 +437,20 @@ if (process.argv.includes('--navegador')) {
     ok(Object.keys(vistas).length === 9 && Object.entries(vistas).every(([k, v]) => k === v) && !errs.length, 'las 9 vistas (con la lateral) y el pixel sin errores', vistas);
     const ras = await p.evaluate(async () => { MCS.vistas.motor3d = 'raster'; window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Digit' + (MC.VISTAS.findIndex(q => q.id === 'tercera') + 1) })); await new Promise(r => setTimeout(r, 1500)); const n = MCS.vistas.raster ? MCS.vistas.raster.n : 0, gpu = MC.GPU.perfil(); MCS.vistas.motor3d = 'auto'; return { poligonos: n, nivel: gpu.nivel, webgl: gpu.webgl, software: gpu.software, escala: +MCS.vistas.res.escala.toFixed(2) }; });
     ok(ras.poligonos > 200 && !errs.length, 'GPU virtual: la 3D por software (MC.Raster) dibuja la ciudad sin WebGL', ras);
+    const glSombra = await p.evaluate(async () => {
+      const V = MCS.vistas;
+      V.motor3d = 'gl';
+      window.dispatchEvent(new KeyboardEvent('keydown', {code: 'Digit2'}));
+      await new Promise(r => setTimeout(r, 1300));
+      const activo = V.hayGL(), R = V.gl, estado = {
+        disponible: activo, programa: !!R?.pSh, malla: R?._sombrasCache?.n ?? null,
+        dibujando: V.efectiva().tipo === 'gl', sinErroresGL: activo ? R.gl.getError() === 0 : null
+      };
+      V.motor3d = 'auto';
+      return estado;
+    });
+    ok(!glSombra.disponible || (glSombra.programa && glSombra.dibujando && glSombra.sinErroresGL && !errs.length),
+      'C-M27: WebGL 1 forzado compila el shader de sombras sin error; omitir si no hay WebGL', glSombra);
     const run = await p.evaluate(async () => { const r = MCS.mundo.red('rueda'), e = r.aristas.filter(a => a.k === MC.VIA.CICLO && a.largo > 300)[2], q = e.t.at(e.largo / 2); Object.assign(MCS.cuerpo, { x: q.x, y: q.y, a: q.a }); MCS.cuerpo.setVeh('bici'); const ant = { x: MCS.cuerpo.x, y: MCS.cuerpo.y, min: MCS.reloj.min };
       document.querySelector('#bRun').hidden = false; document.querySelector('#bRun').click(); await new Promise(r => setTimeout(r, 2500)); const dentro = MC.Run.activo, s = MC.Run.g.p.s; MC.Run.salir(); await new Promise(r => setTimeout(r, 400));
       return { dentro, s: Math.round(s), lejos: Math.round(Math.hypot(MCS.cuerpo.x - ant.x, MCS.cuerpo.y - ant.y)), enCiclo: MCS.mundo.esCiclovia(MCS.cuerpo.x, MCS.cuerpo.y, 25) || MCS.mundo.red('rueda').cercana(MCS.cuerpo.x, MCS.cuerpo.y, 10) != null, dmin: MCS.reloj.min - ant.min, clima: MCS.clima.tipo }; });
