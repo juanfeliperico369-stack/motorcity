@@ -1,4 +1,4 @@
-/* Motor City 3.0.0 · 2026-11-20 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 3.1.0 · 2026-11-20 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -16,7 +16,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '3.0.0',
+  version: '3.1.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -2405,6 +2405,122 @@ const Naturaleza = {
 };
 MC.Naturaleza = Naturaleza;
 
+/* ---- js/28-persecucion.js ---- */
+/* =====================================================================
+   MOTOR CITY 3.1 · Persecución optativa sin violencia gráfica (C-M26).
+   Conductores sobre calles reales, rutas A* y cuerpos físicos compartidos
+   con el resto del motor. Sin nuevos assets, dependencias ni azar global.
+   ===================================================================== */
+class Persecucion {
+  constructor(mundo, op = {}) {
+    this.mundo = mundo;
+    this.nivel = clamp(op.nivel || 1, 1, 5);
+    this.duracion = op.duracion || 90;
+    this.estado = 'inactiva'; this.rivales = []; this.t = 0;
+    this.puntos = 0; this.turbo = 0; this.evento = null;
+    this.rozados = new Set(); this.alcance = 0; this.motivo = '';
+  }
+  iniciar(jugador) {
+    if (!jugador || !Number.isFinite(jugador.x) || !Number.isFinite(jugador.y)) return false;
+    if (this.estado === 'activa') return false;
+    const M = this.mundo, n = Math.min(4, 2 + Math.floor(this.nivel / 2));
+    const ca = Math.cos(jugador.a || 0), sa = Math.sin(jugador.a || 0), rivales = [];
+    for (let i = 0; i < n; i++) {
+      /* Nacen fuera del radio inmediato, por detrás o a un costado.
+         Nunca teletransportarlos delante de la cámara a mitad de partida. */
+      const atras = 38 + i * 23, lado = i % 2 ? 17 : -17;
+      const x = jugador.x - ca * atras - sa * lado, y = jugador.y - sa * atras + ca * lado;
+      const q = M.viaCercana(x, y, 110);
+      if (!q || Math.hypot(q.x - jugador.x, q.y - jugador.y) < 20) continue;
+      const c = new MC.Cuerpo(M, { x: q.x, y: q.y, a: q.ang, veh: 'carro' });
+      rivales.push({ id: 'patrulla-' + i, cuerpo: c, ruta: null, tiempoRuta: 0,
+        tactica: i % 2 === 0 ? 'seguir' : 'cerrar', contacto: 0 });
+    }
+    if (!rivales.length) return false;
+    this.rivales = rivales; this.estado = 'activa'; this.motivo = '';
+    this.t = 0; this.puntos = 0; this.turbo = 0; this.alcance = 0;
+    this.evento = '🚨 ¡Te persiguen! Mantén distancia durante ' + this.duracion + ' s';
+    this.rozados.clear();
+    return true;
+  }
+  parar(motivo = 'cancelada') {
+    if (this.estado !== 'activa') return false;
+    this.estado = 'inactiva'; this.motivo = motivo; this.rivales = [];
+    this.turbo = 0;
+    this.evento = motivo === 'escapaste' ? '🏁 ¡Escapaste! · ' + this.puntos + ' puntos' :
+      motivo === 'alcanzado' ? '🚔 Te alcanzaron. Inténtalo de nuevo' : 'Persecución terminada';
+    return true;
+  }
+  /* Un casi choque puntúa solo con velocidad y separación real, nunca con contacto.
+     El identificador del tráfico impide farmear el mismo vehículo por cuadro. */
+  casiChoques(jugador, trafico = []) {
+    if (this.estado !== 'activa' || Math.abs(jugador.v || 0) < 7) return 0;
+    const ancho = jugador.veh && jugador.veh.ancho || 1.8;
+    let cuantos = 0;
+    for (const o of trafico) {
+      if (o.id == null || this.rozados.has(o.id) || !Number.isFinite(o.x) || !Number.isFinite(o.y)) continue;
+      const distancia = Math.hypot(jugador.x - o.x, jugador.y - o.y);
+      const contacto = (ancho + (o.ancho || 1.8)) / 2 + .25;
+      if (distancia > contacto + .35 && distancia < contacto + 1.5) {
+        this.rozados.add(o.id); cuantos++; this.puntos += 100; this.turbo = Math.max(this.turbo, 1.25);
+      }
+    }
+    if (cuantos) {
+      this.evento = '⚡ Casi choque +' + 100 * cuantos + ' · turbo';
+      MC._pausaImpacto = Math.max(MC._pausaImpacto || 0, .03);
+    }
+    return cuantos;
+  }
+  actualizar(dt, jugador, trafico = []) {
+    if (this.estado !== 'activa' || !Number.isFinite(dt) || dt <= 0) return;
+    dt = Math.min(dt, .05); this.t += dt; this.turbo = Math.max(0, this.turbo - dt);
+    this.casiChoques(jugador, trafico);
+    let mejor = Infinity;
+    for (const p of this.rivales) {
+      const C = p.cuerpo, dx = jugador.x - C.x, dy = jugador.y - C.y;
+      const d = Math.hypot(dx, dy);
+      mejor = Math.min(mejor, d);
+      p.tiempoRuta -= dt;
+      if (p.tiempoRuta <= 0) {
+        /* El perseguidor que cierra calcula una intercepción corta por calles,
+           no una línea recta a través de casas. Replanificar con presupuesto. */
+        const adelante = p.tactica === 'cerrar' ? clamp(Math.abs(jugador.v || 0) * 1.1, 5, 25) : 0;
+        const meta = { x: jugador.x + Math.cos(jugador.a || 0) * adelante,
+          y: jugador.y + Math.sin(jugador.a || 0) * adelante };
+        const propuesta = MC.Manejo.rutaA(this.mundo, C, meta, 'rueda');
+        /* rutaA devuelve un único punto cuando la red está desconectada.
+           Ese respaldo sirve para «tocar para ir», pero una patrulla no debe atravesar manzanas. */
+        p.ruta = Array.isArray(propuesta) && propuesta.length >= 4 ? propuesta : null;
+        p.tiempoRuta = 1.5 + (p.id.charCodeAt(p.id.length - 1) % 3) * .25;
+      }
+      if (!p.ruta) {
+        C.actualizar(dt, { acel: -.4, giro: 0 });   // sin ruta, frenar y volver a calcular
+        continue;
+      }
+      const m = MC.Manejo.seguirRuta(C, p.ruta, { radio: 4 });
+      if (!m || !m.dir) {
+        C.actualizar(dt, { acel: -.4, giro: 0 });
+        continue;
+      }
+      const meta = [C.x + m.dir.x * 8, C.y + m.dir.y * 8];
+      const fuerza = MC.IA.llegar([C.x, C.y], meta, 1, 4);
+      C.actualizar(dt, { dir: { x: fuerza[0], y: fuerza[1], m: clamp(Math.hypot(...fuerza), .35, 1) } });
+    }
+    /* Hay que detenerse y dejarse alcanzar: rozar a otro carro no es captura. */
+    this.alcance = mejor < 3.6 && Math.abs(jugador.v || 0) < 3 ? this.alcance + dt : 0;
+    if (this.alcance > 2) this.parar('alcanzado');
+    else if (this.t >= this.duracion) this.parar('escapaste');
+  }
+  vehiculos() {
+    if (this.estado !== 'activa') return [];
+    return this.rivales.map(p => { const c = p.cuerpo; return {
+      id: p.id, tipo: 'carro', clase: 'auto', x: c.x, y: c.y, a: c.a,
+      v: c.v, largo: 4.4, ancho: 1.8, color: '#376878', frena: 0
+    }; });
+  }
+}
+MC.Persecucion = Persecucion;
+
 /* ---- js/29-arboleda.js ---- */
 /* =====================================================================
    ARBOLEDA · los árboles del mundo, de pie y con volumen (2.6)
@@ -2911,9 +3027,81 @@ const TIPOS_OBJ = {
   caja: { r: .33, h: .6, masa: 4, rebote: .25, roce: 3.6, col: '#b07a43', col2: '#7a5129' },
   valla: { r: .55, h: 1, masa: 14, rebote: .15, roce: 4.5, col: '#e8e8e8', col2: '#d62828' }
 };
+/* 30 piezas de barrio: medidas aproximadas para jugabilidad, no medidas catastrales. */
+const TIPOS_OBJ_BARRIO = {
+  banca_parque: { r: 0.85, h: 0.85, masa: 75, rebote: 0.12, roce: 5, col: '#6e7f58', col2: '#3b3c38', fijo: true, rompible: false, resistencia: 25 },
+  matera_cemento: { r: 0.325, h: 0.65, masa: 90, rebote: 0.18, roce: 2.8, col: '#b6a68c', col2: '#3b3c38', fijo: false, rompible: true, resistencia: 11 },
+  bolardo: { r: 0.1, h: 0.78, masa: 55, rebote: 0.18, roce: 5, col: '#737c83', col2: '#3b3c38', fijo: true, rompible: true, resistencia: 14 },
+  poste_alumbrado: { r: 0.125, h: 6.5, masa: 210, rebote: 0.18, roce: 5, col: '#b0b7b9', col2: '#3b3c38', fijo: true, rompible: true, resistencia: 16 },
+  poste_electrico: { r: 0.16, h: 8, masa: 700, rebote: 0.12, roce: 5, col: '#9a9690', col2: '#3b3c38', fijo: true, rompible: false, resistencia: 90 },
+  reja_anden: { r: 1, h: 1.1, masa: 90, rebote: 0.18, roce: 5, col: '#616e74', col2: '#3b3c38', fijo: true, rompible: true, resistencia: 14 },
+  moto_parqueada: { r: 1, h: 1.15, masa: 130, rebote: 0.12, roce: 5, col: '#8b6f57', col2: '#3b3c38', fijo: true, rompible: false, resistencia: 75 },
+  bici_parqueada: { r: 0.875, h: 1.1, masa: 17, rebote: 0.12, roce: 2.8, col: '#2a7c94', col2: '#3b3c38', fijo: false, rompible: false, resistencia: 50 },
+  papelera: { r: 0.2, h: 0.8, masa: 9, rebote: 0.18, roce: 2.8, col: '#38635c', col2: '#3b3c38', fijo: false, rompible: true, resistencia: 6 },
+  mesa_cafe: { r: 0.4, h: 0.75, masa: 18, rebote: 0.18, roce: 2.8, col: '#94775e', col2: '#3b3c38', fijo: false, rompible: true, resistencia: 6 },
+  silla_plastica: { r: 0.275, h: 0.85, masa: 4, rebote: 0.18, roce: 2.8, col: '#ccbd9c', col2: '#3b3c38', fijo: false, rompible: true, resistencia: 4 },
+  sombrilla_comercio: { r: 1.1, h: 2.5, masa: 14, rebote: 0.18, roce: 2.8, col: '#c0a85d', col2: '#3b3c38', fijo: false, rompible: true, resistencia: 5 },
+  senal_obra: { r: 0.3, h: 1.1, masa: 5, rebote: 0.18, roce: 2.8, col: '#d78c33', col2: '#3b3c38', fijo: false, rompible: true, resistencia: 4 },
+  senal_transito: { r: 0.14, h: 2.2, masa: 35, rebote: 0.18, roce: 5, col: '#b6b6b2', col2: '#3b3c38', fijo: true, rompible: true, resistencia: 12 },
+  hidrante: { r: 0.175, h: 0.7, masa: 80, rebote: 0.12, roce: 5, col: '#b64337', col2: '#3b3c38', fijo: true, rompible: false, resistencia: 80 },
+  cajon_mercado: { r: 0.3, h: 0.35, masa: 7, rebote: 0.18, roce: 2.8, col: '#91704f', col2: '#3b3c38', fijo: false, rompible: true, resistencia: 5 },
+  carrito_ventas: { r: 0.75, h: 1.8, masa: 65, rebote: 0.18, roce: 2.8, col: '#b08551', col2: '#3b3c38', fijo: false, rompible: true, resistencia: 7 },
+  barril: { r: 0.3, h: 0.9, masa: 16, rebote: 0.18, roce: 2.8, col: '#626c6f', col2: '#3b3c38', fijo: false, rompible: true, resistencia: 8 },
+  llanta: { r: 0.35, h: 0.7, masa: 9, rebote: 0.12, roce: 2.8, col: '#292c2b', col2: '#3b3c38', fijo: false, rompible: false, resistencia: 25 },
+  paleta_obra: { r: 0.175, h: 1.6, masa: 3, rebote: 0.18, roce: 2.8, col: '#bc594c', col2: '#3b3c38', fijo: false, rompible: true, resistencia: 3 },
+  caja_herramientas: { r: 0.25, h: 0.27, masa: 12, rebote: 0.12, roce: 2.8, col: '#556c70', col2: '#3b3c38', fijo: false, rompible: false, resistencia: 20 },
+  tarima: { r: 1, h: 0.35, masa: 65, rebote: 0.18, roce: 2.8, col: '#aa835d', col2: '#3b3c38', fijo: false, rompible: true, resistencia: 12 },
+  saco_arena: { r: 0.325, h: 0.25, masa: 25, rebote: 0.12, roce: 2.8, col: '#b4a079', col2: '#3b3c38', fijo: false, rompible: false, resistencia: 35 },
+  maleta: { r: 0.21, h: 0.68, masa: 9, rebote: 0.18, roce: 2.8, col: '#3e677f', col2: '#3b3c38', fijo: false, rompible: true, resistencia: 7 },
+  maceta_barro: { r: 0.19, h: 0.48, masa: 8, rebote: 0.18, roce: 2.8, col: '#b56e4d', col2: '#3b3c38', fijo: false, rompible: true, resistencia: 4 },
+  coche_bebe: { r: 0.45, h: 1.1, masa: 11, rebote: 0.12, roce: 2.8, col: '#5b8086', col2: '#3b3c38', fijo: false, rompible: false, resistencia: 30 },
+  canasto: { r: 0.275, h: 0.35, masa: 3, rebote: 0.18, roce: 2.8, col: '#a28859', col2: '#3b3c38', fijo: false, rompible: true, resistencia: 4 },
+  escombro: { r: 0.175, h: 0.2, masa: 9, rebote: 0.12, roce: 2.8, col: '#9d9a8e', col2: '#3b3c38', fijo: false, rompible: false, resistencia: 45 },
+  escalera_mano: { r: 0.325, h: 1.8, masa: 13, rebote: 0.18, roce: 2.8, col: '#a9afb1', col2: '#3b3c38', fijo: false, rompible: true, resistencia: 7 },
+  maceta_colgante: { r: 0.175, h: 1.3, masa: 10, rebote: 0.18, roce: 2.8, col: '#60805a', col2: '#3b3c38', fijo: false, rompible: true, resistencia: 5 }
+};
+Object.assign(TIPOS_OBJ, TIPOS_OBJ_BARRIO);
 class Objetos {
-  constructor(mundo) { this.M = mundo; this.L = []; }
-  poner(tipo, x, y, op = {}) { const T = TIPOS_OBJ[tipo] || TIPOS_OBJ.cono, o = Object.assign({ tipo, x, y, z: 0, vx: 0, vy: 0, vz: 0, a: op.a ?? h2(x | 0, y | 0, 91) * TAU, va: 0, vuelco: 0, dormido: true }, T, op); this.L.push(o); return o; }
+  constructor(mundo, op = {}) {
+    this.M = mundo; this.L = []; this.guardado = op.guardado || null;
+    this.mundoId = String(op.mundoId || (mundo.meta && (mundo.meta.id || mundo.meta.nombre)) || 'mundo');
+    this._repetidos = new Map(); this._ids = new Set();
+  }
+  /* Coordenadas originales = sector de pertenencia: mover el objeto NO cambia su identidad. */
+  poner(tipo, x, y, op = {}) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) throw new Error('Coordenadas de objeto inválidas');
+    const T = TIPOS_OBJ[tipo] || TIPOS_OBJ.cono, base = tipo + '@' + x.toFixed(2) + ',' + y.toFixed(2);
+    const repetido = this._repetidos.get(base) || 0; this._repetidos.set(base, repetido + 1);
+    const clave = op.clave == null ? base + '#' + repetido : String(op.clave);
+    const id = op.id || (MC.GuardadoSectores ? MC.GuardadoSectores.id(this.mundoId, 'objeto', clave) : this.mundoId + '/objeto/' + encodeURIComponent(clave));
+    if (this._ids.has(id)) throw new Error('Objeto duplicado: ' + id);
+    const o = Object.assign({ tipo, x, y, z: 0, vx: 0, vy: 0, vz: 0,
+      a: op.a ?? h2(x | 0, y | 0, 91) * TAU, va: 0, vuelco: 0, dormido: true,
+      roto: false, alterado: false }, T, op);
+    o.id = id; o.origenX = x; o.origenY = y;
+    const guardado = this.guardado && this.guardado.obtener(x, y, id);
+    if (guardado && guardado.tipo === tipo) {
+      for (const k of ['x', 'y', 'z', 'vx', 'vy', 'vz', 'a', 'va', 'vuelco']) {
+        if (Number.isFinite(guardado[k])) o[k] = guardado[k];
+      }
+      for (const k of ['dormido', 'roto', 'fijo']) if (typeof guardado[k] === 'boolean') o[k] = guardado[k];
+    }
+    this.L.push(o); this._ids.add(id); return o;
+  }
+  /* Se guarda solo lo que se ha movido/roto, nunca todas las piezas del mapa. */
+  guardarCambios() {
+    if (!this.guardado) return 0;
+    let n = 0;
+    for (const o of this.L) {
+      if (!o.alterado) continue;
+      const cambio = { tipo: o.tipo, x: o.x, y: o.y, z: o.z, vx: o.vx, vy: o.vy,
+        vz: o.vz, a: o.a, va: o.va, vuelco: o.vuelco, dormido: o.dormido,
+        roto: !!o.roto, fijo: !!o.fijo };
+      this.guardado.cambiar(o.origenX, o.origenY, o.id, cambio);
+      o.alterado = false; n++;
+    }
+    return n;
+  }
   /* siembra objetos que tengan sentido donde caen: conos y vallas en las vías, balones en plazas, canecas y cajas en andenes */
   sembrar(cx, cy, radio = 260, n = 40, sem = 7) {
     const M = this.M, VIAS = new Set([TT.ROAD, TT.AVE]); let k = 0;
@@ -2929,15 +3117,26 @@ class Objetos {
   en(x0, y0, x1, y1) { return this.L.filter(o => o.x >= x0 && o.x <= x1 && o.y >= y0 && o.y <= y1); }
   /* cuerpos: [{ x, y, z, r, masa, vx, vy }] (el jugador, el tráfico): los que chocan empujan */
   actualizar(dt, cuerpos = []) {
+    if (!Number.isFinite(dt) || dt <= 0) return;
     dt = Math.min(dt, .05); const M = this.M, G = 9.81;
     for (const o of this.L) {
       for (const c of cuerpos) {
         const dx = o.x - c.x, dy = o.y - c.y, d = Math.hypot(dx, dy), R = o.r + (c.r || .4); if (d >= R || d < 1e-4 || Math.abs((c.z || 0) - o.z) > o.h + 1.5) continue;
         const nx = dx / d, ny = dy / d, rel = ((c.vx || 0) - o.vx) * nx + ((c.vy || 0) - o.vy) * ny;
-        o.x += nx * (R - d); o.y += ny * (R - d);   // que no se metan
+        if (o.fijo) {
+          /* Barreras ancladas: solo ceden con una colisión fuerte si son deformables. */
+          if (rel > (o.resistencia || 12) && o.rompible) {
+            o.fijo = false; o.roto = true; o.vuelco = 1; o.dormido = false;
+            o.vx = nx * Math.min(3, rel * .15); o.vy = ny * Math.min(3, rel * .15);
+            o.alterado = true; MC.emit('golpe', { o, fuerza: rel });
+          }
+          continue;
+        }
+        o.x += nx * (R - d); o.y += ny * (R - d); o.alterado = true;  // que no se metan
         if (rel > .2) { const mc = c.masa || 70, J = rel * (1 + o.rebote) * mc / (mc + o.masa); o.vx += nx * J; o.vy += ny * J; o.vz = Math.max(o.vz, Math.min(4.5, J * (o.tipo === 'balon' ? .3 : .18))); o.va += (h2(o.x | 0, o.y | 0, 95) - .5) * J * 2; if (o.tipo === 'cono' || o.tipo === 'valla' || o.tipo === 'caneca') o.vuelco = Math.min(1, o.vuelco + J * .15); o.dormido = false; if (J > 2) MC.emit('golpe', { o, fuerza: J }); }
       }
-      if (o.dormido) continue;
+      if (o.dormido || o.fijo) continue;
+      o.alterado = true;
       o.vz -= G * dt; o.z += o.vz * dt;
       if (o.z <= 0) { o.z = 0; o.vz = Math.abs(o.vz) > 1 ? -o.vz * o.rebote : 0; const f = Math.max(0, 1 - o.roce * dt); o.vx *= f; o.vy *= f; o.va *= f; }
       const nx = o.x + o.vx * dt, ny = o.y + o.vy * dt;
@@ -2955,7 +3154,7 @@ class Objetos {
       else if (o.tipo === 'cono') { if (tumb) m.cajaF(p[0], p[1], p[2], o.a, o.h, o.r * 1.6, o.r * 1.4, c); else { m.cajaF(p[0], p[1], p[2], o.a, o.r * 2.2, o.r * 2.2, .05, hex3('#222')); m.cil(p[0], p[1] + .05, p[2], o.r, o.h, 6, c, 0); m.cil(p[0], p[1] + o.h * .45, p[2], o.r * .55, o.h * .14, 6, c2, o.r * .45); } }
       else if (o.tipo === 'caneca') { if (tumb) m.cajaF(p[0], p[1], p[2], o.a, o.h, o.r * 2, o.r * 2, c); else { m.cil(p[0], p[1], p[2], o.r, o.h, 7, c, o.r * 1.06, c2); } }
       else if (o.tipo === 'valla') { const h = tumb ? .25 : o.h; m.cajaF(p[0], p[1] + (tumb ? 0 : h * .55), p[2], o.a, o.r * 2, .08, h * .4, c2); m.cajaF(p[0], p[1], p[2], o.a, o.r * 2.1, .5, .08, c); }
-      else m.cajaF(p[0], p[1], p[2], o.a, o.r * 2, o.r * 2, o.h, c, 0, c2);
+      else m.cajaF(p[0], p[1], p[2], o.a, o.r * 2, o.r * 2, o.roto ? o.h * .35 : o.h, c, 0, c2);
     }
   }
   /* 2D: encima del suelo con la proyección de la vista (aPantalla) y su escala en px por metro */
@@ -4137,7 +4336,7 @@ const Vista2D = {
     const { g, pr, z, W, H, E } = D; if (z < .35) return; g.font = '700 ' + Math.round(clamp(z * 4, 10, 14)) + 'px system-ui, sans-serif'; g.textAlign = 'center';
     /* las etiquetas no se montan unas sobre otras ni tapan el centro (donde va el jugador) */
     const usadas = [], cx = W / 2, cy = H / 2, R0 = Math.min(W, H) * .09;
-    const pon = (t, x, y, col) => { const [sx, sy] = pr(x, y, 8); if (sx < -60 || sx > W + 60 || sy < -20 || sy > H + 20) return; const w = g.measureText(t).width + 10, r = [sx - w / 2 - 3, sy - 19, sx + w / 2 + 3, sy + 5]; if (usadas.some(u => r[0] < u[2] && r[2] > u[0] && r[1] < u[3] && r[3] > u[1])) return; if (Math.abs(sx - cx) < w / 2 + R0 && Math.abs(sy - 8 - cy) < R0 + 10) return; usadas.push(r); g.fillStyle = 'rgba(10,35,66,.82)'; g.fillRect(sx - w / 2, sy - 16, w, 18); g.fillStyle = col; g.fillText(t, sx, sy - 3); };
+    const pon = (t, x, y, col) => { const [sx, sy] = pr(x, y, 8); if (sx < -60 || sx > W + 60 || sy < -20 || sy > H + 20) return; const w = g.measureText(t).width + 10, r = [sx - w / 2 - 3, sy - 19, sx + w / 2 + 3, sy + 5]; if (E.bloqueosEtiquetas && E.bloqueosEtiquetas(W, H).some(z => r[0] < z[2] && r[2] > z[0] && r[1] < z[3] && r[3] > z[1])) return; if (usadas.some(u => r[0] < u[2] && r[2] > u[0] && r[1] < u[3] && r[3] > u[1])) return; if (Math.abs(sx - cx) < w / 2 + R0 && Math.abs(sy - 8 - cy) < R0 + 10) return; usadas.push(r); g.fillStyle = 'rgba(10,35,66,.82)'; g.fillRect(sx - w / 2, sy - 16, w, 18); g.fillStyle = col; g.fillText(t, sx, sy - 3); };
     for (const l of E.transporte ? E.transporte.lineas : []) if (l.clase === 'metro' || l.clase === 'cable' || l.clase === 'tram') for (const s of l.est) { const q = l.T.at(s.s); pon(s.nombre, q.x, q.y, '#ffffff'); }
     if (z > .9) for (const s of E.mundo.transporte.encicla || []) pon('🚲 ' + s.nombre, s.x, s.y, '#c4ec7c');
     const lug = []; for (const L of E.mundo.lugares) { if (L.secreto) continue; const [sx, sy] = pr(L.x, L.y, 8); if (sx > -40 && sx < W + 40 && sy > 0 && sy < H + 20) lug.push([Math.hypot(sx - W / 2, sy - H / 2), L]); }
@@ -4582,10 +4781,62 @@ class Malla {
   /* segmento grueso entre dos puntos (huesos del personaje, tubos de la bici) */
   hueso(p, q, r, col) { const dx = q[0] - p[0], dy = q[1] - p[1], dz = q[2] - p[2], L = Math.hypot(dx, dy, dz) || 1e-6; let ax = 0, ay = 1, az = 0; if (Math.abs(dy / L) > .9) { ax = 1; ay = 0; } let ux = dy * az - dz * ay, uy = dz * ax - dx * az, uz = dx * ay - dy * ax, l = Math.hypot(ux, uy, uz) || 1; ux = ux / l * r; uy = uy / l * r; uz = uz / l * r; let vx = (dy * uz - dz * uy) / L, vy = (dz * ux - dx * uz) / L, vz = (dx * uy - dy * ux) / L; const A = [], B = []; for (const [i, j] of [[1, 1], [-1, 1], [-1, -1], [1, -1]]) { A.push([p[0] + ux * i + vx * j, p[1] + uy * i + vy * j, p[2] + uz * i + vz * j]); B.push([q[0] + ux * i + vx * j, q[1] + uy * i + vy * j, q[2] + uz * i + vz * j]); } for (let k = 0; k < 4; k++) { const m = (k + 1) % 4; this.quad(A[k], A[m], B[m], B[k], col); } }
 }
+/* Proyección económica de sombras sobre el terreno, sin shadow maps ni texturas.
+   Se construye una sola malla para los objetos cercanos, reutilizable por celda de cámara y posición solar.
+   Las sombras solo afectan al plano del suelo, con profundidad y mezcla alfa; NO se pintan sobre las fachadas. */
+const Sombras3D = {
+  generar(M, O, sol, cx, cy, op = {}) {
+    if (!sol || sol.z < .16 || !M || typeof M.cota !== 'function') return [];
+    const radio = op.radio || 115, m = new Malla();
+    const k = Math.min(2.7, 1 / Math.max(sol.z, .32));
+    const elev = (x, y) => M.cota(x, y) - O[2] + .12;
+    const desplazamiento = altura => {
+      const alcance = Math.min(25, altura * k * Math.hypot(sol.x, sol.y));
+      const norm = Math.hypot(sol.x, sol.y) || 1;
+      return [-sol.x / norm * alcance, -sol.y / norm * alcance];
+    };
+    const color = [.055, .075, .065];
+    const edificaciones = op.edificios || M.edificiosEn(cx - radio, cy - radio, cx + radio, cy + radio);
+    let edificios = 0;
+    for (const e of edificaciones) {
+      if (edificios >= 65) break;
+      if (!e || !Number.isFinite(e.x) || !Number.isFinite(e.y) || !Number.isFinite(e.h) ||
+          Math.hypot(e.x - cx, e.y - cy) > radio || e.h < 3) continue;
+      const P = op.esquinas ? op.esquinas(e) : Mundo.esquinas(e), n = P.length / 2;
+      if (n < 3 || n > 16) continue;
+      const [dx, dy] = desplazamiento(Math.min(e.h, 22));
+      for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n, ax = P[i * 2], ay = P[i * 2 + 1], bx = P[j * 2], by = P[j * 2 + 1];
+        if (![ax, ay, bx, by].every(Number.isFinite)) continue;
+        m.quad([ax - O[0], elev(ax, ay), ay - O[1]],
+          [bx - O[0], elev(bx, by), by - O[1]],
+          [bx + dx - O[0], elev(bx + dx, by + dy), by + dy - O[1]],
+          [ax + dx - O[0], elev(ax + dx, ay + dy), ay + dy - O[1]], color);
+      }
+      edificios++;
+    }
+    const arboles = op.arboles || Arboleda.en(M, cx - radio, cy - radio, cx + radio, cy + radio, 100);
+    let arbolesDibujados = 0;
+    for (const t of arboles) {
+      if (arbolesDibujados >= 80 || !t || !Number.isFinite(t.x) || !Number.isFinite(t.y) || !Number.isFinite(t.h)) continue;
+      if (Math.hypot(t.x - cx, t.y - cy) > radio) continue;
+      const [dx,dy] = desplazamiento(t.h * .72), x = t.x + dx, y = t.y + dy, rx = Math.max(.5, t.r * .86), ry = rx * .75;
+      const center = [x - O[0], elev(x, y), y - O[1]];
+      for(let i = 0;i < 8;i++) {
+        const a = i * Math.PI/4, b=(i+1)*Math.PI/4;
+        const pa = [x + Math.cos(a)*rx, y + Math.sin(a)*ry], pb=[x + Math.cos(b)*rx,y + Math.sin(b)*ry];
+        m.tri(center,[pa[0]-O[0],elev(...pa),pa[1]-O[1]],[pb[0]-O[0],elev(...pb),pb[1]-O[1]],color);
+      }
+      arbolesDibujados++;
+    }
+    return m.d;
+  }
+};
 const VS = 'attribute vec3 aP;attribute vec3 aN;attribute vec3 aC;attribute float aE;uniform mat4 uM;uniform vec3 uL;uniform float uAmb;uniform float uSol;uniform vec3 uO;uniform float uNoche;varying vec3 vC;varying float vD;void main(){float d=max(dot(normalize(aN),uL),0.);vec3 c=aC*(uAmb+uSol*d);vC=mix(c,aC*(0.55+0.6*uNoche),aE*uNoche)+aE*uNoche*vec3(0.25,0.18,0.05);vD=length(aP-uO);gl_Position=uM*vec4(aP,1.);}';
 const VT = 'attribute vec3 aP;attribute vec3 aN;attribute vec2 aT;uniform mat4 uM;uniform vec3 uL;uniform float uAmb;uniform float uSol;uniform vec3 uO;varying vec2 vT;varying float vL;varying float vD;void main(){vL=uAmb+uSol*max(dot(normalize(aN),uL),0.);vT=aT;vD=length(aP-uO);gl_Position=uM*vec4(aP,1.);}';
 const FS = 'precision mediump float;uniform vec3 uF;uniform vec2 uFR;varying vec3 vC;varying float vD;void main(){float f=clamp((vD-uFR.x)/(uFR.y-uFR.x),0.,1.);gl_FragColor=vec4(mix(vC,uF,f),1.);}';
 const FT = 'precision mediump float;uniform sampler2D uS;uniform vec3 uF;uniform vec2 uFR;varying vec2 vT;varying float vL;varying float vD;void main(){float f=clamp((vD-uFR.x)/(uFR.y-uFR.x),0.,1.);gl_FragColor=vec4(mix(texture2D(uS,vT).rgb*vL,uF,f),1.);}';
+const FSH = 'precision mediump float;varying vec3 vC;uniform float uAlpha;void main(){gl_FragColor=vec4(vC,uAlpha);}';
 const FC = 'precision mediump float;varying vec3 vC;void main(){gl_FragColor=vec4(vC,1.);}';
 const VC = 'attribute vec2 aP;attribute vec3 aC;varying vec3 vC;void main(){vC=aC;gl_Position=vec4(aP,0.999,1.);}';
 class VistaGL {
@@ -4594,11 +4845,11 @@ class VistaGL {
     try { this.gl = this.cv && this.cv.getContext && (this.cv.getContext('webgl', { antialias: true, alpha: false }) || this.cv.getContext('experimental-webgl')); } catch (e) { this.gl = null; }
     if (!this.gl) return; const gl = this.gl;
     const prog = (v, f) => { const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; }; const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, v)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, f)); gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); const u = {}, a = {}; const nu = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS), na = gl.getProgramParameter(p, gl.ACTIVE_ATTRIBUTES); for (let i = 0; i < nu; i++) { const n = gl.getActiveUniform(p, i).name; u[n] = gl.getUniformLocation(p, n); } for (let i = 0; i < na; i++) { const n = gl.getActiveAttrib(p, i).name; a[n] = gl.getAttribLocation(p, n); } return { p, u, a }; };
-    try { this.pC = prog(VS, FS); this.pT = prog(VT, FT); this.pS = prog(VC, FC); this.ok = true; } catch (e) { MC.falla('WebGL', e); this.ok = false; }
-    this.dyn = gl.createBuffer(); this.cielo = gl.createBuffer(); this.aniso = gl.getExtension('EXT_texture_filter_anisotropic') || gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
+    try { this.pC = prog(VS, FS); this.pT = prog(VT, FT); this.pS = prog(VC, FC); this.pSh = prog(VS, FSH); this.ok = true; } catch (e) { MC.falla('WebGL', e); this.ok = false; }
+    this.dyn = gl.createBuffer(); this.cielo = gl.createBuffer(); this.bufSombras = gl.createBuffer(); this._sombrasCache = null; this.aniso = gl.getExtension('EXT_texture_filter_anisotropic') || gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
   }
   _vbo(arr) { const gl = this.gl, b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(arr), gl.STATIC_DRAW); return { b, n: arr.length }; }
-  liberar() { const gl = this.gl; for (const r of this.regiones.values()) this._borrar(r); this.regiones.clear(); if (this.lejos) { for (const b of this.lejos) gl.deleteBuffer(b.b); this.lejos = null; } }
+  liberar() { const gl = this.gl; for (const r of this.regiones.values()) this._borrar(r); this.regiones.clear(); this._sombrasCache = null; if (this.lejos) { for (const b of this.lejos) gl.deleteBuffer(b.b); this.lejos = null; } }
   _borrar(r) { const gl = this.gl; if (r.suelo) gl.deleteBuffer(r.suelo.b); if (r.cosas) gl.deleteBuffer(r.cosas.b); if (r.tex) gl.deleteTexture(r.tex); }
   /* relieve lejano: bloques de 8 × 8 celdas de 240 m con colores por suelo (las montañas que rodean el valle) */
   _lejos() {
@@ -4683,6 +4934,30 @@ class VistaGL {
     /* regiones: suelo con su losa */
     gl.useProgram(this.pT.p); uni(this.pT); gl.activeTexture(gl.TEXTURE0); gl.uniform1i(this.pT.u.uS, 0);
     for (const r of this.regiones.values()) { gl.bindTexture(gl.TEXTURE_2D, r.tex); gl.bindBuffer(gl.ARRAY_BUFFER, r.suelo.b); this._attr(this.pT, [['aP', 3], ['aN', 3], ['aT', 2]], 8); gl.drawArrays(gl.TRIANGLES, 0, r.suelo.n / 8); }
+    /* C-M27: sombras solares planas sobre el terreno antes de dibujar volúmenes.
+       Cache por celda de ~25 m, para no reconstruir centenares de triángulos por cuadro.
+       Se desactivan con noche, lluvia fuerte o calidad baja (respaldo visual del 2D). */
+    if (cal > .48 && sol.z > .16 && S.luzSol > .2 && this.pSh) {
+      const clave = [Math.floor(cx / 25), Math.floor(cy / 25), Math.round(sol.x * 10),
+        Math.round(sol.y * 10), Math.round(sol.z * 10), ...O].join('/');
+      if (!this._sombrasCache || this._sombrasCache.clave !== clave) {
+        const geometria = Sombras3D.generar(M, O, sol, cx, cy);
+        this._sombrasCache = { clave, n: geometria.length / 10 };
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.bufSombras);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometria), gl.DYNAMIC_DRAW);
+      }
+      if (this._sombrasCache.n) {
+        const alpha = clamp(S.luzSol * (1 - lluvia * .5) * .33, .05, .33);
+        const cull = gl.isEnabled(gl.CULL_FACE);
+        gl.disable(gl.CULL_FACE); gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.depthMask(false); gl.useProgram(this.pSh.p); uni(this.pSh);
+        gl.uniform1f(this.pSh.u.uAlpha, alpha);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.bufSombras);
+        this._attr(this.pSh, [['aP', 3], ['aN', 3], ['aC', 3], ['aE', 1]], 10);
+        gl.drawArrays(gl.TRIANGLES, 0, this._sombrasCache.n);
+        gl.depthMask(true); gl.disable(gl.BLEND); if (cull) gl.enable(gl.CULL_FACE);
+      }
+    }
     gl.useProgram(this.pC.p); uni(this.pC);
     for (const r of this.regiones.values()) if (r.cosas) { gl.bindBuffer(gl.ARRAY_BUFFER, r.cosas.b); this._attr(this.pC, [['aP', 3], ['aN', 3], ['aC', 3], ['aE', 1]], 10); gl.drawArrays(gl.TRIANGLES, 0, r.cosas.n / 10); }
     const D = this._dinamico(E); if (D.length) { gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(D), gl.DYNAMIC_DRAW); this._attr(this.pC, [['aP', 3], ['aN', 3], ['aC', 3], ['aE', 1]], 10); gl.drawArrays(gl.TRIANGLES, 0, D.length / 10);
@@ -4694,7 +4969,7 @@ class VistaGL {
   /* metros del mundo → píxel de la pantalla (para etiquetas encima de la 3D) */
   aPantalla(x, y, z, W, H) { if (!this.mvp || !this.O) return null; const m = this.mvp, X = x - this.O[0], Y = z - this.O[2], Z = y - this.O[1], cw = m[3] * X + m[7] * Y + m[11] * Z + m[15]; if (cw <= .1) return null; return [(m[0] * X + m[4] * Y + m[8] * Z + m[12]) / cw * W / 2 + W / 2, -(m[1] * X + m[5] * Y + m[9] * Z + m[13]) / cw * H / 2 + H / 2]; }
 }
-Object.assign(MC, { VistaGL, Malla, M4 });
+Object.assign(MC, { VistaGL, Malla, M4, Sombras3D });
 
 /* ---- js/45-gl3d.js ---- */
 /* =====================================================================
@@ -4757,7 +5032,11 @@ Object.assign(Malla.prototype, {
     if (dos) { const al = .45; for (let i = 0; i < n; i++) { const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 1) continue; const nx = (b[1] - a[1]) / L * sg, nz = -(b[0] - a[0]) / L * sg; this.quadF([a[0], zt - .05, a[1]], [b[0], zt - .05, b[1]], [b[0] + nx * al, zt - .25, b[1] + nz * al], [a[0] + nx * al, zt - .25, a[1] + nz * al], osc3(techo, .8), 0, [cx, zt - 3, cz]); } }
     else if (detalle >= 3 || !casa) {
       for (let i = 0; i < n; i++) { const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < .8) continue; const nx = (b[1] - a[1]) / L * sg * .18, nz = -(b[0] - a[0]) / L * sg * .18, a2 = [a[0] - nx, a[1] - nz], b2 = [b[0] - nx, b[1] - nz]; this.quadF([a[0], zt, a[1]], [b[0], zt, b[1]], [b[0], zt + .55, b[1]], [a[0], zt + .55, a[1]], osc3(muro, .93), 0, ctr); this.quadF([a2[0], zt, a2[1]], [b2[0], zt, b2[1]], [b2[0], zt + .55, b2[1]], [a2[0], zt + .55, a2[1]], osc3(muro, .8), 0, [cx, zt + 5, cz]); this.quadF([a[0], zt + .55, a[1]], [b[0], zt + .55, b[1]], [b2[0], zt + .55, b2[1]], [a2[0], zt + .55, a2[1]], acl3(muro, .2), 0, [cx, zt - 5, cz]); }
-      if (st.tanque || h2(sem, 3, 82) < .35) this.cil(cx + (h2(sem, 4, 83) - .5) * Math.min(e.hw, 4), zt, cz + (h2(sem, 5, 83) - .5) * Math.min(e.hd, 4), .62, 1.25, 7, hex3('#1d2228'), .62, hex3('#2b3138'));
+      const tx = cx + (h2(sem, 4, 83) - .5) * Math.min(e.hw, 4), tz = cz + (h2(sem, 5, 83) - .5) * Math.min(e.hd, 4);
+      if (Z.tanques_madera && H > 12 && h2(sem, 3, 82) < (Z.tanques || .5)) {   // Nueva York: tanque de agua de madera sobre patas, con techo cónico
+        for (const [px, pz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) this.cajaF(tx + px * .9, zt + .55, tz + pz * .9, 0, .14, .14, 2.2, hex3('#2a2b2e'));
+        this.cil(tx, zt + 2.7, tz, 1.25, 2.6, 9, hex3('#6b4e35'), 1.25, hex3('#5a412c')); this.cil(tx, zt + 5.3, tz, 1.35, 1.1, 9, hex3('#3b3d42'), 0);
+      } else if (st.tanque || h2(sem, 3, 82) < .35) this.cil(tx, zt, tz, .62, 1.25, 7, hex3('#1d2228'), .62, hex3('#2b3138'));
     }
     if (detalle < 3 && !casa) return;
     /* fachada por cada muro: zócalo, ventanas con marco y vidrio, puerta, balcones y cornisa */
@@ -5553,7 +5832,7 @@ const UI = {
     const css = document.createElement('style'); css.textContent = `#${id}{--f:${T.fondo};--t:${T.tinta};--a:${T.acento};--a2:${T.acento2};--b:${T.borde};--r:${T.radio};position:fixed;inset:0;pointer-events:none;font:14px/1.3 ${T.letra};color:var(--t);z-index:20}
 #${id} [hidden]{display:none!important}#${id} .p{pointer-events:auto}#${id} .izq{position:absolute;top:max(10px,env(safe-area-inset-top));left:10px;right:84px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}#${id} .fichas{display:flex;flex-wrap:wrap;gap:6px;max-height:76px;overflow:hidden}#${id} .ficha{max-width:52vw;overflow:hidden;text-overflow:ellipsis}#${id} .mision{overflow:hidden}#${id} .mision .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#${id} .mision .d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}#${id} .aviso.on{-webkit-line-clamp:3}
 #${id} .ficha{padding:6px 10px;border-radius:999px;background:var(--f);border:1px solid var(--b);font-weight:700;white-space:nowrap;backdrop-filter:blur(6px)}
-#${id} .botones{position:absolute;right:8px;top:max(10px,env(safe-area-inset-top));display:flex;flex-direction:column;flex-wrap:wrap-reverse;align-content:flex-start;max-height:calc(100vh - 170px);gap:6px}
+#${id} .botones{position:absolute;right:8px;top:max(10px,env(safe-area-inset-top));display:flex;flex-direction:column;flex-wrap:wrap-reverse;align-content:flex-start;max-height:calc(100vh - 170px);gap:6px;width:clamp(48px,calc(20vw - 10px),66px)}#${id} .botones button{box-sizing:border-box;width:100%;min-width:0;padding:4px 1px;overflow:hidden}#${id} .botones button small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #${id} button{min-width:48px;min-height:48px;border-radius:var(--r);border:1px solid var(--b);background:var(--f);color:var(--t);font:700 18px/1 ${T.letra};cursor:pointer}
 #${id} button:focus-visible{outline:3px solid var(--a);outline-offset:2px}#${id} button small{display:block;font-size:10px;opacity:.85;margin-top:2px}
 #${id} .vel{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(max(14px,env(safe-area-inset-bottom)) + 8px);text-shadow:0 2px 6px #000c;white-space:nowrap}#${id} .vel b{font:900 30px/1 ${T.letra};color:var(--a)}
@@ -5565,7 +5844,7 @@ const UI = {
 #${id} .menu{position:absolute;right:66px;top:max(10px,env(safe-area-inset-top));max-height:78vh;overflow:auto;width:min(300px,72vw);padding:8px;border-radius:var(--r);background:var(--f);border:1px solid var(--b);display:grid;gap:4px}#${id} .menu button{text-align:left;font-size:14px;padding:8px 10px}
 #${id} .mapaG{position:fixed;inset:0;z-index:60;background:#0b0f14;touch-action:none}#${id} .mapaG canvas{width:100%;height:100%;display:block}#${id} .mapaG button{position:absolute;top:calc(env(safe-area-inset-top) + 12px);right:12px;width:48px;height:48px;border-radius:50%;border:0;background:#fff;color:#111;font:800 20px system-ui}#${id} .mapaG small{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 14px);text-align:center;color:#fff;font:600 13px system-ui;text-shadow:0 1px 3px #000}
 #${id} canvas.mini{position:absolute;right:10px;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 96px);width:120px;height:120px;border-radius:50%;border:2px solid var(--b);background:#0006}
-#${id} .fichas>*,#${id} .botones>*,#${id} .mision,#${id} .vel,#${id} .barras{transition:opacity .6s}#${id} .dim{opacity:.38}#${id}.foco .fichas,#${id}.foco .botones,#${id}.foco .mision,#${id}.foco .barras{opacity:.18}#${id} .izq .aviso{pointer-events:none}#${id}.cine>*{opacity:0!important;pointer-events:none!important}
+#${id} .fichas>*,#${id} .botones>*,#${id} .mision,#${id} .vel,#${id} .barras{transition:opacity .6s}#${id} .dim{opacity:.75}#${id}.foco .fichas,#${id}.foco .botones,#${id}.foco .mision,#${id}.foco .barras{opacity:.18}#${id} .izq .aviso{pointer-events:none}#${id}.cine>*{opacity:0!important;pointer-events:none!important}
 @media (orientation:landscape){#${id} .izq{right:auto;max-width:24vw}#${id} .fichas{max-height:66px}#${id} .ficha{max-width:23vw}#${id} .mision .d{-webkit-line-clamp:1}}@media (orientation:landscape) and (max-height:500px){#${id} .ficha{padding:4px 8px;font-size:12px}#${id} .mision,#${id} .aviso{font-size:12px}}
 #${id} .joy{position:absolute;left:0;top:0;width:124px;height:124px;margin:-62px 0 0 -62px;border-radius:50%;border:3px solid rgba(255,255,255,.45);background:radial-gradient(circle,rgba(255,255,255,.10),rgba(255,255,255,.03));transition:opacity .3s;will-change:transform}
 #${id} .joy i{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:var(--a);opacity:.85;box-shadow:0 2px 10px #0006;will-change:transform}
@@ -6669,7 +6948,7 @@ const Publico = {
 };
 MC.Publico = Publico;
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-naturaleza.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;

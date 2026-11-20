@@ -1,0 +1,16 @@
+{
+ "ciudad": "nueva_york",
+ "bytes": 10212604,
+ "casillas": [
+  1686,
+  3410
+ ],
+ "tile": 6.0,
+ "vias": 83556,
+ "edificios": 163875,
+ "lugares": 400,
+ "relieve": [
+  -12,
+  113
+ ]
+}
