@@ -136,7 +136,7 @@ function jugar() {
     '• <b>Agua:</b> en la orilla, «🏊 Al agua»; mantén 🔽 para bucear.<br>• <b>Más:</b> 🗺️ vistas (lateral, 3D, pixel…), 🏠 tu casa, 🏙️ alcalde, ⚙️ ajustes.</div>', ['¡A jugar!']);
   /* 2.8 · accesibilidad y medición (entrega maestra §10.3, §13 y §14): sacudida, partículas, calidad y telemetría */
   const OPC = Object.assign({ sacudida: 1, particulas: 1, calidad: 'auto', tele: false }, leerG().opciones || {}); let tele = !!OPC.tele, teleT = 0;
-  const aplicarOpc = () => { MC.opciones.sacudida = OPC.sacudida; MC.opciones.particulas = OPC.particulas; const Q = { baja: .45, media: .75, alta: 1 }[OPC.calidad]; vistas.auto = !Q; if (Q) vistas.calidad = Q; tele = !!OPC.tele; if (!tele) { const f = ui.ficha('tele', ''); f.hidden = true; } escribirG({ opciones: OPC }); };
+  const aplicarOpc = () => { MC.opciones.sacudida = OPC.sacudida; MC.opciones.particulas = OPC.particulas; const Q = { baja: .45, media: .75, alta: 1 }[OPC.calidad]; vistas.auto = !Q; MC.opciones.densidad = !Q; if (Q) vistas.calidad = Q; tele = !!OPC.tele; if (!tele) { const f = ui.ficha('tele', ''); f.hidden = true; } escribirG({ opciones: OPC }); };
   aplicarOpc();
   const NIVEL = v => v >= 1 ? 'normal' : v > 0 ? 'suave' : 'apagada', sig = (L, v) => L[(L.indexOf(v) + 1) % L.length];
   const menuAjustes = () => ui.menu('⚙️ Ajustes', [{ id: 'libre', texto: '🆓 Modo libre (todo gratis): ' + (libre ? 'sí' : 'no') }, { id: 'ayuda', texto: '❓ Cómo se juega' },
@@ -206,7 +206,11 @@ function jugar() {
     requestAnimationFrame(paso);
   }
   /* tamaño */
-  let W = 0, H = 0; const ajustar = () => { const d = Math.min(2, devicePixelRatio || 1); W = cv.width = Math.round(innerWidth * d); H = cv.height = Math.round(innerHeight * d); vistas.dpr = d; }; addEventListener('resize', ajustar); ajustar();
+  /* 2.11: densidad dinámica del lienzo (MC.DensidadLienzo): si los cuadros llegan lentos, el lienzo baja de densidad
+     (el navegador lo agranda gratis) y la cámara corrige el zoom para que el mundo se vea del mismo tamaño */
+  const densidad = new MC.DensidadLienzo({ max: Math.min(2, devicePixelRatio || 1), activa: MC.opciones.densidad !== false }); let dEf = densidad.max;
+  let W = 0, H = 0; const ajustar = () => { densidad.ponerMax(Math.min(2, devicePixelRatio || 1)); const d = dEf = densidad.medir(0, vistas.actual.id); W = cv.width = Math.round(innerWidth * d); H = cv.height = Math.round(innerHeight * d); vistas.dpr = d; }; addEventListener('resize', ajustar); ajustar();
+  const redensificar = d => { if (d === dEf) return; const k = d / dEf; camara.zoom *= k; camara.limites.zoom = [camara.limites.zoom[0] * k, camara.limites.zoom[1] * k]; dEf = d; W = cv.width = Math.round(innerWidth * d); H = cv.height = Math.round(innerHeight * d); vistas.dpr = d; };
   ponVista('cenital'); nuevaMision(); camara.x = cuerpo.x; camara.y = cuerpo.y;
   /* 2.6: el tutorial es opcional (en la portada y en ⚙️ Ajustes); al empezar solo queda la guía del joystick, que se va sola */
   /* ciclo */
@@ -239,9 +243,10 @@ function jugar() {
     /* el perro te sigue (dirección de Reynolds: llegar con separación) */
     const f = MC.IA.llegar([perro.x, perro.y], [cuerpo.x - Math.cos(cuerpo.a) * 3, cuerpo.y - Math.sin(cuerpo.a) * 3], Math.min(perro.vmax, Math.abs(cuerpo.v) + 3), 4); perro.x += f[0] * dt; perro.y += f[1] * dt; perro.v = Math.hypot(f[0], f[1]); if (perro.v > .2) perro.a = Math.atan2(f[1], f[0]);
     E.peatones = pobl.paso(dt, reloj, cuerpo.x, cuerpo.y, 420); E.trafico = trafico.paso(dt, cuerpo.x, cuerpo.y, reloj.seg, vistas.calidad);
+    if (!interior) { densidad.activa = MC.opciones.densidad !== false; redensificar(densidad.medir(dt, vistas.actual.id + (vistas.pixel ? '_px' : ''))); }
     vistas.dibujar(g, W, H, E, dt); ui.pintarJoystick(); MC.Telemetria.registro(vistas.ms, dt); if (tele && (teleT -= dt) <= 0) { teleT = .25; ui.ficha('tele', MC.Telemetria.linea(E)).hidden = false; }   /* 2.8: telemetría (percentiles) */
     /* la flecha al objetivo del mandado (en las vistas 2D): pin si se ve, flecha en el borde si no */
-    const Pm = mision && mision.actual; if (Pm && Pm.x != null && E._pr && vistas.actual.tipo === '2d') { let [sx, sy] = E._pr(Pm.x, Pm.y, 0); if (vistas.pixel) { sx *= vistas.escalaPixel; sy *= vistas.escalaPixel; } const Z = ui.zonaLibre(), d2 = W / innerWidth; MC.UI.indicador(g, W, H, sx, sy, { texto: Math.round(Math.hypot(Pm.x - cuerpo.x, Pm.y - cuerpo.y)) + ' m', escala: dpr0, t: E.t, rect: [Z.x0 * d2 + 20 * dpr0, Z.y0 * d2 + 10 * dpr0, Z.x1 * d2 - 20 * dpr0, Z.y1 * d2] }); }
+    const Pm = mision && mision.actual; if (Pm && Pm.x != null && E._pr && vistas.actual.tipo === '2d') { let [sx, sy] = E._pr(Pm.x, Pm.y, 0); if (vistas.pixel) { sx *= vistas.escalaPixel; sy *= vistas.escalaPixel; } const Z = ui.zonaLibre(), d2 = W / innerWidth; MC.UI.indicador(g, W, H, sx, sy, { texto: Math.round(Math.hypot(Pm.x - cuerpo.x, Pm.y - cuerpo.y)) + ' m', escala: dEf, t: E.t, rect: [Z.x0 * d2 + 20 * dEf, Z.y0 * d2 + 10 * dEf, Z.x1 * d2 - 20 * dEf, Z.y1 * d2] }); }
     if ((adapt += dt) > 20 && tocando) { adapt = 0; const A = MC.Musica.adaptar({ velocidad: Math.abs(cuerpo.v), hora: reloj.hora, clima }); if (A.estilo !== tocando.pieza.titulo.split(' · ').pop()) tocando = MC.Musica.tocar({ estilo: A.estilo, tema: TEMAS[temaI], energia: A.energia, compases: 16 }); }
     if ((hud -= dt) <= 0) { hud = .25;
       ui.ficha('hora', '🕐 ' + reloj.texto()); ui.ficha('clima', clima.texto()); ui.ficha('plata', libre ? '🆓 ' + cop(libro.saldo('jugador')) : '💰 ' + cop(libro.saldo('jugador'))); ui.ficha('lugar', '📍 ' + (M.calle(cuerpo.x, cuerpo.y) || M.meta.nombre));
