@@ -15,8 +15,7 @@ try{
   const pre=await p.evaluate(()=>({h:document.documentElement.scrollWidth,view:innerWidth,city:!!window.TC,mission:TC.estado().mission,overlay:!document.querySelector('#portada').hidden}));
   if(pre.h>pre.view+1||!pre.city||pre.mission!==0||!pre.overlay)throw Error('Portada inválida '+w+': '+JSON.stringify(pre));
   await p.click('#iniciar');let init=await p.evaluate(()=>TC.estado());
-  if(!document?.createElement){} // no-op: browser assertions below
-  await p.keyboard.down('KeyW');await p.waitForTimeout(1000);await p.keyboard.up('KeyW');const fin=await p.evaluate(()=>TC.estado());
+  await p.keyboard.down('w');await p.waitForTimeout(1000);await p.keyboard.up('w');const fin=await p.evaluate(()=>TC.estado());
   if(fin.player.y>=init.player.y-2||fin.mission!==0||errors.length)throw Error('Control de movimiento/JS '+w+': '+JSON.stringify({init:init.player,fin:fin.player,errors}));
   const touch=await p.evaluate(()=>Array.from(document.querySelectorAll('[data-key]')).every(e=>e.getBoundingClientRect().height>=44));
   if(!touch)throw Error('Botón táctil menor que 44px a '+w);
