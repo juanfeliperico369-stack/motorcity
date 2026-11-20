@@ -53,10 +53,13 @@ const Vida = {
   /* las huellas en el piso, antes de los objetos (las llama MC.Vista2D) */
   piso(D) {
     const { g, pr, z, E } = D; if (!this.marcas.length || z < .9) return; const t = E.t || 0, COL = { arena: '92,70,40', tierra: '58,42,26', barro: '44,30,18', nieve: '120,135,165' };
+    let viejas = 0; while (viejas < this.marcas.length && t - this.marcas[viejas].t > 240) viejas++; if (viejas) this.marcas.splice(0, viejas);
+    /* en lote: un trazo por suelo y por edad (4 tramos), no uno por huella: cientos de huellas cuestan como 16 */
+    const G = new Map(); for (const m of this.marcas) { const k = m.s + ((t - m.t) / 60 | 0) + (m.pie ? 'p' : 'l'); let L = G.get(k); if (!L) G.set(k, L = []); L.push(m); }
     g.save(); g.lineCap = 'round';
-    for (let i = this.marcas.length - 1; i >= 0; i--) { const m = this.marcas[i], edad = t - m.t; if (edad > 240) { this.marcas.splice(0, i + 1); break; } const a = (m.s === 'nieve' ? .5 : .32) * clamp(1 - edad / 240, 0, 1);
-      if (m.pie) { const [x, y] = pr(m.x, m.y, 0); g.fillStyle = 'rgba(' + COL[m.s] + ',' + a.toFixed(3) + ')'; g.beginPath(); g.ellipse(x, y, Math.max(.6, m.l * z * .5), Math.max(.5, m.w * z * .5 * (D.P.k || 1)), m.a + (D.P.yaw || 0), 0, TAU); g.fill(); }
-      else { const [x0, y0] = pr(m.x0, m.y0, 0), [x1, y1] = pr(m.x1, m.y1, 0); g.strokeStyle = 'rgba(' + COL[m.s] + ',' + a.toFixed(3) + ')'; g.lineWidth = Math.max(1, m.w * z); g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); } }
+    for (const L of G.values()) { const m0 = L[0], a = (m0.s === 'nieve' ? .5 : .32) * clamp(1 - (t - m0.t) / 240, 0, 1), col = 'rgba(' + COL[m0.s] + ',' + a.toFixed(3) + ')'; g.beginPath();
+      if (m0.pie) { for (const m of L) { const [x, y] = pr(m.x, m.y, 0), rx = Math.max(.6, m.l * z * .5); g.moveTo(x + rx, y); g.ellipse(x, y, rx, Math.max(.5, m.w * z * .5 * (D.P.k || 1)), m.a + (D.P.yaw || 0), 0, TAU); } g.fillStyle = col; g.fill(); }
+      else { for (const m of L) { const [x0, y0] = pr(m.x0, m.y0, 0), [x1, y1] = pr(m.x1, m.y1, 0); g.moveTo(x0, y0); g.lineTo(x1, y1); } g.strokeStyle = col; g.lineWidth = Math.max(1, m0.w * z); g.stroke(); } }
     g.restore();
   },
   /* palomas en el piso cerca del jugador; alzan vuelo si se acerca rápido */

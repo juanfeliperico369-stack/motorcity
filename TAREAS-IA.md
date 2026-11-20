@@ -31,6 +31,21 @@ De las obras con derechos se toman las **técnicas**; el arte que se copia es de
 ---
 
 ## Gemini · Antigravity («hydrogen») · tareas fáciles
+> **Entregado el 20‑nov‑2026 (G‑H1…G‑H8):**
+> - `reportes/2026-11-20-gemini-*.md` (capturas, revisor de arte y pruebas);
+> - `arte/referencias/` (6 láminas);
+> - `contenido/datos-gemini.json` (30 datos);
+> - `arte/gemini/iconos-ui.json`;
+> - `arte/dominio-publico/candidatas.md` (40 obras);
+> - la auditoría de los reels en `docs/INSPIRACION-VISUAL.md` §1.1.
+>
+> Claude corrigió lo que encontraron las capturas (botones y zona libre, aviso desfasado, ventanas en casas de un piso, cubiertas flotantes, cebras cruzadas, botón «Comprar» y burbuja de la casa) y sacó las paletas de las obras colombianas.
+>
+> **Lo que sigue para Gemini:**
+> - **G‑H7**: los 13 enlaces y las 7 fichas que solo describe su informe;
+> - **G‑H9**: la medición en un celular real;
+> - **G‑H1 otra vez** sobre la 2.8, con `node motor.mjs capturas`.
+
 Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo anotado para ChatGPT** y no lo hagas.
 
 | Id | Tarea | Cómo | Entrega |

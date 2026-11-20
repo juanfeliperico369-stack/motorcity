@@ -613,6 +613,21 @@ De las obras con derechos se toman las **técnicas**; el arte que se copia es de
 ---
 
 ### Gemini · Antigravity («hydrogen») · tareas fáciles
+> **Entregado el 20‑nov‑2026 (G‑H1…G‑H8):**
+> - `reportes/2026-11-20-gemini-*.md` (capturas, revisor de arte y pruebas);
+> - `arte/referencias/` (6 láminas);
+> - `contenido/datos-gemini.json` (30 datos);
+> - `arte/gemini/iconos-ui.json`;
+> - `arte/dominio-publico/candidatas.md` (40 obras);
+> - la auditoría de los reels en `docs/INSPIRACION-VISUAL.md` §1.1.
+>
+> Claude corrigió lo que encontraron las capturas (botones y zona libre, aviso desfasado, ventanas en casas de un piso, cubiertas flotantes, cebras cruzadas, botón «Comprar» y burbuja de la casa) y sacó las paletas de las obras colombianas.
+>
+> **Lo que sigue para Gemini:**
+> - **G‑H7**: los 13 enlaces y las 7 fichas que solo describe su informe;
+> - **G‑H9**: la medición en un celular real;
+> - **G‑H1 otra vez** sobre la 2.8, con `node motor.mjs capturas`.
+
 Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo anotado para ChatGPT** y no lo hagas.
 
 | Id | Tarea | Cómo | Entrega |
@@ -713,8 +728,8 @@ Cada juego tiene su propio `TAREAS-IA.md` en la raíz de su repositorio:
 Versión **2.8.0** · 20‑nov‑2026 · **125 pruebas en verde** (`node motor.mjs prueba --navegador`).
 
 ### Resumen
-- **Hechos:** 72 pedidos ✅.
-- **Hechos, pero falta algo de afuera:** 3 🟡. Los 10 reels que piden iniciar sesión los describe Gemini. El motor ya está copiado en EnCicla y El Metro, pero sus IAs todavía no lo usan. Y falta probar en un celular real.
+- **Hechos:** 74 pedidos ✅.
+- **Hechos, pero falta algo de afuera:** 4 🟡. Los 10 reels que piden iniciar sesión los describe Gemini. El motor ya está copiado en EnCicla y El Metro, pero sus IAs todavía no lo usan. Y falta probar en un celular real.
 - **Pendientes:** 6 ⏳:
   - los juegos *Motor City* (carreras) y *Extremo*;
   - bajar la maqueta de 40 ms en cualquier máquina;
@@ -832,7 +847,14 @@ Versión **2.8.0** · 20‑nov‑2026 · **125 pruebas en verde** (`node motor.m
 | «Prepara todo»: lo que se pudo hacer ya en el motor | ✅ | Palomas que huyen, huellas, faros, luces de freno, vintage, CRT, térmico, accesibilidad, telemetría, calidad y contratos (`js/88-vida.js`, `js/90-telemetria.js`, `js/91-contratos.js`, `schemas/`) |
 | «Prepara todo»: lo demás, repartido | ✅ | `TAREAS-IA.md`: C‑M20, C‑M21, C‑M22, C‑A10, C‑A11, G‑H7 y G‑H9 |
 
-### 9. Lo que falta, y a quién le toca
+### 9. La entrega de Gemini (G‑H1…G‑H8) y sus hallazgos (2.8)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Tareas fáciles de Gemini | ✅ | `reportes/2026-11-20-gemini-*.md`, `arte/referencias/`, `contenido/datos-gemini.json`, `arte/gemini/iconos-ui.json`, `arte/dominio-publico/candidatas.md` y `docs/INSPIRACION-VISUAL.md` §1.1 |
+| Corregir lo que vio Gemini en las capturas | ✅ | Zona libre con margen para los botones (80 %); avisos con clave (la vista nunca queda desfasada); ventanas en las casas de un piso; cubiertas sobre columnas; cebras sin cruzarse; botón «Comprar» y burbuja dentro de la casa; sombra de las copas más pequeña |
+| Paletas de las obras colombianas | 🟡 | `arte/dominio-publico/paletas.json` (`col_*`). Algunas quedaron pendientes porque Wikimedia limita las descargas; se completan en la próxima sesión. |
+
+### 10. Lo que falta, y a quién le toca
 | Qué | Estado | A quién le toca |
 |---|---|---|
 | Probar en un **celular real** de gama media | 🟡 | Al autor. Anota el modelo y lo que se siente lento o confuso. |
@@ -1744,6 +1766,38 @@ El autor reunió los 14 reels, los videos y el análisis de ChatGPT y de Gemini 
 3. No atar las reglas a los gráficos: la calidad cambia el aspecto, nunca la frenada.
 4. Contratos de datos versionados: `schemas/` y `MC.Contratos`.
 5. Medir en un celular real con percentiles: `MC.Telemetria`.
+
+#### 1.1 Auditoría G‑H7 de Gemini (20‑nov‑2026)
+Gemini revisó los 10 reels que faltaban. Siguen detrás del inicio de sesión de Instagram, así que no se inventó contenido. Lo verificado es esto:
+
+| Reel / publicación | Estado de acceso (2026-11-20) | Qué se ve (solo evidencia verificada) | Estilo | Qué da peso o vida | Técnica observada / uso en Motor City |
+|---|---|---|---|---|---|
+| `DfvyT1QIFIQ` | **Evidencia indirecta verificada** (ficha `R10`, reseña externa en `develog.develrocket.com` documentada en `MOTOR-CITY-ENTREGA-MAESTRA.md`; sin inspección del metraje original) | ***Town Brush***: al pintar con el dedo, el paisaje de un pueblo cobra vida y se transforma | Pixel art (según fuente secundaria) | Respuesta inmediata del entorno al gesto táctil (no se verificó física interna ni código) | «Toque que despierta el mundo»: pintar, reparar o limpiar activa animación, luz y cambios persistentes → referencia para `C‑M11` y `MC.Urbe` |
+| `Dfaux2QFsay` | Bloqueado por inicio de sesión en Instagram (sin acceso público al shortcode) | No verificable sin sesión; pendiente asociar al MP4 correspondiente del autor | Pendiente | Pendiente | Pendiente asociar MP4 |
+| `De9tpl3yakv` | Bloqueado por inicio de sesión en Instagram (sin acceso público al shortcode) | No verificable sin sesión; pendiente asociar al MP4 correspondiente del autor | Pendiente | Pendiente | Pendiente asociar MP4 |
+| `De7qMG8iZdh` | Bloqueado por inicio de sesión en Instagram (sin acceso público al shortcode) | No verificable sin sesión; pendiente asociar al MP4 correspondiente del autor | Pendiente | Pendiente | Pendiente asociar MP4 |
+| `Dfpb3_vHFPb` | Bloqueado por inicio de sesión en Instagram (sin acceso público al shortcode) | No verificable sin sesión; pendiente asociar al MP4 correspondiente del autor | Pendiente | Pendiente | Pendiente asociar MP4 |
+| `Dc_s5CPsstT` | Bloqueado por inicio de sesión en Instagram (sin acceso público al shortcode) | No verificable sin sesión; pendiente asociar al MP4 correspondiente del autor | Pendiente | Pendiente | Pendiente asociar MP4 |
+| `De9ZhRAIOhJ` | Bloqueado por inicio de sesión en Instagram (sin acceso público al shortcode) | No verificable sin sesión; pendiente asociar al MP4 correspondiente del autor | Pendiente | Pendiente | Pendiente asociar MP4 |
+| `DdwLGJmjjvQ` | Bloqueado por inicio de sesión en Instagram (sin acceso público al shortcode) | No verificable sin sesión; pendiente asociar al MP4 correspondiente del autor | Pendiente | Pendiente | Pendiente asociar MP4 |
+| `DfRe6pQzWzS` | Bloqueado por inicio de sesión en Instagram (sin acceso público al shortcode) | No verificable sin sesión; pendiente asociar al MP4 correspondiente del autor | Pendiente | Pendiente | Pendiente asociar MP4 |
+| `DfDkDxQiQS7` | Bloqueado por inicio de sesión en Instagram (publicación `?img_index=2` privada/login) | No verificable sin sesión; pendiente asociar la imagen o MP4 correspondiente del autor | Pendiente | Pendiente | Pendiente asociar imagen/MP4 |
+
+##### Técnicas verificadas directamente en los 17 clips MP4 analizados (`MOTOR-CITY-ENTREGA-MAESTRA.md`, sin asignación 1:1 a los 9 shortcodes bloqueados)
+En la entrega maestra del autor se inspeccionaron directamente 17 clips MP4 (`R01`, `R05`, `R06`, `R07`, `R11`, `R12`, `R14–R17`, `R19–R25`). Aunque no existe correspondencia confirmada entre cada `.mp4` y los 9 shortcodes bloqueados arriba, sus aportes verificados respaldan directamente los módulos de Motor City 2.7:
+
+| Fichas con MP4 directo | Qué se vio directamente en los fotogramas | Estilo | Qué da peso o vida | Principio aplicable al motor |
+|---|---|---|---|---|
+| `R01` (*The Sound of Fury*) | Combate musical con trazos de tinta negra, estelas y pausas de impacto | Cómic / novela gráfica oscura con *cel-shading* | *Hitstop*, sacudida de cámara, tela al viento y partículas | Contornos + VFX 2D + *hitstop* (`MC.Vida`, `MC.Estilo` `comic`/`novela`) |
+| `R05`, `R06` (PS2/GTA retro y *Project Zomboid* 3ª persona 3D) | Escenas *mid/low-poly* con texturas pintadas e interacciones cotidianas en interiores 3D | *Low/mid-poly* retro con luz cálida | Retroceso de golpes, gestos cotidianos (reparar, abrir puertas, leer) y sombras largas | Personajes legibles sin hiperrealismo y micro-acciones táctiles en Mi casa y lugares |
+| `R07`, `R12` (*Fable Rover ER-6* y 4×4 en desierto/playa en Godot) | Rover de 6 ruedas con suspensión visible; 4×4 rompiendo cercas y derrapando en arena junto al mar | Maqueta técnica / diorama *top-down* cálido | Compresión de suspensión, vallas rompibles, polvo de llantas, surcos y gaviotas que huyen | Suspensión ligera, *props* reactivos, fauna que reacciona y estelas (`MC.Vida`, `C‑M15`) |
+| `R11` (*Cairn*) | Escalada en roca vertical con cuerdas, apoyos cuidadosos y clima de montaña | Novela gráfica / *ligne claire* 3D | Tensión del apoyo, caídas con peso y viento en tela/nieve | Contactos firmes y peso corporal al saltar/aterrizar (`MC.Vida`) |
+| `R14`, `R19` (*Still The Game*) | Diorama isométrico urbano con ciclo de 24 h, estaciones, farolas, ventanas encendidas, nieve y huellas | Diorama isométrico 3D realista estilizado | Avance pesado en nieve, sombras largas girando y encendido progresivo de ventanas y farolas | Ciclo solar con luces nocturnas en fachadas (`C‑A6`) y huellas/charcos (`C‑M17`, `C‑M15`) |
+| `R15`, `R16`, `R17` (Ciudades pixel art, *CityRT*, *Miniopolis*) | Mapas urbanos isométricos, constructor web *cel-shaded* y edificios modulares con filtros en vivo (*Comic, CRT, Vintage, Vibrant*) | Pixel art isométrico / *cel-shading* / maqueta con filtros | Golpe seco con polvo al encajar plantas, tráfico continuo y cambio instantáneo de atmósfera | Selector de estilos `MC.Estilo` + construcción modular y modo a pie de calle (`C‑A8`, `C‑M19`) |
+| `R20–R25` (Laboratorio 3D, mapa térmico, cuaderno ilustrado, haikus JS, tipografía) | Campos 3D, vista rayos X, propagación de incendio sobre relieve, ajedrez de cuaderno, haikus en Canvas y fuente manuscrita | Técnico 3D / ilustración de cuaderno / Canvas 2D generativo | Inercia en controles, capas de datos sincronizadas, *squash & stretch* 2D y ondas procedurales | Capas de ciudad (`MC.Urbe`), efectos de lluvia/ondas ligeros en Canvas y depurador de físicas |
+
+> **Para cerrar el mapa 1:1:** basta con que el autor indique qué `.mp4` corresponde a cada uno de los 9 shortcodes bloqueados (sin intentar evadir el inicio de sesión de Instagram).
+
 
 ### 2. Peso y vida («game feel»)
 | Fuente | La técnica | En el motor |
@@ -2761,6 +2815,18 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
    - Codex: C‑M20 (API de construcción por código y pincel de mundo), C‑M21 (suspensión, balanceo, cosas que se rompen, IK, tablero y taller con rayos X) y C‑M22 (guardado versionado y sectores);
    - ChatGPT: C‑A10 (tipografía propia) y C‑A11 (interfaz de libreta);
    - Gemini: G‑H7 (verificar las 13 URL y las 7 fichas que solo describe su informe) y G‑H9 (medición en un celular real con la telemetría).
+
+9. **Llegó la entrega de Gemini (G‑H1…G‑H8)** y se unió a la rama. De sus capturas se corrigió:
+   - la zona libre deja margen para la columna de botones (80 %): en su máquina, la prueba fallaba por 4 px;
+   - `ui.aviso(texto, ms, clave)`: el aviso de la vista reemplaza al anterior y nunca queda desfasado;
+   - ventanas encendidas en las casas de un piso;
+   - las cubiertas sin muros se dibujan sobre columnas;
+   - cebras sin cruzarse en «#»;
+   - en Mi casa, el botón «Comprar» completo, la burbuja dentro de la casa y el rótulo de los cuartos pequeños;
+   - la sombra horneada de las copas, más pequeña.
+
+   También se sacaron las paletas de las obras colombianas de su lista. Wikimedia limita las descargas, así que algunas quedaron para después.
+10. **Rendimiento:** las huellas se dibujan en lote (16 trazos en vez de cientos). En esta máquina nueva, la cenital de Medellín mide 14–16 ms tanto en la 2.7 como en la 2.8: no es una regresión, es el contenedor.
 
 **Probado:** 125 pruebas:
 - huellas y palomas;

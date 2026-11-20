@@ -12,8 +12,8 @@
 Versión **2.8.0** · 20‑nov‑2026 · **125 pruebas en verde** (`node motor.mjs prueba --navegador`).
 
 ## Resumen
-- **Hechos:** 72 pedidos ✅.
-- **Hechos, pero falta algo de afuera:** 3 🟡. Los 10 reels que piden iniciar sesión los describe Gemini. El motor ya está copiado en EnCicla y El Metro, pero sus IAs todavía no lo usan. Y falta probar en un celular real.
+- **Hechos:** 74 pedidos ✅.
+- **Hechos, pero falta algo de afuera:** 4 🟡. Los 10 reels que piden iniciar sesión los describe Gemini. El motor ya está copiado en EnCicla y El Metro, pero sus IAs todavía no lo usan. Y falta probar en un celular real.
 - **Pendientes:** 6 ⏳:
   - los juegos *Motor City* (carreras) y *Extremo*;
   - bajar la maqueta de 40 ms en cualquier máquina;
@@ -131,7 +131,14 @@ Versión **2.8.0** · 20‑nov‑2026 · **125 pruebas en verde** (`node motor.m
 | «Prepara todo»: lo que se pudo hacer ya en el motor | ✅ | Palomas que huyen, huellas, faros, luces de freno, vintage, CRT, térmico, accesibilidad, telemetría, calidad y contratos (`js/88-vida.js`, `js/90-telemetria.js`, `js/91-contratos.js`, `schemas/`) |
 | «Prepara todo»: lo demás, repartido | ✅ | `TAREAS-IA.md`: C‑M20, C‑M21, C‑M22, C‑A10, C‑A11, G‑H7 y G‑H9 |
 
-## 9. Lo que falta, y a quién le toca
+## 9. La entrega de Gemini (G‑H1…G‑H8) y sus hallazgos (2.8)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Tareas fáciles de Gemini | ✅ | `reportes/2026-11-20-gemini-*.md`, `arte/referencias/`, `contenido/datos-gemini.json`, `arte/gemini/iconos-ui.json`, `arte/dominio-publico/candidatas.md` y `docs/INSPIRACION-VISUAL.md` §1.1 |
+| Corregir lo que vio Gemini en las capturas | ✅ | Zona libre con margen para los botones (80 %); avisos con clave (la vista nunca queda desfasada); ventanas en las casas de un piso; cubiertas sobre columnas; cebras sin cruzarse; botón «Comprar» y burbuja dentro de la casa; sombra de las copas más pequeña |
+| Paletas de las obras colombianas | 🟡 | `arte/dominio-publico/paletas.json` (`col_*`). Algunas quedaron pendientes porque Wikimedia limita las descargas; se completan en la próxima sesión. |
+
+## 10. Lo que falta, y a quién le toca
 | Qué | Estado | A quién le toca |
 |---|---|---|
 | Probar en un **celular real** de gama media | 🟡 | Al autor. Anota el modelo y lo que se siente lento o confuso. |

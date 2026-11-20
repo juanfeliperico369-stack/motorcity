@@ -22,7 +22,7 @@ html,body{margin:0;height:100%;background:#0b1020;color:#f4f1e6;font:14px/1.3 sy
 #casaForm input[type=text]{width:100%;box-sizing:border-box;min-height:46px;padding:0 12px;border-radius:12px;border:1px solid #ffffff40;background:#0b1020;color:#fff;font:16px system-ui}
 #casaForm label{display:flex;gap:8px;align-items:center;margin:10px 0;font-size:13px;opacity:.85}
 .fila{display:flex;gap:8px;flex-wrap:wrap}.fila button{flex:1;min-height:46px;min-width:46px;border-radius:12px;border:1px solid #39ffb3;background:#102a22;color:#39ffb3;font:800 15px system-ui;cursor:pointer}.fila button.b2{border-color:#ffffff40;background:#0b1020;color:#fff}
-#barraCasa{bottom:max(14px,env(safe-area-inset-bottom));padding:10px}#barraCasa .fila button{font-size:13px;min-width:0}
+#barraCasa{bottom:max(14px,env(safe-area-inset-bottom));padding:10px}#barraCasa .fila{gap:6px}#barraCasa .fila button{font-size:12px;min-width:0;padding:4px 2px;line-height:1.15;white-space:normal}
 #comoSe{margin:10px auto 0;max-width:520px;text-align:left;font-size:14px;opacity:.9}#comoSe summary{cursor:pointer;text-align:center;opacity:.85}#comoSe p{line-height:1.5;margin:8px 0 0}
 </style>
 </head>
@@ -2199,7 +2199,7 @@ const Mobiliario = {
     if (!ciclo) for (let d = 20 + r() * 30; d < total - 10; d += 55 + r() * 40) { if (peat || v.k === VIA.CALLE && r() < .35) { poner('banca', d, r() < .5 ? 1 : -1, .2); poner('caneca', d + 2.2, 1, .1); } }
     if (v.k === VIA.AVENIDA || v.k === VIA.CARRERA) for (let d = 60 + r() * 120; d < total - 20; d += 330 + r() * 60) poner('paradero', d, 1, .4);
     if (!ciclo) for (let d = 30 + r() * 60; d < total - 10; d += 110 + r() * 30) if (r() < .5) poner('hidrante', d, r() < .5 ? 1 : -1, -.2);
-    if ((v.k === VIA.CALLE || v.k === VIA.CARRERA || v.k === VIA.AVENIDA) && total > 30) for (const [d, sg] of [[3.5, 1], [total - 3.5, -1]]) { const q = punto(d); L.push({ t: 'cebra', x: q.x, y: q.y, a: q.a, ancho: anc * 2, v: 0 }); }
+    if ((v.k === VIA.CALLE || v.k === VIA.CARRERA || v.k === VIA.AVENIDA) && total > 30) for (const [d, sg] of [[3.5, 1], [total - 3.5, -1]]) { const q = punto(d); if (L.some(o => o.t === 'cebra' && Math.hypot(o.x - q.x, o.y - q.y) < 4)) continue; L.push({ t: 'cebra', x: q.x, y: q.y, a: q.a, ancho: anc * 2, v: 0 }); }
     C.set(i, L); if (C.size > 6000) C.delete(C.keys().next().value); return L;
   },
   /* los props en una caja (solo de las vías que pasan por ahí) */
@@ -3455,7 +3455,7 @@ class Losas {
     /*    2.6: los mismos árboles de MC.Arboleda (también los del borde de las losas vecinas: ya no quedan cortados).
           En las vistas inclinadas de cerca no se pintan en el piso: se levantan (antes parecían tapetes). */
     if (!lejos && !sinArboles) for (const t of Arboleda.en(M, x0 - 7, y0 - 7, x0 + L + 7, y0 + L + 7, 5000)) { if (MC.estilo !== 'clasico') Arboleda.arriba(g, t); else this.arbol(g, t.x, t.y, t.r, t.s); }
-    else if (!lejos && sinArboles) { g.fillStyle = 'rgba(10,16,12,.17)'; g.beginPath(); for (const t of Arboleda.en(M, x0 - 7, y0 - 7, x0 + L + 7, y0 + L + 7, 5000)) { const rM = t.r * (Arboleda.ESPECIES[t.e] || Arboleda.ESPECIES.urapan).ancho; g.moveTo(t.x + rM * 1.2, t.y + rM * .2); g.ellipse(t.x + rM * .25, t.y + rM * .2, rM * .95, rM * .9, 0, 0, TAU); } g.fill(); }   // la sombra bajo la copa, horneada en el piso (gratis por cuadro)
+    else if (!lejos && sinArboles) { g.fillStyle = 'rgba(10,16,12,.15)'; g.beginPath(); for (const t of Arboleda.en(M, x0 - 7, y0 - 7, x0 + L + 7, y0 + L + 7, 5000)) { const rM = t.r * (Arboleda.ESPECIES[t.e] || Arboleda.ESPECIES.urapan).ancho; g.moveTo(t.x + rM * .95, t.y + rM * .2); g.ellipse(t.x + rM * .25, t.y + rM * .2, rM * .7, rM * .66, 0, 0, TAU); } g.fill(); }   // la sombra bajo la copa, horneada en el piso (gratis por cuadro)
     /* 5. techos de las huellas reales (sombra suave al sureste) y tanques en las laderas */
     const E = lejos ? [] : M.edificiosEn(x0, y0, x0 + L, y0 + L).sort((a, b) => a.h - b.h);
     for (const b of E) { const P = Mundo.esquinas(b), sh = Math.min(1.4, .3 + b.h * .04); g.fillStyle = 'rgba(20,24,40,.2)';   /* solo oclusión de contacto: la sombra del sol la pone MC.Sombras según la hora */ g.beginPath(); g.moveTo(P[0] + sh, P[1] + sh); for (let i = 2; i < P.length; i += 2) g.lineTo(P[i] + sh, P[i + 1] + sh); g.closePath(); g.fill(); }
@@ -3611,7 +3611,7 @@ const Vista2D = {
       if (D.real && z > 3.5) { const hb = Math.min(1, (z1 - z0) * .25) / (z1 - z0), ha = .35 / (z1 - z0), Bi = [B[i][0] + (T[i][0] - B[i][0]) * hb, B[i][1] + (T[i][1] - B[i][1]) * hb], Bj = [B[j][0] + (T[j][0] - B[j][0]) * hb, B[j][1] + (T[j][1] - B[j][1]) * hb], Ti = [T[i][0] - (T[i][0] - B[i][0]) * ha, T[i][1] - (T[i][1] - B[i][1]) * ha], Tj = [T[j][0] - (T[j][0] - B[j][0]) * ha, T[j][1] - (T[j][1] - B[j][1]) * ha];   /* 2.6: humedad y salpicado en la base del muro; sombra bajo el alero */
         g.fillStyle = 'rgba(34,26,18,.24)'; g.beginPath(); g.moveTo(B[i][0], B[i][1]); g.lineTo(B[j][0], B[j][1]); g.lineTo(Bj[0], Bj[1]); g.lineTo(Bi[0], Bi[1]); g.closePath(); g.fill();
         g.fillStyle = 'rgba(0,0,0,.13)'; g.beginPath(); g.moveTo(T[i][0], T[i][1]); g.lineTo(T[j][0], T[j][1]); g.lineTo(Tj[0], Tj[1]); g.lineTo(Ti[0], Ti[1]); g.closePath(); g.fill(); }
-      if (ventanas && z > 1.8 && D.ventanas !== false) { const alto = (z1 - z0), pisos = Math.min(14, Math.floor(alto / 3)), L = Math.hypot(ex, ey), cols = Math.min(6, Math.floor(L / (z * 3.2))); if (pisos >= 1 && cols >= 1) {
+      if (ventanas && z > 1.8 && D.ventanas !== false) { const alto = (z1 - z0), pisos = Math.min(14, Math.max(1, Math.floor(alto / 3))), L = Math.hypot(ex, ey), cols = Math.min(6, Math.floor(L / (z * 3.2))); if (pisos >= 1 && cols >= 1) {
         /* fachada por reglas (WFC, como Townscaper): locales, vitrinas y puerta abajo; balcones alineados; muros ciegos */
         const FZ = pisos * cols <= 48 && z > 2.2 ? Ondas.fachadaCache(ventanas * 31 + i, pisos, cols) : null, alturaV = (T[i][1] - B[i][1]);
         const fm = MC.arte.f('fachadaModulo');   // arte del juego: fachadaModulo(g, tipo, x, y, ancho, alto, encendida, D) → true si lo dibujó
@@ -3625,7 +3625,9 @@ const Vista2D = {
     if (D.mapa) techo = Estilo.col(techo); g.fillStyle = noche > .05 ? tono(techo, -noche * .5) : techo; g.beginPath(); g.moveTo(T[0][0], T[0][1]); for (let i = 1; i < n; i++) g.lineTo(T[i][0], T[i][1]); g.closePath(); g.fill(); if (D.ES.tinta && z > 1.2) { g.strokeStyle = D.ES.tintaColor; g.lineWidth = Math.max(1, D.ES.tinta * Math.min(1.4, z / 6)); g.stroke(); }
     g.strokeStyle = 'rgba(0,0,0,.22)'; g.lineWidth = Math.max(.5, z * .15); g.stroke();
   },
-  edificio(D, q) { const st = estiloEdificio(D.E.mundo, q), P = Mundo.esquinas(q); this.prisma(D, P, 0, q.h, st.muro, st.techo, q.h >= 4.5 ? (q.s * 1e4 | 0) : 0); if (st.tanque && D.z > 1.5) { const [x, y] = D.pr(q.x, q.y, q.h + 1.2); D.g.fillStyle = '#1d1f24'; D.g.fillRect(x - D.z * .7, y - D.z * .4, D.z * 1.4, D.z * 1.2); } },
+  /* 2.8: una cubierta sin muros (un techo sobre columnas: parqueaderos, kioscos, plazas de mercado) no flota */
+  cubierta(D, q, st) { const { g, pr, z } = D, P = Mundo.esquinas(q), n = P.length >> 1; g.strokeStyle = '#3a3d44'; g.lineWidth = Math.max(1, z * .3); g.beginPath(); for (let i = 0; i < n; i++) { const [bx, by] = pr(P[2 * i], P[2 * i + 1], 0), [tx, ty] = pr(P[2 * i], P[2 * i + 1], q.h - .3); g.moveTo(bx, by); g.lineTo(tx, ty); } g.stroke(); this.prisma(D, P, Math.max(0, q.h - .5), q.h, st.muro, st.techo, 0); },
+  edificio(D, q) { const st = estiloEdificio(D.E.mundo, q), P = Mundo.esquinas(q); if (q.clase === 'techo' && D.modo !== 'cenital') return this.cubierta(D, q, st); this.prisma(D, P, 0, q.h, st.muro, st.techo, q.h >= 2.8 ? (q.s * 1e4 | 0) : 0); if (st.tanque && D.z > 1.5) { const [x, y] = D.pr(q.x, q.y, q.h + 1.2); D.g.fillStyle = '#1d1f24'; D.g.fillRect(x - D.z * .7, y - D.z * .4, D.z * 1.4, D.z * 1.2); } },
   sitio(D, q) {
     const ES = ['#b8673f', '#eceae4', '#bdbcb6', '#5e7b97', '#ece3cd', '#efe8d8', '#d4d8dd', '#3a3f4a', '#b9714b', '#d8432f', '#d9d4c9', '#a86a4c', '#e9dab3', '#2a302d', '#3a3f4a', '#6a645c', '#a6573a', '#e3e6ea', '#4b5a55'], m = ES[q.est] || '#d9d4c9', t = q.techo === 'dos' || q.techo === 'cuatro' ? '#b5542f' : q.techo === 'cupula' ? '#56665f' : tono(m, -.12);
     for (const R of q.R.slice(0, 1)) this.prisma(D, R, 0, q.partes ? q.partes[0].z0 || Math.min(q.h, 12) : q.h, m, t, 7);
@@ -4501,7 +4503,7 @@ const Interiores = {
     const fmu = MC.arte.f('mueble');   // arte: mueble(g, m, estilo, P) en metros del plano → true si lo dibujó
     for (const m of P.muebles) { if (fmu && fmu(g, m, P.estilo, P) === true) continue; if (m.tipo === 'tapete') { Interiores.tapete(g, m, EST); continue; } g.fillStyle = m.color || (EST.muebles[m.tipo]) || COL[m.tipo] || EST.madera; g.fillRect(m.x, m.y, m.w, m.h); g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = .03; g.strokeRect(m.x, m.y, m.w, m.h); if (m.tipo === 'cama') { g.fillStyle = '#c43a26'; g.fillRect(m.x + m.w * .08, m.y + m.h * .3, m.w * .84, m.h * .62); } }
     if (P.escaleras) { const s2 = P.escaleras; g.fillStyle = '#bdb8ad'; g.fillRect(s2.x, s2.y, s2.w, s2.h); g.strokeStyle = '#7d7f84'; g.lineWidth = .04; for (let q = 0; q < s2.h; q += .28) { g.beginPath(); g.moveTo(s2.x, s2.y + q); g.lineTo(s2.x + s2.w, s2.y + q); g.stroke(); } }
-    if (op.etiquetas !== false && esc > 14) { g.fillStyle = 'rgba(20,24,32,.42)'; g.font = '600 ' + (.34) + 'px system-ui'; g.textAlign = 'left'; g.textBaseline = 'top'; for (const c of P.cuartos) if (c.w > 1.8) g.fillText({ bano: 'baño', sala_juntas: 'juntas', recepcion: 'recepción', balcon: 'balcón', rectoria: 'rectoría', sacristia: 'sacristía' }[c.tipo] || c.tipo, c.x + .22, c.y + .2); g.textBaseline = 'alphabetic'; }   // en la esquina: el nombre no tapa los muebles
+    if (op.etiquetas !== false && esc > 14) { g.fillStyle = 'rgba(20,24,32,.42)'; g.font = '600 ' + (.34) + 'px system-ui'; g.textAlign = 'left'; g.textBaseline = 'top'; for (const c of P.cuartos) if (c.w > 1.2 && c.h > 1) g.fillText({ bano: 'baño', sala_juntas: 'juntas', recepcion: 'recepción', balcon: 'balcón', rectoria: 'rectoría', sacristia: 'sacristía' }[c.tipo] || c.tipo, c.x + .22, c.y + .2); g.textBaseline = 'alphabetic'; }   // en la esquina: el nombre no tapa los muebles
     g.restore();
   }
 };
@@ -5016,14 +5018,14 @@ const UI = {
       /* foco: al ir rápido o en tensión, solo queda lo vital (velocidad, aviso); cine: nada */
       foco(on) { capa.classList.toggle('foco', !!on); }, cine(on) { capa.classList.toggle('cine', !!on); },
       /* el rectángulo que la interfaz no debe tapar (en px de la ventana) */
-      zonaLibre() { const W = innerWidth, H = innerHeight, v = H > W; return v ? { x0: W * .16, y0: H * .24, x1: W * .84, y1: H * .68 } : { x0: W * .26, y0: H * .2, x1: W * .74, y1: H * .74 }; },
+      zonaLibre() { const W = innerWidth, H = innerHeight, v = H > W; return v ? { x0: W * .16, y0: H * .24, x1: W * .8, y1: H * .68 } : { x0: W * .26, y0: H * .2, x1: W * .74, y1: H * .74 }; },
       boton({ id: bid, icono = '', texto = '', al, padre }) { const b = document.createElement('button'); b.className = 'p'; b.innerHTML = icono + (texto ? '<small>' + texto + '</small>' : ''); b.setAttribute('aria-label', texto || bid); b.onclick = e => { e.stopPropagation(); al && al(e); }; (padre || botones).appendChild(b); Bs[bid] = b; return b; },
       velocidad(ms, extra = '') { vel.innerHTML = '<b>' + Math.round(Math.abs(ms) * 3.6) + '</b> km/h ' + extra; },
       barra(clave, etiqueta, v) { if (!Ba[clave]) { const w = div('', barras), [ico, ...txt] = String(etiqueta).split(' '); w.title = etiqueta; w.innerHTML = '<small>' + (txt.length ? ico + '<span> ' + txt.join(' ') + '</span>' : etiqueta) + '</small><div class="barra"><i></i></div>';   /* en celular vertical solo el ícono: las barras caben en una fila */ Ba[clave] = w.querySelector('i'); Ba[clave]._w = w; } Ba[clave].style.width = Math.round(clamp(v, 0, 1) * 100) + '%'; },
       /* avisos en cola: uno a la vez; si llega uno igual, no se repite */
       barraVisible(clave, v) { if (Ba[clave]) Ba[clave]._w.hidden = !v; },
-      aviso(texto, ms = 2200) { const C = ui._cola || (ui._cola = []); if (C.some(q => q[0] === texto) || aviso.textContent === texto && aviso.classList.contains('on')) return; C.push([texto, ms]); if (!ui._av) ui._sig(); },
-      _sig() { const q = (ui._cola || []).shift(); if (!q) { ui._av = false; return; } ui._av = true; aviso.textContent = q[0]; aviso.classList.add('on'); clearTimeout(ui._t); ui._t = setTimeout(() => { aviso.classList.remove('on'); setTimeout(() => ui._sig(), 320); }, q[1]); },
+      aviso(texto, ms = 2200, clave) { const C = ui._cola || (ui._cola = []); if (clave) { for (let i = C.length - 1; i >= 0; i--) if (C[i][2] === clave) C.splice(i, 1); if (ui._av && ui._avClave === clave) { aviso.textContent = texto; clearTimeout(ui._t); ui._t = setTimeout(() => { aviso.classList.remove('on'); setTimeout(() => ui._sig(), 320); }, ms); return; } } if (C.some(q => q[0] === texto) || aviso.textContent === texto && aviso.classList.contains('on')) return; C.push([texto, ms, clave]); if (!ui._av) ui._sig(); },   // 2.8: con «clave», el aviso nuevo reemplaza al viejo del mismo tipo (la vista nunca queda desfasada)
+      _sig() { const q = (ui._cola || []).shift(); if (!q) { ui._av = false; ui._avClave = null; return; } ui._av = true; ui._avClave = q[2] || null; aviso.textContent = q[0]; aviso.classList.add('on'); clearTimeout(ui._t); ui._t = setTimeout(() => { aviso.classList.remove('on'); setTimeout(() => ui._sig(), 320); }, q[1]); },
       leyenda(L) { leyenda.hidden = !L; if (!L) return; leyenda.innerHTML = '<b>' + (L.titulo || '') + '</b>' + (L.items || []).map(([c, t]) => '<span><i style="background:' + c + '"></i>' + t + '</span>').join(''); },   // qué significa cada color de una capa de datos
       mision(texto) { mision.hidden = !texto; const [t, ...d] = String(texto || '').split('<br>'); mision.innerHTML = '<div class="t">' + t + '</div>' + (d.length ? '<div class="d">' + d.join(' ') + '</div>' : ''); },   // título en una línea; el detalle, en dos como mucho (nunca medio renglón cortado)
       /* diálogo con opciones: devuelve una promesa con la opción elegida */
@@ -5546,10 +5548,13 @@ const Vida = {
   /* las huellas en el piso, antes de los objetos (las llama MC.Vista2D) */
   piso(D) {
     const { g, pr, z, E } = D; if (!this.marcas.length || z < .9) return; const t = E.t || 0, COL = { arena: '92,70,40', tierra: '58,42,26', barro: '44,30,18', nieve: '120,135,165' };
+    let viejas = 0; while (viejas < this.marcas.length && t - this.marcas[viejas].t > 240) viejas++; if (viejas) this.marcas.splice(0, viejas);
+    /* en lote: un trazo por suelo y por edad (4 tramos), no uno por huella: cientos de huellas cuestan como 16 */
+    const G = new Map(); for (const m of this.marcas) { const k = m.s + ((t - m.t) / 60 | 0) + (m.pie ? 'p' : 'l'); let L = G.get(k); if (!L) G.set(k, L = []); L.push(m); }
     g.save(); g.lineCap = 'round';
-    for (let i = this.marcas.length - 1; i >= 0; i--) { const m = this.marcas[i], edad = t - m.t; if (edad > 240) { this.marcas.splice(0, i + 1); break; } const a = (m.s === 'nieve' ? .5 : .32) * clamp(1 - edad / 240, 0, 1);
-      if (m.pie) { const [x, y] = pr(m.x, m.y, 0); g.fillStyle = 'rgba(' + COL[m.s] + ',' + a.toFixed(3) + ')'; g.beginPath(); g.ellipse(x, y, Math.max(.6, m.l * z * .5), Math.max(.5, m.w * z * .5 * (D.P.k || 1)), m.a + (D.P.yaw || 0), 0, TAU); g.fill(); }
-      else { const [x0, y0] = pr(m.x0, m.y0, 0), [x1, y1] = pr(m.x1, m.y1, 0); g.strokeStyle = 'rgba(' + COL[m.s] + ',' + a.toFixed(3) + ')'; g.lineWidth = Math.max(1, m.w * z); g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); } }
+    for (const L of G.values()) { const m0 = L[0], a = (m0.s === 'nieve' ? .5 : .32) * clamp(1 - (t - m0.t) / 240, 0, 1), col = 'rgba(' + COL[m0.s] + ',' + a.toFixed(3) + ')'; g.beginPath();
+      if (m0.pie) { for (const m of L) { const [x, y] = pr(m.x, m.y, 0), rx = Math.max(.6, m.l * z * .5); g.moveTo(x + rx, y); g.ellipse(x, y, rx, Math.max(.5, m.w * z * .5 * (D.P.k || 1)), m.a + (D.P.yaw || 0), 0, TAU); } g.fillStyle = col; g.fill(); }
+      else { for (const m of L) { const [x0, y0] = pr(m.x0, m.y0, 0), [x1, y1] = pr(m.x1, m.y1, 0); g.moveTo(x0, y0); g.lineTo(x1, y1); } g.strokeStyle = col; g.lineWidth = Math.max(1, m0.w * z); g.stroke(); } }
     g.restore();
   },
   /* palomas en el piso cerca del jugador; alzan vuelo si se acerca rápido */
@@ -5868,7 +5873,7 @@ function jugar() {
   const VIST = ['cenital', 'ciudad3d', 'maqueta', 'lateral', 'pano', 'tercera']; let iv = 0, seguir = null;
   /* tocar para ir: en la vista cenital, un toque marca el destino y el personaje va solo por las calles (A*) */
   const tocarMapa = q => { if (esquema !== 'tocar_ir' || vistas.actual.id !== 'cenital') return; const d = vistas.dpr || 1, [x, y] = camara.aMundo(q.x * d, q.y * d, W, H); ruta = MC.Manejo.rutaA(M, cuerpo, { x, y }, cuerpo.veh.clase === 'pie' ? 'rueda' : 'rueda'); ui.aviso('👆 Vamos para allá'); };
-  const ponVista = id => { const v = vistas.usar(id, E); bGirar.hidden = !(v.id === 'lateral' || v.id === 'maqueta'); if (v.tipo === 'pano') { try { seguir = new MC.SeguirRuta(M, cuerpo, { red: 'rueda' }); } catch (e) { seguir = null; } } else seguir = null; ui.aviso(v.icon + ' ' + v.n); };
+  const ponVista = id => { const v = vistas.usar(id, E); bGirar.hidden = !(v.id === 'lateral' || v.id === 'maqueta'); if (v.tipo === 'pano') { try { seguir = new MC.SeguirRuta(M, cuerpo, { red: 'rueda' }); } catch (e) { seguir = null; } } else seguir = null; ui.aviso(v.icon + ' ' + v.n, 1600, 'vista'); };
   const tecla = k => { if (k === 'KeyQ') camara.girar90(-1); else if (k === 'KeyR') camara.girar90(1); else if (k === 'KeyH') casa(); else if (k === 'KeyV') { iv = (iv + 1) % VIST.length; ponVista(VIST[iv]); } else if (k === 'KeyP') vistas.pixel = !vistas.pixel; else if (k === 'KeyM') musica(); else if (k === 'KeyE') entrar(); else if (k === 'KeyB') menuVeh(); };
   ui.boton({ id: 'vista', icono: '🗺️', texto: 'Vista', al: () => menuVista() }); ui.boton({ id: 'veh', icono: '🚲', texto: 'Vehículo', al: () => menuVeh() }); ui.boton({ id: 'musica', icono: '🎵', texto: 'Sonido', al: () => menuSonido() });
   const bAccion = ui.boton({ id: 'accion', icono: '🚪', texto: 'Entrar', al: () => entrar() }); bAccion.hidden = true;
@@ -5907,7 +5912,7 @@ function jugar() {
   const bBaja = ui.accion({ id: 'baja', icono: '🔽', texto: 'Bajar / bucear (mantener)', mantener: true, ctl }), bSube = ui.accion({ id: 'sube', icono: '🔼', texto: 'Subir (mantener)', mantener: true, ctl }); bBaja.hidden = bSube.hidden = true;
   /* 2.7: estilos gráficos (realista, clásico, cómic, manga, anime, novela gráfica, ukiyo-e y acuarela) */
   const DESC_ESTILO = { realista: 'asfalto gastado, tejas y árboles de pie', clasico: 'plano y limpio', comic: 'tinta, semitono y onomatopeyas', manga: 'blanco y negro, tramado y líneas de velocidad', anime: 'cel shading y cielos de Shinkai', novela: 'noir: tinta, sombras negras y un rojo', ukiyoe: 'paleta de Hokusai sobre papel', vintage: 'foto vieja: sepia, papel y viñeta', crt: 'pantalla vieja con líneas de barrido', termica: 'el calor del mundo, como un dron térmico', acuarela: 'pigmento y papel, como la Comisión Corográfica' };
-  const ponEstilo = id => { MC.estilo = id; escribirG({ estilo: id }); ui.aviso('🖌️ ' + MC.Estilo.p.n + ': ' + (DESC_ESTILO[id] || ''), 2500); };
+  const ponEstilo = id => { MC.estilo = id; escribirG({ estilo: id }); ui.aviso('🖌️ ' + MC.Estilo.p.n + ': ' + (DESC_ESTILO[id] || ''), 2500, 'estilo'); };
   const menuEstilo = () => ui.menu('🖌️ Estilo', MC.Estilo.lista().map(e => ({ id: e.id, texto: e.icono + ' ' + e.n + (MC.estilo === e.id ? ' ✓' : '') })), ponEstilo);
   const menuVista = () => ui.menu('Vista', MC.VISTAS.map(v => ({ id: v.id, texto: v.icon + ' ' + v.n + (vistas.actual.id === v.id ? ' ✓' : '') })).concat([{ id: 'pixel', texto: '👾 Pixel: ' + (vistas.pixel ? 'sí' : 'no') }].concat([{ id: 'estilo', texto: '🖌️ Estilo: ' + MC.Estilo.p.icono + ' ' + MC.Estilo.p.n }], hayGemini ? [{ id: 'arte', texto: '🎨 Arte: ' + (MC.arte.activa === 'gemini' ? 'de Gemini' : 'del motor') }] : []), [{ id: 'mas', texto: '🔍 Acercar' }, { id: 'menos', texto: '🔎 Alejar' }]), id => { if (id === 'pixel') vistas.pixel = !vistas.pixel; else if (id === 'arte') cambiarArte(); else if (id === 'estilo') menuEstilo(); else if (id === 'mas') camara.zoom = Math.min(camara.limites.zoom[1], camara.zoom * 1.5); else if (id === 'menos') camara.zoom = Math.max(camara.limites.zoom[0], camara.zoom / 1.5); else { iv = Math.max(0, VIST.indexOf(id)); ponVista(id); } });
   const ayuda = () => ui.dialogo('🎮 Cómo se juega', '<div style="text-align:left;line-height:1.5">' +
@@ -5981,7 +5986,7 @@ function jugar() {
     const paso = () => { if (!interior || barra.hidden) return; requestAnimationFrame(paso); const W2 = ic.width = Math.round(innerWidth * d), H2 = ic.height = Math.round(innerHeight * d), PL = hogar.plano(); esc = Math.min(W2 / (PL.ancho + 2), (H2 * .82) / (PL.fondo + 2)); ox = (W2 - PL.ancho * esc) / 2; oy = (H2 * .86 - PL.fondo * esc) / 2;
       ig.fillStyle = '#141822'; ig.fillRect(0, 0, W2, H2); MC.Interiores.dibujar(ig, PL, ox, oy, esc); const m = PL.muebles[sel]; if (m) { ig.strokeStyle = '#39ffb3'; ig.lineWidth = 3; ig.strokeRect(ox + m.x * esc, oy + m.y * esc, m.w * esc, m.h * esc); } ctlI.leer();
       hab.P = PL; hab.paso(1 / 60, 6); const J = MC.Personaje.pose(hab.accion ? 'quieto' : 'camina', hab.fase); J.fase = hab.fase; MC.Sombras.contacto(ig, ox + hab.x * esc, oy + hab.y * esc + esc * .1, esc * .35, esc * .18); MC.arte.f('personajeArriba')(ig, J, habA, ox + hab.x * esc, oy + hab.y * esc, esc, hab.a);
-      ig.font = Math.round(esc * .6) + 'px system-ui'; ig.textAlign = 'center'; ig.fillText(hab.accion ? '💭' : ICO[hab.masUrgente()] || '', ox + hab.x * esc, oy + (hab.y - .6) * esc);
+      ig.font = Math.round(esc * .6) + 'px system-ui'; ig.textAlign = 'center'; ig.fillText(hab.accion ? '💭' : ICO[hab.masUrgente()] || '', ox + hab.x * esc, oy + Math.max(.55, hab.y - .6) * esc);   /* la burbuja nunca se sale por el muro de arriba */
       if ((infoT += 1 / 60) > .5) { infoT = 0; $('#bcInfo').textContent = '✨ Ambiente ' + hogar.ambiente() + '/100 · ' + hab.nombre + ': ' + (hab.accion ? hab.accion.texto : 'busca qué hacer'); } };
     let infoT = 1;
     requestAnimationFrame(paso);

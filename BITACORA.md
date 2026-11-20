@@ -22,6 +22,18 @@
    - ChatGPT: C‑A10 (tipografía propia) y C‑A11 (interfaz de libreta);
    - Gemini: G‑H7 (verificar las 13 URL y las 7 fichas que solo describe su informe) y G‑H9 (medición en un celular real con la telemetría).
 
+9. **Llegó la entrega de Gemini (G‑H1…G‑H8)** y se unió a la rama. De sus capturas se corrigió:
+   - la zona libre deja margen para la columna de botones (80 %): en su máquina, la prueba fallaba por 4 px;
+   - `ui.aviso(texto, ms, clave)`: el aviso de la vista reemplaza al anterior y nunca queda desfasado;
+   - ventanas encendidas en las casas de un piso;
+   - las cubiertas sin muros se dibujan sobre columnas;
+   - cebras sin cruzarse en «#»;
+   - en Mi casa, el botón «Comprar» completo, la burbuja dentro de la casa y el rótulo de los cuartos pequeños;
+   - la sombra horneada de las copas, más pequeña.
+
+   También se sacaron las paletas de las obras colombianas de su lista. Wikimedia limita las descargas, así que algunas quedaron para después.
+10. **Rendimiento:** las huellas se dibujan en lote (16 trazos en vez de cientos). En esta máquina nueva, la cenital de Medellín mide 14–16 ms tanto en la 2.7 como en la 2.8: no es una regresión, es el contenedor.
+
 **Probado:** 125 pruebas:
 - huellas y palomas;
 - partículas apagadas por accesibilidad;
