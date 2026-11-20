@@ -261,6 +261,16 @@ if (fs.existsSync(gu)) {
 { const n = MC.Paisaje.plan({ hora: 23, clima: { lluvia: 0 }, verde: .6 }), m = MC.Paisaje.plan({ hora: 6.3, clima: { lluvia: 0 }, verde: .6, ruido: .2 }), ll = MC.Paisaje.plan({ hora: 14, clima: { lluvia: .8, tormenta: .5 } });
   ok(n.grillos > .3 && n.pajaros < .1 && m.pajaros > .3 && ll.lluvia > .7 && ll.truenos > .3, 'paisaje sonoro: grillos de noche, pájaros al amanecer, lluvia y truenos', { noche: n.grillos, amanecer: m.pajaros }); }
 
+{ /* G-H1: las etiquetas Canvas no deben quedar detrás de los botones de la derecha. */
+  const textos = [], g = { measureText: () => ({ width: 70 }), fillRect: () => {}, fillText: t => textos.push(t) };
+  const D = { g, pr: (x, y) => [x, y], W: 412, H: 860, z: 5, P: { k: 1 },
+    E: { mundo: { lugares: [{ nombre: 'Lugar bajo botones', x: 375, y: 420 }, { nombre: 'Lugar visible', x: 130, y: 610 }], transporte: { encicla: [] } },
+      bloqueosEtiquetas: w => [[w - 84, 0, w, 860]] } };
+  MC.Vista2D.etiquetas(D);
+  ok(!textos.includes('Lugar bajo botones') && textos.includes('Lugar visible'),
+    'G-H1: las etiquetas del mundo no se pintan debajo de los controles del juego', textos);
+}
+
 console.log('15) Terreno: agua, montañas, rocas y límites de paso');
 { /* agua real: el embalse de Guatapé es lago y se hace más hondo lejos de la orilla; Medellín tiene su río */
   const MG = new MC.Mundo(new Uint8Array(fs.readFileSync(gu)), JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades/guatape.json'), 'utf8'))), AG = MC.Terreno.agua(MG), grande = AG.C.slice().sort((a, b) => b.area - a.area)[0];

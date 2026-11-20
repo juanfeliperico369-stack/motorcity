@@ -47,7 +47,10 @@ function jugar() {
   const tanque = { moto_mandados: 6, carro_mandados: 20 };
   const ORDEN = ['pie', 'rueda', 'moto', 'auto', 'pesado', 'aire', 'agua'], GRUPO = { pie: 'A pie', rueda: 'Bicis, patinetes y tablas', moto: 'Motos', auto: 'Carros', pesado: 'Pesados', aire: 'Aire', agua: 'Agua' };
   const listaVeh = () => libre ? MC.Vehiculos.de('mandados', v => ORDEN.includes(v.clase)).sort((a, b) => ORDEN.indexOf(a.clase) - ORDEN.indexOf(b.clase)).map(v => [v.id, { n: (v.icon || '•') + ' ' + v.n + ' · ' + GRUPO[v.clase].toLowerCase(), tiene: true, agua: v.clase === 'agua' }]) : Object.entries(garaje);
-  const E = { mundo: M, camara, reloj, clima, transporte: null, jugador, t: 0, vehiculos: [], trafico: [], peatones: [], extras: [], cables: [] };
+  const E = { mundo: M, camara, reloj, clima, transporte: null, jugador, t: 0, vehiculos: [], trafico: [], peatones: [], extras: [], cables: [],
+    /* Las etiquetas del mundo se omiten si quedan debajo de la columna de botones; son Canvas, no DOM. */
+    bloqueosEtiquetas: (w, h) => [[w - 84 * w / innerWidth, 0, w, h]]
+  };
   /* 3.0: artilugios físicos (MC.Objetos): conos y vallas en las vías, balones en las plazas, canecas y cajas en los andenes */
   /* C-M29 + G-H17: una semilla aleatoria nunca hereda el guardado de Guatapé. */
   const claveObjetos = 'motorcity.mandados.objetos.guatape.v1';
@@ -84,7 +87,7 @@ function jugar() {
     entregado = false; const paquete = { id: 'paquete', n: 'Paquete', masa, volumen: masa * 3 };
     mision = new MC.Mision({ titulo: 'De ' + o.nombre + ' a ' + d.nombre, limite, premio: pago, libro, cuenta: 'jugador', pasos: [{ tipo: 'ir', x: o.x, y: o.y, radio: 22, texto: 'Recoge en ' + o.nombre }, { tipo: 'esperar', x: o.x, y: o.y, radio: 22, seg: 1.2, texto: 'Recogiendo…' }, { tipo: 'ir', x: d.x, y: d.y, radio: 22, texto: 'Lleva a ' + d.nombre }, { tipo: 'condicion', x: d.x, y: d.y, radio: 40, cond: () => entregado, texto: 'Entra y entrega en la mano 🚪' }] });
     mision.paquete = paquete; mision.origen = o; mision.destino = d; mision.pago = pago; dinero0 = libro.saldo('jugador');
-    ui.aviso('📦 Mandado nuevo: ' + o.nombre + ' → ' + d.nombre + ' · ' + cop(pago) + ' · ' + masa + ' kg', 3500);
+    if (hechos > 0) ui.aviso('📦 Mandado nuevo: ' + o.nombre + ' → ' + d.nombre + ' · ' + cop(pago) + ' · ' + masa + ' kg', 3500);
   };
   MC.on('mision', ev => { if (ev.estado === 'cumplida' || ev.estado === 'fallida') hist.director.resultado(ev.estado === 'cumplida'); if (ev.estado === 'cumplida') { hechos++; ui.aviso('✅ ¡Entregado! +' + cop(mision.pago) + ' · llevas ' + hechos, 3000); setTimeout(nuevaMision, 2500); } else if (ev.estado === 'fallida') { ui.aviso('⏰ Se acabó el tiempo. Pagan la mitad.', 3000); libro.mover('mundo', 'jugador', mision.pago / 2, 'Mandado tarde', false); setTimeout(nuevaMision, 2500); } });
   /* controles e interfaz */
@@ -92,7 +95,7 @@ function jugar() {
   const VIST = ['cenital', 'ciudad3d', 'maqueta', 'lateral', 'pano', 'tercera']; let iv = 0, seguir = null;
   /* tocar para ir: en la vista cenital, un toque marca el destino y el personaje va solo por las calles (A*) */
   const tocarMapa = q => { if (esquema !== 'tocar_ir' || vistas.actual.id !== 'cenital') return; const d = vistas.dpr || 1, [x, y] = camara.aMundo(q.x * d, q.y * d, W, H); ruta = MC.Manejo.rutaA(M, cuerpo, { x, y }, cuerpo.veh.clase === 'pie' ? 'rueda' : 'rueda'); ui.aviso('👆 Vamos para allá'); };
-  const ponVista = id => { const v = vistas.usar(id, E); bGirar.hidden = !(v.id === 'lateral' || v.id === 'maqueta'); if (v.tipo === 'pano') { try { seguir = new MC.SeguirRuta(M, cuerpo, { red: 'rueda' }); } catch (e) { seguir = null; } } else seguir = null; ui.aviso(v.icon + ' ' + v.n, 1600, 'vista'); };
+  const ponVista = (id, sinAviso = false) => { const v = vistas.usar(id, E); bGirar.hidden = !(v.id === 'lateral' || v.id === 'maqueta'); if (v.tipo === 'pano') { try { seguir = new MC.SeguirRuta(M, cuerpo, { red: 'rueda' }); } catch (e) { seguir = null; } } else seguir = null; if (!sinAviso) ui.aviso(v.icon + ' ' + v.n, 1600, 'vista'); };
   const tecla = k => { if (k === 'KeyQ') camara.girar90(-1); else if (k === 'KeyR') camara.girar90(1); else if (k === 'KeyH') casa(); else if (k === 'KeyV') { iv = (iv + 1) % VIST.length; ponVista(VIST[iv]); } else if (k === 'KeyP') vistas.pixel = !vistas.pixel; else if (k === 'KeyM') musica(); else if (k === 'KeyE') entrar(); else if (k === 'KeyB') menuVeh(); };
   ui.boton({ id: 'vista', icono: '🗺️', texto: 'Vista', al: () => menuVista() }); ui.boton({ id: 'veh', icono: '🚲', texto: 'Vehículo', al: () => menuVeh() }); ui.boton({ id: 'musica', icono: '🎵', texto: 'Sonido', al: () => menuSonido() });
   const bAccion = ui.boton({ id: 'accion', icono: '🚪', texto: 'Entrar', al: () => entrar() }); bAccion.hidden = true;
@@ -234,7 +237,7 @@ function jugar() {
   const densidad = new MC.DensidadLienzo({ max: Math.min(2, devicePixelRatio || 1), activa: MC.opciones.densidad !== false }); let dEf = densidad.max;
   let W = 0, H = 0; const ajustar = () => { densidad.ponerMax(Math.min(2, devicePixelRatio || 1)); const d = dEf = densidad.medir(0, vistas.actual.id); W = cv.width = Math.round(innerWidth * d); H = cv.height = Math.round(innerHeight * d); vistas.dpr = d; }; addEventListener('resize', ajustar); ajustar();
   const redensificar = d => { if (d === dEf) return; const k = d / dEf; camara.zoom *= k; camara.limites.zoom = [camara.limites.zoom[0] * k, camara.limites.zoom[1] * k]; dEf = d; W = cv.width = Math.round(innerWidth * d); H = cv.height = Math.round(innerHeight * d); vistas.dpr = d; };
-  ponVista('cenital'); nuevaMision(); camara.x = cuerpo.x; camara.y = cuerpo.y;
+  ponVista('cenital', true); nuevaMision(); camara.x = cuerpo.x; camara.y = cuerpo.y;
   /* 2.6: el tutorial es opcional (en la portada y en ⚙️ Ajustes); al empezar solo queda la guía del joystick, que se va sola */
   /* ciclo */
   let t0 = performance.now(), hud = 0, adapt = 0, histT = 0, dialogo = false, sonT = 0, ultBloqueo = null, nadaba = false, objetosT = 0, sectoresT = 0;
