@@ -1,8 +1,8 @@
 {
- "version": "2.10.0",
- "motor_kb": 744,
+ "version": "3.0.0",
+ "motor_kb": 750,
  "mundo_kb": 8884,
- "html_kb": 9915,
- "sha": "4863b867",
- "archivos": 59
+ "html_kb": 9922,
+ "sha": "67f40f13",
+ "archivos": 60
 }

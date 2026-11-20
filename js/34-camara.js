@@ -28,7 +28,7 @@ class Camara {
   }
   /* gesto de la pantalla (de Controles) */
   gesto(g) {
-    if (g.tipo === 'zoom') { const z0 = this.zoom * g.k; this.zoom = clamp(z0, ...this.limites.zoom); if (z0 < this.limites.zoom[0] * .98) MC.emit('zoomTope', 'lejos'); else if (z0 > this.limites.zoom[1] * 1.02) MC.emit('zoomTope', 'cerca'); this.d.dist = clamp(this.d.dist / g.k, this.perfil === 'primera' ? 0 : 2.5, 2500); }
+    if (g.tipo === 'zoom') { const z0 = this.zoom * g.k; this.zoom = clamp(z0, ...this.limites.zoom); if (z0 < this.limites.zoom[0] * .98) MC.emit('zoomTope', 'lejos'); else if (z0 > this.limites.zoom[1] * 1.02) MC.emit('zoomTope', 'cerca'); if (this.perfil === 'tercera' && g.k < 1 && this.d.dist / g.k > 15) MC.emit('zoomTope', 'lejos3p'); this.d.dist = clamp(this.d.dist / g.k, this.perfil === 'primera' ? 0 : 2.5, 2500); }
     else if (g.tipo === 'girar') { this.yawObj = null; this.yaw -= g.da; this.mira -= g.da; }
     else if (g.tipo === 'inclinar') { this.pitchObj = null; this.pitch = clamp(this.pitch + g.dy * .006, ...this.limites.pitch); this.d.pitch = clamp(this.d.pitch + g.dy * .004, -.4, 1.4); }
     else if (g.tipo === 'mirar') { if (this.modo === 'libre') { const c = Math.cos(this.yaw), s = Math.sin(this.yaw); this.x -= (g.dx * c + g.dy * s) / this.zoom; this.y -= (-g.dx * s + g.dy * c) / this.zoom; } else { this.mira += g.dx * .006; this.d.pitch = clamp(this.d.pitch + g.dy * .004, -.4, 1.4); } }
