@@ -63,6 +63,10 @@ jobs:
         run: node motor.mjs prueba --navegador
       - name: TURNO CERO · vertical slice offline en 4 tamaños
         run: node pruebas/getaway-prototipo.mjs
+      - name: TURNO CERO 3D · WebGL2, cuatro formatos y misión completa
+        run: |
+          if ! command -v xvfb-run >/dev/null; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+          xvfb-run -a node pruebas/getaway-3d.mjs
       - name: C-M25 · Portada móvil y escritorio (anti plantilla genérica)
         run: node pruebas/portada.mjs
       - name: G-H1 · 14 capturas de revisión
@@ -78,6 +82,7 @@ jobs:
             dist/publico.md
             dist/publico.json
             dist/capturas/
+            dist/getaway-3d/
             dist/construccion.json
           if-no-files-found: ignore
           retention-days: 7

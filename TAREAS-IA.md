@@ -261,3 +261,7 @@ La PR #5 contiene C-M26 (persecución jugable y E2E verificado), C-M25 (portada 
 - **C-A15:** dirección artística conceptual y wireframe listos como documentos, no atlas UV ni captura de gameplay.
 - **G-H19:** investigación documental ampliada de 3 a 13 fichas, sin cronometrajes de vídeos no observados.
 - **Siguiente IA:** antes de iniciar 3D, auditar licencias del GIS, cobertura de la isla y conectividad de puentes, carga por 1 km y transición de prototipo a MC4.
+
+
+### Avance comprobable «Turno Cero» v0.3.0 (20-nov-2026)
+ChatGPT entregó una vertical slice 3D original en `juegos/getaway/turno-cero-accion-3d.html`, pruebas E2E `pruebas/getaway-3d.mjs` y tres GLB de personajes con 12 huesos y 8 clips cada uno. Tiene controles PC/táctil, combate ficticio, dron, visor, señuelos, persecución y una misión completa en **distrito ficticio de prueba**. Ver `docs/GETAWAY-AVANCE-V03.md`. Pendiente GIS Manhattan real, conexión de las APIs MC4, materiales PBR finales y reproducción de rig glTF en runtime.
