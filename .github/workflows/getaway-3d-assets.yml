@@ -21,18 +21,25 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Generar 42 GLB originales (sin dependencias externas)
+      - name: Generar 42 modelos GLB originales (sin dependencias externas)
         run: python3 juegos/getaway/arte3d/generar_modelos.py
-      - name: Comprobar cabeceras GLB, JSON y geometría
+      - name: Comprobar 42 modelos GLB
         run: python3 juegos/getaway/arte3d/pruebas-modelos.py
-      - name: Comprobar que se generaron 42 activos
+      - name: Generar 3 personajes con esqueleto y 8 clips cada uno
+        run: python3 juegos/getaway/arte3d/generar_actores_rig.py
+      - name: Verificar glTF skin y animaciones
+        run: python3 juegos/getaway/arte3d/validar_actores_rig.py
+      - name: Comprobar el total de 45 modelos
         run: |
           test "$(find juegos/getaway/arte3d/modelos -name '*.glb' -type f | wc -l)" -eq 42
+          test "$(find juegos/getaway/arte3d/rigged -name '*.glb' -type f | wc -l)" -eq 3
       - uses: actions/upload-artifact@v4
         with:
-          name: turno-cero-42-modelos-glb
+          name: turno-cero-45-modelos-glb
           path: |
             juegos/getaway/arte3d/modelos/*.glb
+            juegos/getaway/arte3d/rigged/*.glb
+            juegos/getaway/arte3d/rigged/manifest-rig.json
             juegos/getaway/arte3d/manifest.json
             juegos/getaway/arte3d/README.md
             docs/GETAWAY-ESPIONAJE-3D.md
