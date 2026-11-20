@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="412" height="860" viewBox="0 0 412 860" role="img" aria-labelledby="title desc">
+<title id="title">Interfaz de conducción Turno Cero, estudio móvil</title>
+<desc id="desc">Wireframe original de experiencia para móvil, con recorrido urbano esquemático, misión, nivel de búsqueda y controles grandes. No es una captura del juego.</desc>
+<rect x="0" y="0" width="412" height="860" fill="#182224" />
+<rect x="0" y="0" width="412" height="42" fill="#E4D9C5" />
+<text x="15" y="26" font-family="Arial, sans-serif" font-size="16" fill="#182224" font-weight="bold">TURNO CERO · MANHATTAN</text>
+<text x="327" y="26" font-family="Arial, sans-serif" font-size="12" fill="#182224" >03:12 AM</text>
+<rect x="0" y="42" width="412" height="39" fill="#334446" />
+<text x="16" y="66" font-family="Arial, sans-serif" font-size="12" fill="#E4D9C5" letter-spacing="1">MISIÓN 02  /  LA LISTA</text>
+<rect x="297" y="52" width="99" height="18" fill="#A84635" />
+<text x="304" y="65" font-family="Arial, sans-serif" font-size="11" fill="#E4D9C5" font-weight="bold">BUSCA  2 / 5</text>
+<rect x="6" y="90" width="400" height="574" fill="#283738" />
+<g transform="translate(6 90)"><path d="M18 85L18 570" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M65 85L65 570" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M112 85L112 570" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M159 85L159 570" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M206 85L206 570" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M253 85L253 570" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M300 85L300 570" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M347 85L347 570" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M394 85L394 570" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M441 85L441 570" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M488 85L488 570" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M535 85L535 570" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M0 90L400 90" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M0 138L400 138" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M0 186L400 186" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M0 234L400 234" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M0 282L400 282" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M0 330L400 330" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M0 378L400 378" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M0 426L400 426" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M0 474L400 474" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M0 522L400 522" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M0 570L400 570" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/><path d="M0 618L400 618" fill="none" stroke="#657573" stroke-width="3" stroke-linecap="square"/>
+<rect x="9" y="210" width="111" height="122" fill="#546A63" opacity=".84"/>
+<rect x="230" y="29" width="98" height="140" fill="#6A6259" />
+<rect x="258" y="360" width="135" height="151" fill="#7F6E60" />
+<rect x="14" y="478" width="60" height="49" fill="#6B756A" />
+<path d="M13 558L70 518L145 412L181 290L247 246L357 175" fill="none" stroke="#D7A15C" stroke-width="7" stroke-dasharray="13 9"/>
+<circle cx="145" cy="410" r="10" fill="#E4D9C5" stroke="#A84635" stroke-width="3"/>
+<g transform="translate(183,348) rotate(-25) scale(0.4)">
+ <ellipse cx="4" cy="17" rx="69" ry="24" fill="#0e1718" opacity=".55"/>
+ <rect x="-71" y="-22" width="142" height="48" fill="#A84635" rx="12" stroke="#182224" stroke-width="4"/>
+ <rect x="-31" y="-19" width="57" height="42" fill="#182224" rx="10"/>
+ <rect x="-21" y="-15" width="40" height="12" fill="#6e8b8c" />
+ <rect x="-21" y="6" width="40" height="12" fill="#577174" />
+ <path d="M-34 -1L29 -1" fill="none" stroke="#E4D9C5" stroke-width="2" stroke-linecap="square"/>
+ <rect x="-50" y="-27" width="26" height="7" fill="#182224" rx="3"/><rect x="35" y="-27" width="26" height="7" fill="#182224" rx="3"/>
+ <rect x="-50" y="21" width="26" height="8" fill="#182224" rx="3"/><rect x="35" y="21" width="26" height="8" fill="#182224" rx="3"/>
+ <rect x="-70" y="-14" width="6" height="11" fill="#D7A15C" /><rect x="-70" y="5" width="6" height="11" fill="#D7A15C" />
+ <rect x="63" y="-15" width="5" height="10" fill="#CF5D46" /><rect x="63" y="6" width="5" height="10" fill="#CF5D46" />
+ </g>
+<text x="23" y="130" font-family="Arial, sans-serif" font-size="11" fill="#E4D9C5" >CHELSEA</text>
+<text x="266" y="73" font-family="Arial, sans-serif" font-size="11" fill="#E4D9C5" >MIDTOWN</text>
+<text x="267" y="488" font-family="Arial, sans-serif" font-size="11" fill="#E4D9C5" >EAST RIVER</text>
+</g>
+<rect x="14" y="97" width="195" height="59" fill="#E4D9C5" stroke="#182224" stroke-width="1"/>
+<text x="25" y="116" font-family="Arial, sans-serif" font-size="10" fill="#A84635" letter-spacing="1">DESTINO</text>
+<text x="25" y="136" font-family="Arial, sans-serif" font-size="13" fill="#182224" font-weight="bold">Muévete sin ser visto</text>
+<rect x="0" y="666" width="412" height="194" fill="#E4D9C5" />
+<path d="M16 666L397 666" fill="none" stroke="#182224" stroke-width="2" stroke-linecap="square"/>
+<text x="18" y="689" font-family="Arial, sans-serif" font-size="11" fill="#182224" letter-spacing="1">VELOCIDAD</text>
+<text x="18" y="728" font-family="Georgia, 'Times New Roman', serif" font-size="37" fill="#182224" >42</text>
+<text x="79" y="725" font-family="Arial, sans-serif" font-size="11" fill="#73848A" >km/h · SIMULADO</text>
+<text x="248" y="689" font-family="Arial, sans-serif" font-size="11" fill="#182224" letter-spacing="1">COCHE</text>
+<text x="248" y="725" font-family="Arial, sans-serif" font-size="13" fill="#A84635" font-weight="bold">SEDÁN / 85 %</text>
+<rect x="18" y="759" width="112" height="74" fill="#182224" rx="9"/>
+<text x="48" y="803" font-family="Arial, sans-serif" font-size="15" fill="#E4D9C5" font-weight="bold">FRENO</text>
+<rect x="282" y="759" width="112" height="74" fill="#182224" rx="9"/>
+<text x="304" y="803" font-family="Arial, sans-serif" font-size="15" fill="#E4D9C5" font-weight="bold">ACEL.</text>
+<rect x="148" y="762" width="116" height="69" fill="#E4D9C5" rx="8" stroke="#182224" stroke-width="2"/>
+<text x="177" y="789" font-family="Arial, sans-serif" font-size="18" fill="#182224" >◀   ▶</text>
+<text x="176" y="816" font-family="Arial, sans-serif" font-size="11" fill="#182224" >GIRAR</text>
+<text x="15" y="850" font-family="Arial, sans-serif" font-size="10" fill="#A84635" letter-spacing=".7">WIREFRAME ORIGINAL · NO GAMEPLAY</text>
+</svg>

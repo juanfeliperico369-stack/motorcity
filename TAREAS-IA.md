@@ -202,3 +202,9 @@ Cada juego **debería** tener su propio `TAREAS-IA.md` en la raíz: la auditorí
 ---
 ## Consolidación de la rama 3.1.0 (20-nov-2026)
 La PR #5 contiene C-M26 (persecución jugable y E2E verificado), C-M25 (portada editorial), C-M27 (sombras solares proyectadas, parcial), C-M29/G-H17 (física y guardado parcial), G-H1 (14 capturas inspeccionadas), G-H18 (50 lugares oficiales de Manhattan), G-H19 (investigación documental parcial) y guías de arte. Consultar [`docs/ESTADO-3.1.0.md`](docs/ESTADO-3.1.0.md) antes de asumir que una tarea está cerrada. **C-A14, C-M28, tilt-shift y pruebas móviles físicas continúan pendientes.**
+
+## 20-nov-2026 · C-A15 / G-H19 ampliada · Manhattan adulto
+- **Publicado en PR #5:** `docs/REFERENCIAS-MANHATTAN-13.md` (13 fichas Google Play), `docs/GETAWAY-MANHATTAN-BIBLIA.md` (7 misiones adultas y tres finales), `juegos/getaway/preproduccion/*.json` para agentes, `juegos/getaway/prototipo.html` como mini juego offline esquemático, y dos `arte/chatgpt/guias/manhattan-*.svg` con fuentes vectoriales originales. Estas entregas **no contienen mapa MC4 real**.
+- **C-A15:** dirección artística conceptual y wireframe listos como documentos, no atlas UV ni captura de gameplay.
+- **G-H19:** investigación documental ampliada de 3 a 13 fichas, sin cronometrajes de vídeos no observados.
+- **Siguiente IA:** antes de iniciar 3D, auditar licencias del GIS, cobertura de la isla y conectividad de puentes, carga por 1 km y transición de prototipo a MC4.
