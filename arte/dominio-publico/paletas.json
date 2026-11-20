@@ -618,5 +618,35 @@
    0.083
   ],
   "curaduria": "Gemini G-H8"
+ },
+ {
+  "id": "col_16",
+  "autor": "Grabador del *Papel Periódico Ilustrado*, 15 mar 1887",
+  "obra": "Grabado de Ramón Torres Méndez* (*Papel Periódico Ilustrado*)",
+  "anio": null,
+  "archivo": "Ramón Torres Méndez.png",
+  "fuente": "https://commons.wikimedia.org/wiki/File:Ram%C3%B3n_Torres_M%C3%A9ndez.png",
+  "licencia": "Public domain",
+  "colores": [
+   "#ffffff",
+   "#343434",
+   "#cbcbcb",
+   "#eaeaea",
+   "#777777",
+   "#9f9f9f",
+   "#f8f8f8",
+   "#fefefe"
+  ],
+  "pesos": [
+   0.481,
+   0.109,
+   0.091,
+   0.084,
+   0.071,
+   0.071,
+   0.056,
+   0.036
+  ],
+  "curaduria": "Gemini G-H8"
  }
 ]

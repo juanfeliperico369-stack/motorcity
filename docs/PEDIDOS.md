@@ -136,7 +136,7 @@ Versión **2.9.0** · 20‑nov‑2026 · **132 pruebas en verde** (`node motor.m
 |---|---|---|
 | Tareas fáciles de Gemini | ✅ | `reportes/2026-11-20-gemini-*.md`, `arte/referencias/`, `contenido/datos-gemini.json`, `arte/gemini/iconos-ui.json`, `arte/dominio-publico/candidatas.md` y `docs/INSPIRACION-VISUAL.md` §1.1 |
 | Corregir lo que vio Gemini en las capturas | ✅ | Zona libre con margen para los botones (80 %); avisos con clave (la vista nunca queda desfasada); ventanas en las casas de un piso; cubiertas sobre columnas; cebras sin cruzarse; botón «Comprar» y burbuja dentro de la casa; sombra de las copas más pequeña |
-| Paletas de las obras colombianas | 🟡 | `arte/dominio-publico/paletas.json` (`col_*`). Algunas quedaron pendientes porque Wikimedia limita las descargas; se completan en la próxima sesión. |
+| Paletas de las obras colombianas | 🟡 | 12 de 16 en `arte/dominio-publico/paletas.json` (`col_*`): Comisión Corográfica, Torres Méndez, Garay, Acevedo Bernal y el *Papel Periódico Ilustrado*. Wikimedia frenó las otras 4; se completan en la próxima sesión. |
 
 ## 10. La entrega de ChatGPT y Codex (2.7.1), unida en la 2.9
 | Pedido | Estado | Dónde |
