@@ -61,6 +61,8 @@ jobs:
         run: node motor.mjs construir
       - name: QA en Chromium
         run: node motor.mjs prueba --navegador
+      - name: C-M25 · Portada móvil y escritorio (anti plantilla genérica)
+        run: node pruebas/portada.mjs
       - name: G-H1 · 14 capturas de revisión
         run: node motor.mjs capturas
       - name: Público simulado (ventana completa)
