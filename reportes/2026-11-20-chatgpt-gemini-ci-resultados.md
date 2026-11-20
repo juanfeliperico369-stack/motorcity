@@ -30,3 +30,6 @@ Se amplió el flujo para que la siguiente ejecución de GitHub Actions corra `no
 
 ## Nota de robustez: prueba intermitente de palomas
 En la ejecución [#44755627607](https://github.com/juanfeliperico369-stack/motorcity/actions/runs/44755627607), el caso de fauna falló una vez tras 138 pruebas correctas: el test inyectó una paloma para comprobar su huida pero también llamó al sistema con delta positivo, permitiendo un nacimiento aleatorio adicional. La evidencia observada (huyen=1, llantas=22, pisadas=6, suelo barro) sugiere el spawn ocasional, no una regresión persistente del motor. Se ejecuta ese evento de huida con delta=0 en el **test**, sin modificar la física/azar de producción. La corrección se considera validada solo cuando las pruebas posteriores terminen.
+
+## Corrección de un error introducido al editar el test
+El run de CI [44757480064](https://github.com/juanfeliperico369-stack/motorcity/actions/runs/44757480064) se detuvo con ReferenceError porque el comentario de la corrección de fauna dejó accidentalmente la declaración de huyen a la derecha de // en una única línea. Se restaura su declaración como instrucción ejecutable y se mantiene el comentario al final. El test C-M26 sí alcanzó el estado aprobado antes del fallo. **Se requiere nueva corrida para afirmar el conjunto válido.**
