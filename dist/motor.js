@@ -1,4 +1,4 @@
-/* Motor City 2.7.0 · 2026-11-20 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 2.7.1 · 2026-11-20 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -11,7 +11,7 @@
    Reglas: un solo HTML, sin internet ni librerías; español de Colombia; ningún dato personal.
    ===================================================================== */
 const MC = {
-  version: '2.7.0',
+  version: '2.7.1',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -788,7 +788,19 @@ class Mundo {
     for (const q of J.lista) { const tipo = J.tipos[q[0]], vi = tipo === 'viaducto', i0 = vi ? 6 : 5, p = new Float32Array(q.slice(i0)); let L = 0; for (let i = 2; i < p.length; i += 2) L += Math.hypot(p[i] - p[i - 2], p[i + 1] - p[i - 1]); out.push({ tipo, nivel: q[1], ancho: q[2], alto: q[3], peatonal: !!q[4], linea: vi ? q[5] : null, p, largo: L, caja: caja([p]) }); }
     return (this._pasos = out);
   }
-  pasosEn(x0, y0, x1, y1) { return this.pasos().filter(q => q.caja[2] >= x0 && q.caja[0] <= x1 && q.caja[3] >= y0 && q.caja[1] <= y1); }
+  pasosEn(x0, y0, x1, y1) {
+    const pasos = this.pasos(), lado = 128;
+    const ix = Math.floor(x0/lado), iy = Math.floor(y0/lado), fx = Math.floor(x1/lado), fy = Math.floor(y1/lado);
+    if (this._consultasPasos?.fuente !== pasos) this._consultasPasos = {fuente:pasos, zonas:new Map()};
+    const zonas = this._consultasPasos.zonas, clave = [ix,iy,fx,fy].join(',');
+    let cerca = zonas.get(clave);
+    if (!cerca) {
+      cerca = pasos.filter(({caja:b}) => b[2]>=ix*lado && b[0]<=(fx+1)*lado && b[3]>=iy*lado && b[1]<=(fy+1)*lado);
+      if (zonas.size >= 96) zonas.delete(zonas.keys().next().value);
+      zonas.set(clave,cerca);
+    }
+    return cerca.filter(({caja:b}) => b[2]>=x0 && b[0]<=x1 && b[3]>=y0 && b[1]<=y1);
+  }
   /* lugar con postal más cercano */
   lugarCercano(x, y, r = 400) { let best = null, bd = r; for (const L of this.lugares) { const d = Math.hypot(L.x - x, L.y - y); if (d < bd) { bd = d; best = L; } } return best; }
   estacionCercana(x, y, r = 600, clase) { let best = null, bd = r; for (const l of this.transporte.lineas) { if (clase && l.clase !== clase) continue; for (const s of l.estaciones) { const d = Math.hypot(s[1] - x, s[2] - y); if (d < bd) { bd = d; best = { linea: l, nombre: s[0], x: s[1], y: s[2], d }; } } } return best; }
@@ -1326,7 +1338,17 @@ const Terreno = {
   MATERIAL_TT, PEND_MAX, AGUA_MAX,
   /* ---------- agua: tipo y profundidad ---------- */
   agua(M) {
-    if (M._agua) return M._agua; const T = M.tile, paso = Math.max(T, 10, Math.ceil(Math.sqrt(M.ancho * M.alto / 1.2e6) / T) * T), w = Math.ceil(M.ancho / paso), h = Math.ceil(M.alto / paso), n = w * h;
+    if (M._agua) return M._agua;
+    if (M.tiene?.('agua') && M.capaInfo('agua').formato === 'AGUA1') {
+      const {w,h,paso,cuerpos:C} = M.capaInfo('agua'), datos = M.capa('agua');
+      const dv = new DataView(datos.buffer,datos.byteOffset,datos.byteLength), n = w*h;
+      const tipo = new Uint8Array(n), comp = new Int32Array(n).fill(-1), D = new Float32Array(n);
+      for (let o=0; o<datos.length; o+=13) {
+        const i=dv.getUint32(o,true); tipo[i]=datos[o+12]; comp[i]=dv.getInt32(o+4,true); D[i]=dv.getFloat32(o+8,true);
+      }
+      return M._agua={w,h,paso,C,tipo,comp,D};
+    }
+    const T = M.tile, paso = Math.max(T, 10, Math.ceil(Math.sqrt(M.ancho * M.alto / 1.2e6) / T) * T), w = Math.ceil(M.ancho / paso), h = Math.ceil(M.alto / paso), n = w * h;
     const tipo = new Uint8Array(n), tierra = new Uint8Array(n), rio = new Uint8Array(n);   // 0 tierra · 1 agua · 2 quebrada
     for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const t = M.suelo((i + .5) * paso, (j + .5) * paso), k = j * w + i; tipo[k] = t === TT.WATER ? 1 : t === TT.CANAL ? 2 : 0; }
     /* el río con nombre del mapa (si lo trae): se marca para que no se corte en la rejilla gruesa y se reconozca como río */
@@ -1433,6 +1455,7 @@ const ESTILOS_GRAF = {
   realista: { n: 'Realista', icono: '📷', rudeza: true, arbol: 'real' },
   clasico: { n: 'Clásico (plano)', icono: '🟩', arbol: 'cel' },
   comic: { n: 'Cómic', icono: '💥', saturar: 1.35, contraste: 1.08, niveles: 5, tinta: 2.2, tintaColor: '#141118', trama: 'puntos', arbol: 'cel', sombra: [24, 20, 70, .42], lineas: '#141118', onomatopeyas: true, cielo: [[.22, .52, .95], [.98, .92, .62]] },
+  unbit: { n: 'Grabado de un bit', icono: '◩', gris: true, arbol: 'tono', binario: true },
   manga: { n: 'Manga', icono: '🖋️', gris: true, contraste: 1.18, niveles: 4, tinta: 2, tintaColor: '#0b0b0b', trama: 'tono', arbol: 'tono', sombra: [0, 0, 0, .38], lineas: '#0b0b0b', onomatopeyas: true, final: 'gris', cielo: [[.82, .82, .82], [.99, .99, .99]] },
   anime: { n: 'Anime', icono: '🌸', saturar: 1.22, brillo: 1.05, niveles: 6, tinta: 1, tintaColor: '#2b2740', arbol: 'cel', sombra: [70, 50, 150, .32], lineas: '#ffffff', onomatopeyas: false, cielo: [[.16, .4, .92], [.8, .93, 1]] },
   novela: { n: 'Novela gráfica (noir)', icono: '🌃', umbral: [.3, .62], tonos: ['#0d0c0b', '#6a655c', '#ece5d3'], acento: '#b3201c', tinta: 2.6, tintaColor: '#000000', trama: 'rayado', arbol: 'silueta', sombra: [0, 0, 0, .72], lineas: '#000000', onomatopeyas: true, cielo: [[.07, .07, .08], [.5, .48, .45]] },
@@ -1465,7 +1488,18 @@ const Estilo = {
   col(css) {
     if (!css || typeof css !== 'string') return css; const S = this.p; if (S === ESTILOS_GRAF.realista || S === ESTILOS_GRAF.clasico) return css;
     if (this._ccEst !== MC.estilo) { this._cc.clear(); this._ccEst = MC.estilo; } let v = this._cc.get(css); if (v) return v;
-    const a = /rgba/.test(css) ? +(css.match(/[\d.]+/g)[3] ?? 1) : 1; v = css3(this.rgb(hex3(css), S), a); this._cc.set(css, v); if (this._cc.size > 4000) this._cc.clear(); return v;
+    const hex = /^#([a-f0-9]{3,4}|[a-f0-9]{6}|[a-f0-9]{8})$/i.exec(css);
+    const rgb = /^rgba?\(\s*([.\d]+)\s*,\s*([.\d]+)\s*,\s*([.\d]+)(?:\s*,\s*([.\d]+))?\s*\)$/i.exec(css);
+    if (!hex && !rgb) return css;
+    let color, alfa = 1;
+    if (hex) {
+      const codigo = hex[1].length < 5 ? [...hex[1]].map(n => n+n).join('') : hex[1];
+      color = hex3('#'+codigo.slice(0,6));
+      if (codigo.length === 8) alfa = parseInt(codigo.slice(6),16)/255;
+    } else {
+      color = rgb.slice(1,4).map(n => Number(n)/255); alfa = Number(rgb[4] ?? 1);
+    }
+    v = css3(this.rgb(color,S),alfa); this._cc.set(css, v); if (this._cc.size > 4000) this._cc.clear(); return v;
   },
   /* luz de un muro: en los estilos de cel, la luz salta en bandas en lugar de degradarse */
   luz(lz) { const S = this.p; return S.niveles && !S.rudeza ? Math.round(lz * 3) / 3 : lz; },
@@ -1482,6 +1516,46 @@ const Estilo = {
   trama(g, x0, y0, L, res) {
     const S = this.p; if (!S.trama) return; const f = this.fuente(S.trama); if (!f) return; const m = S.trama === 'papel' ? .12 : Math.max(.22, 2.2 / Math.max(.5, res)) / 16 * (S.trama === 'tono' ? .55 : 1);   // el punto del semitono mide lo mismo en pantalla a cualquier zoom de horneado
     const p = g.createPattern(f, 'repeat'); if (p && p.setTransform && typeof DOMMatrix !== 'undefined') p.setTransform(new DOMMatrix([m, 0, 0, m, 0, 0])); g.fillStyle = p; g.fillRect(x0, y0, L, L);
+  },
+  // Umbrales ordenados por máxima distancia al punto más cercano en un toro.
+  ruidoAzul() {
+    if (this._azul) return this._azul;
+    const n = 16, rango = new Uint8Array(n*n), distancia = new Float32Array(n*n).fill(Infinity);
+    let elegido = 93;
+    for (let valor = 0; valor < rango.length; valor++) {
+      rango[elegido] = valor;
+      const x = elegido % n, y = elegido >> 4;
+      let max = -1, siguiente = 0;
+      for (let i = 0; i < rango.length; i++) {
+        const dx = Math.abs(i % n - x), dy = Math.abs((i >> 4) - y);
+        distancia[i] = Math.min(distancia[i], Math.min(dx,n-dx)**2 + Math.min(dy,n-dy)**2);
+        const candidato = distancia[i] + h2(i,valor,451) * .01;
+        if (candidato > max) { max = candidato; siguiente = i; }
+      }
+      elegido = siguiente;
+    }
+    return this._azul = rango;
+  },
+  imprimir(g, W, H, V, binario) {
+    const img = g.getImageData(0, 0, W, H), rgba = img.data;
+    const {a,b,c,d,e,f} = V, det = a*d-b*c;
+    const paso = Math.max(.08, 1 / Math.max(.1,V.z));
+    const ux = d/det/paso, uy = -b/det/paso, vx = -c/det/paso, vy = a/det/paso;
+    const azul = binario ? this.ruidoAzul() : null;
+    for (let y = 0, i = 0; y < H; y++) {
+      let xw = (.5-e)*ux+(y+.5-f)*vx, yw = (.5-e)*uy+(y+.5-f)*vy;
+      for (let x = 0; x < W; x++, i+=4, xw+=ux, yw+=uy) {
+        const lum = .2126*rgba[i]+.7152*rgba[i+1]+.0722*rgba[i+2];
+        if (binario) {
+          const rango = azul[(Math.floor(xw)&15) + ((Math.floor(yw)&15)<<4)];
+          rgba[i] = rgba[i+1] = rgba[i+2] = lum > rango+.5 || lum === 255 ? 255 : 0;
+        } else if (lum < 160) {
+          const dx = ((Math.floor(xw)&7)-3.5)/4, dy = ((Math.floor(yw)&7)-3.5)/4;
+          if (dx*dx+dy*dy < (160-lum)/160) { rgba[i]*=.52; rgba[i+1]*=.48; rgba[i+2]*=.58; }
+        }
+      }
+    }
+    g.putImageData(img,0,0);
   },
   /* ---------- pase final (por cuadro, barato): manga en grises y líneas de velocidad ---------- */
   final(g, W, H, E) {
@@ -2244,6 +2318,7 @@ const Arboleda = {
   /* ---------- horneado: un lienzo por especie, variante y vista ---------- */
   _sp: new Map(),
   sprite(e, v, vista, noche) {
+    if (!Object.hasOwn(this.ESPECIES, e)) e = 'urapan';
     const k = e + v + vista + (noche ? 'n' : '') + MC.estilo; let c = this._sp.get(k); if (c !== undefined) return c;   // 2.7: un horneado por estilo
     if (noche) { const d = this.sprite(e, v, vista, false); c = d ? lienzo(d.width, d.height) : null; if (c) { const g = c.getContext('2d'); g.drawImage(d, 0, 0); g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(10,18,44,.6)'; g.fillRect(0, 0, c.width, c.height); c._base = d._base; c._rx = d._rx; c._alto = d._alto; } }
     else c = vista === 'lado' ? this._hornearLado(e, v) : this._hornearArriba(e, v);
@@ -2400,7 +2475,7 @@ const Personaje = {
     else if (estado === 'bucea') { const e = (Math.sin(fase) + 1) / 2; mI = [pecho[0] + .55 - e * .5, pecho[1] + .18 * e]; mD = [pecho[0] + .55 - e * .5, pecho[1] - .18 * e]; }   // brazada de rana
     else { const b = estado === 'corre' ? .5 : estado === 'camina' ? .28 : estado === 'patina' ? .4 : .08; mI = [pecho[0] - s * b, pecho[1] - .5 + Math.abs(s) * .05]; mD = [pecho[0] + s * b, pecho[1] - .5 + Math.abs(c) * .05]; if (estado === 'corre') { mI[1] += .12; mD[1] += .12; } }
     const codo = (m, sg) => { const mx = (pecho[0] + m[0]) / 2, mz = (pecho[1] + m[1]) / 2, dx = m[0] - pecho[0], dz = m[1] - pecho[1], L = Math.hypot(dx, dz) || 1, a = .3, h = Math.sqrt(Math.max(0, a * a - (L / 2) ** 2)); return [mx + dz / L * h * sg, mz - dx / L * h * sg]; };
-    Object.assign(J, { cadera: P(...cad), pecho: P(...pecho), cabeza: P(...cabeza), pieI: P(...pI), pieD: P(...pD), rodI: P(...rod(pI, 1)), rodD: P(...rod(pD, 1)), manoI: P(...mI), manoD: P(...mD), codoI: P(...codo(mI, -1)), codoD: P(...codo(mD, -1)), inc, estado, radioCabeza: cab * k });
+    Object.assign(J, { cadera: P(...cad), pecho: P(...pecho), cabeza: P(...cabeza), pieI: P(...pI), pieD: P(...pD), rodI: P(...rod(pI, 1)), rodD: P(...rod(pD, 1)), manoI: P(...mI), manoD: P(...mD), codoI: P(...codo(mI, -1)), codoD: P(...codo(mD, -1)), inc, estado, fase, radioCabeza: cab * k });
     return J;
   },
   /* el estado del cuerpo según el vehículo y la velocidad */
@@ -2606,7 +2681,12 @@ class Cuerpo {
     }
     if (this.enAire && V.clase !== 'aire') { this.z += this.vz * dt; this.vz -= GRAV * dt; if (this.z <= 0) { this.z = 0; this.enAire = false; this.eventos.push(this.vz < -6 ? 'aterrizaFuerte' : 'aterriza'); this.vz = 0; } }
     /* mover con choques (desliza por el eje libre) */
-    const dx = Math.cos(this.a) * this.v * dt, dy = Math.sin(this.a) * this.v * dt, nx = this.x + dx, ny = this.y + dy;
+    const auto = V.clase === 'auto' || V.clase === 'pesado';
+    const suelto = auto && !this.paso && (this.tt === TT.NIEVE || (this.tt === TT.LAND || this.tt === TT.GRASS) && (E.lluvia || E.clima?.lluvia || 0) > .35);
+    const rumboPrevio = this.rumboRodado ?? this.a;
+    this.rumboRodado = suelto ? rumboPrevio + Math.atan2(Math.sin(this.a-rumboPrevio), Math.cos(this.a-rumboPrevio)) * (1-Math.exp(-dt*2.8)) : this.a;
+    this.inclinacion = auto ? Math.atan(clamp(this.pend,-.65,.65)) : 0;
+    const dx = Math.cos(this.rumboRodado) * this.v * dt, dy = Math.sin(this.rumboRodado) * this.v * dt, nx = this.x + dx, ny = this.y + dy;
     if (this.puede(nx, ny)) { this.x = nx; this.y = ny; }
     else if (this.puede(nx, this.y)) { this.x = nx; this.v *= .7; }
     else if (this.puede(this.x, ny)) { this.y = ny; this.v *= .7; }
@@ -3137,9 +3217,12 @@ const Sprites = {
   /* registra un atlas; imagen: dataURL, URL local, <img> o <canvas> */
   atlas(id, def) {
     const A = { id, cuadros: def.cuadros || {}, anim: def.anim || {}, metros: def.metros || {}, img: null, listo: false, magenta: def.magenta !== false };
-    const fin = img => { A.img = A.magenta ? Sprites._sinMagenta(img) : img; A.listo = true; MC.emit('sprites', id); };
+    let terminar;
+    A.carga = new Promise(resolver => { terminar = resolver; });
+    const fin = img => { A.img = A.magenta ? Sprites._sinMagenta(img) : img; A.listo = true; terminar(true); MC.emit('sprites', id); };
     if (def.imagen && typeof def.imagen === 'object') fin(def.imagen);
-    else if (def.imagen && typeof Image !== 'undefined') { const im = new Image(); im.onload = () => fin(im); im.onerror = () => MC.falla('sprites', 'no cargó ' + id); im.src = def.imagen; }
+    else if (def.imagen && typeof Image !== 'undefined') { const im = new Image(); im.onload = () => fin(im); im.onerror = () => { terminar(false); MC.falla('sprites', 'no cargó ' + id); }; im.src = def.imagen; }
+    else terminar(false);
     this.atlases.set(id, A); return A;
   },
   /* el magenta plano se vuelve transparente (con borde suave para el antialias) */
@@ -3330,7 +3413,7 @@ const Rudeza = {
 /* ---------- losas del suelo ---------- */
 class Losas {
   constructor(mundo, op = {}) { this.mundo = mundo; this.L = op.lado || 160; this.cache = new Map(); this.max = op.max || 140; this.version = 0; this.pend = []; this.px = 0; this.maxPx = op.maxPx || (GPU.perfil().nivel === 'alta' ? 40e6 : 22e6); }   // presupuesto de píxeles: las losas nítidas de cerca pesan más
-  limpiar() { this.cache.clear(); this.px = 0; this.version++; }
+  limpiar() { this.cache.clear(); this.pend.length = 0; this.px = 0; this.version++; }
   _poner(k, c) { this.cache.set(k, c); if (c) this.px += c.width * c.height; while (this.cache.size > this.max || this.px > this.maxPx) { const k0 = this.cache.keys().next().value, c0 = this.cache.get(k0); if (c0) this.px -= c0.width * c0.height; this.cache.delete(k0); if (k0 === k) break; } }
   /* borra las losas de una caja (cuando la ciudad crece o cambia) */
   invalidar(x0, y0, x1, y1) { const L = this.L; for (const k of [...this.cache.keys()]) { const [gx, gy] = k.split(',').map(Number); if ((gx + 1) * L >= x0 && gx * L <= x1 && (gy + 1) * L >= y0 && gy * L <= y1) { const c0 = this.cache.get(k); if (c0) this.px -= c0.width * c0.height; this.cache.delete(k); } } this.version++; }
@@ -3342,7 +3425,15 @@ class Losas {
     c = this.pintar(gx, gy, res, fl); this._poner(k, c); return c;
   }
   /* pinta las losas pendientes con un presupuesto de milisegundos */
-  trabajar(ms = 6) { const t0 = MC.ahora(); while (this.pend.length && MC.ahora() - t0 < ms) { const k = this.pend.shift(), [gx, gy, res, st] = k.split(',').map(Number); if (!this.cache.has(k)) this._poner(k, this.pintar(gx, gy, res, st | 0)); } }
+  trabajar(ms = 6) {
+    const inicio = MC.ahora();
+    while (this.pend.length && MC.ahora() - inicio < ms) {
+      const clave = this.pend.shift();
+      const [gx, gy, res, flags, piel, estilo] = clave.split(',');
+      if (piel !== MC.arte.activa || estilo !== MC.estilo || this.cache.has(clave)) continue;
+      this._poner(clave, this.pintar(+gx, +gy, +res, +flags));
+    }
+  }
   pintar(gx, gy, res, fl) {
     const ES = Estilo.p, sinTechos = (fl & 1) !== 0, sinArboles = (fl & 2) !== 0, real = !!ES.rudeza, mapa = !ES.rudeza && MC.estilo !== 'clasico', tw = ES.tinta ? clamp(ES.tinta * .9 / Math.max(.8, res), .1, .7) : 0;   /* 2.7: el estilo (mapa de color, tinta y trama) */
     const M = this.mundo, L = this.L, T = M.tile, n = Math.round(L / T), px = Math.max(8, Math.round(L * res)), cv = lienzo(px, px); if (!cv) return null;
@@ -3363,7 +3454,34 @@ class Losas {
     /* la casilla de borde de cada lado es de la losa vecina: así el suavizado no deja costuras entre losas */
     bg.putImageData(img, 0, 0); g.imageSmoothingEnabled = true; const e = px / n; g.drawImage(base, 0, 0, m, m, -e, -e, px + 2 * e, px + 2 * e);
     g.save(); g.scale(res, res); g.translate(-x0, -y0);
-    const lejos = res < .3;   // losas de lejos: sin árboles, sin techos y solo las vías grandes
+    const lejos = res < .3;
+    const textura = real && res >= .9 && MC.arte.f('textura');
+    const patrones = new Map();
+    function patron(material) {
+      if (!textura) return null;
+      if (!patrones.has(material)) {
+        const tile = textura(material);
+        let p = null;
+        if (tile && tile.metros > 0 && tile.imagen && tile.imagen.width && tile.imagen.height) {
+          p = g.createPattern(tile.imagen, 'repeat');
+          if (p) p.setTransform(new DOMMatrix().scale(tile.metros / tile.imagen.width, tile.metros / tile.imagen.height));
+        }
+        patrones.set(material, p);
+      }
+      return patrones.get(material);
+    }
+    if (textura) {
+      g.save();
+      g.globalAlpha = .55;
+      for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+        const x = x0 + i * T, y = y0 + j * T;
+        const tipo = M.suelo(x + T / 2, y + T / 2);
+        const mat = tipo === TT.GRASS ? 'pasto' : tipo === TT.ROCA ? 'grava' : null;
+        const p = mat && patron(mat);
+        if (p) { g.fillStyle = p; g.fillRect(x, y, T, T); }
+      }
+      g.restore();
+    }
     /* 2. sitios: canchas, piscinas, plazas y prados de los campus */
     const SI = M.sitios(), dentroL = b => b[2] >= x0 && b[0] <= x0 + L && b[3] >= y0 && b[1] <= y0 + L;
     for (const z of SI.Z) if (dentroL(z.caja)) { g.fillStyle = mapa ? Estilo.col('#d9d1bd') : '#d9d1bd'; this._poly(g, z.R); }
@@ -3376,9 +3494,20 @@ class Losas {
     if (tw) for (const v of carros) lin(v.p, v.ancho + 3.2 + tw * 2, ES.tintaColor);
     for (const v of carros) lin(v.p, v.ancho + 3.2, V.anden);
     if (tw) for (const v of carros) lin(v.p, v.ancho + tw * 2, ES.tintaColor);
-    if (real && res >= .9) { Rudeza.anden(g, carros, lin); for (const v of carros) lin(v.p, v.ancho + .5, V.bordillo); }
+    if (real && res >= .9) {
+      const baldosa = patron('anden');
+      if (baldosa) for (const v of carros) lin(v.p, v.ancho + 3.2, baldosa);
+      else Rudeza.anden(g, carros, lin);
+      for (const v of carros) lin(v.p, v.ancho + .5, V.bordillo);
+    }
     for (const v of resto) if (v.k !== VIA.CICLO) lin(v.p, v.ancho + (v.k === VIA.ESCALAS ? .6 : 1), v.k === VIA.ESCALAS ? V.escalas : v.k === VIA.SENDERO ? V.sendero : V.peatonal);
-    for (const v of carros) lin(v.p, v.ancho, v.k === VIA.AUTOPISTA ? V.autopista : v.k === VIA.AVENIDA ? V.avenida : V.asfalto);
+    for (const v of carros) lin(v.p, v.ancho, patron(v.k === VIA.CALLE ? 'asfalto_parchado' : 'asfalto') || (v.k === VIA.AUTOPISTA ? V.autopista : v.k === VIA.AVENIDA ? V.avenida : V.asfalto));
+    if (fl & 4) for (const v of carros) lin(v.p, v.ancho, 'rgba(15,29,42,.38)');
+    if (textura) for (const v of resto) {
+      const mat = v.k === VIA.PEATONAL ? 'adoquin' : v.k === VIA.SENDERO ? 'barro' : null;
+      const p = mat && patron(mat);
+      if (p) lin(v.p, v.ancho, p);
+    }
     if (real && res >= .9) for (const v of carros) { lin(v.p, v.ancho * .5, 'rgba(14,14,16,.10)'); Rudeza.asfalto(g, v, res); }   // el centro de los carriles, más gastado y oscuro
     for (const v of carros) if (v.ancho >= 8 && res >= .6) { if (v.k === VIA.AVENIDA || v.k === VIA.AUTOPISTA) lin(v.p, .35, V.amarilla); else lin(v.p, .25, V.linea, [3, 4]); }
     for (const v of resto) if (v.k === VIA.ESCALAS && res >= .8) lin(v.p, v.ancho * .7, 'rgba(90,70,50,.35)', [.35, .45]);
@@ -3391,7 +3520,17 @@ class Losas {
     /* 5. techos de las huellas reales (sombra suave al sureste) y tanques en las laderas */
     const E = lejos ? [] : M.edificiosEn(x0, y0, x0 + L, y0 + L).sort((a, b) => a.h - b.h);
     for (const b of E) { const P = Mundo.esquinas(b), sh = Math.min(1.4, .3 + b.h * .04); g.fillStyle = 'rgba(20,24,40,.2)';   /* solo oclusión de contacto: la sombra del sol la pone MC.Sombras según la hora */ g.beginPath(); g.moveTo(P[0] + sh, P[1] + sh); for (let i = 2; i < P.length; i += 2) g.lineTo(P[i] + sh, P[i + 1] + sh); g.closePath(); g.fill(); }
-    if (!sinTechos) for (const b of E) { this.techo(g, b, M, mapa, tw, ES); if (real && res >= 1.5) Rudeza.techo(g, b, Mundo.esquinas(b), estiloEdificio(M, b)); }
+    if (!sinTechos) for (const b of E) {
+      this.techo(g, b, M, mapa, tw, ES);
+      if (real && res >= 1.5) {
+        const huella = Mundo.esquinas(b), estilo = estiloEdificio(M, b);
+        const p = patron(b.clase === 'nave' || b.clase === 'techo' ? 'zinc' : estilo.plano ? 'concreto' : 'teja');
+        if (p) {
+          g.save(); g.globalAlpha = .72; g.fillStyle = p; this._poly(g, [huella]); g.restore();
+        }
+        Rudeza.techo(g, b, huella, estilo);
+      }
+    }
     if (!sinTechos) for (const b of SI.E) if (dentroL(b.caja)) { g.fillStyle = b.techo === 'cupula' ? '#56665f' : b.clase === 'iglesia' ? '#b5542f' : '#bdbcb6'; this._poly(g, b.R); g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = .4; this._poly(g, b.R, true); }
     if (real && res >= .9) Rudeza.textura(g, x0, y0, L);   // grano y manchas sobre todo
     else if (mapa && res >= .5) Estilo.trama(g, x0, y0, L, res);   // semitono, tramado de manga, rayado o papel
@@ -3453,7 +3592,7 @@ const Vista2D = {
     const oy = P.k < .45 ? H * .17 : 0, a = z * cs, b = z * sn * P.k, c = -z * sn, d = z * cs * P.k, e = W / 2 - a * C.x - c * C.y, f = H / 2 + oy - b * C.x - d * C.y;   // de lado, el piso baja: más cielo y menos tierra
     const pr = (x, y, h = 0) => [a * x + c * y + e, b * x + d * y + f - h * z * P.hk];
     const inv = (sx, sy) => { const det = a * d - b * c, X = sx - e, Y = sy - f; return [(d * X - c * Y) / det, (-b * X + a * Y) / det]; };
-    E._pr = pr; E._vista = { modo, P, W, H, z };
+    E._pr = pr; E._vista = { modo, P, W, H, z, a, b, c, d, e, f };
     /* caja del mundo visible (con margen para lo alto) */
     let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const [sx, sy] of [[0, -H * .6 * P.hk], [W, -H * .6 * P.hk], [0, H], [W, H]]) { const [wx, wy] = inv(sx, sy); x0 = Math.min(x0, wx); x1 = Math.max(x1, wx); y0 = Math.min(y0, wy); y1 = Math.max(y1, wy); }
     /* de lado (k pequeño) la caja se iría al infinito: se recorta a una franja de profundidad alrededor de la cámara */
@@ -3473,7 +3612,7 @@ const Vista2D = {
     g.setTransform(a, b, c, d, e, f); g.imageSmoothingEnabled = !pixel;
     const gx0 = Math.floor(x0 / Ld), gx1 = Math.floor(x1 / Ld), gy0 = Math.floor(y0 / Ld), gy1 = Math.floor(y1 / Ld); let faltan = 0;
     for (let gy = gy0; gy <= gy1; gy++) for (let gx = gx0; gx <= gx1; gx++) {
-      const fl = (sinTechos ? 1 : 0) | (dePie ? 2 : 0); let L = Ls.losa(gx, gy, res, faltan > (op.presupuesto ?? 2), fl);
+      const fl = (sinTechos ? 1 : 0) | (dePie ? 2 : 0) | (E.clima?.lluvia > .12 ? 4 : 0); let L = Ls.losa(gx, gy, res, faltan > (op.presupuesto ?? 2), fl);
       if (!L) { faltan++; L = Ls.losa(gx, gy, Math.max(.0625, res / 4), false, fl); }   // mientras llega la buena, una borrosa
       if (L) g.drawImage(L, gx * Ld, gy * Ld, Ld + .05, Ld + .05); else faltan++;
     }
@@ -3483,13 +3622,19 @@ const Vista2D = {
     const objs = [], noche = E.cielo ? E.cielo.noche : 0, dy = (x, y) => b * x + d * y + f, cal = E.calidad ?? 1;
     const luzX = Math.cos(P.yaw + 2.4), dibCtx = { g, pr, z, P, noche, E, luzX, modo, W, H, real: !!Estilo.p.rudeza, ES: Estilo.p, mapa: !Estilo.p.rudeza && MC.estilo !== 'clasico' }, luces = [];
     const Fr = E._franja, delante = (x, y) => Fr && Fr.fx * (x - C.x) + Fr.fy * (y - C.y) > Fr.Rp;   // de lado: lo que queda antes del corte no se dibuja
+    // Descartar antes de preparar el dibujo, con margen para copa, focos y altura.
+    const visible = (x, y, radio, alto = 0) => {
+      const sx = a * x + c * y + e, sy = b * x + d * y + f, r = radio * z + 3;
+      return sx + r >= 0 && sx - r <= W && sy + r >= 0 && sy - r - alto * z * P.hk <= H;
+    };
+    if (E.clima?.lluvia > .12 && z >= 1) this.charcos(dibCtx, E.clima.lluvia);
     /* sombras del sol de esta hora (también de edificios que están fuera de la pantalla y la alcanzan) */
     const sv = op.sombras === false ? null : Sombras.vector(E.cielo), conSombra = sv && z > .22 && cal > .3; dibCtx.sv = conSombra ? sv : null;
     const minH = z < .5 ? 9 : z < 1 ? 5 : 0, maxN = Math.round(1800 * cal);
     if (modo !== 'cenital' || conSombra) {
       const pad = conSombra ? Math.min(160, 25 * sv.L) : 0, lista = E.mundo.edificiosEn(x0 - pad, y0 - pad, x1 + pad, y1 + pad).filter(q => q.h >= minH && !delante(q.x, q.y)); if (lista.length > maxN) lista.sort((p, q) => q.h * q.hw * q.hd - p.h * p.hw * p.hd).length = maxN;
       const sit = E.mundo.sitios().E.filter(q => { const k2 = q.caja; return !(k2[2] < x0 - pad || k2[0] > x1 + pad || k2[3] < y0 - pad || k2[1] > y1 + pad); });
-      if (conSombra) { const S = lista.map(q => ({ P: Mundo.esquinas(q), h: q.h, q })); for (const q of sit) if (q.R[0]) S.push({ P: q.R[0], h: Math.min(q.h, 90) }); Sombras.dibujar2D(g, W, H, S, pr, sv, { cenital: modo === 'cenital' }); }
+      if (conSombra) { const S = lista.filter(q => visible(q.x,q.y,q.hw+q.hd+q.h*sv.L+2)).map(q => ({ P: Mundo.esquinas(q), h: q.h, q })); for (const q of sit) if (q.R[0]) S.push({ P: q.R[0], h: Math.min(q.h, 90) }); Sombras.dibujar2D(g, W, H, S, pr, sv, { cenital: modo === 'cenital' }); }
       if (modo !== 'cenital') { for (const q of lista) if (q.x >= x0 && q.x <= x1 && q.y >= y0 && q.y <= y1) objs.push({ y: dy(q.x, q.y) + Math.max(q.hw, q.hd) * z * P.k * .5, t: 0, q }); for (const q of sit) { const k2 = q.caja; if (k2[2] < x0 || k2[0] > x1 || k2[3] < y0 || k2[1] > y1) continue; objs.push({ y: dy(q.x, q.y), t: 4, q }); } }
     }
     /* agua viva: brillos que se mueven sobre lagos, ríos y mar (baratos: una muestra cada pocos metros) */
@@ -3497,16 +3642,16 @@ const Vista2D = {
       for (let yy = Math.floor(y0 / st) * st; yy < y1 && n < 700; yy += st) for (let xx = Math.floor(x0 / st) * st; xx < x1 && n < 700; xx += st) { const tt = E.mundo.suelo(xx, yy); if (tt !== TT.WATER && tt !== TT.CANAL) continue; n++; const ph = h2(xx | 0, yy | 0, 7) * TAU, a = (Math.sin(t * 1.3 + ph) + 1) / 2; if (a < .55) continue; const wx = xx + Math.sin(t * .4 + ph) * st * .3, wy = yy + Math.cos(t * .3 + ph) * st * .2, p1 = pr(wx - 1.2 * a, wy, 0), p2 = pr(wx + 1.2 * a, wy, 0); g.moveTo(p1[0], p1[1]); g.lineTo(p2[0], p2[1]); }
       g.stroke(); g.restore(); }
     /* naturaleza: rocas, palmas, frailejones, arbustos y juncos (de cerca) */
-    if (z > .6 && cal > .35 && op.naturaleza !== false) for (const p of Naturaleza.en(E.mundo, x0, y0, x1, y1, Math.round(150 + 500 * cal))) if (!delante(p.x, p.y)) objs.push({ y: dy(p.x, p.y), t: 8, q: p });
+    if (z > .6 && cal > .35 && op.naturaleza !== false) for (const p of Naturaleza.en(E.mundo, x0, y0, x1, y1, Math.round(150 + 500 * cal))) if (!delante(p.x, p.y) && visible(p.x, p.y, 8, 22)) objs.push({ y: dy(p.x, p.y), t: 8, q: p });
     /* 2.6: los árboles de pie (maqueta, oblicua y lateral de cerca), con su sombra según el sol antes de todo lo demás */
-    if (dePie) { const cap = Math.round(150 + 420 * cal); let AR = Arboleda.en(E.mundo, x0 - 8, y0 - 8, x1 + 8, y1 + 8, 5000).filter(t => !delante(t.x, t.y)); if (AR.length > cap) { const q = cap / AR.length; AR = AR.filter(t => (t.s * 7.31 + t.r) % 1 < q); }   /* si son demasiados, se ralea parejo (no se corta media pantalla) */ if (z >= 6) Arboleda.sombras(dibCtx, AR, conSombra ? sv : null); for (const t of AR) objs.push({ y: dy(t.x, t.y), t: 10, q: t }); }
+    if (dePie) { const cap = Math.round(150 + 420 * cal); let AR = Arboleda.en(E.mundo, x0 - 8, y0 - 8, x1 + 8, y1 + 8, 5000).filter(t => !delante(t.x, t.y)); if (AR.length > cap) { const q = cap / AR.length; AR = AR.filter(t => (t.s * 7.31 + t.r) % 1 < q); }   /* si son demasiados, se ralea parejo (no se corta media pantalla) */ if (z >= 6) Arboleda.sombras(dibCtx, AR, conSombra ? sv : null); for (const t of AR) if (visible(t.x, t.y, t.r * 2 + 2, t.h * 1.4)) objs.push({ y: dy(t.x, t.y), t: 10, q: t }); }
     /* mobiliario urbano (postes, árboles de calle, bancas, paraderos, cebras): solo de cerca */
-    if (z > .9 && cal > .35 && op.mobiliario !== false) { const L = Mobiliario.en(E.mundo, x0, y0, x1, y1, Math.round(120 + 480 * cal * Math.min(1, z / 2))).filter(p => !delante(p.x, p.y)); Mobiliario.piso(dibCtx, L); for (const p of L) if (p.t !== 'cebra') objs.push({ y: dy(p.x, p.y), t: 7, q: p }); }
+    if (z > .9 && cal > .35 && op.mobiliario !== false) { const L = Mobiliario.en(E.mundo, x0, y0, x1, y1, Math.round(120 + 480 * cal * Math.min(1, z / 2))).filter(p => !delante(p.x, p.y) && visible(p.x, p.y, 18, 16)); Mobiliario.piso(dibCtx, L); for (const p of L) if (p.t !== 'cebra') objs.push({ y: dy(p.x, p.y), t: 7, q: p }); }
     /* capa de información (valor del suelo, ruido, contaminación…: las «vistas de datos» de SimCity y Cities: Skylines) */
     if (E.capaInfo && E.capaInfo.dibujar) E.capaInfo.dibujar(g, a, b, c, d, e, f, dibCtx);
     for (const q of E.mundo.pasosEn(x0, y0, x1, y1)) if (q.nivel > 0) objs.push({ y: dy((q.caja[0] + q.caja[2]) / 2, (q.caja[1] + q.caja[3]) / 2) + 1e4 * 0, t: 1, q, cen: modo === 'cenital' });
-    for (const v of E.vehiculos || []) objs.push({ y: dy(v.x, v.y) + (v.z || 0) * .001, t: 2, q: v });
-    for (const p of E.peatones || []) objs.push({ y: dy(p.x, p.y), t: 3, q: p });
+    for (const v of E.vehiculos || []) if (visible(v.x, v.y, (v.largo || 12) + 5, (v.z || 0) + 8)) objs.push({ y: dy(v.x, v.y) + (v.z || 0) * .001, t: 2, q: v });
+    for (const p of E.peatones || []) if (visible(p.x, p.y, 2, (p.z || 0) + 3)) objs.push({ y: dy(p.x, p.y), t: 3, q: p });
     if (E.jugador) objs.push({ y: dy(E.jugador.x, E.jugador.y) + .5, t: 5, q: E.jugador });
     const est = E.jugador && E.jugador.cuerpo && E.jugador.cuerpo.estacionado; if (est && est.x >= x0 - 20 && est.x <= x1 + 20 && est.y >= y0 - 20 && est.y <= y1 + 20) objs.push({ y: dy(est.x, est.y), t: 9, q: est });
     for (const x of E.extras || []) objs.push({ y: dy(x.x, x.y), t: 6, q: x });
@@ -3547,6 +3692,7 @@ const Vista2D = {
         const FZ = pisos * cols <= 48 && z > 2.2 ? Ondas.fachadaCache(ventanas * 31 + i, pisos, cols) : null, alturaV = (T[i][1] - B[i][1]);
         const fm = MC.arte.f('fachadaModulo');   // arte del juego: fachadaModulo(g, tipo, x, y, ancho, alto, encendida, D) → true si lo dibujó
         for (let p = 0; p < pisos; p++) for (let q = 0; q < cols; q++) { const tipo = FZ ? FZ[pisos - 1 - p][q] : 'ventana'; if (tipo === 'muro') continue; const lit = noche > .3 && h2(i * 31 + q, p, ventanas) < .4; const u = (q + .3) / cols, v = (p + .35) / pisos, x = B[i][0] + ex * u, y = B[i][1] + ey * u + alturaV * v, w = Math.max(1, ex / cols * .45);
+          if (fm) D.varianteFachada = Math.abs(ventanas + i*31 + p*7 + q) % 3;
           if (fm && fm(g, tipo, x, y, w, Math.max(1, z * 1.2), lit, D) === true) continue;
           if (tipo === 'local' || tipo === 'vitrina') { const yb = B[i][1] + ey * u + alturaV * (p + .08) / pisos; g.fillStyle = noche > .3 ? 'rgba(255,226,150,' + (.5 + noche * .4) + ')' : 'rgba(120,160,190,.55)'; g.fillRect(x - w * .25, yb - z * 1.9, w * 1.5, z * 1.9); if (tipo === 'vitrina') { g.fillStyle = ['#c43a26', '#2f80ed', '#2e7d32', '#f2b705'][(ventanas + q) % 4]; g.fillRect(x - w * .35, yb - z * 2.4, w * 1.7, Math.max(1, z * .45)); } continue; }
           if (tipo === 'puerta') { const yb = B[i][1] + ey * u + alturaV * .02; g.fillStyle = '#4a2f22'; g.fillRect(x, yb - z * 2.1, w * .8, z * 2.1); continue; }
@@ -3556,14 +3702,88 @@ const Vista2D = {
     if (D.mapa) techo = Estilo.col(techo); g.fillStyle = noche > .05 ? tono(techo, -noche * .5) : techo; g.beginPath(); g.moveTo(T[0][0], T[0][1]); for (let i = 1; i < n; i++) g.lineTo(T[i][0], T[i][1]); g.closePath(); g.fill(); if (D.ES.tinta && z > 1.2) { g.strokeStyle = D.ES.tintaColor; g.lineWidth = Math.max(1, D.ES.tinta * Math.min(1.4, z / 6)); g.stroke(); }
     g.strokeStyle = 'rgba(0,0,0,.22)'; g.lineWidth = Math.max(.5, z * .15); g.stroke();
   },
-  edificio(D, q) { const st = estiloEdificio(D.E.mundo, q), P = Mundo.esquinas(q); this.prisma(D, P, 0, q.h, st.muro, st.techo, q.h >= 4.5 ? (q.s * 1e4 | 0) : 0); if (st.tanque && D.z > 1.5) { const [x, y] = D.pr(q.x, q.y, q.h + 1.2); D.g.fillStyle = '#1d1f24'; D.g.fillRect(x - D.z * .7, y - D.z * .4, D.z * 1.4, D.z * 1.2); } },
+  charcos(D, intensidad) {
+    const { g, E, P, pr, z } = D, cx = Math.floor(E.camara.x / 7), cy = Math.floor(E.camara.y / 7);
+    const t = E.t || 0, charcos = [];
+    for (let j = cy - 4; j <= cy + 4; j++) for (let i = cx - 4; i <= cx + 4; i++) {
+      const semilla = h2(i, j, 907);
+      if (semilla > .48 || charcos.length >= 20) continue;
+      const x = (i + semilla) * 7, y = (j + h2(i, j, 908)) * 7;
+      const tt = E.mundo.suelo(x, y);
+      if (tt !== TT.ROAD && tt !== TT.AVE && tt !== TT.AUTO) continue;
+      const [sx, sy] = pr(x, y), rx = (.45 + semilla * 2) * z;
+      charcos.push([sx, sy, rx, Math.max(.5, rx * P.k * .52), (t * 1.8 + semilla * 17) % 1]);
+    }
+    g.save();
+    g.fillStyle = D.noche > .45 ? 'rgba(211,175,112,.32)' : 'rgba(164,203,220,.48)';
+    g.beginPath();
+    for (const [x,y,rx,ry] of charcos) { g.moveTo(x + rx,y); g.ellipse(x,y,rx,ry,0,0,TAU); }
+    g.fill(); g.beginPath(); g.lineWidth = Math.max(.5, z * .035);
+    g.strokeStyle = 'rgba(233,242,249,' + (.25 + intensidad * .35) + ')';
+    for (const [x,y,rx,ry,k] of charcos) {
+      g.moveTo(x - rx * .65, y); g.lineTo(x - rx * .2, y);
+      if (k > .08 && k < .8) { g.moveTo(x + rx * k, y); g.ellipse(x,y,rx*k,ry*k,0,0,TAU); }
+    }
+    g.stroke(); g.restore(); return charcos.length;
+  },
+  edificio(D, q) {
+    const [x, y] = D.pr(q.x, q.y);
+    const radio = Math.ceil((q.hw + q.hd + 2) * D.z) + 2;
+    const base = Math.ceil(radio * D.P.k) + 3;
+    const cima = base + Math.ceil((q.h + 2) * D.z * D.P.hk);
+    if (x + radio < 0 || x - radio > D.W || y + base < 0 || y - cima > D.H) return;
+    // La maqueta gira por cuadrantes. Un edificio ya pintado se traslada con la cámara.
+    // Las pieles con fachadas dinámicas conservan su llamada en cada cuadro.
+    const area = 2 * radio * (base + cima);
+    if (D.modo !== 'maqueta' || area > 65000 || (MC.arte.f('fachadaModulo') && !MC.arte.f('fachadasEstaticas'))) return this._edificioDirecto(D, q);
+    const clave = [MC.estilo, MC.arte.activa, D.E.losas.version, D.z, D.P.yaw, Math.round(D.noche * 36), D.noche > .3, q.h, q.hw, q.hd, q.s].join('/');
+    const cache = D.E._fachadasMaqueta || (D.E._fachadasMaqueta = { imagenes: new Map(), pixeles: 0 });
+    let pieza = cache.imagenes.get(q);
+    if (!pieza || pieza.clave !== clave) {
+      if (pieza) cache.pixeles -= pieza.area;
+      const cv = lienzo(2 * radio, base + cima), ctx = cv.getContext('2d');
+      const local = (wx, wy, h) => { const [sx, sy] = D.pr(wx, wy, h); return [sx - x + radio, sy - y + cima]; };
+      this._edificioDirecto({ ...D, g: ctx, pr: local }, q);
+      pieza = { cv, clave, area };
+      cache.imagenes.set(q, pieza);
+      cache.pixeles += area;
+      while (cache.pixeles > 4e6 || cache.imagenes.size > 1200) {
+        const vieja = cache.imagenes.keys().next().value;
+        cache.pixeles -= cache.imagenes.get(vieja).area;
+        cache.imagenes.delete(vieja);
+      }
+    }
+    D.g.drawImage(pieza.cv, x - radio, y - cima);
+  },
+  _edificioDirecto(D, q) { const st = estiloEdificio(D.E.mundo, q), P = Mundo.esquinas(q); this.prisma(D, P, 0, q.h, st.muro, st.techo, q.h >= 4.5 ? (q.s * 1e4 | 0) : 0); if (st.tanque && D.z > 1.5) { const [x, y] = D.pr(q.x, q.y, q.h + 1.2); D.g.fillStyle = '#1d1f24'; D.g.fillRect(x - D.z * .7, y - D.z * .4, D.z * 1.4, D.z * 1.2); } },
   sitio(D, q) {
     const ES = ['#b8673f', '#eceae4', '#bdbcb6', '#5e7b97', '#ece3cd', '#efe8d8', '#d4d8dd', '#3a3f4a', '#b9714b', '#d8432f', '#d9d4c9', '#a86a4c', '#e9dab3', '#2a302d', '#3a3f4a', '#6a645c', '#a6573a', '#e3e6ea', '#4b5a55'], m = ES[q.est] || '#d9d4c9', t = q.techo === 'dos' || q.techo === 'cuatro' ? '#b5542f' : q.techo === 'cupula' ? '#56665f' : tono(m, -.12);
     for (const R of q.R.slice(0, 1)) this.prisma(D, R, 0, q.partes ? q.partes[0].z0 || Math.min(q.h, 12) : q.h, m, t, 7);
     if (q.partes) for (const p of q.partes) this.prisma(D, p.B, p.z0, p.z1, ES[p.est] || m, p.techo === 'aguja' ? '#e3e6ea' : tono(ES[p.est] || m, -.15), 0);
   },
   pasoElevado(D, q) {
-    const { g, pr, z } = D, h = q.nivel * NIVEL_M, p = q.p, n = p.length >> 1, L = q.ancho / 2, vi = q.tipo === 'viaducto', T = q.trazo || (q.trazo = new Trazo(p));
+    const { g, z, P } = D, cen = D.modo === 'cenital';
+    const h = q.nivel * NIVEL_M, L = q.ancho / 2, vi = q.tipo === 'viaducto', T = q.trazo || (q.trazo = new Trazo(q.p));
+    const clave = [z,P.yaw,P.k,P.hk,cen,h,L].join('/');
+    if (!q._dibujoPaso || q._dibujoPaso.clave !== clave) {
+      const cs=Math.cos(P.yaw), sn=Math.sin(P.yaw);
+      const pr=(x,y,alt) => [(cs*(x-q.p[0])-sn*(y-q.p[1]))*z,(sn*(x-q.p[0])+cs*(y-q.p[1]))*z*P.k-alt*z*P.hk];
+      const capas = [], ctx = {beginPath(){ this.path=new Path2D(); },moveTo(x,y){this.path.moveTo(x,y);},
+        lineTo(x,y){this.path.lineTo(x,y);},closePath(){this.path.closePath();},
+        fill(){capas.push(['fill',this.fillStyle,this.path]);},stroke(){capas.push(['stroke',this.strokeStyle,this.path,this.lineWidth]);},
+        fillRect(x,y,w,h){let ultima=capas.at(-1); if (!ultima || ultima[1]!==this.fillStyle) {ultima=['fill',this.fillStyle,new Path2D()]; capas.push(ultima);} ultima[2].rect(x,y,w,h);}};
+      this._trazarPaso({cen},q,ctx,pr,z,h,L,vi,T);
+      q._dibujoPaso={clave,capas};
+    }
+    const [x,y]=D.pr(q.p[0],q.p[1]);
+    g.save();g.translate(x,y);
+    for(const [tipo,color,path,ancho] of q._dibujoPaso.capas) {
+      if(tipo==='fill'){g.fillStyle=color;g.fill(path);}
+      else {g.strokeStyle=color;g.lineWidth=ancho;g.stroke(path);}
+    }
+    g.restore();
+  },
+  _trazarPaso(D,q,g,pr,z,h,L,vi,T) {
     const rampa = vi ? 0 : Math.min(q.largo * .4, q.peatonal ? 9 : 22), alt = s => h * (vi ? 1 : suave(Math.min(s, q.largo - s) / rampa));
     if (!D.cen) { g.fillStyle = vi ? '#9aa3ad' : '#a9a49a'; for (let s = 12; s < q.largo - 6; s += vi ? 30 : 24) { const c = T.at(s), [x, y] = pr(c.x, c.y, 0), [, y2] = pr(c.x, c.y, alt(s)); const w = Math.max(1, z * 1.4); g.fillRect(x - w / 2, y2, w, y - y2); } }
     const izq = [], der = []; for (let s = 0; s <= q.largo; s += Math.max(2, 8 / Math.max(.3, z))) { const c = T.at(s), nx = -Math.sin(c.a), ny = Math.cos(c.a), hh = D.cen ? 0 : alt(s); izq.push(pr(c.x + nx * L, c.y + ny * L, hh)); der.push(pr(c.x - nx * L, c.y - ny * L, hh)); }
@@ -3604,13 +3824,15 @@ const Vista2D = {
       g.save(); g.strokeStyle = 'rgba(57,255,179,.9)'; g.lineWidth = Math.max(2, z * .14); g.beginPath(); g.ellipse(sx, sy, r, r * kk, 0, 0, TAU); g.stroke(); g.fillStyle = '#39ffb3'; const ax = sx + ux * (r + 4), ay = sy + uy * (r * kk + 4), w = Math.max(6, r * .45); g.beginPath(); g.moveTo(ax + ux * w, ay + uy * w); g.lineTo(ax - uy * w * .6, ay + ux * w * .6); g.lineTo(ax + uy * w * .6, ay - ux * w * .6); g.closePath(); g.fill(); g.restore(); }
     if (D.modo === 'cenital') {
       g.save(); g.translate(x, y); g.rotate(C.a + P.yaw); g.scale(z, z);
-      if (V.clase !== 'pie') { if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') { Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); g.restore(); return; } g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.25, V.largo * .6, .5); }
+      const dibujo = V.clase !== 'pie' && MC.arte.f('vehiculoArriba')?.(g,V,0,0,1,0);
+      if (dibujo && ['auto','pesado','moto'].includes(V.clase)) { g.restore(); return; }
+      if (!dibujo && V.clase !== 'pie') { if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') { Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); g.restore(); return; } g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.25, V.largo * .6, .5); }
       g.restore(); const J = Personaje.pose(C.estado || 'quieto', C.fase); J.fase = C.fase; MC.arte.f('personajeArriba')(g, J, A, x, y, z, C.a + P.yaw);
       if (C.nadando || C.vadeando) { g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = Math.max(1, z * .08); for (const k of [1, 1.6]) { g.beginPath(); g.arc(x, y, z * (.5 * k + .1 * Math.sin((D.E.t || 0) * 3 + k)), 0, TAU); g.stroke(); } if (C.buceando) { g.fillStyle = 'rgba(30,95,140,.55)'; g.beginPath(); g.arc(x, y, z * .9, 0, TAU); g.fill(); this.burbujas(g, x, y - z * .2, y + z * .4, z * 1.5, D.E.t || 0); } }
       return;
     }
     const dir = Math.cos(C.a + P.yaw) >= 0 ? 1 : -1, esc = Math.max(4, z * P.hk * 1.1);
-    const cab = V.clase !== 'pie' && !C.enAire ? clamp(-(C._acel || 0) * .011, -.1, .1) * dir : 0; if (cab) { g.save(); g.translate(x, y); g.rotate(cab); g.translate(-x, -y); }   /* 2.7 · peso: cabecea al acelerar y al frenar */
+    const cabeceo = V.clase !== 'pie' && !C.enAire ? clamp(-(C._acel || 0) * .011, -.1, .1) * dir : 0; const cab = cabeceo - (C.inclinacion || 0) * dir; if (cab) { g.save(); g.translate(x, y); g.rotate(cab); g.translate(-x, -y); }   /* 2.7 · peso: cabecea al acelerar y al frenar */
     const vl = MC.arte.f('vehiculoLado'); if (vl && V.clase !== 'pie') vl(g, V, x, y, esc, dir, C);
     const J = Personaje.pose(C.estado || 'quieto', C.fase, { alto: A.alto, manubrio: V.manubrio }); MC.arte.f('personajeLado')(g, J, A, x, y, esc, dir); if (cab) g.restore();
     /* en el agua: el agua tapa las piernas (vadeando) o casi todo el cuerpo (nadando), con su onda */
@@ -3627,10 +3849,28 @@ const Vista2D = {
   /* el vehículo que quedó parqueado (en la orilla o amarrado en el agua) */
   estacionado(D, e) {
     const { g, pr, z, P, modo } = D, V = Vehiculos.get(e.veh), [x, y] = pr(e.x, e.y, 0);
-    if (modo === 'cenital') { g.save(); g.translate(x, y); g.rotate(e.a + P.yaw); g.scale(z, z); if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); else { g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.22, V.largo * .6, .44); } g.restore(); return; }
+    if (modo === 'cenital') { if (MC.arte.f('vehiculoArriba')?.(g,V,x,y,z,e.a + P.yaw)) return; g.save(); g.translate(x, y); g.rotate(e.a + P.yaw); g.scale(z, z); if (V.clase === 'auto' || V.clase === 'pesado' || V.clase === 'moto') Pincel.vehiculoArriba(g, V.clase === 'moto' ? 'moto' : 'carro', V.color, V.largo, V.ancho, false, false); else { g.fillStyle = '#1d1f24'; g.fillRect(-V.largo / 2, -.08, V.largo, .16); g.fillStyle = V.color || '#7ab800'; g.fillRect(-V.largo * .3, -.22, V.largo * .6, .44); } g.restore(); return; }
     const vl = MC.arte.f('vehiculoLado'); Sombras.contacto(g, x, y, z * (V.largo || 1.6) * .5, z * .25, .25); if (vl) vl(g, V, x, y, Math.max(4, z * P.hk * 1.1), Math.cos(e.a + P.yaw) >= 0 ? 1 : -1, null);
   },
-  cables(D, cables) { const { g, pr, z } = D; g.strokeStyle = 'rgba(30,32,38,.8)'; g.lineWidth = Math.max(.6, z * .12); for (const L of cables) { g.beginPath(); for (let s = 0; s <= L.T.largo; s += 20) { let dE = 1e9; for (const e of L.est) dE = Math.min(dE, Math.abs(e.s - s)); const c = L.T.at(s), h = 6 + 22 * suave(clamp(dE / 120, 0, 1)), [x, y] = pr(c.x, c.y, h); s ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); } },
+  cables(D, cables) {
+    const {g,z,P}=D, clave=[z,P.yaw,P.k,P.hk].join('/');
+    g.save(); g.strokeStyle='rgba(30,32,38,.8)'; g.lineWidth=Math.max(.6,z*.12);
+    for (const L of cables) {
+      const inicio=L.T.at(0), [ox,oy]=D.pr(inicio.x,inicio.y);
+      if (L._tramaCable?.clave!==clave) {
+        const path=new Path2D();
+        for (let s=0; s<=L.T.largo; s+=20) {
+          let distancia=Infinity;
+          for (const e of L.est) distancia=Math.min(distancia,Math.abs(e.s-s));
+          const c=L.T.at(s), h=6+22*suave(clamp(distancia/120,0,1)), [x,y]=D.pr(c.x,c.y,h);
+          if (s) path.lineTo(x-ox,y-oy); else path.moveTo(x-ox,y-oy);
+        }
+        L._tramaCable={clave,path};
+      }
+      g.save(); g.translate(ox,oy); g.stroke(L._tramaCable.path); g.restore();
+    }
+    g.restore();
+  },
   etiquetas(D) {
     const { g, pr, z, W, H, E } = D; if (z < .35) return; g.font = '700 ' + Math.round(clamp(z * 4, 10, 14)) + 'px system-ui, sans-serif'; g.textAlign = 'center';
     /* las etiquetas no se montan unas sobre otras ni tapan el centro (donde va el jugador) */
@@ -4235,6 +4475,10 @@ class Vistas {
     const zoomReal = E.camara.zoom; if (px) E.camara.zoom = zoomReal / this.escalaPixel;
     try {
       if (v.tipo === '2d') { Vista2D.dibujar(dst, w, h, E, { modo: v.modo, pixel: px, dpr: this.dpr, presupuesto: this.calidad > .6 ? 3 : 1, etiquetas: !px }); this._clima2D(dst, w, h, E); }
+      else if (v.tipo === 'three') {
+        this.three ||= v.crear();
+        dst.drawImage(this.three.dibujar(w,h,E),0,0,w,h);
+      }
       else if (v.tipo === 'pano') { this.pano.dibujar(dst, w, h, E, px ? { k: clamp(Math.min(w, h * 1.4) / 70, 2, 40) * (zoomReal / 3.2) } : {}); }
       else if (v.tipo === 'gl') {
         /* resolución dinámica: la 3D se dibuja a escala s y se agranda (bajar píxeles antes que cuadros) */
@@ -4250,6 +4494,11 @@ class Vistas {
     const Cj = E.jugador && E.jugador.cuerpo; if (Cj && Cj.buceando) this._bajoAgua(g, W, H, -Cj.z, E.t || 0);
     /* fundido desde la vista anterior */
     if (this.fundido && this.fundido.cv) { this.fundido.t += dt / .55; const a = 1 - suave(this.fundido.t); if (a <= 0) this.fundido = null; else { g.save(); g.globalAlpha = a; g.drawImage(this.fundido.cv, 0, 0, W, H); g.restore(); } }
+    if (v.tipo === '2d' && (Estilo.p.binario || MC.estilo === 'comic')) {
+      const proy = E._vista, k = px ? this.escalaPixel : 1;
+      const V = {z:proy.z*k}; for (const campo of ['a','b','c','d','e','f']) V[campo] = proy[campo]*k;
+      Estilo.imprimir(g,W,H,V,!!Estilo.p.binario);
+    }
     this._ultimo = g.canvas;
     this.losas.trabajar(this.calidad > .6 ? 5 : 3);
     /* calidad automática: media móvil del tiempo de dibujo */
@@ -5353,7 +5602,7 @@ Object.assign(MC, { Necesidades, Habitante });
    ===================================================================== */
 const Pieles = {
   paquetes: {},
-  PARTES: ['prop', 'naturaleza', 'fachada', 'personaje', 'vehiculo', 'animal', 'mueble', 'arbol'],
+  PARTES: ['prop', 'naturaleza', 'fachada', 'personaje', 'vehiculo', 'animal', 'mueble', 'arbol', 'textura'],
   /* registra los atlas y la piel; devuelve una promesa que se cumple cuando las imágenes cargaron */
   instalar(id, pack, op = {}) {
     if (!pack || !pack.atlases) throw new Error('Pieles: el paquete ' + id + ' no trae atlas');
@@ -5367,7 +5616,22 @@ const Pieles = {
     const N = (aid, D) => D && D.noche > .4 && Sprites.atlases.get(aid + '_noche') ? aid + '_noche' : aid;
     const sinTilde = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '');
     const ARBOLES = op.arboles || ['arbol_guayacan_amarillo', 'arbol_guayacan_rosado', 'arbol_ceiba', 'arbol_palma', 'arbol_mango'];
-    const piel = {};
+    const piel = { fachadasEstaticas: true };
+    const pavimento = de('suelos');
+    if (partes.has('textura') && pavimento) {
+      const fuentes = new Map();
+      piel.textura = (material) => {
+        const atlas = Sprites.atlases.get(pavimento);
+        if (!atlas || !atlas.listo || !atlas.cuadros[material]) return null;
+        if (!fuentes.has(material)) {
+          const [x, y, w, h] = atlas.cuadros[material];
+          const tile = lienzo(w, h);
+          tile.getContext('2d').drawImage(atlas.img, x, y, w, h, 0, 0, w, h);
+          fuentes.set(material, { imagen: tile, metros: atlas.metros[material] });
+        }
+        return fuentes.get(material);
+      };
+    }
     if (partes.has('prop') && AU) piel.prop = (g, p, x, y, z, D) => {
       if (p.t === 'cebra' || (p.t === 'arbol' && op.arboles === false)) return false; const cen = D && D.modo === 'cenital', noche = D && D.noche > .3, v = p.v || 0;
       const U = N(AU, D); if (p.t === 'arbol') { const alto = 5 + v * 4, copa = 3.2 + v * 2.4; return S(U + '/' + ARBOLES[Math.floor(v * 5) % ARBOLES.length] + (cen ? '_cen' : ''), g, x, y, z, { metros: cen ? copa : alto * 1.12 }); }   // a la medida del árbol del motor
@@ -5383,15 +5647,51 @@ const Pieles = {
       return S(U + '/' + p.t, g, x, y, z);
     };
     if (partes.has('fachada') && AW) piel.fachadaModulo = (g, tipo, x, y, w, h, lit, D) => {
-      const zona = (D && D.zona) || op.zona || 'pueblo', n = AW + '/' + zona + '_' + tipo + '_v' + (Math.abs(Math.round(x * .37 + y * .61)) % 3) + '_' + (lit ? 'noche' : 'dia');
+      const zona = (D && D.zona) || op.zona || 'pueblo', n = AW + '/' + zona + '_' + tipo + '_v' + (D?.varianteFachada ?? 0) + '_' + (lit ? 'noche' : 'dia');
       if (!tiene(n)) return false; const [sx, sy, sw, sh] = Sprites.atlases.get(AW).cuadros[n.split('/')[1]], A = Sprites.atlases.get(AW), r = op.recorte || [.18, .12, .64, .62];   // solo el vano (ventana, puerta o vitrina), no el muro del módulo
       g.drawImage(A.img, sx + sw * r[0], sy + sh * r[1], sw * r[2], sh * r[3], x, y, w, h); return true;
     };
     if (partes.has('personaje') && AP) {
-      piel.personajeLado = (g, J, A, x, y, esc, dir) => (op.respetarAspecto && A && A.propio) || !S(AP + '/persona_' + ((J && J.estado) || 'quieto'), g, x, y, esc, { fase: J && J.fase, espejo: dir < 0, metros: (A && A.alto) || 1.68 }) ? M().personajeLado(g, J, A, x, y, esc, dir) : true;
-      piel.personajeArriba = (g, J, A, x, y, z, ang) => (op.respetarAspecto && A && A.propio) || !S(AP + '/persona_cen_' + ((J && J.estado) || 'quieto') + '_der', g, x, y, z, { rot: ang || 0 }) ? M().personajeArriba(g, J, A, x, y, z, ang) : true;   // un solo cuadro que gira con el cuerpo, no 4 saltos
+      const tieneReparto = !!pack.atlases[AP].anim?.persona0_quieto;
+      const atlasCel = AP + '_cel';
+      function prepararCel() {
+        if (Sprites.atlases.has(atlasCel)) return;
+        const a = Sprites.atlases.get(AP);
+        if (!a.listo) return;
+        const c = lienzo(a.img.width,a.img.height), ctx = c.getContext('2d');
+        ctx.drawImage(a.img,0,0);
+        const img = ctx.getImageData(0,0,c.width,c.height), p=img.data, fila=c.width*4;
+        for (let i=0; i<p.length; i+=4) {
+          if (p[i+3]<32) continue;
+          if (p[i-1]<48 || p[i+7]<48 || p[i-fila+3]<48 || p[i+fila+3]<48) {
+            p[i]=33; p[i+1]=32; p[i+2]=37; continue;
+          }
+          const luz=.2126*p[i]+.7152*p[i+1]+.0722*p[i+2];
+          const tono=(luz<76 ? 48 : luz<152 ? 120 : 202)/Math.max(1,luz);
+          p[i]*=tono; p[i+1]*=tono; p[i+2]*=tono;
+        }
+        ctx.putImageData(img,0,0);
+        Sprites.atlas(atlasCel,{imagen:c,cuadros:a.cuadros,metros:a.metros,anim:a.anim,magenta:false});
+      }
+      const figura = A => Number.isInteger(A?.figura) ? clamp(A.figura, 0, 5) : A?.cCasco ? 2 : Math.abs(A?.camisa | 0) % 6;
+      piel.personajeLado = (g, J, A, x, y, esc, dir) => {
+        const i = figura(A), prefijo = tieneReparto ? (i === 4 && ['comic','manga','anime'].includes(MC.estilo) ? 'cel' : i === 4 ? 'persona' : 'persona' + i) : 'persona';
+        const estado = J?.estado || 'quieto';
+        const enCel = tieneReparto && ['comic','manga','anime'].includes(MC.estilo) && i !== 4;
+        if (enCel) prepararCel();
+        const ref = (enCel ? atlasCel : AP) + '/' + prefijo + '_' + estado;
+        const pxm = tieneReparto ? esc * ((A?.alto || 1.7) / 1.7) : esc;
+        if (!(op.respetarAspecto && A?.propio) && S(ref,g,x,y,pxm,{fase:J?.fase, espejo:dir < 0, metros:tieneReparto ? undefined : A?.alto || 1.68})) return true;
+        return M().personajeLado(g, J, A, x, y, esc, dir);
+      };
+      piel.personajeArriba = (g, J, A, x, y, z, ang) => {
+        const ref = tieneReparto ? 'persona' + figura(A) + '_cen_der' : 'persona_cen_' + (J?.estado || 'quieto') + '_der';
+        if (!(op.respetarAspecto && A?.propio) && S(AP + '/' + ref, g, x, y, z, {rot:ang || 0})) return true;
+        return M().personajeArriba(g, J, A, x, y, z, ang);
+      };
     }
     if (partes.has('vehiculo') && AV) piel.vehiculoLado = (g, V, x, y, esc, dir, C) => S(AV + '/' + ((V && V.id) || 'bici') + '_lado', g, x, y, esc, { espejo: dir < 0 }) || (M().vehiculoLado ? M().vehiculoLado(g, V, x, y, esc, dir, C) : false);
+    if (partes.has('vehiculo') && AV) piel.vehiculoArriba = (g, V, x, y, z, ang) => S(AV + '/' + V.id + '_arriba', g, x, y, z, {rot:ang});
     if (partes.has('animal') && AA) piel.animalLado = (g, a, x, y, esc, dir, t, v) => S(AA + '/' + ((a && a.id) || 'perro_criollo') + '_lado', g, x, y, esc, { espejo: dir < 0 }) || M().animalLado(g, a, x, y, esc, dir, t, v);
     /* árboles (2.6): arbol_<especie>_lado|arriba[_v1|_v2] en cualquier atlas del paquete; si no está, el árbol procedural de MC.Arboleda */
     const AT = partes.has('arbol') ? ids.find(a => Object.keys(pack.atlases[a].cuadros || {}).some(n => /^arbol_[a-z_]+_(lado|arriba)/.test(n))) : null;
@@ -5401,8 +5701,14 @@ const Pieles = {
       const [sx, sy, sw, sh] = A.cuadros[n]; g.drawImage(A.img, sx, sy, sw, sh, m.x, m.y, m.w, m.h); return true;
     };
     MC.arte.registrar(id, piel); this.paquetes[id] = { pack, ids, partes: [...partes] };
-    const listo = new Promise(res => { const ver = () => ids.every(a => Sprites.atlases.get(a) && Sprites.atlases.get(a).listo) ? res(ids) : setTimeout(ver, 30); ver(); }).then(L => { if (AU && op.noche !== false) nocturno(AU); return L; });
-    if (op.usar) listo.then(() => MC.arte.usar(id));
+    const listo = Promise.all(ids.map(a => Sprites.atlases.get(a).carga)).then(cargas => {
+      const fallidos = ids.filter((a, i) => !cargas[i]);
+      if (fallidos.length) throw new Error('Atlas sin imagen: ' + fallidos.join(', '));
+      if (AU && op.noche !== false) nocturno(AU);
+      if (op.usar) MC.arte.usar(id);
+      return ids;
+    });
+
     return listo;
   },
   /* un ícono SVG del paquete (24 × 24, del color del texto) o '' si no está */
@@ -5439,7 +5745,7 @@ const Vida = {
   onomatopeya(x, y, texto, color = '#ffd400') { if (this.onos.length > 6) this.onos.shift(); this.onos.push({ x, y, texto, color, t: 0 }); },
   /* lo que pasa con el jugador: aterrizajes, frenazos, agua y choques */
   _jugador(E, dt) {
-    const C = E.jugador && E.jugador.cuerpo; if (!C) return; const pv = this._pv || (this._pv = { aire: !!C.enAire, vz: 0, v: C.v || 0, agua: 0 });
+    const C = E.jugador && E.jugador.cuerpo; if (!C) return; if (this._cuerpo !== C) { this._cuerpo = C; this._pv = null; } const pv = this._pv || (this._pv = { aire: !!C.enAire, vz: 0, v: C.v || 0, agua: 0 });
     const acel = dt > 0 ? ((C.v || 0) - pv.v) / dt : 0; C._acel = (C._acel || 0) * .8 + acel * .2;
     if (pv.aire && !C.enAire && pv.vz < -2.2) {   // aterrizó: aplasta, sacude y levanta polvo según la caída
       const f = clamp((-pv.vz - 2.2) / 8, .15, 1); C._squash = { t0: E.t || 0, k: f }; this.emitir(C.nadando ? 'agua' : 'polvo', C.x, C.y, 6 + (f * 10 | 0), { vel: 1.5 + f * 2.5, vz: .6 }); if (E.camara && E.camara.sacudir) E.camara.sacudir(.12 + f * .3); if (f > .4) this.onomatopeya(C.x, C.y, '¡TUM!'); MC.emit('aterriza', { fuerza: f });
@@ -5515,15 +5821,41 @@ const Exportar = {
     return { w, h, paso, min: mn, max: mx, datos: D, caja: [x0, y0, x0 + (w - 1) * paso, y0 + (h - 1) * paso] };
   },
   /* RAW de 16 bits sin signo, little endian (Unity: «Raw», Unreal: «.r16»), normalizado entre min y max */
-  r16(A) { const out = new Uint16Array(A.datos.length), k = A.max > A.min ? 65535 / (A.max - A.min) : 0; for (let i = 0; i < out.length; i++) out[i] = Math.round((A.datos[i] - A.min) * k); return new Uint8Array(out.buffer); },
+  r16(A) {
+    const out = new Uint8Array(A.datos.length * 2), vista = new DataView(out.buffer);
+    const k = A.max > A.min ? 65535 / (A.max - A.min) : 0;
+    for (let i = 0; i < A.datos.length; i++) vista.setUint16(2 * i, Math.round((A.datos[i] - A.min) * k), true);
+    return out;
+  },
   /* los datos para que otro motor ponga su lógica: edificios, vías, árboles y lugares */
   escena(M, caja, op = {}) {
     const [x0, y0, x1, y1] = caja, dentro = (x, y) => x >= x0 && x <= x1 && y >= y0 && y <= y1, r1 = v => Math.round(v * 10) / 10, VN = {}; if (typeof VIA !== 'undefined') for (const [k, v] of Object.entries(VIA)) VN[v] = k.toLowerCase();
     const edificios = M.edificiosEn(x0, y0, x1, y1).filter(b => dentro(b.x, b.y)).slice(0, op.maxEdificios || 20000).map((b, i) => { const st = estiloEdificio(M, b); return { id: i, x: r1(b.x), y: r1(b.y), base: r1(M.cota(b.x, b.y)), alto: r1(b.h), huella: Array.from(Mundo.esquinas(b), r1), clase: b.clase || 'casa', muro: st.muro, techo: st.techo, plano: !!st.plano }; });
-    const vias = M.vias().filter(v => { for (let i = 0; i < v.p.length; i += 2) if (dentro(v.p[i], v.p[i + 1])) return true; return false; }).map(v => ({ tipo: VN[v.k] || v.k, nombre: v.nombre || '', ancho: v.ancho, p: Array.from(v.p, r1) }));
+    const vias = this.viasEn(M, caja).map(v => ({ tipo: VN[v.k] || v.k, nombre: v.nombre || '', ancho: v.ancho, p: Array.from(v.p, r1) }));
     const arboles = Arboleda.en(M, x0, y0, x1, y1, op.maxArboles || 20000).map(t => ({ x: r1(t.x), y: r1(t.y), base: r1(M.cota(t.x, t.y)), especie: t.e, alto: r1(t.h), copa: r1(t.r * (Arboleda.ESPECIES[t.e] || {}).ancho || t.r) }));
     const lugares = (M.lugares || []).filter(l => dentro(l.x, l.y)).map(l => ({ nombre: l.nombre, x: r1(l.x), y: r1(l.y), tipo: l.dibujo || l.tipo || '' }));
     return { motor: 'Motor City ' + MC.version, mundo: (M.cfg && M.cfg.id) || '', nombre: (M.cfg && M.cfg.nombre) || '', unidades: 'metros', ejes: 'mundo: x oriente, y sur, h arriba · glTF: X = x, Y = h, Z = y', caja, edificios, vias, arboles, lugares };
+  },
+  // Recorte paramétrico de cada segmento. Un cruce también cuenta si ambos extremos quedan fuera.
+  viasEn(M, caja) {
+    const [x0,y0,x1,y1] = caja, resultado = [];
+    for (const v of M.vias()) {
+      let tramo = null;
+      for (let i = 0; i+3 < v.p.length; i+=2) {
+        const x=v.p[i], y=v.p[i+1], dx=v.p[i+2]-x, dy=v.p[i+3]-y;
+        let ini=0, fin=1;
+        for (const [p,q] of [[-dx,x-x0],[dx,x1-x],[-dy,y-y0],[dy,y1-y]]) {
+          if (p<0) ini=Math.max(ini,q/p);
+          else if (p>0) fin=Math.min(fin,q/p);
+          else if (q<0) { fin=-1; break; }
+        }
+        if (ini>=fin || (!dx && !dy)) { tramo=null; continue; }
+        if (!tramo || ini>0) { tramo={...v,p:[x+ini*dx,y+ini*dy]}; resultado.push(tramo); }
+        tramo.p.push(x+fin*dx,y+fin*dy);
+        if (fin<1) tramo=null;
+      }
+    }
+    return resultado;
   },
   /* ---------- geometría ---------- */
   _malla() { return { p: [], n: [], c: [], i: [] }; },
@@ -5575,7 +5907,7 @@ const Exportar = {
   /* ---------- glTF 2.0 binario (GLB) ---------- */
   glb(M, caja, op = {}) {
     const A = this.alturas(M, caja, op.paso || 4), [x0, y0, x1, y1] = caja, dentro = (x, y) => x >= x0 && x <= x1 && y >= y0 && y <= y1;
-    const partes = [['terreno', this._terreno(M, A)], ['edificios', this._edificios(M, M.edificiosEn(x0, y0, x1, y1).filter(b => dentro(b.x, b.y)))], ['vias', this._vias(M, M.vias().filter(v => { for (let i = 0; i < v.p.length; i += 2) if (dentro(v.p[i], v.p[i + 1])) return true; return false; }))], ['arboles', this._arboles(M, Arboleda.en(M, x0, y0, x1, y1, op.maxArboles || 8000))]].filter(([, m]) => m.i.length);
+    const partes = [['terreno', this._terreno(M, A)], ['edificios', this._edificios(M, M.edificiosEn(x0, y0, x1, y1).filter(b => dentro(b.x, b.y)))], ['vias', this._vias(M, this.viasEn(M,caja))], ['arboles', this._arboles(M, Arboleda.en(M, x0, y0, x1, y1, op.maxArboles || 8000))]].filter(([, m]) => m.i.length);
     /* el origen en el centro de la caja (los motores pierden precisión lejos del origen) */
     const ox = (x0 + x1) / 2, oz = (y0 + y1) / 2, oy = A.min; for (const [, m] of partes) for (let k = 0; k < m.p.length; k += 3) { m.p[k] -= ox; m.p[k + 1] -= oy; m.p[k + 2] -= oz; }
     const trozos = [], bufferViews = [], accessors = [], meshes = [], nodes = []; let off = 0;
@@ -5607,7 +5939,58 @@ const Puente = {
 };
 MC.Exportar = Exportar; MC.Puente = Puente;
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-naturaleza.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js"];
+/* ---- js/90-three.js ---- */
+/* Vista opcional. Cada juego proporciona su copia local de three.js. */
+Vistas.registrarThree = function (THREE) {
+  if (!THREE?.WebGLRenderer) throw new TypeError('Se necesita three.js con WebGLRenderer');
+  const previa = VISTAS.find(v => v.id === 'three');
+  if (previa) return previa;
+  const vista = {id:'three', n:'Three.js', icon:'🌆', tipo:'three', control:'mundo', crear() {
+    const renderer = new THREE.WebGLRenderer({antialias:true});
+    const escena = new THREE.Scene(), cam = new THREE.PerspectiveCamera(48,1,.5,2000);
+    const material = new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide});
+    const sol = new THREE.DirectionalLight(0xffffff,1.8);
+    escena.background = new THREE.Color(0xbad5e7);
+    escena.add(sol,new THREE.HemisphereLight(0xe6f5ff,0x77604d,1.5));
+    const barrio = new THREE.Group();
+    escena.add(barrio);
+    let anterior = null, cx, cy;
+    function malla(nombre,m) {
+      if (!m.i.length) return;
+      const geo = new THREE.BufferGeometry();
+      for (const [a,datos] of [['position',m.p],['normal',m.n],['color',m.c]])
+        geo.setAttribute(a,new THREE.Float32BufferAttribute(datos,3));
+      geo.setIndex(m.i);
+      const obj = new THREE.Mesh(geo,material);
+      obj.name = nombre;
+      barrio.add(obj);
+    }
+    return {renderer, escena, dibujar(w,h,E) {
+      const M=E.mundo, C=E.camara, x=Math.floor(C.x/128), y=Math.floor(C.y/128);
+      if (M!==anterior || x!==cx || y!==cy) {
+        for (const viejo of [...barrio.children]) { viejo.geometry.dispose(); barrio.remove(viejo); }
+        const caja=[x*128-192,y*128-192,x*128+320,y*128+320];
+        malla('terreno',Exportar._terreno(M,Exportar.alturas(M,caja,8)));
+        malla('edificios',Exportar._edificios(M,M.edificiosEn(...caja)));
+        malla('vias',Exportar._vias(M,Exportar.viasEn(M,caja)));
+        malla('arboles',Exportar._arboles(M,Arboleda.en(M,...caja,2400)));
+        anterior=M; cx=x; cy=y;
+      }
+      if (renderer.domElement.width!==w || renderer.domElement.height!==h) {
+        renderer.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix();
+      }
+      const base=M.cota(C.x,C.y), r=clamp(190/Math.max(1,C.zoom),20,120);
+      cam.position.set(C.x+Math.sin(C.yaw)*r,base+r*.85,C.y+Math.cos(C.yaw)*r);
+      cam.lookAt(C.x,base+2,C.y); sol.position.set(-.5,1,.4);
+      renderer.render(escena,cam);
+      return renderer.domElement;
+    }};
+  }};
+  VISTAS.push(vista);
+  return vista;
+};
+
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","11-red.js","12-generador.js","13-cosmos.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-naturaleza.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","46-vistas.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js","90-three.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;

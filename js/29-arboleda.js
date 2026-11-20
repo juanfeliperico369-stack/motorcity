@@ -38,6 +38,7 @@ const Arboleda = {
   /* ---------- horneado: un lienzo por especie, variante y vista ---------- */
   _sp: new Map(),
   sprite(e, v, vista, noche) {
+    if (!Object.hasOwn(this.ESPECIES, e)) e = 'urapan';
     const k = e + v + vista + (noche ? 'n' : '') + MC.estilo; let c = this._sp.get(k); if (c !== undefined) return c;   // 2.7: un horneado por estilo
     if (noche) { const d = this.sprite(e, v, vista, false); c = d ? lienzo(d.width, d.height) : null; if (c) { const g = c.getContext('2d'); g.drawImage(d, 0, 0); g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(10,18,44,.6)'; g.fillRect(0, 0, c.width, c.height); c._base = d._base; c._rx = d._rx; c._alto = d._alto; } }
     else c = vista === 'lado' ? this._hornearLado(e, v) : this._hornearArriba(e, v);

@@ -24,6 +24,7 @@ const ESTILOS_GRAF = {
   realista: { n: 'Realista', icono: '📷', rudeza: true, arbol: 'real' },
   clasico: { n: 'Clásico (plano)', icono: '🟩', arbol: 'cel' },
   comic: { n: 'Cómic', icono: '💥', saturar: 1.35, contraste: 1.08, niveles: 5, tinta: 2.2, tintaColor: '#141118', trama: 'puntos', arbol: 'cel', sombra: [24, 20, 70, .42], lineas: '#141118', onomatopeyas: true, cielo: [[.22, .52, .95], [.98, .92, .62]] },
+  unbit: { n: 'Grabado de un bit', icono: '◩', gris: true, arbol: 'tono', binario: true },
   manga: { n: 'Manga', icono: '🖋️', gris: true, contraste: 1.18, niveles: 4, tinta: 2, tintaColor: '#0b0b0b', trama: 'tono', arbol: 'tono', sombra: [0, 0, 0, .38], lineas: '#0b0b0b', onomatopeyas: true, final: 'gris', cielo: [[.82, .82, .82], [.99, .99, .99]] },
   anime: { n: 'Anime', icono: '🌸', saturar: 1.22, brillo: 1.05, niveles: 6, tinta: 1, tintaColor: '#2b2740', arbol: 'cel', sombra: [70, 50, 150, .32], lineas: '#ffffff', onomatopeyas: false, cielo: [[.16, .4, .92], [.8, .93, 1]] },
   novela: { n: 'Novela gráfica (noir)', icono: '🌃', umbral: [.3, .62], tonos: ['#0d0c0b', '#6a655c', '#ece5d3'], acento: '#b3201c', tinta: 2.6, tintaColor: '#000000', trama: 'rayado', arbol: 'silueta', sombra: [0, 0, 0, .72], lineas: '#000000', onomatopeyas: true, cielo: [[.07, .07, .08], [.5, .48, .45]] },
@@ -56,7 +57,18 @@ const Estilo = {
   col(css) {
     if (!css || typeof css !== 'string') return css; const S = this.p; if (S === ESTILOS_GRAF.realista || S === ESTILOS_GRAF.clasico) return css;
     if (this._ccEst !== MC.estilo) { this._cc.clear(); this._ccEst = MC.estilo; } let v = this._cc.get(css); if (v) return v;
-    const a = /rgba/.test(css) ? +(css.match(/[\d.]+/g)[3] ?? 1) : 1; v = css3(this.rgb(hex3(css), S), a); this._cc.set(css, v); if (this._cc.size > 4000) this._cc.clear(); return v;
+    const hex = /^#([a-f0-9]{3,4}|[a-f0-9]{6}|[a-f0-9]{8})$/i.exec(css);
+    const rgb = /^rgba?\(\s*([.\d]+)\s*,\s*([.\d]+)\s*,\s*([.\d]+)(?:\s*,\s*([.\d]+))?\s*\)$/i.exec(css);
+    if (!hex && !rgb) return css;
+    let color, alfa = 1;
+    if (hex) {
+      const codigo = hex[1].length < 5 ? [...hex[1]].map(n => n+n).join('') : hex[1];
+      color = hex3('#'+codigo.slice(0,6));
+      if (codigo.length === 8) alfa = parseInt(codigo.slice(6),16)/255;
+    } else {
+      color = rgb.slice(1,4).map(n => Number(n)/255); alfa = Number(rgb[4] ?? 1);
+    }
+    v = css3(this.rgb(color,S),alfa); this._cc.set(css, v); if (this._cc.size > 4000) this._cc.clear(); return v;
   },
   /* luz de un muro: en los estilos de cel, la luz salta en bandas en lugar de degradarse */
   luz(lz) { const S = this.p; return S.niveles && !S.rudeza ? Math.round(lz * 3) / 3 : lz; },
@@ -73,6 +85,46 @@ const Estilo = {
   trama(g, x0, y0, L, res) {
     const S = this.p; if (!S.trama) return; const f = this.fuente(S.trama); if (!f) return; const m = S.trama === 'papel' ? .12 : Math.max(.22, 2.2 / Math.max(.5, res)) / 16 * (S.trama === 'tono' ? .55 : 1);   // el punto del semitono mide lo mismo en pantalla a cualquier zoom de horneado
     const p = g.createPattern(f, 'repeat'); if (p && p.setTransform && typeof DOMMatrix !== 'undefined') p.setTransform(new DOMMatrix([m, 0, 0, m, 0, 0])); g.fillStyle = p; g.fillRect(x0, y0, L, L);
+  },
+  // Umbrales ordenados por máxima distancia al punto más cercano en un toro.
+  ruidoAzul() {
+    if (this._azul) return this._azul;
+    const n = 16, rango = new Uint8Array(n*n), distancia = new Float32Array(n*n).fill(Infinity);
+    let elegido = 93;
+    for (let valor = 0; valor < rango.length; valor++) {
+      rango[elegido] = valor;
+      const x = elegido % n, y = elegido >> 4;
+      let max = -1, siguiente = 0;
+      for (let i = 0; i < rango.length; i++) {
+        const dx = Math.abs(i % n - x), dy = Math.abs((i >> 4) - y);
+        distancia[i] = Math.min(distancia[i], Math.min(dx,n-dx)**2 + Math.min(dy,n-dy)**2);
+        const candidato = distancia[i] + h2(i,valor,451) * .01;
+        if (candidato > max) { max = candidato; siguiente = i; }
+      }
+      elegido = siguiente;
+    }
+    return this._azul = rango;
+  },
+  imprimir(g, W, H, V, binario) {
+    const img = g.getImageData(0, 0, W, H), rgba = img.data;
+    const {a,b,c,d,e,f} = V, det = a*d-b*c;
+    const paso = Math.max(.08, 1 / Math.max(.1,V.z));
+    const ux = d/det/paso, uy = -b/det/paso, vx = -c/det/paso, vy = a/det/paso;
+    const azul = binario ? this.ruidoAzul() : null;
+    for (let y = 0, i = 0; y < H; y++) {
+      let xw = (.5-e)*ux+(y+.5-f)*vx, yw = (.5-e)*uy+(y+.5-f)*vy;
+      for (let x = 0; x < W; x++, i+=4, xw+=ux, yw+=uy) {
+        const lum = .2126*rgba[i]+.7152*rgba[i+1]+.0722*rgba[i+2];
+        if (binario) {
+          const rango = azul[(Math.floor(xw)&15) + ((Math.floor(yw)&15)<<4)];
+          rgba[i] = rgba[i+1] = rgba[i+2] = lum > rango+.5 || lum === 255 ? 255 : 0;
+        } else if (lum < 160) {
+          const dx = ((Math.floor(xw)&7)-3.5)/4, dy = ((Math.floor(yw)&7)-3.5)/4;
+          if (dx*dx+dy*dy < (160-lum)/160) { rgba[i]*=.52; rgba[i+1]*=.48; rgba[i+2]*=.58; }
+        }
+      }
+    }
+    g.putImageData(img,0,0);
   },
   /* ---------- pase final (por cuadro, barato): manga en grises y líneas de velocidad ---------- */
   final(g, W, H, E) {

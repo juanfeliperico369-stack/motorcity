@@ -1,5 +1,12 @@
 # Bitácora de Motor City
 
+## 20 de noviembre de 2026 · 2.7.1 · Arte a escala y adaptadores
+
+Mandados incorpora seis atlas de ChatGPT con 676 cuadros. Los 997 cuadros del paquete de Gemini pasan el revisor tras reparar los recortes y márgenes. Guatapé y Medellín cargan su hidrografía desde MC4. Godot 4 y three.js abrieron escenas del motor.
+
+El banco integrado pasó 130 pruebas. La maqueta midió 34,9 ms con CPU 4×, por encima de la meta de 20 ms. El informe enlaza las pruebas de los tres juegos, las capturas y los pendientes. [Entrega del motor compartido](ENTREGA-CHATGPT-MOTOR-CITY-2.6.md)
+
+
 ## 20‑nov‑2026 · 2.7.0 · Estilos gráficos, peso y vida, y motores potentes (Claude Code)
 **Pedido:**
 - 14 reels de referencia;
