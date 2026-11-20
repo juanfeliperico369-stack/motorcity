@@ -492,6 +492,25 @@ if (process.argv.includes('--navegador')) {
       const agua = { vioBoton, aPie: G.cuerpo.veh.id === 'pie', parqueada: !!G.cuerpo.estacionado, vadea: G.cuerpo.vadeando || G.cuerpo.nadando }; const U = G.darUrbe(), zon = U.zonificar('R', G.cuerpo.x, G.cuerpo.y, 200); G.ponCapa('valor'); await new Promise(q => setTimeout(q, 700)); const crec = U.avanzar(4).nuevos; G.ponCapa('zonas'); await new Promise(q => setTimeout(q, 500)); G.ponCapa(null);
       return { tapa, tapaLargo, agua, tapaDespues: MC.UI.verificar(G.ui), calidad: R.ubicacion.calidad, barra, estilo: est, ambiente: amb.slice(0, 40), lugares: MC.Lugares.en(G.mundo, 0, 0, G.mundo.ancho, G.mundo.alto).length, vista: G.vistas.actual.id, zonas: zon, crecen: crec, ocurrencias: G.ocu.resumen() }; });
     ok(r.tapa.length === 0 && r.tapaLargo.length === 0 && r.tapaDespues.length === 0 && r.agua.vioBoton && r.agua.aPie && r.agua.parqueada && r.agua.vadea && r.calidad === 'exacta' && r.barra && r.estilo && /Ambiente/.test(r.ambiente) && r.lugares > 20 && ['cenital', 'lateral'].includes(r.vista) && r.zonas > 0 && !errs.length, 'Mandados: la interfaz no tapa el centro; al agua desde la bici; mi casa con alguien que vive ahí; modo alcalde con capas de datos y crecimiento', r);
+    /* C-M26: prueba E2E real de la activación y salida del reto con el botón táctil. */
+    const chase = await p.evaluate(async () => {
+      const G = window.MANDADOS, q = G.mundo.viaCercana(G.hogar.d.x, G.hogar.d.y, 100),
+        boton = document.querySelector('.mcui button[aria-label="Persecución"]');
+      if (!q || !boton) return { boton: !!boton, via: !!q, inicio: false };
+      Object.assign(G.cuerpo, { x: q.x, y: q.y, a: q.ang, v: 0 });
+      G.cuerpo.setVeh('carro');
+      boton.click();
+      await new Promise(res => setTimeout(res, 900));
+      const inicio = G.persecucion.estado === 'activa';
+      const patrullas = G.persecucion.vehiculos();
+      const libre = MC.UI.verificar(G.ui);
+      boton.click();
+      return { boton: true, via: true, inicio, patrullas: patrullas.length,
+        fin: G.persecucion.estado === 'inactiva', atrapado: libre, id: patrullas[0] && patrullas[0].id };
+    });
+    ok(chase.boton && chase.via && chase.inicio && chase.patrullas >= 1 &&
+      chase.fin && chase.atrapado.length === 0 && !errs.length,
+      'C-M26 en Chromium móvil: botón de persecución, patrullas visibles, HUD sin invadir y salida', chase);
     await b.close();
   }
 }

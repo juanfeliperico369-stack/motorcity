@@ -16,3 +16,6 @@ Esta es una primera versión funcional del modo, no un juego de policía complet
 
 ## Validación
 Las comprobaciones automáticas nuevas cubren apertura, aparición fuera de 20 m, visualización, casi choque sin duplicado y cancelación; deben pasar junto con las 138 pruebas de navegador antes de fusionar la rama.
+
+## QA E2E añadida
+Se integra un escenario Chromium real con viewport móvil 412×860: entrar en Mandados, seleccionar carro, pulsar el botón «Persecución», comprobar patrullas visibles y que la interfaz no invada el área libre, cancelar con el mismo botón y verificar estado inactivo. **Este escenario debe pasar en el CI final antes de declarar el reto probado de punta a punta**.
