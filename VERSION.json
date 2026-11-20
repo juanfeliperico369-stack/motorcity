@@ -4,7 +4,8 @@
   "nombre": "Motor City",
   "fuente_de_verdad": "juanfeliperico369-stack/motorcity",
   "copias": [
-    "juanfeliperico369-stack/BicicletasUno (carpeta motor-city/)",
-    "juanfeliperico369-stack/MetroZero (carpeta motor-city/)"
-  ]
+    "BicicletasUno: integración del motor en main no comprobada",
+    "MetroZero: integración del motor en main no comprobada"
+  ],
+  "estado": "3.1.0 candidata en rama de integración, no integrada en main"
 }

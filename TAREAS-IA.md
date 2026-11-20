@@ -103,7 +103,7 @@ Cada tarea es corta y se puede comprobar. Si algo pide más que esto, **déjalo 
 > - el 1 bit ya no hace muaré en la maqueta;
 > - Mandados pasó de 8,2 a 5,1 MB (`herramientas/aligerar_arte.py`).
 >
-> **Lo que sigue, en orden:**
+> **Lo que sigue, en orden (ver estado actualizado en `docs/ESTADO-3.1.0.md`):**
 > 1. **C‑M13**: la maqueta por debajo de 20 ms;
 > 2. **C‑M21**, **C‑M20** y **C‑M22**;
 > 3. **C‑A10** y **C‑A11**;
@@ -181,7 +181,7 @@ Cada atlas va con su `manifiesto.json` y pasa `node motor.mjs revisar-arte` sin 
 ---
 
 ## Las IAs de los juegos
-Cada juego tiene su propio `TAREAS-IA.md` en la raíz de su repositorio:
+Cada juego **debería** tener su propio `TAREAS-IA.md` en la raíz: la auditoría de las ramas `main` no los encontró, por lo que es trabajo de integración pendiente:
 - **Juega EnCicla** (`BicicletasUno`): migrar a `motor-city/` y el estilo 2.6.
 - **El Metro** (`MetroZero`): su protocolo de 7 pasos y la migración.
 - **Run Scooter** (`RunRunZero`): sigue independiente.
@@ -198,3 +198,7 @@ Cada juego tiene su propio `TAREAS-IA.md` en la raíz de su repositorio:
 - Une las entregas (arte de ChatGPT en `MC.Pieles` y código de Codex).
 - Mantiene `docs/PEDIDOS.md`.
 - Sigue con *Motor City* (carreras) y *Extremo* (§9.7).
+
+---
+## Consolidación de la rama 3.1.0 (20-nov-2026)
+La PR #5 contiene C-M26 (persecución jugable y E2E verificado), C-M25 (portada editorial), C-M27 (sombras solares proyectadas, parcial), C-M29/G-H17 (física y guardado parcial), G-H1 (14 capturas inspeccionadas), G-H18 (50 lugares oficiales de Manhattan), G-H19 (investigación documental parcial) y guías de arte. Consultar [`docs/ESTADO-3.1.0.md`](docs/ESTADO-3.1.0.md) antes de asumir que una tarea está cerrada. **C-A14, C-M28, tilt-shift y pruebas móviles físicas continúan pendientes.**

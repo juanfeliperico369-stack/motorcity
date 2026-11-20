@@ -189,4 +189,7 @@ Versión **3.0.0** en `main`; **3.0.1 propuesta en la PR #5** · 20‑nov‑2026
 ## 20-nov-2026 · Nueva ronda de IA y diseño
 - **C-M25:** portada editorial sin neón ni tarjetas genéricas, con prueba en Chromium `pruebas/portada.mjs`; ejecución CI pendiente de inspección en el commit correspondiente.
 - **G-H19, parcial:** investigación documental de persecuciones de tres juegos. No se inventan minutos/segundos ni conteo de policías; `reportes/2026-11-20-gemini-persecuciones.md`.
-- **G-H18:** pendiente de catálogo de 50 puntos de Manhattan basado en una fuente geográfica consultable; no se fabricarán coordenadas.
+- **G-H18:** 50 registros de NYC CommonPlace publicados en `contenido/nueva-york-lugares.json` (IDs/coordenadas/fuente); **acceso a cada lugar sin verificar**. Ver `docs/ESTADO-3.1.0.md`.
+
+## Nota de consolidación · 3.1.0
+Esta página conserva la historia original de los pedidos, incluso estados de 2.10/3.0 ahora superados. El **estado actualizado y con evidencias** se mantiene en [`docs/ESTADO-3.1.0.md`](ESTADO-3.1.0.md). No leer «Hecho» de versiones anteriores como una certificación de la rama principal ni del rendimiento en teléfonos físicos.
