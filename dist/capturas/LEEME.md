@@ -1,7 +1,7 @@
 # Capturas de Mandados
 
-- Página: http://127.0.0.1:8851/dist/juegos/mandados.html
-- Motor City 2.7.1 · estilo realista · arte gemini · GPU software
+- Página: file:///home/antigravity/juanfeliperico369-stack/motorcity/dist/juegos/mandados.html
+- Motor City 2.9.1 · estilo realista · arte gemini · GPU software
 - La interfaz tapa el centro: no · sprites que faltan: 0 · errores: ninguno
 
 - `cenital-10h.png`

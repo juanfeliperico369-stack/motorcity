@@ -1,4 +1,6 @@
-# Motor City 2.7.1 · Entrega del motor compartido
+# Motor City · Entrega del motor compartido
+
+La actualización vigente de Motor City 2.9.1 y la revisión de los nuevos enlaces están al final de este documento.
 
 **20 de noviembre de 2026.** Mandados permite jugar con el arte nuevo en **Vista → Arte → ChatGPT**. La elección se conserva al volver a entrar. La rama de entrega es `claude/motor-city-engine-xu7p4y`. Este informe mantiene el nombre de archivo pedido en `TAREAS-IA.md`.
 
@@ -73,3 +75,28 @@ La herramienta tomó **14 capturas** con viewport táctil de 412 × 860 y anotó
 3. **EnCicla.** Registrar el último estado recibido por cada invitado y sus marcas de tiempo durante la prueba de tres participantes. Esto permite localizar la pérdida de reenvío o el exceso de espera sin ocultar el fallo.
 4. **Alcance de terreno y simulación.** Siguen pendientes la prueba completa de las siete clases de vehículo, el salto sobre roca pequeña y la cobertura de agua y roca en el raster. C-M2 a C-M12 y C-M14 conservan sus criterios en la lista del motor, incluidos tráfico por recorridos, viviendas con A*, sombras sobre muros, distritos, accesibilidad, contenido y pruebas. [Criterios de aceptación](TAREAS-IA.md)
 5. **Referencias de vídeo.** Para nueve enlaces de Instagram sigue faltando una correspondencia confirmada con los MP4 del autor. En otro caso hay una reseña indirecta. El informe de Gemini conserva esa distinción. [Estado por referencia](docs/INSPIRACION-VISUAL.md)
+
+## Actualización del 20 de noviembre · Motor City 2.9.1
+
+La rama 2.9 reúne la entrega anterior con las correcciones y las referencias incorporadas por Claude y Gemini. Se revisaron los nuevos encargos. El cambio de este corte corresponde a una parte de C-M22.
+
+`MC.GuardadoSectores` ofrece IDs estables, datos JSON por sector, activación y suspensión, instantáneas con `schema_version`, restauración y migraciones explícitas. El guardado usa una sola escritura y devuelve `false` si el almacenamiento falla. El manual incluye un ejemplo y la prueba comprueba desplazamiento a otro sector, restauración, migración, versión futura y fallo de almacenamiento. Para completar C-M22 faltan los eventos y la conexión con los objetos rotos, grafitis y huellas de los juegos. [Código](js/92-guardado.js) · [Manual](docs/MANUAL.md)
+
+En el banco de Chromium con CPU 4×, la maqueta de la versión 2.9 midió **31,2 ms** de mediana y la versión 2.9.1 midió **22 ms**. Las 133 pruebas de la última ejecución pasaron. Sigue abierta la meta de menos de 20 ms, incluida su medición en cómic y 1 bit. Permanecen abiertos C-M20, C-M21, C-A10, C-A11 y las tareas de simulación enumeradas en la lista de trabajo. [Tareas](TAREAS-IA.md)
+
+### Enlaces nuevos
+
+Se consultaron las descripciones de las publicaciones y tres fotogramas de cada uno de los ocho vídeos de TikTok. Las afirmaciones de sus autores sobre instalaciones, popularidad o resultados requieren verificación independiente.
+
+| Referencia | Contenido observado | Aplicación al proyecto |
+|---|---|---|
+| [Vídeo de lanzamiento](https://vt.tiktok.com/ZSpw3yj9x/) | Presenta una herramienta para generar un vídeo a partir de un proyecto web. | Una pieza de presentación podría partir de capturas reales de Mandados y mostrar el manejo y las vistas. |
+| [Simulación de usuarios](https://vt.tiktok.com/ZSpw3ah5Q/) | Presenta MiroFish para simular reacciones a productos. | Sus resultados serían hipótesis para contrastar con jugadores reales. |
+| [Instrucciones de un asistente](https://vt.tiktok.com/ZSpw36ySn/) | Habla de un supuesto documento de instrucciones de Claude. | Las pautas del proyecto deben ser claras y comprobables, con pruebas de funcionamiento. |
+| [Revisión de código](https://vt.tiktok.com/ZSpw3u8dH/) | Describe la revisión de código generado por IA. | Mantener pruebas del comportamiento, revisión de cambios y corrección de fallos. |
+| [Buscador de skills](https://vt.tiktok.com/ZSpw3hjS4/) | Presenta un directorio para buscar herramientas de agentes. | Revisar utilidad y procedencia antes de incorporar dependencias al motor. |
+| [Modern Web Guidance](https://vt.tiktok.com/ZSpw3MBBy/) | Presenta una guía de compatibilidad web moderna. | Comprobar las APIs elegidas en los navegadores que usan los juegos. |
+| [Hallmark](https://vt.tiktok.com/ZSpw3DhsN/) | Muestra una revisión de patrones repetitivos de diseño web. | Revisar contraste, legibilidad, jerarquía y espacio para jugar en Mandados. |
+| [Diseño y Playwright](https://vt.tiktok.com/ZSpw3ESfu/) | Presenta herramientas de diseño y pruebas de interfaz en navegador. | Continuar las pruebas táctiles y complementar las capturas con revisión humana. |
+| [Carrusel de herramientas](https://www.instagram.com/p/DfVDgmclLPi/?img_index=6) | La descripción identifica un carrusel sobre herramientas para Claude. El enlace se recibió dos veces. | Revisar cada herramienta por separado si surge una necesidad concreta. La sexta imagen no se pudo recuperar. |
+| [Publicación de Instagram](https://www.instagram.com/p/DexJDYnNQ0X/) | Se recuperó el nombre público y la descripción breve de la publicación. El contenido visual no se pudo recuperar. | Queda pendiente el análisis del contenido. |
