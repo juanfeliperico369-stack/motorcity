@@ -89,7 +89,7 @@ Object.assign(Malla.prototype, {
     }
   },
   /* carro low-poly (o buseta, camión, moto o bici) en (x, y, z) GL con rumbo a */
-  carro3d(x, y, z, a, L, W, col, tipo = 'carro', noche = 0) {
+  carro3d(x, y, z, a, L, W, col, tipo = 'carro', noche = 0, extra = null) {
     const c = hex3(col), ca = Math.cos(a), sa = Math.sin(a), pt = (u, v, h) => [x + u * ca - v * sa, y + h, z + u * sa + v * ca], rueda = hex3('#16181c');
     if (tipo === 'moto' || tipo === 'bici') { this.cajaF(x, y + .45, z, a, L * .55, .22, .35, c); for (const u of [-L * .36, L * .36]) { const p = pt(u, 0, 0); this.cajaF(p[0], y + .02, p[2], a, .62, .12, .62, rueda); } if (noche > .3) { const f = pt(L * .45, 0, .75); this.cajaF(f[0], f[1], f[2], a, .1, .14, .12, [1, .95, .7], 1); } return; }
     const alto = tipo === 'buseta' || tipo === 'camion' || tipo === 'bus' ? 2.6 : 1.0, bajo = .34;
@@ -105,6 +105,9 @@ Object.assign(Malla.prototype, {
     const fl = pt(L / 2 + .01, W * .32, bajo + .32), fr = pt(L / 2 + .01, -W * .32, bajo + .32), bl = pt(-L / 2 - .01, W * .32, bajo + .32), br = pt(-L / 2 - .01, -W * .32, bajo + .32), on = noche > .3 ? 1 : 0;
     for (const p of [fl, fr]) this.cajaF(p[0], p[1], p[2], a, .06, .32, .14, on ? [1, .95, .75] : [.85, .85, .8], on);
     for (const p of [bl, br]) this.cajaF(p[0], p[1], p[2], a, .06, .3, .14, [.75, .08, .08], on);
+    /* 4.0: barra de luces de la patrulla (rojo y azul que se alternan) */
+    if (extra && extra.sirena && alto < 2) { const f = Math.floor((typeof performance !== 'undefined' ? performance.now() : 0) / 160) % 2, l = pt(-L * .06, W * .2, bajo + 1.08), r = pt(-L * .06, -W * .2, bajo + 1.08);
+      this.cajaF(l[0], l[1], l[2], a, .3, .14, .34, f ? [1, .1, .1] : [.35, .05, .05], f); this.cajaF(r[0], r[1], r[2], a, .3, .14, .34, f ? [.1, .2, .5] : [.15, .4, 1], 1 - f); }
   },
   /* persona (peatón): piernas, torso, brazos, cabeza y pelo */
   persona3d(x, y, z, a, A, fase = 0, alto = 1.7) {

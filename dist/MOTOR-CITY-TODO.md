@@ -814,6 +814,12 @@ Cada juego **debería** tener su propio `TAREAS-IA.md` en la raíz: la auditorí
 ### Consolidación de la rama 3.1.0 (20-nov-2026)
 La PR #5 contiene C-M26 (persecución jugable y E2E verificado), C-M25 (portada editorial), C-M27 (sombras solares proyectadas, parcial), C-M29/G-H17 (física y guardado parcial), G-H1 (14 capturas inspeccionadas), G-H18 (50 lugares oficiales de Manhattan), G-H19 (investigación documental parcial) y guías de arte. Consultar [`docs/ESTADO-3.1.0.md`](docs/ESTADO-3.1.0.md) antes de asumir que una tarea está cerrada. **C-A14, C-M28, tilt-shift y pruebas móviles físicas continúan pendientes.**
 
+### 20-nov-2026 · C-A15 / G-H19 ampliada · Manhattan adulto
+- **Publicado en PR #5:** `docs/REFERENCIAS-MANHATTAN-13.md` (13 fichas Google Play), `docs/GETAWAY-MANHATTAN-BIBLIA.md` (7 misiones adultas y tres finales), `juegos/getaway/preproduccion/*.json` para agentes, `juegos/getaway/prototipo.html` como mini juego offline esquemático, y dos `arte/chatgpt/guias/manhattan-*.svg` con fuentes vectoriales originales. Estas entregas **no contienen mapa MC4 real**.
+- **C-A15:** dirección artística conceptual y wireframe listos como documentos, no atlas UV ni captura de gameplay.
+- **G-H19:** investigación documental ampliada de 3 a 13 fichas, sin cronometrajes de vídeos no observados.
+- **Siguiente IA:** antes de iniciar 3D, auditar licencias del GIS, cobertura de la isla y conectividad de puentes, carga por 1 km y transición de prototipo a MC4.
+
 
 ---
 
@@ -885,6 +891,8 @@ Sobre las cámaras de esos juegos se publica poco. Lo que sigue sale de lo que s
 # ANEXO 0e. Lo que sigue: Getaway Nueva York y las reglas del feedback (`docs/PROXIMO-NUEVA-YORK.md`)
 
 
+> **Actualización de alcance (20-nov-2026, posterior al pedido original):** el autor cambió explícitamente el concepto de **todo público** a **thriller criminal para adultos**. Esta página conserva el plan geográfico histórico, pero el contrato vigente de historia y arte es `docs/GETAWAY-MANHATTAN-BIBLIA.md`, y el juego de trabajo se llama provisionalmente **TURNO CERO: MANHATTAN**. No copiar un juego comercial ni representar como exacta una cuadrícula inventada. Se agregó un prototipo independiente en `juegos/getaway/prototipo.html`, que **no usa Manhattan MC4**.
+
 > **Pedido del autor (20‑nov‑2026)**, para después de las mejoras de Gemini y ChatGPT:
 > - craquear Nueva York, en especial Manhattan;
 > - alrededor, llanuras, montañas, lagos, playas y todos los tipos de terreno, para exprimir el motor;
@@ -902,7 +910,7 @@ Sobre las cámaras de esos juegos se publica poco. Lo que sigue sale de lo que s
 | **Rascacielos que se ven a lo lejos** | Impostores (siluetas horneadas) para lo que está a más de 600 m, como el LOD de GTA San Andreas. En el borde, la niebla. | Codex (C‑M28) |
 | **Mundo redondo, atmósfera y espacio** | Se hace en tres pasos:<ol><li>**Curvatura en el sombreador:** la altura baja con d²/2R, así que el horizonte se curva al subir.</li><li>**Vista de planeta:** al alejarse más allá del mapa, el mundo pasa a ser una esfera con la textura de `losasLejos`, con un halo de atmósfera (dispersión de Rayleigh simple) y estrellas.</li><li>**El espacio:** con `MC.Cosmos` (ya existe) pone el Sol y la Luna en su lugar y las estrellas de la hora.</li></ol> | Claude (C‑M31 para el sombreador de atmósfera, si Codex llega antes) |
 
-### 2. El juego (*Getaway*, todo público)
+### 2. Concepto histórico para todo público (SUPERADO por la versión adulta)
 - **Trama breve, cinco capítulos:**
   - un conductor novato hereda el taxi de su tío y descubre que una familia de «la mafia» le debe al barrio;
   - escapes, rescates de mercancía robada (cuadros de un museo) y una última persecución por el puente de Brooklyn.

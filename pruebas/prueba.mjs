@@ -453,6 +453,27 @@ console.log('19) Planeta 4.0: anillo de mundos, carreteras largas en la nada y g
     'planeta: el anillo cierra con 3 ciudades, el tramo tiene su autopista y paradas, se sale de Medellín al embalse y del embalse se llega a Guatapé', { lugares: T.lugares.length, cotas: cotas.map(Math.round), sale: sale && sale.a, llega: alFinal && alFinal.a, globo: G && [+G.lon.toFixed(1), +G.lat.toFixed(1)] });
 }
 
+console.log('20) Búsqueda 0–5, modelos GLB y Turno Cero (4.0)');
+{ /* MC.Busqueda: umbrales del contrato de Codex, nacen fuera de la vista, te buscan donde te vieron, cebo, pulso y disparos */
+  const q = M.viaCercana(col.x, col.y, 100), J = new MC.Cuerpo(M, { x: q.x, y: q.y, a: q.ang, veh: 'carro' }), B = new MC.Busqueda(M, { semilla: 5 });
+  const niveles = [0, 14, 15, 34, 35, 55, 70, 85, 100].map(h => B.nivelDe(h)); B.alerta(40, { causa: 'prueba' }); const nivel = B.nivel;
+  const ev = {}; let lejos = true; for (let i = 0; i < 300; i++) { B.actualizar(1 / 60, J, []); for (const e of B.sacar()) ev[e.tipo] = (ev[e.tipo] || 0) + 1; if (i === 140) { B.banda(1, { J }); } }
+  for (const r of B.rivales) if (r.bando === 'policia' && Math.hypot(r.cuerpo.x - J.x, r.cuerpo.y - J.y) < 40) lejos = false;
+  B.ultima = { x: J.x + 300, y: J.y, t: 0 }; B.visto = false; const cebo = (B.senuelo(J.x - 200, J.y, 5), !!B.cebo), pulso = B.pulso(J, 500), disparo = B.disparar(J, { alcance: 500 });
+  const V = B.vehiculos(), conSirena = V.some(v => v.sirena), obst = B.obstaculos().length;
+  ok(JSON.stringify(niveles) === '[0,0,1,1,2,3,4,5,5]' && nivel === 2 && B.rivales.length >= 1 && lejos && cebo && pulso && (disparo === null || typeof disparo.acierto === 'boolean') && conSirena && obst >= 3 && Number.isFinite(B.heat),
+    'búsqueda: umbrales 15/35/55/70/85, patrullas que nacen lejos, sirena, cebo, pulso, disparos y obstáculos', { niveles, nivel, rivales: B.rivales.length, eventos: ev, pulso, disparo: disparo && disparo.acierto });
+  B.limpiar(); ok(B.nivel === 0 && !B.rivales.length && !B.heli, 'búsqueda: limpiar deja todo en cero');
+}
+{ /* MC.Modelos: los 42 GLB de Codex se leen, la carrocería se tiñe y la malla los gira al rumbo del carro */
+  const D = path.join(RAIZ, 'arte/modelos/turno-cero'), F = fs.existsSync(D) ? fs.readdirSync(D).filter(f => f.endsWith('.glb')) : [];
+  let n = 0; for (const f of F) if (MC.Modelos.registrar(f.slice(0, -4), new Uint8Array(fs.readFileSync(path.join(D, f))))) n++;
+  const S = MC.Modelos.get('vehiculo_sedan'), Pm = MC.Modelos.get('personaje_mara'), m = new MC.Malla(); if (S) m.modelo(S, 0, 0, 0, Math.PI / 2, { largo: 4.65, tinte: '#ff0000' });
+  let rojo = 0, maxZ = -1e9; for (let i = 0; i < m.d.length; i += 10) { if (m.d[i + 6] === 1 && m.d[i + 7] === 0 && m.d[i + 8] === 0) rojo++; maxZ = Math.max(maxZ, m.d[i + 2]); }
+  ok(n === 42 && S && S.n > 300 && Pm && Pm.frente === 'z' && rojo > 50 && maxZ > 2 && MC.Modelos.vehiculo({ sirena: true }).id === 'vehiculo_police' && MC.Modelos.vehiculo({ tipo: 'taxi' }).id === 'vehiculo_taxi',
+    'modelos GLB: 42 leídos, la carrocería toma el color del carro y un rumbo de 90° pone el carro a lo largo del eje sur', { n, tris: S && S.n, rojo, largoGirado: +maxZ.toFixed(2) });
+  MC.Modelos.L.clear();
+}
 if (process.argv.includes('--navegador')) {
   console.log('16) Banco de pruebas en Chromium');
   const html = path.join(RAIZ, 'dist/motor-city.html'); let chromium; try { ({ chromium } = require('playwright')); } catch (e) { console.log('  (sin playwright: se salta)'); }
@@ -569,6 +590,30 @@ if (process.argv.includes('--navegador')) {
     ok(chase.boton && chase.via && chase.inicio && chase.patrullas >= 1 &&
       chase.fin && chase.atrapado.length === 0 && !errs.length,
       'C-M26 en Chromium móvil: botón de persecución, patrullas visibles, HUD sin invadir y salida', chase);
+    await b.close();
+  }
+  /* 4.0 · Turno Cero: el juego grande en un planeta (tres ciudades reales, carreteras de la nada, modelos GLB) */
+  const tc = path.join(RAIZ, 'dist/juegos/getaway.html');
+  if (chromium && fs.existsSync(tc)) {
+    const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 412, height: 860 }, hasTouch: true }), errs = [];
+    p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+    await p.goto(urlPrueba(tc)); await p.waitForFunction(() => window.TURNO_LISTO, null, { timeout: 120000 });
+    const portada = await p.evaluate(() => ({ adultos: /18\+/.test(document.querySelector('.sello').textContent), modelos: MC.Modelos.L.size, mundos: Object.keys(MC_CIUDADES) }));
+    await p.click('#bHistoria'); await p.waitForFunction(() => TURNO.M && !TURNO.transicion && TURNO.hist && TURNO.hist.p, null, { timeout: 120000 }).catch(() => {});
+    for (let i = 0; i < 30; i++) { const d = await p.$('.dialogo button'); if (d) await d.click().catch(() => {}); else if (await p.evaluate(() => TURNO.hist && TURNO.hist.p && !TURNO.pausa)) break; await p.waitForTimeout(150); }
+    const r = await p.evaluate(async () => {
+      const G = TURNO, H = G.hist, espera = ms => new Promise(q => setTimeout(q, ms)), paso0 = H.p && H.p.tipo, obj = !!G.objetivo, tapa = MC.UI.verificar(G.ui);
+      const m = H.est.meta; Object.assign(G.cuerpo, { x: m.x, y: m.y, v: 0 }); await espera(3500); const dialogo = !!document.querySelector('.dialogo');
+      /* el planeta: salir de Manhattan por el puente George Washington, recorrer la carretera y llegar a Medellín */
+      G.hist = null; H.p = null; G.busq.limpiar(); document.querySelectorAll('.dialogo button').forEach(x => x.click()); await espera(300); document.querySelectorAll('.dialogo button').forEach(x => x.click()); G.pausa = false;
+      const Q = G.planeta.puertas('nueva_york', G.M).siguiente; G.planeta.llegadaT = 0; Object.assign(G.cuerpo, { x: Q.x + Math.cos(Q.a) * 3, y: Q.y + Math.sin(Q.a) * 3 }); for (let i = 0; i < 80 && G.id !== 'ruta_atlantico'; i++) await espera(100); while (G.transicion) await espera(100);
+      const enRuta = G.id, letrero = document.querySelector('#viaje').textContent, c = G.M.carretera; G.planeta.llegadaT = 0; Object.assign(G.cuerpo, { x: c.centro(c.largo - 12), y: c.largo - 12 }); for (let i = 0; i < 200 && G.id !== 'medellin'; i++) await espera(100); while (G.transicion) await espera(100);
+      const medellin = G.id, metro = !!G.transporte && G.transporte.lineas.some(l => l.clase === 'metro'), modelos3d = MC.Modelos.L.size;
+      G.Artefactos.cebo(); G.busq.ponerNivel(3); await espera(1500); const persigue = G.busq.rivales.length, tapa2 = MC.UI.verificar(G.ui);
+      return { paso0, obj, tapa, dialogo, enRuta, letrero: letrero.slice(0, 40), medellin, metro, modelos3d, persigue, tapa2, errores: MC.errores.length };
+    });
+    ok(portada.adultos && portada.modelos === 42 && portada.mundos.length === 3 && r.paso0 === 'ir' && r.obj && !r.tapa.length && r.dialogo && r.enRuta === 'ruta_atlantico' && /Medellín/.test(r.letrero) && r.medellin === 'medellin' && r.metro && r.persigue >= 1 && !r.tapa2.length && !r.errores && !errs.length,
+      'Turno Cero en Chromium móvil: aviso 18+, 42 modelos, la historia arranca, el HUD no tapa el centro, Manhattan → Ruta del Atlántico → Medellín con su metro y la policía persigue', Object.assign({}, portada, r, { errs: errs.slice(0, 3) }));
     await b.close();
   }
 }
