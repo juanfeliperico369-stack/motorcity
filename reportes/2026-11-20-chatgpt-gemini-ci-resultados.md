@@ -27,3 +27,6 @@ Se amplió el flujo para que la siguiente ejecución de GitHub Actions corra `no
 - No se probó aún un teléfono Android/iOS físico, calor o consumo de batería (G-H9 / G-H14 / G-H16).
 - No se probó simultáneamente la integración de EnCicla y El Metro; requieren migraciones en sus repositorios.
 - No se corrió `npx modern-web-guidance ... legacy-scan`; tampoco se instaló ninguna skill en Antigravity (G-H12 y G-H13 incompletas).
+
+## Nota de robustez: prueba intermitente de palomas
+En la ejecución [#44755627607](https://github.com/juanfeliperico369-stack/motorcity/actions/runs/44755627607), el caso de fauna falló una vez tras 138 pruebas correctas: el test inyectó una paloma para comprobar su huida pero también llamó al sistema con delta positivo, permitiendo un nacimiento aleatorio adicional. La evidencia observada (huyen=1, llantas=22, pisadas=6, suelo barro) sugiere el spawn ocasional, no una regresión persistente del motor. Se ejecuta ese evento de huida con delta=0 en el **test**, sin modificar la física/azar de producción. La corrección se considera validada solo cuando las pruebas posteriores terminen.
