@@ -1,5 +1,13 @@
 # Bitácora de Motor City
 
+## 20-nov-2026 · 3.0.1 · Objetos de barrio y persistencia (ChatGPT)
+- C-M29 / G-H17 (entrega parcial): 30 tipos de mobiliario urbano en `js/32-objetos.js` y tamaños **aproximados para diseño** en `contenido/objetos-gemini.json`.
+- IDs estables por origen de los objetos: restauración de desplazamientos, velocidad, orientación y daño con `MC.GuardadoSectores`.
+- Mandados guarda cambios de Guatapé periódicamente y al ocultar/cerrar la pestaña; los mundos aleatorios no heredan esos datos.
+- Regresiones agregadas a `pruebas/prueba.mjs`. Comprobación aislada del código realizada; **batería Node/Chromium pendiente** en clon completo.
+- Falta arte individualizado de cada objeto y medición con hardware móvil.
+
+
 ## 20‑nov‑2026 · 3.0.0 · Los tres juegos actualizados y Nueva York preparado (Claude Code)
 - **EnCicla** (`src/js/97-motor30.js`):
   - la calidad automática del 3.0;

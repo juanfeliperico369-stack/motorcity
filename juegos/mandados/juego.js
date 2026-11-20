@@ -49,7 +49,19 @@ function jugar() {
   const listaVeh = () => libre ? MC.Vehiculos.de('mandados', v => ORDEN.includes(v.clase)).sort((a, b) => ORDEN.indexOf(a.clase) - ORDEN.indexOf(b.clase)).map(v => [v.id, { n: (v.icon || '•') + ' ' + v.n + ' · ' + GRUPO[v.clase].toLowerCase(), tiene: true, agua: v.clase === 'agua' }]) : Object.entries(garaje);
   const E = { mundo: M, camara, reloj, clima, transporte: null, jugador, t: 0, vehiculos: [], trafico: [], peatones: [], extras: [], cables: [] };
   /* 3.0: artilugios físicos (MC.Objetos): conos y vallas en las vías, balones en las plazas, canecas y cajas en los andenes */
-  const objetos = new MC.Objetos(M); objetos.sembrar(c0.x, c0.y, 340, 46); E.objetos = objetos;
+  /* C-M29 + G-H17: una semilla aleatoria nunca hereda el guardado de Guatapé. */
+  const claveObjetos = 'motorcity.mandados.objetos.guatape.v1';
+  let guardadoObjetos = null;
+  if (!generado) {
+    try { guardadoObjetos = MC.GuardadoSectores.leer(claveObjetos) || new MC.GuardadoSectores({ mundo: 'guatape', lado: 128 }); }
+    catch (e) { guardadoObjetos = new MC.GuardadoSectores({ mundo: 'guatape', lado: 128 }); }
+  }
+  const objetos = new MC.Objetos(M, { guardado: guardadoObjetos, mundoId: 'guatape' });
+  objetos.sembrar(c0.x, c0.y, 340, 46); E.objetos = objetos;
+  if (guardadoObjetos) guardadoObjetos.actualizar(cuerpo.x, cuerpo.y, 1);
+  const guardarObjetos = () => { if (guardadoObjetos && objetos.guardarCambios()) guardadoObjetos.guardar(claveObjetos); };
+  addEventListener('pagehide', guardarObjetos);
+  addEventListener('visibilitychange', () => { if (document.hidden) guardarObjetos(); });
   MC.on('golpe', ev => { camara.sacudir(Math.min(.22, ev.fuerza * .025)); if (MC.Vida && MC.Vida.emitir) MC.Vida.emitir('polvo', ev.o.x, ev.o.y, 6); });
   const pobl = new MC.Poblacion(M, { n: 36, centro: c0, radio: 900, semilla: 4 }), trafico = new MC.Trafico(M, { n: 10, peatones: 0, red: 'rueda', radio: 400 });
   const perro = MC.Seres.Animal.crear('perro_criollo', 3); perro.x = c0.x - 3; perro.y = c0.y; perro.a = 0; perro.v = 0;
@@ -225,7 +237,7 @@ function jugar() {
   ponVista('cenital'); nuevaMision(); camara.x = cuerpo.x; camara.y = cuerpo.y;
   /* 2.6: el tutorial es opcional (en la portada y en ⚙️ Ajustes); al empezar solo queda la guía del joystick, que se va sola */
   /* ciclo */
-  let t0 = performance.now(), hud = 0, adapt = 0, histT = 0, dialogo = false, sonT = 0, ultBloqueo = null, nadaba = false;
+  let t0 = performance.now(), hud = 0, adapt = 0, histT = 0, dialogo = false, sonT = 0, ultBloqueo = null, nadaba = false, objetosT = 0, sectoresT = 0;
   /* el tráfico y la gente también ocupan espacio: no se atraviesan */
   cuerpo.obstaculos = () => { const L = []; for (const v of E.trafico || []) { if (v.clase === 'metro' || v.clase === 'cable' || v.clase === 'tram') continue; const r = (v.ancho || 1.8) / 2 + .15, l = (v.largo || 4.3) / 3, c = Math.cos(v.a || 0), s2 = Math.sin(v.a || 0); for (const k of [-1, 0, 1]) L.push({ x: v.x + c * l * k, y: v.y + s2 * l * k, r, motivo: 'un vehículo' }); } for (const p of E.peatones || []) L.push({ x: p.x, y: p.y, r: .28, motivo: 'una persona' }); return L; };
   const cuadro = ahora => {
@@ -257,6 +269,10 @@ function jugar() {
     const f = MC.IA.llegar([perro.x, perro.y], [cuerpo.x - Math.cos(cuerpo.a) * 3, cuerpo.y - Math.sin(cuerpo.a) * 3], Math.min(perro.vmax, Math.abs(cuerpo.v) + 3), 4); perro.x += f[0] * dt; perro.y += f[1] * dt; perro.v = Math.hypot(f[0], f[1]); if (perro.v > .2) perro.a = Math.atan2(f[1], f[0]);
     E.peatones = pobl.paso(dt, reloj, cuerpo.x, cuerpo.y, 420); E.trafico = trafico.paso(dt, cuerpo.x, cuerpo.y, reloj.seg, vistas.calidad);
     { const V = cuerpo.veh, cs = [{ x: cuerpo.x, y: cuerpo.y, z: cuerpo.z, r: V.clase === 'pie' ? .35 : Math.max(.4, (V.ancho || .8) / 2), masa: V.masa || (V.clase === 'auto' ? 1200 : V.clase === 'pesado' ? 6000 : 90), vx: Math.cos(cuerpo.a) * cuerpo.v, vy: Math.sin(cuerpo.a) * cuerpo.v }]; for (const t of E.trafico) if (Math.hypot(t.x - cuerpo.x, t.y - cuerpo.y) < 160) cs.push({ x: t.x, y: t.y, z: 0, r: 1, masa: 1200, vx: Math.cos(t.a) * (t.v || 0), vy: Math.sin(t.a) * (t.v || 0) }); objetos.actualizar(dt, cs); }
+    if (guardadoObjetos) {
+      if ((sectoresT += dt) >= 1) { sectoresT = 0; const cambio = guardadoObjetos.actualizar(cuerpo.x, cuerpo.y, 1); if (cambio.duermen.length) guardarObjetos(); }
+      if ((objetosT += dt) >= 8) { objetosT = 0; guardarObjetos(); }
+    }
     if (!interior) { densidad.activa = MC.opciones.densidad !== false; redensificar(densidad.medir(dt, vistas.actual.id + (vistas.pixel ? '_px' : ''))); }
     vistas.dibujar(g, W, H, E, dt); if (vistas.efectiva().tipo === '2d' && !vistas.pixel) objetos.dibujar2D(g, (x, y, z) => vistas.aPantalla(E, x, y, z), camara.zoom, cuerpo, 140); ui.pintarJoystick(); MC.Telemetria.registro(vistas.ms, dt); if (tele && (teleT -= dt) <= 0) { teleT = .25; ui.ficha('tele', MC.Telemetria.linea(E)).hidden = false; }   /* 2.8: telemetría (percentiles) */
     /* la flecha al objetivo del mandado (en las vistas 2D): pin si se ve, flecha en el borde si no */
@@ -274,7 +290,7 @@ function jugar() {
       bMontar.hidden = !cuerpo.puedeMontar(3.5); if (!bMontar.hidden) bMontar.firstChild.textContent = MC.Vehiculos.get(cuerpo.estacionado.veh).icon || '🚲';
       ui.barra('aire', '🫧 Aire', cuerpo.aire); ui.barraVisible('aire', cuerpo.buceando || cuerpo.aire < .999); bComprar.hidden = !(cercaDe(tiendas, 30) || (tanque[V.id] != null && cercaDe(gasolineras, 40))); bComprar.firstChild.textContent = tanque[V.id] != null && cercaDe(gasolineras, 40) ? '⛽' : '💧';
       ui.pintarMinimapa(cuerpo.x, cuerpo.y, camara.yaw, (P && P.x != null ? [{ x: P.x, y: P.y, color: '#ffc23a' }] : []).concat(hogar ? [{ x: hogar.d.x, y: hogar.d.y, color: '#39ffb3' }] : []));
-      window.MANDADOS = { mundo: M, cuerpo, yo, libro, get mision() { return mision; }, get piloto() { return piloto; }, set piloto(p) { piloto = p; }, get vehiculos() { return listaVeh().length; }, reloj, clima, vistas, camara, hechos, generado, hist, ocu, desg, ui, get hogar() { return hogar; }, get urbe() { return urbe; }, get botones() { return { bAgua, bMontar, bTierra, bBaja, bSube }; }, get libre() { return libre; }, cambiarArte, ponEstilo, opciones: OPC, aplicarOpc, darUrbe, ponCapa, ponHogar: t => { const R = MC.Hogar.desdeDireccion(M, t); if (R.ok) hogar = R.hogar; return R; }, abrirCasa: () => abrirCasa(), ponVista, entregar: () => { entregado = true; interior = false; $('#interior').hidden = true; } }; }
+      window.MANDADOS = { mundo: M, cuerpo, yo, libro, get mision() { return mision; }, get piloto() { return piloto; }, set piloto(p) { piloto = p; }, get vehiculos() { return listaVeh().length; }, reloj, clima, vistas, camara, hechos, generado, hist, ocu, desg, ui, get hogar() { return hogar; }, get urbe() { return urbe; }, objetos, guardadoObjetos, guardarObjetos, get botones() { return { bAgua, bMontar, bTierra, bBaja, bSube }; }, get libre() { return libre; }, cambiarArte, ponEstilo, opciones: OPC, aplicarOpc, darUrbe, ponCapa, ponHogar: t => { const R = MC.Hogar.desdeDireccion(M, t); if (R.ok) hogar = R.hogar; return R; }, abrirCasa: () => abrirCasa(), ponVista, entregar: () => { entregado = true; interior = false; $('#interior').hidden = true; } }; }
   };
   requestAnimationFrame(cuadro);
 }

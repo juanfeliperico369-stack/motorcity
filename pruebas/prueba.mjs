@@ -163,6 +163,26 @@ console.log('13) Escala, manejo, sprites, mi casa, lugares, historias, ocurrenci
   for (let i = 0; i < 600; i++) { O.actualizar(1 / 60, i < 12 ? [{ x: q.x + i / 12 * .95, y: q.y, z: 0, r: .4, masa: 80, vx: 6, vy: 0 }, { x: q.x, y: q.y + 3 - .7 + i / 12 * .4, z: 0, r: .4, masa: 1200, vx: 0, vy: 3 }] : []); alto = Math.max(alto, b.z); }
   const sem = new MC.Objetos(M).sembrar(q.x, q.y, 300, 30);
   ok(Math.hypot(b.x - q.x - 1, b.y - q.y) > 1.5 && alto > .05 && b.dormido && c.dormido && Math.hypot(c.x - q.x, c.y - q.y - 3) > .3 && sem > 0, 'objetos físicos: el golpe los empuja y los levanta, caen, ruedan con roce y se duermen; la siembra pone conos, balones, canecas y cajas', { avanzó: +Math.hypot(b.x - q.x - 1, b.y - q.y).toFixed(1), alto: +alto.toFixed(2), sembrados: sem, duerme: [b.dormido, c.dormido], caja: +Math.hypot(c.x - q.x, c.y - q.y - 3).toFixed(2) }); }
+{ /* C-M29: persistencia de artilugios, guardados por sector original e IDs estables. */
+  const T = { meta: { nombre: 'Guatapé' }, edificioEn: () => false, cota: () => 0 };
+  const S = new MC.GuardadoSectores({ mundo: 'guatape', lado: 128 });
+  const O = new MC.Objetos(T, { guardado: S, mundoId: 'guatape' });
+  const a = O.poner('cono', 0, 0, { clave: 'probar-cono' });
+  O.actualizar(1 / 60, [{ x: -.3, y: 0, r: .35, vx: 9, vy: 0, masa: 100 }]);
+  for (let i = 0; i < 400; i++) O.actualizar(1 / 60);
+  const movido = a.x > 0 && a.alterado, cambios = O.guardarCambios();
+  const p = O.poner('poste_alumbrado', 10, 10, { clave: 'probar-poste' });
+  O.actualizar(1 / 60, [{ x: 9.7, y: 10, r: .4, vx: 23, vy: 0, masa: 1200 }]);
+  const roto = p.roto && !p.fijo;
+  O.guardarCambios();
+  const T2 = new MC.Objetos(T, { guardado: MC.GuardadoSectores.restaurar(S.instantanea()), mundoId: 'guatape' });
+  const a2 = T2.poner('cono', 0, 0, { clave: 'probar-cono' }), p2 = T2.poner('poste_alumbrado', 10, 10, { clave: 'probar-poste' });
+  let duplicado = false; try { T2.poner('cono', 0, 0, { clave: 'probar-cono' }); } catch (e) { duplicado = true; }
+  ok(movido && cambios === 1 && a2.id === a.id && a2.x === a.x && p2.roto && roto && duplicado &&
+    Object.keys(MC.TIPOS_OBJ).length >= 35 && S.sector(-1, -1) === '-1,-1',
+    'C-M29: objetos movidos/rotos se guardan por sector, restauran posición/estado e impiden IDs duplicados',
+    { catalogo: Object.keys(MC.TIPOS_OBJ).length, cambios, roto });
+}
 { /* 2.11: densidad dinámica del lienzo: baja si va lento y bajar sirve; si no sirve vuelve y no insiste; sube con holgura */
   const sim = (D, clave, f, seg) => { let d = D.medir(0, clave); for (let t = 0; t < seg; t += 1 / 60) { const ms = f(d); d = D.medir(ms / 1000, clave); } return d; };
   const A = new MC.DensidadLienzo({ max: 2 }), lento = sim(A, 'maqueta', d => 28 * (d / 2) ** 2 + 4, 6), recupera = sim(A, 'maqueta', () => 16.7, 40);

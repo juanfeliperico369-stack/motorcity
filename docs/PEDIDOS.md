@@ -181,3 +181,7 @@ Versión **3.0.0** · 20‑nov‑2026 · **137 pruebas en verde** (`node motor.m
 | Fluidez | Hecho | 2.11: la densidad dinámica y la capa de suelo. |
 | Pedidos nuevos para Gemini y ChatGPT | Hecho | G‑H14 a G‑H17, y C‑M26 a C‑M29, C‑A13 y C‑A14, en `TAREAS-IA.md`. |
 
+
+## 20-nov-2026 · Entrega ChatGPT (rama de integración)
+- **C-M29 / G-H17 · Parcial funcional:** 30 objetos con parámetros de juego, guardado por sector original e IDs estables; restauración en Mandados.
+- **Pendiente:** arte y modelos detallados, streaming de objetos por sectores, prueba móvil y ejecución integral de Playwright desde un clon.
