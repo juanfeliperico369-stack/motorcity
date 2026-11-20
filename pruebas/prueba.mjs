@@ -289,6 +289,19 @@ if (fs.existsSync(gu)) {
     'C-M26: patrullas detrás del jugador, física, casi choques sin duplicado y cierre seguro');
 }
 
+{ /* C-M27: sombra procedimental de sol, geometría finita y noche sin sombras. */
+  const M0 = { cota: () => 0, edificiosEn: () => [] };
+  const casa = { x: 40, y: 40, h: 8 };
+  const arbol = { x: 43, y: 43, h: 7, r: 2 };
+  const opt = { edificios: [casa], arboles: [arbol], esquinas: () => [38,38,42,38,42,42,38,42] };
+  const dia = MC.Sombras3D.generar(M0,[0,0,0], {x:.7,y:.3,z:.6},40,40,opt);
+  const noche = MC.Sombras3D.generar(M0,[0,0,0], {x:.7,y:.3,z:-.2},40,40,opt);
+  const ejes = dia.filter((_,i) => i % 10 < 3);
+  ok(dia.length > 100 && dia.length % 30 === 0 && ejes.every(Number.isFinite) && !noche.length,
+    'C-M27: sombras WebGL 1 finitas con edificio y árbol; noche desactivada',
+    { vertices: dia.length / 10, noche: noche.length });
+}
+
 console.log('15) Terreno: agua, montañas, rocas y límites de paso');
 { /* agua real: el embalse de Guatapé es lago y se hace más hondo lejos de la orilla; Medellín tiene su río */
   const MG = new MC.Mundo(new Uint8Array(fs.readFileSync(gu)), JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades/guatape.json'), 'utf8'))), AG = MC.Terreno.agua(MG), grande = AG.C.slice().sort((a, b) => b.area - a.area)[0];

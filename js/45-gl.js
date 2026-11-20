@@ -43,10 +43,62 @@ class Malla {
   /* segmento grueso entre dos puntos (huesos del personaje, tubos de la bici) */
   hueso(p, q, r, col) { const dx = q[0] - p[0], dy = q[1] - p[1], dz = q[2] - p[2], L = Math.hypot(dx, dy, dz) || 1e-6; let ax = 0, ay = 1, az = 0; if (Math.abs(dy / L) > .9) { ax = 1; ay = 0; } let ux = dy * az - dz * ay, uy = dz * ax - dx * az, uz = dx * ay - dy * ax, l = Math.hypot(ux, uy, uz) || 1; ux = ux / l * r; uy = uy / l * r; uz = uz / l * r; let vx = (dy * uz - dz * uy) / L, vy = (dz * ux - dx * uz) / L, vz = (dx * uy - dy * ux) / L; const A = [], B = []; for (const [i, j] of [[1, 1], [-1, 1], [-1, -1], [1, -1]]) { A.push([p[0] + ux * i + vx * j, p[1] + uy * i + vy * j, p[2] + uz * i + vz * j]); B.push([q[0] + ux * i + vx * j, q[1] + uy * i + vy * j, q[2] + uz * i + vz * j]); } for (let k = 0; k < 4; k++) { const m = (k + 1) % 4; this.quad(A[k], A[m], B[m], B[k], col); } }
 }
+/* Proyección económica de sombras sobre el terreno, sin shadow maps ni texturas.
+   Se construye una sola malla para los objetos cercanos, reutilizable por celda de cámara y posición solar.
+   Las sombras solo afectan al plano del suelo, con profundidad y mezcla alfa; NO se pintan sobre las fachadas. */
+const Sombras3D = {
+  generar(M, O, sol, cx, cy, op = {}) {
+    if (!sol || sol.z < .16 || !M || typeof M.cota !== 'function') return [];
+    const radio = op.radio || 115, m = new Malla();
+    const k = Math.min(2.7, 1 / Math.max(sol.z, .32));
+    const elev = (x, y) => M.cota(x, y) - O[2] + .12;
+    const desplazamiento = altura => {
+      const alcance = Math.min(25, altura * k * Math.hypot(sol.x, sol.y));
+      const norm = Math.hypot(sol.x, sol.y) || 1;
+      return [-sol.x / norm * alcance, -sol.y / norm * alcance];
+    };
+    const color = [.055, .075, .065];
+    const edificaciones = op.edificios || M.edificiosEn(cx - radio, cy - radio, cx + radio, cy + radio);
+    let edificios = 0;
+    for (const e of edificaciones) {
+      if (edificios >= 65) break;
+      if (!e || !Number.isFinite(e.x) || !Number.isFinite(e.y) || !Number.isFinite(e.h) ||
+          Math.hypot(e.x - cx, e.y - cy) > radio || e.h < 3) continue;
+      const P = op.esquinas ? op.esquinas(e) : Mundo.esquinas(e), n = P.length / 2;
+      if (n < 3 || n > 16) continue;
+      const [dx, dy] = desplazamiento(Math.min(e.h, 22));
+      for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n, ax = P[i * 2], ay = P[i * 2 + 1], bx = P[j * 2], by = P[j * 2 + 1];
+        if (![ax, ay, bx, by].every(Number.isFinite)) continue;
+        m.quad([ax - O[0], elev(ax, ay), ay - O[1]],
+          [bx - O[0], elev(bx, by), by - O[1]],
+          [bx + dx - O[0], elev(bx + dx, by + dy), by + dy - O[1]],
+          [ax + dx - O[0], elev(ax + dx, ay + dy), ay + dy - O[1]], color);
+      }
+      edificios++;
+    }
+    const arboles = op.arboles || Arboleda.en(M, cx - radio, cy - radio, cx + radio, cy + radio, 100);
+    let arbolesDibujados = 0;
+    for (const t of arboles) {
+      if (arbolesDibujados >= 80 || !t || !Number.isFinite(t.x) || !Number.isFinite(t.y) || !Number.isFinite(t.h)) continue;
+      if (Math.hypot(t.x - cx, t.y - cy) > radio) continue;
+      const [dx,dy] = desplazamiento(t.h * .72), x = t.x + dx, y = t.y + dy, rx = Math.max(.5, t.r * .86), ry = rx * .75;
+      const center = [x - O[0], elev(x, y), y - O[1]];
+      for(let i = 0;i < 8;i++) {
+        const a = i * Math.PI/4, b=(i+1)*Math.PI/4;
+        const pa = [x + Math.cos(a)*rx, y + Math.sin(a)*ry], pb=[x + Math.cos(b)*rx,y + Math.sin(b)*ry];
+        m.tri(center,[pa[0]-O[0],elev(...pa),pa[1]-O[1]],[pb[0]-O[0],elev(...pb),pb[1]-O[1]],color);
+      }
+      arbolesDibujados++;
+    }
+    return m.d;
+  }
+};
 const VS = 'attribute vec3 aP;attribute vec3 aN;attribute vec3 aC;attribute float aE;uniform mat4 uM;uniform vec3 uL;uniform float uAmb;uniform float uSol;uniform vec3 uO;uniform float uNoche;varying vec3 vC;varying float vD;void main(){float d=max(dot(normalize(aN),uL),0.);vec3 c=aC*(uAmb+uSol*d);vC=mix(c,aC*(0.55+0.6*uNoche),aE*uNoche)+aE*uNoche*vec3(0.25,0.18,0.05);vD=length(aP-uO);gl_Position=uM*vec4(aP,1.);}';
 const VT = 'attribute vec3 aP;attribute vec3 aN;attribute vec2 aT;uniform mat4 uM;uniform vec3 uL;uniform float uAmb;uniform float uSol;uniform vec3 uO;varying vec2 vT;varying float vL;varying float vD;void main(){vL=uAmb+uSol*max(dot(normalize(aN),uL),0.);vT=aT;vD=length(aP-uO);gl_Position=uM*vec4(aP,1.);}';
 const FS = 'precision mediump float;uniform vec3 uF;uniform vec2 uFR;varying vec3 vC;varying float vD;void main(){float f=clamp((vD-uFR.x)/(uFR.y-uFR.x),0.,1.);gl_FragColor=vec4(mix(vC,uF,f),1.);}';
 const FT = 'precision mediump float;uniform sampler2D uS;uniform vec3 uF;uniform vec2 uFR;varying vec2 vT;varying float vL;varying float vD;void main(){float f=clamp((vD-uFR.x)/(uFR.y-uFR.x),0.,1.);gl_FragColor=vec4(mix(texture2D(uS,vT).rgb*vL,uF,f),1.);}';
+const FSH = 'precision mediump float;varying vec3 vC;uniform float uAlpha;void main(){gl_FragColor=vec4(vC,uAlpha);}';
 const FC = 'precision mediump float;varying vec3 vC;void main(){gl_FragColor=vec4(vC,1.);}';
 const VC = 'attribute vec2 aP;attribute vec3 aC;varying vec3 vC;void main(){vC=aC;gl_Position=vec4(aP,0.999,1.);}';
 class VistaGL {
@@ -55,11 +107,11 @@ class VistaGL {
     try { this.gl = this.cv && this.cv.getContext && (this.cv.getContext('webgl', { antialias: true, alpha: false }) || this.cv.getContext('experimental-webgl')); } catch (e) { this.gl = null; }
     if (!this.gl) return; const gl = this.gl;
     const prog = (v, f) => { const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; }; const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, v)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, f)); gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); const u = {}, a = {}; const nu = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS), na = gl.getProgramParameter(p, gl.ACTIVE_ATTRIBUTES); for (let i = 0; i < nu; i++) { const n = gl.getActiveUniform(p, i).name; u[n] = gl.getUniformLocation(p, n); } for (let i = 0; i < na; i++) { const n = gl.getActiveAttrib(p, i).name; a[n] = gl.getAttribLocation(p, n); } return { p, u, a }; };
-    try { this.pC = prog(VS, FS); this.pT = prog(VT, FT); this.pS = prog(VC, FC); this.ok = true; } catch (e) { MC.falla('WebGL', e); this.ok = false; }
-    this.dyn = gl.createBuffer(); this.cielo = gl.createBuffer(); this.aniso = gl.getExtension('EXT_texture_filter_anisotropic') || gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
+    try { this.pC = prog(VS, FS); this.pT = prog(VT, FT); this.pS = prog(VC, FC); this.pSh = prog(VS, FSH); this.ok = true; } catch (e) { MC.falla('WebGL', e); this.ok = false; }
+    this.dyn = gl.createBuffer(); this.cielo = gl.createBuffer(); this.bufSombras = gl.createBuffer(); this._sombrasCache = null; this.aniso = gl.getExtension('EXT_texture_filter_anisotropic') || gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
   }
   _vbo(arr) { const gl = this.gl, b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(arr), gl.STATIC_DRAW); return { b, n: arr.length }; }
-  liberar() { const gl = this.gl; for (const r of this.regiones.values()) this._borrar(r); this.regiones.clear(); if (this.lejos) { for (const b of this.lejos) gl.deleteBuffer(b.b); this.lejos = null; } }
+  liberar() { const gl = this.gl; for (const r of this.regiones.values()) this._borrar(r); this.regiones.clear(); this._sombrasCache = null; if (this.lejos) { for (const b of this.lejos) gl.deleteBuffer(b.b); this.lejos = null; } }
   _borrar(r) { const gl = this.gl; if (r.suelo) gl.deleteBuffer(r.suelo.b); if (r.cosas) gl.deleteBuffer(r.cosas.b); if (r.tex) gl.deleteTexture(r.tex); }
   /* relieve lejano: bloques de 8 × 8 celdas de 240 m con colores por suelo (las montañas que rodean el valle) */
   _lejos() {
@@ -144,6 +196,30 @@ class VistaGL {
     /* regiones: suelo con su losa */
     gl.useProgram(this.pT.p); uni(this.pT); gl.activeTexture(gl.TEXTURE0); gl.uniform1i(this.pT.u.uS, 0);
     for (const r of this.regiones.values()) { gl.bindTexture(gl.TEXTURE_2D, r.tex); gl.bindBuffer(gl.ARRAY_BUFFER, r.suelo.b); this._attr(this.pT, [['aP', 3], ['aN', 3], ['aT', 2]], 8); gl.drawArrays(gl.TRIANGLES, 0, r.suelo.n / 8); }
+    /* C-M27: sombras solares planas sobre el terreno antes de dibujar volúmenes.
+       Cache por celda de ~25 m, para no reconstruir centenares de triángulos por cuadro.
+       Se desactivan con noche, lluvia fuerte o calidad baja (respaldo visual del 2D). */
+    if (cal > .48 && sol.z > .16 && S.luzSol > .2 && this.pSh) {
+      const clave = [Math.floor(cx / 25), Math.floor(cy / 25), Math.round(sol.x * 10),
+        Math.round(sol.y * 10), Math.round(sol.z * 10), ...O].join('/');
+      if (!this._sombrasCache || this._sombrasCache.clave !== clave) {
+        const geometria = Sombras3D.generar(M, O, sol, cx, cy);
+        this._sombrasCache = { clave, n: geometria.length / 10 };
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.bufSombras);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometria), gl.DYNAMIC_DRAW);
+      }
+      if (this._sombrasCache.n) {
+        const alpha = clamp(S.luzSol * (1 - lluvia * .5) * .33, .05, .33);
+        const cull = gl.isEnabled(gl.CULL_FACE);
+        gl.disable(gl.CULL_FACE); gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.depthMask(false); gl.useProgram(this.pSh.p); uni(this.pSh);
+        gl.uniform1f(this.pSh.u.uAlpha, alpha);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.bufSombras);
+        this._attr(this.pSh, [['aP', 3], ['aN', 3], ['aC', 3], ['aE', 1]], 10);
+        gl.drawArrays(gl.TRIANGLES, 0, this._sombrasCache.n);
+        gl.depthMask(true); gl.disable(gl.BLEND); if (cull) gl.enable(gl.CULL_FACE);
+      }
+    }
     gl.useProgram(this.pC.p); uni(this.pC);
     for (const r of this.regiones.values()) if (r.cosas) { gl.bindBuffer(gl.ARRAY_BUFFER, r.cosas.b); this._attr(this.pC, [['aP', 3], ['aN', 3], ['aC', 3], ['aE', 1]], 10); gl.drawArrays(gl.TRIANGLES, 0, r.cosas.n / 10); }
     const D = this._dinamico(E); if (D.length) { gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(D), gl.DYNAMIC_DRAW); this._attr(this.pC, [['aP', 3], ['aN', 3], ['aC', 3], ['aE', 1]], 10); gl.drawArrays(gl.TRIANGLES, 0, D.length / 10);
@@ -155,4 +231,4 @@ class VistaGL {
   /* metros del mundo → píxel de la pantalla (para etiquetas encima de la 3D) */
   aPantalla(x, y, z, W, H) { if (!this.mvp || !this.O) return null; const m = this.mvp, X = x - this.O[0], Y = z - this.O[2], Z = y - this.O[1], cw = m[3] * X + m[7] * Y + m[11] * Z + m[15]; if (cw <= .1) return null; return [(m[0] * X + m[4] * Y + m[8] * Z + m[12]) / cw * W / 2 + W / 2, -(m[1] * X + m[5] * Y + m[9] * Z + m[13]) / cw * H / 2 + H / 2]; }
 }
-Object.assign(MC, { VistaGL, Malla, M4 });
+Object.assign(MC, { VistaGL, Malla, M4, Sombras3D });
