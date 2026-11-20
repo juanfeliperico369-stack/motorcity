@@ -1,0 +1,40 @@
+name: Turno Cero · validación de activos 3D
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'juegos/getaway/arte3d/**'
+      - 'docs/GETAWAY-ESPIONAJE-3D.md'
+      - '.github/workflows/getaway-3d-assets.yml'
+  push:
+    paths:
+      - 'juegos/getaway/arte3d/**'
+      - 'docs/GETAWAY-ESPIONAJE-3D.md'
+      - '.github/workflows/getaway-3d-assets.yml'
+jobs:
+  gltf:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generar 42 GLB originales (sin dependencias externas)
+        run: python3 juegos/getaway/arte3d/generar_modelos.py
+      - name: Comprobar cabeceras GLB, JSON y geometría
+        run: python3 juegos/getaway/arte3d/pruebas-modelos.py
+      - name: Comprobar que se generaron 42 activos
+        run: |
+          test "$(find juegos/getaway/arte3d/modelos -name '*.glb' -type f | wc -l)" -eq 42
+      - uses: actions/upload-artifact@v4
+        with:
+          name: turno-cero-42-modelos-glb
+          path: |
+            juegos/getaway/arte3d/modelos/*.glb
+            juegos/getaway/arte3d/manifest.json
+            juegos/getaway/arte3d/README.md
+            docs/GETAWAY-ESPIONAJE-3D.md
+          if-no-files-found: error
+          retention-days: 14
