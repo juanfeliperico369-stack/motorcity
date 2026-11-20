@@ -289,6 +289,22 @@ if (fs.existsSync(gu)) {
     'C-M26: patrullas detrás del jugador, física, casi choques sin duplicado y cierre seguro');
 }
 
+{ /* C-M26: sin conexión vial = patrulla frena; nunca persigue en línea recta. */
+  const fuga = new MC.Persecucion(M, { duracion: 5 });
+  let orden = null;
+  const fake = { x: col.x + 50, y: col.y + 10, v: 4, a: 0,
+    actualizar: (dt, e) => { orden = e; } };
+  fuga.estado = 'activa';
+  fuga.rivales = [{ id:'patrulla-0', cuerpo:fake, ruta:null, tiempoRuta:0, tactica:'seguir' }];
+  const rutaAntes = MC.Manejo.rutaA;
+  try {
+    MC.Manejo.rutaA = () => [col.x, col.y]; // contrato: sin camino entre componentes
+    fuga.actualizar(1/60, { x: col.x, y: col.y, a:0, v:12, veh:{ ancho:1.8 } }, []);
+  } finally { MC.Manejo.rutaA = rutaAntes; }
+  ok(!!orden && orden.acel < 0 && !orden.dir && fuga.rivales[0].ruta === null,
+    'C-M26: sin conexión entre calles la patrulla frena y no atraviesa edificios');
+}
+
 { /* C-M27: sombra procedimental de sol, geometría finita y noche sin sombras. */
   const M0 = { cota: () => 0, edificiosEn: () => [] };
   const casa = { x: 40, y: 40, h: 8 };

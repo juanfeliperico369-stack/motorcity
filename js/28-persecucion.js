@@ -79,11 +79,22 @@ class Persecucion {
         const adelante = p.tactica === 'cerrar' ? clamp(Math.abs(jugador.v || 0) * 1.1, 5, 25) : 0;
         const meta = { x: jugador.x + Math.cos(jugador.a || 0) * adelante,
           y: jugador.y + Math.sin(jugador.a || 0) * adelante };
-        p.ruta = MC.Manejo.rutaA(this.mundo, C, meta, 'rueda');
+        const propuesta = MC.Manejo.rutaA(this.mundo, C, meta, 'rueda');
+        /* rutaA devuelve un único punto cuando la red está desconectada.
+           Ese respaldo sirve para «tocar para ir», pero una patrulla no debe atravesar manzanas. */
+        p.ruta = Array.isArray(propuesta) && propuesta.length >= 4 ? propuesta : null;
         p.tiempoRuta = 1.5 + (p.id.charCodeAt(p.id.length - 1) % 3) * .25;
       }
+      if (!p.ruta) {
+        C.actualizar(dt, { acel: -.4, giro: 0 });   // sin ruta, frenar y volver a calcular
+        continue;
+      }
       const m = MC.Manejo.seguirRuta(C, p.ruta, { radio: 4 });
-      const meta = m && m.dir ? [C.x + m.dir.x * 8, C.y + m.dir.y * 8] : [jugador.x, jugador.y];
+      if (!m || !m.dir) {
+        C.actualizar(dt, { acel: -.4, giro: 0 });
+        continue;
+      }
+      const meta = [C.x + m.dir.x * 8, C.y + m.dir.y * 8];
       const fuerza = MC.IA.llegar([C.x, C.y], meta, 1, 4);
       C.actualizar(dt, { dir: { x: fuerza[0], y: fuerza[1], m: clamp(Math.hypot(...fuerza), .35, 1) } });
     }

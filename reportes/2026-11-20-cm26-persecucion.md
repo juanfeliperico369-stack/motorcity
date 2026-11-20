@@ -22,3 +22,6 @@ Se integra un escenario Chromium real con viewport móvil 412×860: entrar en Ma
 
 ## Corrección de accesibilidad y zona libre
 La ejecución de Chromium #44758066009 mostró que el botón «Persecución», por su etiqueta larga, estiró toda la columna flotante hasta x=322 px (viewport 412), invadiendo 7–8 px la zona libre. El reto y las patrullas funcionaron, pero fallaron dos validaciones de UI. Se fija la columna con ancho responsive 48–66 px según el viewport y el texto visual se recorta con puntos suspensivos; su etiqueta ARIA completa sigue disponible. Se requiere volver a ejecutar el E2E para confirmar que los controles ya no invaden la escena.
+
+## Corrección adicional: ruta A* desconectada
+El planificador `MC.Manejo.rutaA` puede devolver solo las coordenadas de destino cuando no encuentra conexión. Una patrulla no debe usar esa línea recta a través de edificios: ahora rechaza rutas con menos de dos puntos (4 componentes), frena y reintenta en el siguiente ciclo. Se añadió una regresión con planificador que devuelve una ruta imposible. Esto es importante en Guatapé, donde se han detectado componentes viales desconectados (C-M23).
