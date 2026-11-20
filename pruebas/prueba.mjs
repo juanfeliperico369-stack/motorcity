@@ -271,6 +271,24 @@ if (fs.existsSync(gu)) {
     'G-H1: las etiquetas del mundo no se pintan debajo de los controles del juego', textos);
 }
 
+{ /* C-M26: reto optativo; nace detrás, circula por red real, bonus sin impacto. */
+  const q = M.viaCercana(col.x, col.y, 100);
+  const P = new MC.Persecucion(M, { nivel: 1, duracion: .6 });
+  const jugador = { x: q.x, y: q.y, a: q.ang, v: 12, veh: { ancho: 1.8 } };
+  const empezo = P.iniciar(jugador);
+  const tras = P.vehiculos();
+  const detras = tras.every(c => Math.hypot(c.x - jugador.x, c.y - jugador.y) > 20);
+  const t = { id: 'vehiculo-test', x: jugador.x + 2.9, y: jugador.y, v: 9, ancho: 1.8 };
+  const premio = P.casiChoques(jugador, [t]), repetido = P.casiChoques(jugador, [t]);
+  P.actualizar(1 / 30, jugador, []);
+  const fisicos = P.vehiculos().every(c => Number.isFinite(c.x) && Number.isFinite(c.y) && c.tipo === 'carro');
+  const puntos = P.puntos, turbo = P.turbo;
+  P.parar('cancelada');
+  ok(empezo && detras && premio === 1 && repetido === 0 && puntos === 100 && turbo > 0 &&
+    fisicos && P.estado === 'inactiva' && P.vehiculos().length === 0,
+    'C-M26: patrullas detrás del jugador, física, casi choques sin duplicado y cierre seguro');
+}
+
 console.log('15) Terreno: agua, montañas, rocas y límites de paso');
 { /* agua real: el embalse de Guatapé es lago y se hace más hondo lejos de la orilla; Medellín tiene su río */
   const MG = new MC.Mundo(new Uint8Array(fs.readFileSync(gu)), JSON.parse(fs.readFileSync(path.join(RAIZ, 'ciudades/guatape.json'), 'utf8'))), AG = MC.Terreno.agua(MG), grande = AG.C.slice().sort((a, b) => b.area - a.area)[0];

@@ -1,5 +1,12 @@
 # Bitácora de Motor City
 
+## 20-nov-2026 · 3.1.0 · Persecución optativa en Mandados
+- C-M26: clase pública `MC.Persecucion` con patrullas y pilotos que recomputan rutas A* por calles, un seguidor y otro que busca cortar el paso. Motor físico de `MC.Cuerpo`, sin atravesar edificios por «IA» de línea recta.
+- Reto voluntario de 90 segundos con botón para iniciar/salir; disponible en moto o carro, con huellas de vehículo en el mismo mundo 3D/2D, cámara de seguimiento sin saltos y captura si el jugador se detiene.
+- Los casi choques con tráfico no dan puntos en contacto ni a baja velocidad; bonus de turbo de duración corta y máximo una recompensa por ID de vehículo.
+- Comprobaciones deterministas de aparición fuera del jugador, física, bonos y cierre en `pruebas/prueba.mjs`. **No declarar validada la 3.1.0 hasta que CI con Node y Chromium pase en este commit.**
+
+
 ## 20-nov-2026 · 3.0.1 · Objetos de barrio y persistencia (ChatGPT)
 - C-M29 / G-H17 (entrega parcial): 30 tipos de mobiliario urbano en `js/32-objetos.js` y tamaños **aproximados para diseño** en `contenido/objetos-gemini.json`.
 - IDs estables por origen de los objetos: restauración de desplazamientos, velocidad, orientación y daño con `MC.GuardadoSectores`.
