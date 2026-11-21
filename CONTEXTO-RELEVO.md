@@ -12,7 +12,8 @@
 > 3. **Nunca borres la entrada de otra IA.** Este documento es un relevo: se suma, no se reescribe.
 > 4. A la IA que venga después de ti pásale la misma instrucción: **también debe hacer y dejar su documento de contexto** (su entrada aquí y su ficha en `coord/`).
 
-**Última actualización:** 21‑nov‑2026, Gemini · Antigravity (sincronizado con motor **4.0.3** de Claude + ingeniería inversa limpia de motores clásicos + paquete de arte pintado).
+**Última actualización:** 21‑nov‑2026, Gemini · Antigravity (sincronizado con motor **4.1.0** de Claude `2d4118f`: auditoría móvil 4.1.0 de `🏁 Arcade`, `⛰️ Vuelo`, sigilo Thief `#gema`/`👂`, mundo abierto primero en Turno Cero + El Metro + EnCicla, y catálogo `G‑H27`).
+- Base integrada de Claude (**4.1.0**): unió entregas 4.0.3 de ChatGPT/Codex y Gemini/Antigravity, y trajo motores clásicos (`js/47-clasicos.js`: OutRun, Comanche, Thief, Wolfenstein, Elite) y «mundo abierto primero» en Turno Cero.
 
 **Rama de trabajo:** `claude/motor-city-engine-xu7p4y` en los cuatro repositorios. Las otras IA trabajan en sus ramas (`ia/<agente>/<tema>`, entrega Gemini en `ia/antigravity/motorcity-4.0`). `main` de `motorcity` se avanza en rápido para GitHub Pages.
 
@@ -42,7 +43,8 @@
 | Juegos | `node motor.mjs sincronizar ../BicicletasUno` y `../MetroZero`. Después, en cada juego, sus pruebas:<ul><li>EnCicla: `node tools/build.js && node tests/run.js`;</li><li>El Metro: `node tools/build.mjs && node tools/test.mjs 100 && node tools/todo.mjs`;</li><li>Run: `node tools/build.mjs && node tools/sim.mjs 100 240`.</li></ul> |
 
 ## 3. Estado (21‑nov‑2026)
-- **Motor 4.0.3**, con las entregas de ChatGPT/Codex y de Gemini/Antigravity unidas, y 152 pruebas en verde. Ya trae:
+- **Motor 4.1.0**, con las entregas de ChatGPT/Codex y de Gemini/Antigravity unidas, y todas las pruebas en verde. Lo nuevo:
+  - **motores clásicos** en `js/47-clasicos.js`: las vistas 🏁 Arcade (OutRun) y ⛰️ Vuelo (Voxel Space), la gema y el ruido de Thief, el DDA y las semillas de Elite. Ver `docs/INVESTIGACION-MOTORES-CLASICOS.md`. Ya trae:
   - **`MC.Planeta`**: anillo de ciudades y carreteras generadas, globo y horizonte curvo;
   - **`MC.Busqueda`**: búsqueda de 0 a 5 con los umbrales de Codex y la última posición vista;
   - **`MC.Modelos`**: lector GLB, con piel y animación glTF, faros de noche y abolladuras por zona;
@@ -66,6 +68,7 @@
 | 3.0–3.1 | Mundo único 3D con cámaras aéreas, fachadas, árboles low-poly, `MC.Objetos`, mapa grande; `MC.Persecucion` (Codex) y sombras solares (Codex) |
 | 4.0 | Todo lo de § 3, más Manhattan craqueado y `docs/TURNO-CERO.md` |
 | 4.0.2 | Reversa y vuelta en tres puntos; `MC.Manejo.pilotar` (la IA sale de atascos); `rutaA` por la forma de la calle. En Turno Cero: Run en la ciclovía, carreras, guardias a pie y accesibilidad. |
+| 4.1.0 | Motores clásicos, rehechos desde cero:<ul><li>`MC.Arcade`: carretera pseudo-3D;</li><li>`MC.VoxelSpace`: vuelo;</li><li>`MC.Sigilo`: gema de luz y ruido por caminos;</li><li>`MC.DDA` y `MC.Semilla`.</li></ul>En Turno Cero: sigilo con gema y oído, y las cámaras 🏁 y ⛰️. |
 | 4.0.3 | Unidas las entregas de ChatGPT/Codex (globo WebGL2, sectores de 1 km, LOD, piezas, audio, acción a pie con línea de visión) y de Gemini/Antigravity (auditoría, 56 paradas). Claude terminó lo que quedó a medias: la prueba roja de la línea de visión, el lenguaje suave con concordancia, lo que faltaba de G‑H20/G‑H21 y las zonas Z1/Z2 de El Metro. |
 | 4.0.1 | Relevo (este documento y `coord/`), luces y abolladuras de los GLB, motor y Doppler, dron policial 3D, reducción no letal, alejar hasta el planeta, eventos de carretera, contratos nuevos y arte de portada |
 
@@ -84,6 +87,8 @@
 | 10 | **Combate a pie más allá de reducir**: cobertura, guardias que persiguen a pie, esquivar | Codex (C‑M32) | Ya están ✊ Reducir y los conos |
 | 11 | **Los arreglos de Codex en EnCicla** (no llegaron a GitHub: solo se subió su ficha `coord/agentes/codex.json`) | Codex | Hay que volver a hacerlos y subirlos a `codex/encicla-motorcity`:<ul><li>bici prestada (`82-prestamo.js`);</li><li>acceso sin aparcamiento (`68-ciudad.js`, `69-libre.js`);</li><li>gasto de la eléctrica (`92-vehiculos.js`; hoy la columna `drain` solo se usa en las eléctricas);</li><li>evento de montar rechazado (`94-revolucion.js`);</li><li>hojas de trama viejas a `stats.leaves` (`00-core.js`, `93-trama.js`);</li><li>`tests/regresion-encicla.js`.</li></ul>Lo de meter `motor-city/dist/motor.js` entero en EnCicla hay que medirlo antes: pesa varios MB. |
 | 12 | **El Metro: zonas Z3, Z4 y Z5 de Antigravity** | Antigravity (o quien las reclame en `MetroZero/.ai-coord/`) | Libres:<ul><li>`37-cronicas.js`;</li><li>`15-mc-puente.js`;</li><li>`48-planificador.js` y `49-guatape.js`.</li></ul>Claude ya hizo Z1 y Z2 en `src/js/98-relevo-z1.js`. |
+| 13 | **Lo que falta de los motores clásicos** (detalle en `docs/INVESTIGACION-MOTORES-CLASICOS.md` § 2) | Codex, con Claude | <ul><li>PVS de Quake para los sectores de Manhattan;</li><li>caché de superficies y lightmaps para las fachadas;</li><li>COLORMAP de Doom para el pixel y el 1 bit;</li><li>sectores y portales de Build para los interiores;</li><li>direccionales como guía, sin HUD (*The Getaway*);</li><li>tope de modelos de tráfico (GTA III).</li></ul> |
+| 14 | **Probar 🏁 Arcade y ⛰️ Vuelo en un celular real** (fluidez y tirones) + corregir 3 bugs ALTA de 4.1.0 | Autor (celular físico) / Claude (bugs 4.1.1) | **Base VM + 18 capturas listas en `reportes/2026-11-21-gemini-clasicos-4.1.md`:** Vuelo `2,4–2,8 ms` (`cuadroMs p50 33,3 ms`, reconstrucción por franjas probada en `626–782 m` sin congelar); **bugs ALTA detectados:** 1) `MC.Arcade` no limpia `hor..H` en giros/pendientes de ciudad (deja 35 % inferior fantasma), 2) en móvil táctil `⚡` no activa `correr` a pie (`vMax = 1,53 m/s < 4,2` → imposible disparar `👂 pasos` y siempre `agachado: true`), 3) `⏸ Menú` sigue cortado arriba (`-259 px`), 4) El Metro y EnCicla aún no entran al mundo abierto en 1 toque. Falta llenar tabla § 1.4 en celular físico con GPU. |
 
 ## 6. Protocolo entre IAs (sin mediador), adoptado de Antigravity y Codex
 - **Una rama por agente:** `ia/<agente>/<tema>` o `<agente>/<tema>`. Nunca `push --force` sobre la rama de otro, ni sobre `main` ni sobre `gh-pages`.
@@ -100,6 +105,7 @@
 - **Si dos soluciones chocan,** gana la que pase las pruebas, pese menos en KB y dé menos ms por cuadro (`MC.Telemetria`). Las mejoras que no se excluyen se suman.
 
 ## 7. Reglas que no se negocian
+- **Mundo abierto desde el principio** (pedido del autor, 4.1): en todos los juegos se entra a jugar de una. La historia, el tutorial y el contexto son opcionales y nunca bloquean.
 - Un solo HTML, sin internet en el juego, y español de Colombia.
 - No romper los guardados. El de Turno Cero es `motorcity.turnocero-v1`.
 - Turno Cero es para adultos (18+) y **no se mezcla** con EnCicla, El Metro ni Run, que son para todo público.
@@ -216,6 +222,37 @@
 - **Hecho:** `MC.Sectores1km`: sectores de 1 km con caché LRU de metadatos; limita a 36 las regiones de edificios ED1 decodificadas cerca de la cámara de Manhattan, cada 2 s. El mundo sigue funcional fuera de la caché porque ED1 crudo permanece disponible.
 - **Prueba:** en Node se crean 90 regiones ficticias y el sectorizador reduce a <=20 sin perder la API; se conservan guardados.
 - **No hecho:** el MC4 comprimido de 10,2 MB y las capas de suelo, relieve y viales siguen cargándose en el juego completo. Streaming real necesita dividir el formato/binarios en construcción y lector sectorizado.
+### Claude · 21‑nov‑2026 · 4.1.0 · motores clásicos
+- **Pedido del autor:**
+  - investigar motores viejos, livianos y potentes, y cómo los usaron los mejores juegos;
+  - hacerles ingeniería inversa;
+  - traer partes de las versiones liberadas.
+- **Hecho:**
+  - **la investigación con fuentes y licencias:** `docs/INVESTIGACION-MOTORES-CLASICOS.md`. Es sala limpia: el código GPL (Doom, Quake) y el de licencias propias (Build, Wolfenstein) solo se leen como documentación, y **el código filtrado o «reversado» de GTA III no se usa**;
+  - **`js/47-clasicos.js`:**
+    - `MC.Arcade`: la vista 🏁, carretera pseudo-3D de OutRun sobre la vía real;
+    - `MC.VoxelSpace`: la vista ⛰️, el vuelo de Comanche;
+    - `MC.Sigilo`: la gema y el ruido de Thief;
+    - `MC.DDA`: Wolfenstein;
+    - `MC.Semilla`: Elite;
+  - **Turno Cero (`55-clasicos.js`):** el sigilo con gema ◆ y oído de los guardias, y las cámaras nuevas en 🎥;
+  - **Turno Cero, mundo abierto desde el principio** (pedido del autor):
+    - ▶ «Jugar · mundo abierto» es el primer botón;
+    - la historia es 📖 opcional: en la portada, el botón 📖 del juego, ⏸ Menú y la tecla H;
+    - la casilla «Entrar directo» salta la portada;
+    - **no vuelvas a poner la historia ni el tutorial como paso obligatorio.**
+- **Probé:**
+  - `node pruebas/prueba.mjs`, § 22 (números verificables);
+  - el banco de Chromium con 11 vistas;
+  - capturas a `412 × 860` en Medellín y en la Autopista del Embalse, de día y de noche.
+- **Riesgo:**
+  - la vista Vuelo arma su ventana de 2 km la primera vez de una sola vez (puede tardar unos 0,3 s en un celular);
+  - la vista Arcade en la ciudad sigue la calle más cercana, y en cruces complejos puede escoger otra;
+  - el ruido de Thief usa `edificioEn` por celda: está bien para unos pocos guardias, pero no lo uses cada cuadro para cientos.
+  - **prueba ocasionalmente roja:** en el banco de Chromium, el rival de la carrera callejera a veces no arranca en 9 s (pasó 1 de 3 veces, con 10 m en lugar de más de 40). Es del piloto de la IA de 4.0.2 con rutas al azar, no de 4.1. Si se repite, revisar `MC.Manejo.pilotar` en la salida.
+- **Sigue:** § 5, filas 13 y 14, además de lo anterior.
+- **A la IA que siga:** al terminar, **escribe tu entrada aquí**, deja tu ficha en `coord/agentes/` y un mensaje en `coord/buzon/`, y pídele lo mismo a la siguiente.
+
 ### Claude · 21‑nov‑2026 · 4.0.3 · terminar lo de las otras IA antes de que se queden sin uso
 - **Pedido del autor:** «ayúdalos a completar las tareas, están por quedar sin uso».
 - **Hecho:**
@@ -324,5 +361,38 @@
   3. **Claude / Codex:** integrar `CulleoUrbano` (`93,5–95,0 %` descarte medido en MC4 real), `hornearAOUrbano`, `FisicaDriver`, `PoolParticulas` y `EscaladorDinamico` de `mc-clasico.js`, corregir encuadre/etiquetas de `MC.GloboGPU` y adoptar `arte/gemini/turno-cero/`;
   4. **Autor / QA físico:** medición real con GPU física en celular Android/iOS (tabla § 1.3 de `reportes/2026-11-21-gemini-turno-cero.md`).
 - **Instrucción obligatoria para la siguiente IA (Claude, Codex, ChatGPT o quien siga):** antes de cerrar tu turno, **DEBE quedar tu propio documento de contexto y relevo**: suma tu entrada aquí en `CONTEXTO-RELEVO.md` § 8 (sin borrar las anteriores), actualiza § 3/§ 5 si cambiaron, actualiza tu ficha en `coord/agentes/<tu-id>.json`, deja un mensaje nuevo en `coord/buzon/` y **especifícale exactamente esta misma regla a la siguiente IA**.
+
+### Gemini · Antigravity («hydrogen») · 21‑nov‑2026 (fase 5) · sincronizado a 4.1.0 y auditoría completa `G‑H25`, `G‑H26`, `G‑H27` y `G‑H28` (`ia/antigravity/motorcity-4.0`)
+- **Hecho (todas las tareas de Gemini en `TAREAS-IA.md` § 4.1 completadas, 100 % aditivo, 0 ediciones en `js/`, `herramientas/`, `pruebas/` ni `juegos/`):**
+  - **Sincronización con Motor City 4.1.0 (`2d4118f`):** fusionado `origin/main` limpio sin tocar archivos del motor ni del juego.
+  - **`G‑H25`, `G‑H26` y `G‑H28`:** reporte [`reportes/2026-11-21-gemini-clasicos-4.1.md`](reportes/2026-11-21-gemini-clasicos-4.1.md) + **18 capturas WebP `412×860`** (`reportes/img/clasicos-4.1/`, `455,5 KB`, revisadas visualmente una por una):
+    - **`G‑H25` (🏁 Arcade y ⛰️ Vuelo · ciudad y carretera · día y noche):**
+      - `MC.VoxelSpace` corrió fluido en VM (`vistasMs p50 = 1,49–2,79 ms`, `cuadroMs p50 = 33,3 ms`) y superó el estrés de avanzar `626–782 m` (Medellín, Ruta del Atlántico y Guatapé) reconstruyendo la ventana por franjas en ~`1,0 s` sin congelar (`preparar` inicial `57,6–102,4 ms`; pico aislado `288 ms` al reasignar 2,8 MB en `_iniciar`);
+      - **BUG VISUAL ALTA en `MC.Arcade` (`js/47-clasicos.js:152`):** en giros/pendientes urbanas (p. ej. Calle 9, El Poblado), no pinta fondo debajo del horizonte (`hor..H`), dejando el **32–35 % inferior del lienzo congelado** con el mapa anterior o un «doble carro fantasma» (`03-arcade-poblado-dia.webp`, `04-arcade-poblado-noche.webp`); además el haz `lighter` nocturno sobreexpone el horizonte a blanco (`07-arcade-horizonte-noche.webp`) y los trapecios dejan costuras de 1 px.
+      - Incluye plantilla en blanco (§ 1.4) para la medición en celular físico con GPU.
+    - **`G‑H26` (Sigilo a lo Thief en Muelle 4 y Bodega 9):**
+      - `#gema` (`37×37 px`) se ubica bien en `412×860` (`y=631..667`, `0` solapamientos), y el oído `MC.Sigilo.ruido` sí rodea muros (`6,3 m` recto → `9,7 m` rodeando, caminar lento `0` alertas);
+      - **BUG CRÍTICO MÓVIL (`juegos/getaway/20-juego.js:200` + `55-clasicos.js:24,27`):** `js/33-controles.js:50` liga `correr` a `B.has('correr')`, pero en móvil solo existe `⚡` (`turbo`). Medido: **`vMaxMovilConTurbo = 1,53 m/s`** frente a **`vMaxTecladoShift = 4,52 m/s`** — en celular es **imposible correr a pie y activar `👂 Un guardia oyó tus pasos` (`v > 4,2`)**, y Mara queda permanentemente `agachado: true` (`1,53 < 1,6`). Además, los faros del tráfico suman luz de día y a través de muros.
+    - **`G‑H28` («Mundo abierto primero» en 3 juegos):**
+      - **Turno Cero 4.1.0: ✅ CUMPLE** (`▶ Jugar · mundo abierto` → Medellín en **`1,99 s`** y 1 toque, `📖 Historia` visible en 4 puntos, `Entrar directo` salta portada en `1,99 s` y `?portada` la devuelve). **Persiste el bug ALTA de 4.0.3 en `⏸ Menú`** (`primerBotonTop: -259 px` con 11 opciones).
+      - **El Metro (`MetroZero` `v0.2.0`): ❌ PENDIENTE** (`▶ JUGAR` abre `MODOS` con `Historia` #1 y `Ciudad Libre` #3 cortado → 2º toque abre grilla con **14/15 estaciones bloqueadas**, requiere **3 toques** + tiene 3 `404` de favicon y textos sobre ilustraciones).
+      - **Juega EnCicla (`BicicletasUno` `v1.7.1`): ❌ PENDIENTE** (`▶ Jugar` abre modal **`BIENVENIDA · 1 DE 4`** y tras `Saltar` abre un **2º muro modal obligatorio `Crea tu personaje`** con botón bajo el pliegue → requiere **≥ 4 toques + scroll**).
+  - **`G‑H27` (Catálogo ampliado de técnicas clásicas en sala limpia):** [`reportes/2026-11-21-gemini-tecnicas-clasicas-extra.md`](reportes/2026-11-21-gemini-tecnicas-clasicas-extra.md) con fuentes públicas y licencias verificadas para ***Driver***, ***Midtown Madness*** (ARTS/AGE), ***Hard Drivin'***, ***Stunt Car Racer***, ***Crazy Taxi*** (+ nota de patente expirada US 6,200,138), ***The Getaway***, ***Burnout 3***, ***Jak & Daxter***, ***Shadow of the Colossus***, ***Silent Hill***, ***Unreal 1*** y 3 motores permisivos auditables (**Cube 2 `zlib`**, **Irrlicht `zlib`**, **Torque 3D `MIT`**).
+  - **Protocolo `coord/`:** actualizados `coord/agentes/antigravity.json` (`base: "2d4118f"`, `version_motor: "4.1.0"`), `reportes/README.md` y buzón `coord/buzon/20261121-0530-antigravity-clasicos-4.1.md`.
+- **Cómo lo probé:**
+  - `node motor.mjs prueba` (**141/141 verde**, `13,6 s`), `node pruebas/getaway-contenido.mjs` (**verde**), `node experimentos/tecnicas-clasicas/prueba-clasico.mjs` (**6/6 verde**);
+  - Playwright `412×860` DPR 2 sobre `dist/juegos/getaway.html` (`0` errores consola), `MetroZero/dist/index.html` (`3` errores `404` favicon) y `BicicletasUno/dist/juega-encicla.html` (`0` errores), con 18 capturas WebP inspeccionadas visualmente;
+  - verificado `git diff origin/main -- js/ herramientas/ pruebas/ juegos/` vacío (0 ediciones en código del motor/juego) y `node motor.mjs documento` regenerado.
+- **Falta (prioridad inmediata para la siguiente IA):**
+  1. **Claude (URGENTE — 4.1.1):**
+     - pintar fondo inferior `fillRect(0, hor, W, H - hor)` en `MC.Arcade` (`js/47-clasicos.js:152`) + bajar `lighter` nocturno y solapar `±0,6 px` en `trap()`;
+     - mapear `⚡` a `e.correr` cuando `V.clase === 'pie'` (`juegos/getaway/20-juego.js:200`), ajustar `agachado` (`v < 1.0`) y pasos (`C.corriendo && v > 2.8`), y filtrar faros de tráfico por `noche` + `!MC.DDA.bloqueado` (`55-clasicos.js`);
+     - corregir recorte superior de `⏸ Menú` (`-259 px` en `412×860`, `js/56-ui.js`);
+     - evacuar ciudad previa en `MC.Planeta` (`StreamAnillo`, ahorra ~190–210 MB) y usar doble buffer en `MC.VoxelSpace._iniciar`.
+  2. **Codex / Claude (`G‑H28` en juegos hermanos):** alinear `MetroZero` (1 toque a Ciudad Libre + 15 estaciones libres + arreglar 3 `404` favicon) y `BicicletasUno` (1 toque a pedalear sin bloquear con `BIENVENIDA` ni `Crea tu personaje`).
+  3. **Codex (4.1 fuertes):** `C‑M37` (PVS Quake Manhattan), `C‑M38` (portales Build), `C‑M39` (COLORMAP Doom), `C‑M40` (direccionales *The Getaway*), `C‑A18` (capas Arcade por bioma), además de `arte/gemini/turno-cero/` y `mc-clasico.js`.
+  4. **Autor / QA físico:** llenar tabla § 1.4 de `reportes/2026-11-21-gemini-clasicos-4.1.md` (Arcade/Vuelo) y tabla § 1.3 de `reportes/2026-11-21-gemini-turno-cero.md` en celular físico con GPU.
+- **Instrucción obligatoria para la siguiente IA (Claude, Codex, ChatGPT o quien siga):** antes de cerrar tu turno, **DEBE quedar tu propio documento de contexto y relevo**: suma tu entrada aquí en `CONTEXTO-RELEVO.md` § 8 (sin borrar las anteriores), actualiza § 3/§ 5 si cambiaron, actualiza tu ficha en `coord/agentes/<tu-id>.json`, deja un mensaje nuevo en `coord/buzon/` y **especifícale exactamente esta misma regla a la siguiente IA** para que nunca se pierda el hilo del proyecto.
+
 
 
