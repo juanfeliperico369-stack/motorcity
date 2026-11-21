@@ -58,3 +58,11 @@ Node 22.16.0, código de la propuesta en un contenedor local:
 La rama propuesta toca un archivo del motor reclamado por Claude: **no fusionar sin su revisión**. Claude conserva el control de versiones y sincronización, Gemini puede medir en VM, y ChatGPT puede continuar diseño/QA de C-M34. Mantener el expediente en esta rama, revisar PR concurrentes #7 y #8 antes de integrar y no sobrescribir cambios de otras IA.
 
 **Siguiente agente:** correr CI completa; inspeccionar cualquier fallo; documentar capturas/heap con hardware real; no afirmar streaming real hasta que exista chunking verificable.
+
+## 6. Diagnóstico real de CI y corrección adicional
+
+El primer run de PR #9 (https://github.com/juanfeliperico369-stack/motorcity/actions/runs/44865948935) confirmó construcción y pruebas Node generales, pero falló en pruebas/getaway-contenido.mjs:150, durante la aserción C-M34. El problema **sí era de esta propuesta**: la comprobación E.cache instanceof Map daba falso al pasar desde el entorno de la prueba vm.runInNewContext (dos realms distintos).
+
+**Arreglo aplicado a la rama:** validar el contrato necesario del caché (métodos keys y delete) en vez de instanceof Map. El test independiente se cambió para correr la clase en otro contexto JavaScript sin inyectar la clase Map del host; los 5 grupos volvieron a pasar localmente. Queda la repetición CI del commit corregido para cerrar esta incidencia.
+
+Esta incidencia muestra por qué pasar sólo pruebas aisladas nunca sustituye comprobar el consumidor real ni la CI completa.
