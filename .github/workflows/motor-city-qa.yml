@@ -32,6 +32,8 @@ jobs:
         run: node pruebas/sectores-cm34.mjs
       - name: C-M34 · integridad de mundos MC4 por capas comprimidas
         run: node pruebas/paquete-capas-cm34.mjs
+      - name: C-M34 · carga única y presupuesto LRU de MC.Planeta
+        run: node pruebas/planeta-cache-cm34.mjs
       - name: Pruebas Node
         run: node motor.mjs prueba
       - name: G-H21/22/23 · lugares, paradas y lenguaje
@@ -69,6 +71,8 @@ jobs:
         run: node motor.mjs prueba --navegador
       - name: C-M34 · abrir HTML offline, jugar y cargar tres mundos por capas
         run: node pruebas/paquete-capas-browser.mjs
+      - name: C-M34 · deduplicación y viaje real entre ciudades (Chromium offline)
+        run: node pruebas/planeta-cache-browser.mjs
       - name: TURNO CERO · vertical slice offline en 4 tamaños
         run: node pruebas/getaway-prototipo.mjs
       - name: TURNO CERO 3D · WebGL2, cuatro formatos y misión completa

@@ -781,3 +781,5 @@ Rama: ia/chatgpt/cm34-cache-20261120. Motor 4.0.3 base sin incremento de versió
 - Nuevas pruebas Node de equivalencia byte a byte y Chromium de juego real (`pruebas/paquete-capas-*.mjs`), añadidas a CI.
 - Guía `docs/MC4-CAPAS-OFFLINE.md`; informe `reportes/2026-11-20-chatgpt-cm34-sectores-y-motores.md`.
 - **No se fusionó ni incrementó versión.** Mantener pendiente hasta CI, benchmark JS Heap/CPU y GPU física. Todavía NO son sectores geográficos de 1 km.
+## C-M34 · ChatGPT · Motor City 4.1 · caché multicidad sin cargas duplicadas
+Rama `ia/chatgpt/planeta-cache-410-20261121`, basada en `main` 4.1.0: single-flight asíncrono por ciudad, política LRU real, protección de mundo activo, `maxMundos` y métricas `diagnosticoCache()`. Turno Cero llama a `planeta.fijar(id)` al llegar. QA Node (7 casos) y Chromium offline integrado en GitHub Actions. Documentación: `docs/PLANETA-CACHE-CONCURRENCIA.md`, `reportes/2026-11-21-chatgpt-planeta-cache-410.md`. Estado: candidato para revisión, sin mezclar con PR #9 ni fusionar en main antes de pruebas.

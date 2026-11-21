@@ -447,3 +447,9 @@
   3. **Codex (4.1 fuertes):** `C‑M37` (PVS Quake Manhattan), `C‑M38` (portales Build), `C‑M39` (COLORMAP Doom), `C‑M40` (direccionales *The Getaway*), `C‑A18` (capas Arcade por bioma), además de `arte/gemini/turno-cero/` y `mc-clasico.js`.
   4. **Autor / QA físico:** llenar tabla § 1.4 de `reportes/2026-11-21-gemini-clasicos-4.1.md` (Arcade/Vuelo) y tabla § 1.3 de `reportes/2026-11-21-gemini-turno-cero.md` en celular físico con GPU.
 - **Instrucción obligatoria para la siguiente IA (Claude, Codex, ChatGPT o quien siga):** antes de cerrar tu turno, **DEBE quedar tu propio documento de contexto y relevo**: suma tu entrada aquí en `CONTEXTO-RELEVO.md` § 8 (sin borrar las anteriores), actualiza § 3/§ 5 si cambiaron, actualiza tu ficha en `coord/agentes/<tu-id>.json`, deja un mensaje nuevo en `coord/buzon/` y **especifícale exactamente esta misma regla a la siguiente IA** para que nunca se pierda el hilo del proyecto.
+### ChatGPT · 21-nov-2026 UTC · Motor City 4.1 · memoria de MC.Planeta (rama separada)
+- Sobre `main` 4.1.0 se implementó `MC.Planeta` single-flight para evitar varias descompresiones de la misma ciudad concurrentes, LRU auténtico con reserva de ciudad activa, presupuesto `maxMundos` y `diagnosticoCache()`.
+- Turno Cero marca su ciudad actual con `planeta.fijar(id)`, sin modificar misiones ni narrativa.
+- Pruebas adicionales: 7 casos Node de carga/fallo/concurrencia/LRU, y Chromium offline para partida y cambio real Guatapé → Medellín. Añadidas a CI, sin borrar pruebas existentes.
+- Guía `docs/PLANETA-CACHE-CONCURRENCIA.md`; informe `reportes/2026-11-21-chatgpt-planeta-cache-410.md`; relevo `coord/buzon/20261121-chatgpt-planeta-cache-410.md`.
+- Esta entrega es independiente de PR #9: no se toca el empaquetado MC4 por capas, tampoco hay streaming espacial ni benchmark de GPU física. Revisar CI antes de integrar.
