@@ -623,7 +623,7 @@ if (process.argv.includes('--navegador')) {
     const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 412, height: 860 }, hasTouch: true }), errs = [];
     p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
     await p.goto(urlPrueba(tc)); await p.waitForFunction(() => window.TURNO_LISTO, null, { timeout: 120000 });
-    const portada = await p.evaluate(() => ({ adultos: /18\+/.test(document.querySelector('.sello').textContent), modelos: MC.Modelos.L.size, mundos: Object.keys(MC_CIUDADES), ctaVisible: document.querySelector('#bHistoria').getBoundingClientRect().bottom <= innerHeight }));
+    const portada = await p.evaluate(() => ({ adultos: /18\+/.test(document.querySelector('.sello').textContent), modelos: MC.Modelos.L.size, mundos: Object.keys(MC_CIUDADES), ctaVisible: document.querySelector('#bHistoria').getBoundingClientRect().bottom <= innerHeight, arteGemini:getComputedStyle(document.querySelector('#portada'),'::before').backgroundImage.includes('data:image/webp;base64,') }));
     await p.click('#bHistoria'); await p.waitForFunction(() => window.TURNO && TURNO.M && !TURNO.transicion, null, { timeout: 120000 });
     for (let i = 0; i < 120; i++) { const d = await p.$('.dialogo button'); if (d) await d.click({ timeout: 3000 }).catch(() => {}); else if (await p.evaluate(() => !!(TURNO.hist && TURNO.hist.p && !TURNO.pausa))) break; await p.waitForTimeout(150); }
     const r = await p.evaluate(async () => {
@@ -652,7 +652,7 @@ if (process.argv.includes('--navegador')) {
       G.Globo.cerrar();
       return { paso0, obj, tapa, dialogo, enRuta, letrero: letrero.slice(0, 40), medellin, metro, modelos3d, cacheMundos, persigue, tapa2, run, salioRun: !G.enRun, rival, globo, menuQA, errores: MC.errores.length };
     });
-    ok(portada.adultos && portada.ctaVisible && portada.modelos >= 45 && portada.mundos.length === 3 && r.paso0 === 'ir' && r.obj && !r.tapa.length && r.dialogo && r.enRuta === 'ruta_atlantico' && /Medellín/.test(r.letrero) && r.medellin === 'medellin' && r.metro && r.cacheMundos.length === 1 && r.cacheMundos[0] === 'medellin' && r.persigue >= 1 && !r.tapa2.length && r.run && r.salioRun && r.rival > 40 && r.menuQA?.visible && r.menuQA.hudOculto && r.menuQA.fondo !== 'rgba(0, 0, 0, 0)' && r.globo && (r.globo.gpu ? r.globo.respaldo === '1' && r.globo.ancho > 0 : /no disponible/i.test(r.globo.error) && r.globo.respaldo === '1') && !r.errores && !errs.length,
+    ok(portada.adultos && portada.arteGemini && portada.ctaVisible && portada.modelos >= 45 && portada.mundos.length === 3 && r.paso0 === 'ir' && r.obj && !r.tapa.length && r.dialogo && r.enRuta === 'ruta_atlantico' && /Medellín/.test(r.letrero) && r.medellin === 'medellin' && r.metro && r.cacheMundos.length === 1 && r.cacheMundos[0] === 'medellin' && r.persigue >= 1 && !r.tapa2.length && r.run && r.salioRun && r.rival > 40 && r.menuQA?.visible && r.menuQA.hudOculto && r.menuQA.fondo !== 'rgba(0, 0, 0, 0)' && r.globo && (r.globo.gpu ? r.globo.respaldo === '1' && r.globo.ancho > 0 : /no disponible/i.test(r.globo.error) && r.globo.respaldo === '1') && !r.errores && !errs.length,
       'Turno Cero en Chromium móvil: aviso 18+, 45 modelos, la historia arranca, el HUD no tapa el centro, Manhattan → Ruta del Atlántico → Medellín con su metro, la policía persigue, Run en la ciclovía y una carrera con el rival en marcha', Object.assign({}, portada, r, { errs: errs.slice(0, 3) }));
     await b.close();
   }
