@@ -107,7 +107,7 @@ def texturizar(nombre):
         pr.update({'baseColorFactor':[1,1,1,1], 'baseColorTexture':{'index':0},
                    'metallicFactor':1.0,'roughnessFactor':1.0,'metallicRoughnessTexture':{'index':1}})
         mat['doubleSided']=True
-    doc['buffers'][0]['byteLength']=len(buf)
+    doc['buffers'][0]['byteLength']=len(buf)+((-len(buf))%4)  # la sección BIN se alinea a 4 bytes
     doc.setdefault('extras',{})['pbr_preproduccion']=True
     doc['asset']['generator']='Turno Cero · C-A16 glTF PBR 1024 atlas + rig preserving'
     J=json.dumps(doc,separators=(',',':'),ensure_ascii=False).encode('utf-8')
