@@ -206,3 +206,12 @@ assert(fuente.includes("id: d.id"),'pasar id de ruta al generador');
 assert(fuente.includes("this.cache.clear(); this.cache.set(id, M)"),'no conservar dos ciudades MC4 simultáneas');
 assert(f('juegos/getaway/20-juego.js').includes("tipo === 'car_repair'"),'reparación por tipo estructurado, no sólo nombre');
 console.log('Gemini G-H22/G-H24: metadatos de ruta y una sola ciudad en caché OK');
+
+
+/* Gemini C-M31: planeta WebGL2 debe caber en modo vertical y mantener etiquetas en Canvas. */
+const shaderG=f('js/13-globo-gpu.js');
+const etiquetasG=f('juegos/getaway/40-dibujo.js');
+assert(shaderG.includes("R=min(.68,(uSize.x/uSize.y)*.80)"),'radio acorde a formato vertical');
+assert(etiquetasG.includes("c.style.opacity = '1'"),'Canvas encima de WebGL lleva etiquetas de ciudades');
+assert(etiquetasG.includes("g.fillText(C.nombre"),'las ciudades tienen nombre sobre el globo WebGL');
+console.log('C-M31 Gemini: radio de globo móvil y etiquetas en overlay OK');

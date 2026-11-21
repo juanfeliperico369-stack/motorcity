@@ -127,8 +127,26 @@ function pintarGlobo(dt) {
   if (!Globo.gpu) Globo.gpu = new MC.GloboGPU($('#ggl'), planeta.anillo);
   const jugador = planeta.enGlobo(G.id, G.cuerpo.x, G.cuerpo.y);
   const webgl = Globo.gpu.dibujar(W, H, { lon0: Globo.lon0, inc: Globo.inc, t: G.t, jugador });
-  c.style.opacity = webgl ? '0' : '1';
-  if (!webgl) {
+  c.style.opacity = '1'; // GPU usa #gcv como capa de etiquetas transparente.
+  if (webgl) {
+    if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+    const g = c.getContext('2d'); g.clearRect(0,0,W,H);
+    const radio = Math.min(.68,(W/H)*.80)*H/2, incl = Globo.inc*Math.PI/180, lon0 = Globo.lon0*Math.PI/180;
+    const ciudades = planeta.anillo.filter(l => l.tipo === 'ciudad');
+    g.textAlign='left';g.font='700 '+Math.round(Math.max(12,Math.min(17,radio*.085)))+'px system-ui';
+    for(const C of ciudades){
+      const la=(C.lat || 0)*Math.PI/180,lo=C.lon*Math.PI/180-lon0,
+        x=Math.cos(la)*Math.sin(lo),y=Math.sin(la),z=Math.cos(la)*Math.cos(lo),
+        alto=y*Math.cos(incl)-z*Math.sin(incl),prof=y*Math.sin(incl)+z*Math.cos(incl);
+      if(prof<=0)continue;
+      const X=W/2+x*radio,Y=H/2-alto*radio;
+      if(X<8 || X>W-8 || Y<8 || Y>H-8)continue;
+      g.beginPath();g.fillStyle='#e8b875';g.arc(X,Y,Math.max(3,d*2.5),0,Math.PI*2);g.fill();
+      g.shadowColor='#000';g.shadowBlur=5;g.fillStyle='#f1ece4';
+      g.fillText(C.nombre, Math.max(8,Math.min(W-g.measureText(C.nombre).width-8,X+8)), Math.max(18,Math.min(H-16,Y+4)));
+      g.shadowBlur=0;
+    }
+  } else {
     c.width = W; c.height = H;
     planeta.globo(c.getContext('2d'), W, H, { lon0: Globo.lon0, inclinacion: Globo.inc, t: G.t, yo: { id: G.id, x: G.cuerpo.x, y: G.cuerpo.y } });
   }
