@@ -8,7 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const base = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const codigo = fs.readFileSync(path.join(base, 'js/10-sectores.js'), 'utf8');
-const contexto = vm.createContext({ MC: {}, Map, Set, Math, Number, RangeError });
+const contexto = vm.createContext({ MC: {}, Math, Number, RangeError });
 vm.runInContext(codigo, contexto, { filename: 'js/10-sectores.js' });
 const { Sectores1km } = contexto.MC;
 let n = 0;
