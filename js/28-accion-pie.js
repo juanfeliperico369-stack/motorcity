@@ -14,7 +14,9 @@ const AccionPie = {
   ocluido(mundo, desde, hasta) {
     if (!mundo || typeof mundo.edificioEn !== 'function') return false;
     const d = Math.hypot(hasta.x - desde.x, hasta.y - desde.y);
-    const n = Math.min(24, Math.ceil(d / 3));
+    /* Muestreo <=1 m: paredes de 1–2 m no pueden quedar entre dos rayos. */
+    if (mundo.edificioEn(hasta.x, hasta.y, 0)) return true;
+    const n = Math.max(2, Math.min(96, Math.ceil(d)));
     for (let i = 1; i < n; i++) {
       const t = i / n, x = desde.x + (hasta.x-desde.x)*t, y = desde.y + (hasta.y-desde.y)*t;
       if (mundo.edificioEn(x,y,0)) return true;
