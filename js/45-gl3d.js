@@ -53,9 +53,9 @@ Object.assign(Malla.prototype, {
     for (let i = 0; i < n; i++) { const j = (i + 1) % n; A += V[i][0] * V[j][1] - V[j][0] * V[i][1]; }
     const sg = A > 0 ? 1 : -1, ctr = [cx, zb + H / 2, cz];   // normal hacia afuera: (dz, −dx) si la huella va antihoraria (A > 0)
     /* cuerpo y techo (a dos aguas con alero en casas rectangulares; plancha con pretil y tanque en el resto) */
-    const dos = !st.plano && !e.P && n === 4;
-    this.prisma(P, O, zb, zt, muro, techo, dos ? { dosAguas: { ancho: Math.min(e.hw, e.hd) * 2 } } : {});
-    if (dos) { const al = .45; for (let i = 0; i < n; i++) { const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 1) continue; const nx = (b[1] - a[1]) / L * sg, nz = -(b[0] - a[0]) / L * sg; this.quadF([a[0], zt - .05, a[1]], [b[0], zt - .05, b[1]], [b[0] + nx * al, zt - .25, b[1] + nz * al], [a[0] + nx * al, zt - .25, a[1] + nz * al], osc3(techo, .8), 0, [cx, zt - 3, cz]); } }
+    const dos = !st.plano && !e.P && n === 4, cuatro = !st.plano && !dos && n <= 16 && H <= 16;   /* 4.5: la huella real con teja lleva techo a cuatro aguas */
+    this.prisma(P, O, zb, zt, muro, techo, dos ? { dosAguas: { ancho: Math.min(e.hw, e.hd) * 2 } } : cuatro ? { cuatro: { alto: Math.min(2.6, Math.min(e.hw, e.hd) * .55), k: .25, cumbrera: osc3(techo, .88) } } : {});
+    if (dos || cuatro) { const al = .45; for (let i = 0; i < n; i++) { const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 1) continue; const nx = (b[1] - a[1]) / L * sg, nz = -(b[0] - a[0]) / L * sg; this.quadF([a[0], zt - .05, a[1]], [b[0], zt - .05, b[1]], [b[0] + nx * al, zt - .25, b[1] + nz * al], [a[0] + nx * al, zt - .25, a[1] + nz * al], osc3(techo, .8), 0, [cx, zt - 3, cz]); } }
     else if (detalle >= 3 || !casa) {
       for (let i = 0; i < n; i++) { const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < .8) continue; const nx = (b[1] - a[1]) / L * sg * .18, nz = -(b[0] - a[0]) / L * sg * .18, a2 = [a[0] - nx, a[1] - nz], b2 = [b[0] - nx, b[1] - nz]; this.quadF([a[0], zt, a[1]], [b[0], zt, b[1]], [b[0], zt + .55, b[1]], [a[0], zt + .55, a[1]], osc3(muro, .93), 0, ctr); this.quadF([a2[0], zt, a2[1]], [b2[0], zt, b2[1]], [b2[0], zt + .55, b2[1]], [a2[0], zt + .55, a2[1]], osc3(muro, .8), 0, [cx, zt + 5, cz]); this.quadF([a[0], zt + .55, a[1]], [b[0], zt + .55, b[1]], [b2[0], zt + .55, b2[1]], [a2[0], zt + .55, a2[1]], acl3(muro, .2), 0, [cx, zt - 5, cz]); }
       const tx = cx + (h2(sem, 4, 83) - .5) * Math.min(e.hw, 4), tz = cz + (h2(sem, 5, 83) - .5) * Math.min(e.hd, 4);
@@ -85,7 +85,7 @@ Object.assign(Malla.prototype, {
     for (let i = 0; i < n; i++) {
       const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 2) continue;
       pared(a, b, 0, 1, zb, zb + .95, .03, zoc);                                   // zócalo
-      if (!dos) pared(a, b, 0, 1, zt - .38, zt, .05, cor);                      // cornisa
+      if (!dos && !cuatro) pared(a, b, 0, 1, zt - .38, zt, .05, cor);                      // cornisa
       const cols = Math.max(1, Math.floor(L / 2.7)), pta = i === iL ? Math.floor(cols / 2) : -1;
       for (let p = 0; p < pisos; p++) for (let q = 0; q < cols; q++) {
         const um = (q + .5) / cols, w = Math.min(1.1, L / cols * .45) / L, y0 = zb + (p === 0 ? 1.15 : 1.0 + p * 3), y1 = y0 + (p === 0 ? 1.15 : 1.3);
