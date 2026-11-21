@@ -1,4 +1,4 @@
-/* Motor City 4.1.0 · 2026-11-21 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 4.2.0 · 2026-11-21 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -16,7 +16,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '4.1.0',
+  version: '4.2.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -597,6 +597,25 @@ class Mundo {
     await m.precargar(['suelo', 'relieve', 'municipio', 'comuna', 'barrio', 'pisos', 'nivel', 'info']);
     return m;
   }
+  /* C-M34 · Mundo desde capas MC4 comprimidas y separadas (mismo formato de datos).
+     obtener(nombre) devuelve base64 o bytes SOLO para la capa pedida. No retiene
+     los bytes MC4 completos; el juego puede guardar las capas en su HTML offline.
+     Es particionado POR CAPA, no streaming espacial por kilómetros. */
+  static desdePaquete(meta, obtener, cfg) {
+    if (!meta || meta.formato !== 'MC4' || !meta.capas || typeof obtener !== 'function') throw new Error('Paquete MC4 inválido');
+    const m = Object.create(Mundo.prototype);
+    m.meta = meta; m.cfg = cfg || null; m.u8 = null; m.base = 0; m._c = new Map(); m._obtenerCapa = obtener;
+    m.W = meta.W; m.H = meta.H; m.tile = meta.tile; m.ancho = meta.W * meta.tile; m.alto = meta.H * meta.tile;
+    m.kx = meta.kx * meta.tile; m.ky = meta.ky * meta.tile;
+    const r = m.capaInfo('relieve'); m.eW = r.w; m.eH = r.h; m.es = r.paso * m.tile;
+    const c = m.capaInfo('municipio'); m.mW = c.w; m.mH = c.h; m.ms = c.paso * m.tile;
+    return m;
+  }
+  static async cargarPaquete(meta, obtener, cfg) {
+    const m = Mundo.desdePaquete(meta, obtener, cfg);
+    await m.precargar(['suelo', 'relieve', 'municipio', 'comuna', 'barrio', 'pisos', 'nivel', 'info']);
+    return m;
+  }
   capaInfo(nombre) { const c = this.meta.capas[nombre]; if (!c) throw new Error('el mundo no trae la capa «' + nombre + '»'); return c; }
   tiene(nombre) { return !!this.meta.capas[nombre]; }
   _tipar(c, raw) {
@@ -608,11 +627,19 @@ class Mundo {
       default: return raw;
     }
   }
-  _bytes(c) { return this.u8.subarray(this.base + c.o, this.base + c.o + c.n); }
+  _bytes(c, nombre) {
+    if (this._obtenerCapa) {
+      const entrada = this._obtenerCapa(nombre);
+      const datos = typeof entrada === 'string' ? deB64(entrada) : entrada;
+      if (!datos || typeof datos.subarray !== 'function' || datos.byteLength !== c.n) throw new Error('Capa MC4 separada inválida: ' + nombre);
+      return datos;
+    }
+    return this.u8.subarray(this.base + c.o, this.base + c.o + c.n);
+  }
   /* la capa ya inflada (síncrona) */
   capa(nombre) {
     let v = this._c.get(nombre); if (v !== undefined) return v;
-    const c = this.capaInfo(nombre), b = this._bytes(c); v = this._tipar(c, c.z === 0 ? b : inflarSync(b, c.raw)); this._c.set(nombre, v); return v;
+    const c = this.capaInfo(nombre), b = this._bytes(c, nombre); v = this._tipar(c, c.z === 0 ? b : inflarSync(b, c.raw)); this._c.set(nombre, v); return v;
   }
   /* un mundo armado en memoria (generador procedural, editor o herramientas): capas ya tipadas, sin comprimir.
      d = { meta: { W, H, tile, lon0, latN, kx, ky, nombre, … }, capas: { suelo: Uint8Array, relieve: {datos: Int16Array, w, h, paso}, … } } */
@@ -624,7 +651,7 @@ class Mundo {
     const r = M.capaInfo('relieve'); M.eW = r.w; M.eH = r.h; M.es = r.paso * M.tile; const c2 = M.capaInfo('municipio'); M.mW = c2.w; M.mH = c2.h; M.ms = c2.paso * M.tile;
     return M;
   }
-  async precargar(nombres) { await Promise.all(nombres.filter(n => this.tiene(n) && !this._c.has(n)).map(async n => { const c = this.capaInfo(n); this._c.set(n, this._tipar(c, await inflar(this._bytes(c), c.raw))); })); return this; }
+  async precargar(nombres) { await Promise.all(nombres.filter(n => this.tiene(n) && !this._c.has(n)).map(async n => { const c = this.capaInfo(n); this._c.set(n, this._tipar(c, await inflar(this._bytes(c, n), c.raw))); })); return this; }
 
   /* ---------- coordenadas ---------- */
   geoAMetros(lat, lon) { return { x: (lon - this.meta.lon0) * this.kx, y: (this.meta.latN - lat) * this.ky }; }
@@ -883,59 +910,82 @@ const ValleCompat = {
 MC.ValleCompat = ValleCompat; MC.Compat1 = ValleCompat;
 
 /* ---- js/10-sectores.js ---- */
-/* C-M34 · Primer paso hacia streaming MC4 por sectores de 1 km.
-   Reduce la memoria de regiones ED1 de edificios DECODIFICADOS cerca de la cámara;
-   el MC4 y las capas de suelo todavía permanecen completos en la memoria de la partida.
-   No intercambia ficheros ni descarga datos: funciona offline y no borra mundos. */
+/* C-M34 · Caché acotada de sectores de 1 km para edificios ED1.
+   El mundo MC4 y las capas de suelo permanecen en memoria: esto NO es
+   streaming de bytes. El cargador de chunks queda como etapa independiente.
+   Prioridad por proximidad: con radio > presupuesto, no recorrer/descartar
+   sectores lejanos cada actualización. Funciona sin red y no toca guardados. */
 class Sectores1km {
-  constructor(mundo,op={}){
-    this.mundo=mundo;this.lado=Math.max(250,op.lado||1000);
-    this.maxSectores=Math.max(1,Math.floor(op.maxSectores||9));
-    this.maxRegiones=Math.max(4,Math.floor(op.maxRegiones||36));
-    this.radio=Math.max(0,Math.min(3,op.radio??1));
-    this.cache=new Map();this.ultimo={sx:0,sy:0,antes:0,despues:0,evictas:0};
-  }
-  zona(x,y){return {sx:Math.floor(x/this.lado),sy:Math.floor(y/this.lado)};}
-  pedir(sx,sy){
-    if(!Number.isFinite(sx)||!Number.isFinite(sy))return null;
-    sx=Math.floor(sx);sy=Math.floor(sy);
-    const clave=sx+','+sy;
-    if(this.cache.has(clave)){
-      const c=this.cache.get(clave);this.cache.delete(clave);this.cache.set(clave,c);return c;
-    }
-    const x0=sx*this.lado,y0=sy*this.lado,x1=x0+this.lado,y1=y0+this.lado,m=this.mundo;
-    const sector={
-      id:clave,sx,sy,x0,y0,x1,y1,
-      /* Devuelve geometría de edificios a petición, no mantiene otra copia por sector. */
-      edificios:()=> typeof m?.edificiosEn==='function'?m.edificiosEn(x0,y0,x1,y1,[]):[]
+  constructor(mundo, op = {}) {
+    const positivo = (v, defecto, minimo, nombre) => {
+      if (v === undefined) return defecto;
+      if (!Number.isFinite(v) || v < minimo) throw new RangeError(nombre + ' inválido');
+      return Math.max(minimo, Math.floor(v));
     };
-    this.cache.set(clave,sector);
-    while(this.cache.size>this.maxSectores)this.cache.delete(this.cache.keys().next().value);
+    this.mundo = mundo;
+    this.lado = positivo(op.lado, 1000, 250, 'lado');
+    this.maxSectores = positivo(op.maxSectores, 9, 1, 'maxSectores');
+    this.maxRegiones = positivo(op.maxRegiones, 36, 4, 'maxRegiones');
+    this.radio = op.radio === undefined ? 1 : positivo(op.radio, 1, 0, 'radio');
+    if (this.radio > 3) throw new RangeError('radio superior a 3');
+    this.cache = new Map();
+    this.ultimo = { sx: 0, sy: 0, antes: 0, despues: 0, evictas: 0, sectores: 0 };
+    /* Se calcula una vez: distancia al centro, después prioridad axial.
+       Así siempre conserva el centro aun si maxSectores < (2*radio+1)^2. */
+    this.cercanos = [];
+    for (let dy = -this.radio; dy <= this.radio; dy++) {
+      for (let dx = -this.radio; dx <= this.radio; dx++) {
+        this.cercanos.push({ dx, dy, d: dx * dx + dy * dy });
+      }
+    }
+    this.cercanos.sort((a, b) => a.d - b.d || Math.abs(a.dx) + Math.abs(a.dy) - Math.abs(b.dx) - Math.abs(b.dy) || a.dy - b.dy || a.dx - b.dx);
+    this.cercanos.length = Math.min(this.cercanos.length, this.maxSectores);
+  }
+  zona(x, y) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) throw new RangeError('Coordenadas de sector inválidas');
+    return { sx: Math.floor(x / this.lado), sy: Math.floor(y / this.lado) };
+  }
+  pedir(sx, sy) {
+    if (!Number.isFinite(sx) || !Number.isFinite(sy)) return null;
+    sx = Math.floor(sx); sy = Math.floor(sy);
+    const clave = sx + ',' + sy;
+    if (this.cache.has(clave)) {
+      const c = this.cache.get(clave);
+      this.cache.delete(clave); this.cache.set(clave, c);
+      return c;
+    }
+    const x0 = sx * this.lado, y0 = sy * this.lado, x1 = x0 + this.lado, y1 = y0 + this.lado, m = this.mundo;
+    const sector = {
+      id: clave, sx, sy, x0, y0, x1, y1,
+      /* Geometría a petición, nunca dos copias por sector. */
+      edificios: () => typeof m?.edificiosEn === 'function' ? m.edificiosEn(x0, y0, x1, y1, []) : []
+    };
+    this.cache.set(clave, sector);
+    while (this.cache.size > this.maxSectores) this.cache.delete(this.cache.keys().next().value);
     return sector;
   }
-  actualizar(x,y){
-    const {sx,sy}=this.zona(x,y);
-    for(let dy=-this.radio;dy<=this.radio;dy++)for(let dx=-this.radio;dx<=this.radio;dx++)this.pedir(sx+dx,sy+dy);
-    const E=this.mundo?._ED;
-    if(!E||!E.cache||!Number.isFinite(E.R)||!E.nx)return (this.ultimo={sx,sy,antes:0,despues:0,evictas:0,sectores:this.cache.size});
-    const ids=[...E.cache.keys()],antes=ids.length,max=this.maxRegiones;
-    ids.sort((a,b)=>{
-      const ra=Math.floor(a/E.nx),rb=Math.floor(b/E.nx),
-        ax=(a%E.nx+.5)*E.R-x,ay=(ra+.5)*E.R-y,
-        bx=(b%E.nx+.5)*E.R-x,by=(rb+.5)*E.R-y;
-      return ax*ax+ay*ay-(bx*bx+by*by);
-    });
-    const distanciaMax=Math.pow((this.radio+1.4)*this.lado,2),conservar=new Set();
-    for(const k of ids){
-      const rx=k%E.nx,ry=Math.floor(k/E.nx),dx=(rx+.5)*E.R-x,dy=(ry+.5)*E.R-y;
-      if(conservar.size<max&&dx*dx+dy*dy<=distanciaMax)conservar.add(k);
+  actualizar(x, y) {
+    const { sx, sy } = this.zona(x, y);
+    for (const { dx, dy } of this.cercanos) this.pedir(sx + dx, sy + dy);
+    const E = this.mundo?._ED;
+    if (!E || !E.cache || typeof E.cache.keys !== 'function' || typeof E.cache.delete !== 'function' || !Number.isFinite(E.R) || E.R <= 0 || !Number.isInteger(E.nx) || E.nx <= 0) {
+      return (this.ultimo = { sx, sy, antes: 0, despues: 0, evictas: 0, sectores: this.cache.size });
     }
-    for(const k of ids)if(!conservar.has(k))E.cache.delete(k);
-    return (this.ultimo={sx,sy,antes,despues:E.cache.size,evictas:antes-E.cache.size,sectores:this.cache.size});
+    const ids = [...E.cache.keys()], antes = ids.length, max = this.maxRegiones;
+    const dist2 = k => {
+      const rx = k % E.nx, ry = Math.floor(k / E.nx), dx = (rx + .5) * E.R - x, dy = (ry + .5) * E.R - y;
+      return dx * dx + dy * dy;
+    };
+    ids.sort((a, b) => dist2(a) - dist2(b));
+    const distanciaMax = Math.pow((this.radio + 1.4) * this.lado, 2), conservar = new Set();
+    for (const k of ids) if (conservar.size < max && dist2(k) <= distanciaMax) conservar.add(k);
+    for (const k of ids) if (!conservar.has(k)) E.cache.delete(k);
+    return (this.ultimo = { sx, sy, antes, despues: E.cache.size, evictas: antes - E.cache.size, sectores: this.cache.size });
   }
-  limpiar(){this.cache.clear();}
+  limpiar() { this.cache.clear(); }
 }
-MC.Sectores1km=Sectores1km;
+MC.Sectores1km = Sectores1km;
+
 /* ---- js/11-red.js ---- */
 /* =====================================================================
    RED · calles y ciclorrutas como grafo (nodos en los cruces, aristas con su curva real)
@@ -3471,6 +3521,7 @@ MC.Vehiculos = Vehiculos;
    - Saltos con gravedad, vuelo (jetpack y avionetas) y agua (lanchas).
    Entrada: { giro: −1..1, acel: −1..1, dir: {x,y,m}|null (rumbo deseado en el mundo), salto, turbo, correr, sube, baja }
    ===================================================================== */
+const MENOR_IA = new Set(['poste', 'banca', 'paradero', 'caneca', 'hidrante']), BORDE_IA = new Set([TT.BLDG, TT.BRICK]);   /* lo menor del andén que la IA atropella (4.2) */
 const GRAV = 19.6;   // gravedad de juego (el doble de la real: saltos cortos y con peso)
 class Cuerpo {
   constructor(mundo, op = {}) {
@@ -3502,7 +3553,7 @@ class Cuerpo {
     /* un tablero o una rampa que queda entre los pies y la cabeza es una pared (no se atraviesa ni se pasa por debajo) */
     const pie = this.zPaso + this.z, alto = this.altoCuerpo(); for (const S of this.superficies(x, y)) if (S.P && S.h - pie > this.escalonDin() && S.h - pie < alto) return false;
     /* terreno (2.4): agua y su profundidad, material, pendiente y barrancos, borde del mundo (MC.Terreno.paso) */
-    const T = Terreno.paso(this, x, y); if (!T.ok) { if (T.agua) this.bloqueoAgua = true; return this._bloquea(T.motivo); }
+    const T = Terreno.paso(this, x, y); if (!T.ok && !(this.ia && !T.agua && BORDE_IA.has(this.mundo.suelo(x, y)) && !this.mundo.edificioEn(x, y, .3))) { if (T.agua) this.bloqueoAgua = true; return this._bloquea(T.motivo); }   /* 4.2: las casillas del borde de la calle (ladrillo o edificio sin edificio real encima) no traban a la IA; la huella de verdad se revisa abajo */
     if (this.chocaEdificios && V.clase !== 'agua') {
       /* edificios: siempre (sobre la calle solo si se mete más de 1 m en la huella: los datos se solapan un poco con la vía),
          y también los edificios de los sitios y las partes bajas de los emblemáticos */
@@ -3510,7 +3561,8 @@ class Cuerpo {
       if (this.mundo.edificioEn(x, y, enVia ? -1 : r)) return this._bloquea('un edificio');
       if (!enVia && Terreno.sitioEn(this.mundo, x, y)) return this._bloquea('un edificio');
       /* árboles, postes, bancas, rocas, palmas… y lo que el juego diga (tráfico, gente). 4.0.2: los carros de la IA (this.ia) sobre la calle no chocan con lo menor del andén y el separador */
-      if (!(this.z > 1.2) && !(this.ia && enVia)) { const o = Terreno.obstaculo(this, x, y, V.clase === 'pie' ? .25 : Math.min(.9, (V.ancho || .6) / 2)); if (o) return this._bloquea(o.t ? ({ arbol: 'un árbol', poste: 'un poste', roca: 'una roca', banca: 'una banca', paradero: 'un paradero', palma: 'una palma' }[o.t] || 'algo') : (o.motivo || 'algo')); }
+      /* 4.2: y en el andén, los carros de la IA tampoco se trancan con lo menor (poste, banca, paradero, caneca, hidrante): lo atropellan como en GTA; árboles y rocas sí los paran */
+      if (!(this.z > 1.2) && !(this.ia && enVia)) { const o = Terreno.obstaculo(this, x, y, V.clase === 'pie' ? .25 : Math.min(.9, (V.ancho || .6) / 2)); if (o && !(this.ia && V.clase !== 'pie' && MENOR_IA.has(o.t))) return this._bloquea(o.t ? ({ arbol: 'un árbol', poste: 'un poste', roca: 'una roca', banca: 'una banca', paradero: 'un paradero', palma: 'una palma' }[o.t] || 'algo') : (o.motivo || 'algo')); }
     }
     return true;
   }
@@ -5642,7 +5694,7 @@ class VistaGL {
     for (let gy = Math.floor((cy - radio) / R); gy <= Math.floor((cy + radio) / R); gy++) for (let gx = Math.floor((cx - radio) / R); gx <= Math.floor((cx + radio) / R); gx++) { const d = Math.hypot((gx + .5) * R - cx, (gy + .5) * R - cy); if (d > radio + R) continue; quiero.set(gx + ',' + gy, d < 100 && cal > .7 ? 4 : d < 170 && cal > .5 ? 3 : d < 300 ? 2 : d < 600 ? 1 : 0); }
     for (const [k, r] of this.regiones) if (!quiero.has(k)) { this._borrar(r); this.regiones.delete(k); }
     const t0 = MC.ahora(), faltan = [...quiero].filter(([k, d]) => { const r = this.regiones.get(k); return !r || r.detalle < d; }).sort((a, b) => { const [ax, ay] = a[0].split(',').map(Number), [bx, by] = b[0].split(',').map(Number); return Math.hypot((ax + .5) * R - cx, (ay + .5) * R - cy) - Math.hypot((bx + .5) * R - cx, (by + .5) * R - cy); });
-    for (const [k, d] of faltan) { if (MC.ahora() - t0 > (op.presupuesto || 8) && this.regiones.size) break; const [gx, gy] = k.split(',').map(Number), viejo = this.regiones.get(k); if (viejo) this._borrar(viejo); this.regiones.set(k, this._region(gx, gy, d)); }
+    for (const [k, d] of faltan) { if (MC.ahora() - t0 > (op.presupuesto || 8) && this.regiones.size) break; const [gx, gy] = k.split(',').map(Number), viejo = this.regiones.get(k); if (viejo) this._borrar(viejo); const nr = this._region(gx, gy, d); nr.gx = gx; nr.gy = gy; this.regiones.set(k, nr); }
     this.pendientes = faltan.length;
     /* cámara y luz */
     const O = this.O, e = [C.ojo[0] - O[0], C.ojo[2] - O[2], C.ojo[1] - O[1]], b = [C.blanco[0] - O[0], C.blanco[2] - O[2], C.blanco[1] - O[1]];
@@ -5660,9 +5712,17 @@ class VistaGL {
     /* relieve lejano (sin los bloques que caen bajo el detalle) */
     gl.useProgram(this.pC.p); uni(this.pC); gl.disable(gl.CULL_FACE);
     for (const B of this.lejos) { if (Math.hypot(B.cx - cx, B.cy - cy) < radio - 1100) continue; gl.bindBuffer(gl.ARRAY_BUFFER, B.b); this._attr(this.pC, [['aP', 3], ['aN', 3], ['aC', 3], ['aE', 1]], 10); gl.drawArrays(gl.TRIANGLES, 0, B.n / 10); }
+    /* 4.2 · recorte por región antes de dibujar (motores clásicos, investigación de Antigravity):
+       - Silent Hill (PS1): lo que queda más allá del muro de niebla no se dibuja;
+       - cono de visión horizontal: en las cámaras de manejo (tercera, primera, cine) las regiones detrás de la cámara tampoco.
+       Las aéreas miran hacia abajo y no se recortan por cono. */
+    const vis = [], fx = C.blanco[0] - C.ojo[0], fy = C.blanco[1] - C.ojo[1], fl = Math.hypot(fx, fy), rad = R * .75 + 30, finNiebla = fr[1] + rad, medio = Math.atan(Math.tan((C.fov || 1) / 2) * W / H) + .15, conCono = !aerea && fl > 1e-3 && Math.abs(C.ojo[2] - C.blanco[2]) < fl * 1.2;
+    for (const r of this.regiones.values()) { if (r.gx == null) { vis.push(r); continue; } const rx = (r.gx + .5) * R - C.ojo[0], ry = (r.gy + .5) * R - C.ojo[1], d = Math.hypot(rx, ry); if (d - rad > finNiebla) continue;
+      if (conCono && d > rad) { const f = (rx * fx + ry * fy) / fl, l = (-rx * fy + ry * fx) / fl; if (Math.abs(Math.atan2(l, f)) - Math.asin(Math.min(1, rad / d)) > medio) continue; } vis.push(r); }
+    this.recorte = { regiones: this.regiones.size, dibujadas: vis.length };
     /* regiones: suelo con su losa */
     gl.useProgram(this.pT.p); uni(this.pT); gl.activeTexture(gl.TEXTURE0); gl.uniform1i(this.pT.u.uS, 0);
-    for (const r of this.regiones.values()) { gl.bindTexture(gl.TEXTURE_2D, r.tex); gl.bindBuffer(gl.ARRAY_BUFFER, r.suelo.b); this._attr(this.pT, [['aP', 3], ['aN', 3], ['aT', 2]], 8); gl.drawArrays(gl.TRIANGLES, 0, r.suelo.n / 8); }
+    for (const r of vis) { gl.bindTexture(gl.TEXTURE_2D, r.tex); gl.bindBuffer(gl.ARRAY_BUFFER, r.suelo.b); this._attr(this.pT, [['aP', 3], ['aN', 3], ['aT', 2]], 8); gl.drawArrays(gl.TRIANGLES, 0, r.suelo.n / 8); }
     /* C-M27: sombras solares planas sobre el terreno antes de dibujar volúmenes.
        Cache por celda de ~25 m, para no reconstruir centenares de triángulos por cuadro.
        Se desactivan con noche, lluvia fuerte o calidad baja (respaldo visual del 2D). */
@@ -5688,7 +5748,7 @@ class VistaGL {
       }
     }
     gl.useProgram(this.pC.p); uni(this.pC);
-    for (const r of this.regiones.values()) if (r.cosas) { gl.bindBuffer(gl.ARRAY_BUFFER, r.cosas.b); this._attr(this.pC, [['aP', 3], ['aN', 3], ['aC', 3], ['aE', 1]], 10); gl.drawArrays(gl.TRIANGLES, 0, r.cosas.n / 10); }
+    for (const r of vis) if (r.cosas) { gl.bindBuffer(gl.ARRAY_BUFFER, r.cosas.b); this._attr(this.pC, [['aP', 3], ['aN', 3], ['aC', 3], ['aE', 1]], 10); gl.drawArrays(gl.TRIANGLES, 0, r.cosas.n / 10); }
     const D = this._dinamico(E); if (D.length) { gl.bindBuffer(gl.ARRAY_BUFFER, this.dyn); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(D), gl.DYNAMIC_DRAW); this._attr(this.pC, [['aP', 3], ['aN', 3], ['aC', 3], ['aE', 1]], 10); gl.drawArrays(gl.TRIANGLES, 0, D.length / 10);
       /* 3.0: rayos X del jugador en las cámaras aéreas: si un árbol o un techo lo tapan, se ve igual (encima de todo) */
       if (aerea && this._njug > 0) { gl.disable(gl.DEPTH_TEST); gl.drawArrays(gl.TRIANGLES, 0, this._njug / 10); gl.enable(gl.DEPTH_TEST); } }
@@ -6338,7 +6398,11 @@ class VoxelSpace {
     const M = this.M, C = cuerpoRetro(E), N = this.N, c = this.c, cielo = cieloRetro(E), oscuro = 1 - cielo.noche * .6;
     if (this.h == null) this.h = C.a; let dh = C.a - this.h; dh = Math.atan2(Math.sin(dh), Math.cos(dh)); this.h += dh * clamp((E.dt || 1 / 60) * 2.2, 0, 1);
     const a = this.h, ca = Math.cos(a), sa = Math.sin(a), cx = C.x - ca * 90, cy = C.y - sa * 90;
-    if (this.x0 == null) this.preparar(cx + ca * 300, cy + sa * 300);
+    if (this.x0 == null) { /* 4.2: la primera ventana también se arma por franjas (antes trababa ~0,3 s): mientras, el cielo y un aviso */
+      if (!this._job) this._job = this._iniciar(cx + ca * 300, cy + sa * 300);
+      const t0 = MC.ahora(); let listo = false; while (!listo && MC.ahora() - t0 < 12) listo = this._trabajar(this._job, 24);
+      if (listo) this._usar(this._job);
+      else { const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, rgbCss(cielo.top, oscuro)); gr.addColorStop(1, rgbCss(cielo.hor, oscuro)); g.fillStyle = gr; g.fillRect(0, 0, W, H); const J = this._job, f = (J.j + J.s) / (2 * N); g.fillStyle = 'rgba(255,255,255,.85)'; g.font = '700 ' + Math.round(W / 26) + 'px system-ui'; g.textAlign = 'center'; g.fillText('⛰️ Armando el vuelo… ' + Math.round(f * 100) + ' %', W / 2, H * .45); return; } }
     else if (this._job) { if (this._trabajar(this._job, Math.max(8, this.N >> 4))) this._usar(this._job); }
     else if (Math.abs(cx + ca * 300 - (this.x0 + N * c / 2)) > N * c * .2 || Math.abs(cy + sa * 300 - (this.y0 + N * c / 2)) > N * c * .2) this._job = this._iniciar(cx + ca * 400, cy + sa * 400);
     const w = Math.round(clamp(W / 2.2, 180, 380)), h = Math.max(100, Math.round(w * H / W)); if (!this._cv || this._cv.width !== w || this._cv.height !== h) { this._cv = lienzo(w, h); this._img = this._cv.getContext('2d').createImageData(w, h); this._u = new Uint32Array(this._img.data.buffer); this._yb = new Int32Array(w); }

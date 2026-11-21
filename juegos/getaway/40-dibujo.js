@@ -101,6 +101,7 @@ function capas(g, es2D) {
   if (G.pulsoVis) { G.pulsoVis.t -= 1 / 60; const p = pr(G.cuerpo.x, G.cuerpo.y, 1); if (p) { const fr = 1 - G.pulsoVis.t / .5, k = escalaEn(G.cuerpo.x, G.cuerpo.y); g.strokeStyle = 'rgba(75,154,171,' + (1 - fr) + ')'; g.lineWidth = 3 * d; g.beginPath(); g.arc(p[0], p[1], k * 65 * fr, 0, TAU); g.stroke(); } if (G.pulsoVis.t <= 0) G.pulsoVis = null; }
   g.restore();
   /* la flecha al objetivo: pin si se ve, flecha en el borde si no */
+  for (const f of EXTRAS.capas) f(g, pr, d, t);
   const O = G.objetivo; if (O && !G.dron) { const sp = pr(O.x, O.y, 0); if (sp) { const Z = G.ui.zonaLibre(), d2 = G.W / innerWidth; MC.UI.indicador(g, G.W, G.H, sp[0], sp[1], { texto: Math.round(Math.hypot(O.x - G.cuerpo.x, O.y - G.cuerpo.y)) + ' m', escala: d, t, rect: [Z.x0 * d2 + 20 * d, Z.y0 * d2 + 10 * d, Z.x1 * d2 - 20 * d, Z.y1 * d2] }); } }
 }
 
@@ -132,7 +133,7 @@ function hud() {
   /* artefactos: listo o cuánto falta */
   const AR = $('#artefactos'); if (AR) { const pon = (k, txt, ok) => { const b = AR.querySelector('[data-k="' + k + '"]'); if (b) { b.querySelector('small').textContent = txt; b.classList.toggle('off', !ok); } }; pon('dron', G.dron ? Math.ceil(G.dron.bat) + 's' : G.recarga.dron ? Math.ceil(G.recarga.dron) + 's' : 'T02', !G.recarga.dron); pon('cebo', '×' + G.cebos, G.cebos > 0); pon('pulso', G.recarga.pulso ? Math.ceil(G.recarga.pulso) + 's' : 'T08', !G.recarga.pulso); pon('lente', G.lenteT > 0 ? Math.ceil(G.lenteT) + 's' : G.recarga.lente ? Math.ceil(G.recarga.lente) + 's' : 'T01', !G.recarga.lente); pon('disparar', '×' + G.municion, G.municion > 0); AR.querySelector('[data-k="disparar"]').hidden = !G.municion; }
   /* minimapa: objetivo, escondites y talleres si te buscan, el Contador marcado, rivales vistos */
-  const pts = []; if (O) pts.push({ x: O.x, y: O.y, color: '#dba65f' });
+  const pts = []; if (O) pts.push({ x: O.x, y: O.y, color: '#dba65f' }); for (const f of EXTRAS.mapa) f(pts);
   if (B.nivel) for (const s of sitiosEspeciales()) pts.push({ x: s.x, y: s.y, color: s.taller ? '#4b9aab' : '#7fc8a9' });
   for (const r of B.rivales) if (!r.roto && (r.marcado > G.t || r.ve)) pts.push({ x: r.cuerpo.x, y: r.cuerpo.y, color: r.bando === 'banda' ? '#c25542' : '#476e8a' });
   U.pintarMinimapa(C.x, C.y, G.camara.yaw, pts); mapaPts = pts;

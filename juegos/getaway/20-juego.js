@@ -73,7 +73,7 @@ const G = window.TURNO = {
 };
 const ui = () => G.ui;
 /* ganchos para los extras (50-extras.js): botones, HUD, tráfico y obstáculos que se suman sin reescribir este archivo */
-const EXTRAS = { ui: [], hud: [], trafico: [], obstaculos: [] };
+const EXTRAS = { ui: [], hud: [], trafico: [], obstaculos: [], capas: [], mapa: [] };   /* 4.2: capas (dibujar encima del mundo) y mapa (puntos del minimapa) */
 
 /* lugar del juego → punto sobre una vía del mundo actual */
 function resolver(clave) {
