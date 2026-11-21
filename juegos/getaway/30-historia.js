@@ -86,7 +86,7 @@ const Historia = {
   terminar() {
     const k = TC.final(G.flags, G.evidencia), F = TC.FINALES[k]; this.p = null; G.objetivo = null; G.busq.limpiar(); Snd.sirenaVol(0);
     const fin = leerG().finales || []; if (!fin.includes(k)) fin.push(k); escribirG({ finales: fin, capitulos: TC.HISTORIA.length, hist: null });
-    $('#fH').textContent = F.t; $('#fX').textContent = F.x;
+    $('#fH').textContent = suave(F.t); $('#fX').textContent = suave(F.x);
     $('#fC').innerHTML = 'Pruebas: ' + G.evidencia + ' · Plata: ' + plata(G.dinero) + ' · Kilómetros: ' + G.km.toFixed(1) + ' · Rivales fuera de la vía: ' + G.destrozados + ' · Civiles heridos: ' + G.civiles + ' · Tiros recibidos: ' + G.disparosRecibidos + '<br>Confianza · Nadia ' + (G.rep.nadia || 0) + ' · Noah ' + (G.rep.noah || 0) + ' · Cross ' + (G.rep.cross || 0) + '<br>Finales vistos: ' + fin.join(', ');
     $('#final').hidden = false; G.pausa = true; MC.emit('turno:final', { final: k });
   },

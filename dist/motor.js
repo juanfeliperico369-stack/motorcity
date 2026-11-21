@@ -1,4 +1,4 @@
-/* Motor City 4.0.2 · 2026-11-20 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 4.0.3 · 2026-11-21 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin librerías ni internet.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -16,7 +16,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '4.0.2',
+  version: '4.0.3',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -1638,7 +1638,7 @@ class Planeta {
     /* nombres de las ciudades y el jugador */
     const proy = (latD, lonD) => { const la = latD * Math.PI / 180, lo = lonD * Math.PI / 180 - lon0, x = Math.cos(la) * Math.sin(lo), y = Math.sin(la), z = Math.cos(la) * Math.cos(lo), v = -(y * Math.cos(tilt) - z * Math.sin(tilt)), zz = y * Math.sin(tilt) + z * Math.cos(tilt); return { x: cx + x * R, y: cy + v * R, ve: zz > 0 }; };
     g.font = '700 ' + Math.max(11, R * .07) + 'px system-ui'; g.textAlign = 'left';
-    for (const C of ciudades) { const p = proy(C.lat ?? ruta(C.lon * Math.PI / 180), C.lon); if (!p.ve) continue; g.fillStyle = '#ffd34d'; g.beginPath(); g.arc(p.x, p.y, Math.max(3, R * .02), 0, TAU); g.fill(); g.fillStyle = '#fff'; g.shadowColor = '#000'; g.shadowBlur = 4; g.fillText(C.nombre, p.x + 8, p.y + 4); g.shadowBlur = 0; }
+    for (const C of ciudades) { const p = proy(C.lat ?? ruta(C.lon * Math.PI / 180), C.lon); if (!p.ve) continue; g.fillStyle = '#ffd34d'; g.beginPath(); g.arc(p.x, p.y, Math.max(3, R * .02), 0, TAU); g.fill(); g.fillStyle = '#fff'; g.shadowColor = '#000'; g.shadowBlur = 4; const tw = g.measureText(C.nombre).width; g.fillText(C.nombre, clamp(p.x + 8, 8, Math.max(8, W - tw - 8)), clamp(p.y + 4, 14, H - 14)); g.shadowBlur = 0; }
     if (op.yo) { const G = this.enGlobo(op.yo.id, op.yo.x, op.yo.y), p = proy(G.lat, G.lon); if (p.ve) { g.fillStyle = '#2ee6a6'; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath(); g.arc(p.x, p.y, Math.max(4, R * .028), 0, TAU); g.fill(); g.stroke(); } }
   }
 }
@@ -2738,12 +2738,32 @@ const AccionPie = {
   ocluido(mundo, desde, hasta) {
     if (!mundo || typeof mundo.edificioEn !== 'function') return false;
     const d = Math.hypot(hasta.x - desde.x, hasta.y - desde.y);
-    const n = Math.min(24, Math.ceil(d / 3));
+    const n = Math.min(64, Math.ceil(d));   /* una muestra por metro: a 3 m se saltaba muros de 2 m (relevo Claude) */
     for (let i = 1; i < n; i++) {
       const t = i / n, x = desde.x + (hasta.x-desde.x)*t, y = desde.y + (hasta.y-desde.y)*t;
       if (mundo.edificioEn(x,y,0)) return true;
     }
     return false;
+  },
+  /* Persecución en alarma: sólo acercarse si el jugador sigue visible. La búsqueda de
+     la última posición vista ya la hace paso(). Nunca leer la posición actual a ciegas. */
+  perseguir(q, jugador, mundo, dt, op = {}) {
+    if (!q || !jugador || q.fuera || q.distraido > 0 || !(dt > 0))
+      return { visible: false, golpe: false, movio: false };
+    const radio = op.radio ?? q.vista ?? 24, alcance = op.alcance ?? 1.1, rapidez = op.rapidez ?? 4.6;
+    const visible = this.ver(q, jugador, mundo, { rango: radio });
+    if (!visible) return { visible: false, golpe: false, movio: false };
+    q.ultima = { x: jugador.x, y: jugador.y };
+    q.busquedaT = 5; q.estado = 'alerta';
+    const dx = jugador.x - q.x, dy = jugador.y - q.y, d = Math.hypot(dx, dy);
+    if (d <= alcance) return { visible: true, golpe: true, movio: false };
+    const paso = Math.min(d-alcance, rapidez*Math.min(dt,.05));
+    const nx = q.x + dx/d*paso, ny = q.y + dy/d*paso;
+    if (mundo && typeof mundo.edificioEn === 'function' &&
+       (mundo.edificioEn(nx,ny,0) || mundo.edificioEn((nx+q.x)/2,(ny+q.y)/2,0)))
+      return { visible: true, golpe: false, movio: false };
+    q.x = nx; q.y = ny; q.a = Math.atan2(dy,dx);
+    return { visible: true, golpe: false, movio: true };
   },
   paso(q, dt, op = {}) {
     if (!q || q.fuera || !(dt > 0)) return { ve: false, estado: 'fuera' };

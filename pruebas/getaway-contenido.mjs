@@ -6,11 +6,12 @@ import assert from 'node:assert/strict';
 const f=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const q=JSON.parse(f('contenido/paradas-carretera.json'));
 const biomas=['costa','llanura','desierto','bosque','montana','nieve','lagos'];
-for(const b of biomas){assert.equal(q.biomas[b]?.length,4,'4 paradas '+b);for(const x of q.biomas[b]) assert(x.nombre&&x.nombre_en&&x.ambiente&&x.tipo);}
-assert.equal(new Set(biomas.flatMap(b=>q.biomas[b].map(x=>x.nombre))).size,28);
+/* G-H22 unido: 4 de Antigravity + 4 de ChatGPT por bioma */
+for(const b of biomas){assert.equal(q.biomas[b]?.length,8,'8 paradas '+b);for(const x of q.biomas[b]) assert(x.nombre&&x.nombre_en&&x.ambiente&&x.tipo);}
+assert.equal(new Set(biomas.flatMap(b=>q.biomas[b].map(x=>x.nombre))).size,56);
 const fuente=f('js/13-planeta.js'),match=fuente.match(/^const PARADAS_RUTA = (\{.*\});$/m);
 assert(match,'dataset embebido en generador de carretera');
-assert.equal(JSON.stringify(JSON.parse(match[1])),JSON.stringify(q.biomas));
+assert.equal(JSON.stringify(JSON.parse(match[1])),JSON.stringify(Object.fromEntries(Object.entries(q.biomas).map(([b,L])=>[b,L.map(x=>({nombre:x.nombre,nombre_en:x.nombre_en,tipo:x.tipo,ambiente:x.ambiente}))]))));
 assert(fuente.includes('biomaP = biomas[bioma(y)]'),'la selección debe obedecer al bioma');
 const historia=f('juegos/getaway/10-contenido.js');
 assert(!/La valentina finca hotel/i.test(historia),'un negocio real no puede ser guarida ficticia');
@@ -27,7 +28,7 @@ for(const s of ['¡Quítense, hijueputas!','Hoy no, malparidos.','¡Párese, gon
 }
 const fuerte=vm.runInNewContext(mat[0]+'\n suave',{leerG:()=>({suave:false})});
 assert.equal(fuerte('¡Párese, gonorrea!'),'¡Párese, gonorrea!');
-console.log('G-H21/22/23: 19 lugares inventariados, 28 paradas, lenguaje suave y fuerte OK');
+console.log('G-H21/22/23: 19 lugares inventariados, 56 paradas, lenguaje suave y fuerte OK');
 
 
 /* C-M36: el audio espacial es una función pura y sus límites se prueban sin navegador. */

@@ -14,7 +14,7 @@ const AccionPie = {
   ocluido(mundo, desde, hasta) {
     if (!mundo || typeof mundo.edificioEn !== 'function') return false;
     const d = Math.hypot(hasta.x - desde.x, hasta.y - desde.y);
-    const n = Math.min(24, Math.ceil(d / 3));
+    const n = Math.min(64, Math.ceil(d));   /* una muestra por metro: a 3 m se saltaba muros de 2 m (relevo Claude) */
     for (let i = 1; i < n; i++) {
       const t = i / n, x = desde.x + (hasta.x-desde.x)*t, y = desde.y + (hasta.y-desde.y)*t;
       if (mundo.edificioEn(x,y,0)) return true;

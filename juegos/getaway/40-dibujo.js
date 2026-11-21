@@ -5,14 +5,15 @@
    el Dron Cuervo, el cebo, la gente tendida y la flecha al objetivo. El HUD sigue la biblia: objetivo y plata
    a la izquierda, la búsqueda en una cinta estrecha, el volante abajo y lo secundario en el menú.
    ===================================================================== */
+/* G-H23 (Gemini y ChatGPT, unidas): conserva la mayúscula, separa singular y plural y cubre las variantes del guion */
 const LENGUAJE_SUAVE = [
   [/hijueputas?/gi, m => /s$/i.test(m) ? 'desgraciados' : 'desgraciado'],
   [/malparid[oa]s?/gi, m => /s$/i.test(m) ? 'miserables' : 'miserable'],
   [/gonorreas?/gi, m => /s$/i.test(m) ? 'canallas' : 'canalla'],
   [/(?:güe|gue|hue)vones/gi, 'bobos'], [/(?:güe|gue|hue)v[oó]n/gi, 'bobo'],
   [/tombos?/gi, m => /s$/i.test(m) ? 'agentes' : 'agente'],
-  [/mierdas?/gi, 'rayos'], [/jodid[oa]s?/gi, 'complicados'],
-  [/cabr[oó]n(?:es)?/gi, 'canalla'], [/\bputas?\b/gi, 'pesados'],
+  [/mierdas?/gi, 'rayos'], [/jodid[oa]s?/gi, m => 'complicad' + m.slice(5).toLowerCase()],
+  [/cabr[oó]n(?:es)?/gi, m => /es$/i.test(m) ? 'canallas' : 'canalla'], [/\bputas?\b/gi, 'pesados'],
   [/\bputos?\b/gi, 'pesados'], [/\bcarajo\b/gi, 'rayos'],
   [/\bcoño\b/gi, 'caramba'], [/\bel sapo\b/gi, 'el informante']
 ];
