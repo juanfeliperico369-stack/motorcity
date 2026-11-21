@@ -215,3 +215,11 @@ assert(shaderG.includes("R=min(.68,(uSize.x/uSize.y)*.80)"),'radio acorde a form
 assert(etiquetasG.includes("c.style.opacity = '1'"),'Canvas encima de WebGL lleva etiquetas de ciudades');
 assert(etiquetasG.includes("g.fillText(C.nombre"),'las ciudades tienen nombre sobre el globo WebGL');
 console.log('C-M31 Gemini: radio de globo móvil y etiquetas en overlay OK');
+
+
+/* Gemini C-M35: fragmentos y humo visibles también al caer en Raster/Canvas 2D. */
+const dib2D=f('juegos/getaway/40-dibujo.js');
+assert(dib2D.includes("(V.usaRaster && V.usaRaster())"),'piezas se ven en Raster software');
+assert(dib2D.includes("G.piezasFisicas && G.piezasFisicas.lista"),'proyección de piezas físicas');
+assert(dib2D.includes("g.strokeRect(-k*.4"),'malla 2D visible y sombreada');
+console.log('C-M35 Gemini: piezas y humo en Canvas/Raster sin WebGL');
