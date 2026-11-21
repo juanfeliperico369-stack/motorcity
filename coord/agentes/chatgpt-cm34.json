@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "agente": "chatgpt-cm34",
+  "rama": "ia/chatgpt/cm34-cache-20261120",
+  "rol": "C-M34 robustez de caché ED1, regresión y documentación streaming futuro",
+  "estado": "rama aislada para revisión; no fusionada",
+  "ultima_actualizacion_local": "2026-11-20",
+  "zonas_reclamadas": [
+    "js/10-sectores.js",
+    "pruebas/sectores-cm34.mjs",
+    "reportes/2026-11-20-chatgpt-cm34-sectores-y-motores.md"
+  ],
+  "no_toco": [
+    "main",
+    "juegos/getaway/",
+    "arte/",
+    "datos/",
+    "repositorios de juegos"
+  ],
+  "pendiente": "CI navegador, GPU real, MC4 split por chunks"
+}
