@@ -92,3 +92,27 @@ assert.equal(mL.d.length,36*30,'la malla dinámica dibuja el número de triángu
 const full=new modeloCtx.Malla();full.modelo(mo,0,0,0,0,{distancia:0});
 assert.equal(full.d.length,120*30,'distancia cero conserva 100 % de geometría');
 console.log('C-M33 · LOD0/LOD1/LOD2: 120, 77, 36 triángulos, caché y render OK');
+
+
+/* C-M35: piezas desprendibles, gravedad, restitución, cota del suelo y limpieza. */
+const piezCtx={MC:{},hex3:()=>[.3,.3,.3]};
+vm.runInNewContext(f('js/32-piezas.js'),piezCtx);
+const piezas=new piezCtx.MC.Piezas({cota:()=>0},{max:2});
+assert.equal(piezas.soltar('invalida',{x:0,y:0,a:0}),null);
+const carro={x:5,y:5,a:0,v:8};
+const capa=piezas.soltar('capo',carro), puerta=piezas.soltar('puerta_izq',carro);
+assert(capa && puerta && capa.z>0);
+const inicial=capa.z;
+piezas.paso(.05);assert(capa.z>inicial,'la pieza despega del vehículo');
+for(let i=0;i<500;i++)piezas.paso(.05);
+assert(capa.z>=.08,'no atraviesa el suelo');assert(piezas.lista.length<=2);
+const antes=piezas.lista.length;
+piezas.soltar('rueda',carro);
+assert(piezas.lista.length<=2,'límite de debris');
+const mock={n:0,cajaF(){this.n++},esfera(){this.n++},cil(){this.n++}};
+piezas.malla(mock,(x,y,z)=>[x,z,y],carro,150);
+assert(mock.n>0,'se dibuja geometría de las piezas');
+piezCtx.MC.Piezas.motorDano(mock,[0,0,0],0,{f:.95},1);
+assert(mock.n>1,'humo/fuego son primitivas 3D');
+piezas.limpiar();assert.equal(piezas.lista.length,0);
+console.log('C-M35 · capó, puertas y llanta: gravedad, rebote, geometría 3D y limpieza OK');

@@ -56,7 +56,7 @@ const G = window.TURNO = {
   modo: 'historia', id: null, M: null, cuerpo: null, camara: null, vistas: null, E: null, trafico: null, pobl: null, transporte: null, busq: null, objetos: null,
   reloj: new MC.Reloj({ vel: .25 }), clima: null, ui: null, ctl: null, cv: null, g: null, W: 0, H: 0,
   dinero: 380, rep: { taller: 0, vecindarios: 0, garantias: 0, coro: 0, northquay: 0 }, flags: {}, veh: 'tc_vega', tengo: ['tc_vega'],
-  carro: 1, vida: 1, nitro: .6, danoZonas: { f: 0, b: 0, l: 0, r: 0 }, pausa: false, transicion: false, vistaId: 'cenital', zoom: null, km: 0, destrozados: 0, civiles: 0, disparosRecibidos: 0,
+  carro: 1, vida: 1, nitro: .6, danoZonas: { f: 0, b: 0, l: 0, r: 0 }, piezasFisicas: null, piezasSueltas: {}, pausa: false, transicion: false, vistaId: 'cenital', zoom: null, km: 0, destrozados: 0, civiles: 0, disparosRecibidos: 0,
   hist: null, objetivo: null, contrato: null, evidencia: 0, municion: 0, dron: null, lenteT: 0, recarga: { dron: 0, pulso: 0, lente: 0 }, cebos: 2, rastreado: null, guardias: [], modelos3d: [], caidos: [], humo: [], lugaresCache: {}, viaje: null, rapido: false, errores: MC.errores, listo: false, t: 0
 };
 const ui = () => G.ui;
@@ -103,7 +103,8 @@ async function entrarMundo(id, spawn = {}, texto = null) {
   G.transporte = M.transporte && M.transporte.lineas && M.transporte.lineas.length ? new MC.Transporte(M, M.cfgCiudad || {}) : null;
   G.busq = new MC.Busqueda(M, { heat: spawn.heat ?? heat0 * .6, semilla: (G.t * 1000) | 0 });
   G.objetos = new MC.Objetos(M, {}); try { G.objetos.sembrar(C.x, C.y, 320, 40); } catch (e) { /* sin objetos */ }
-  G.E = { mundo: M, camara: G.camara, reloj: G.reloj, clima: G.clima, transporte: G.transporte, jugador: { cuerpo: C, aspecto: G.aspecto, modelo: 'personaje_mara_rig', dano: G.danoZonas }, t: G.t, vehiculos: [], trafico: [], peatones: [], extras: [], cables: G.transporte ? G.transporte.lineas.filter(l => l.clase === 'cable') : [], objetos: G.objetos, curvatura: CURVATURA, modelos3d: G.modelos3d,
+   G.piezasFisicas = new MC.Piezas(M);
+  G.E = { mundo: M, camara: G.camara, reloj: G.reloj, clima: G.clima, transporte: G.transporte, jugador: { cuerpo: C, aspecto: G.aspecto, modelo: 'personaje_mara_rig', dano: G.danoZonas }, t: G.t, vehiculos: [], trafico: [], peatones: [], extras: [], cables: G.transporte ? G.transporte.lineas.filter(l => l.clase === 'cable') : [], objetos: G.objetos, piezas: G.piezasFisicas, curvatura: CURVATURA, modelos3d: G.modelos3d,
     bloqueosEtiquetas: (w, h) => [[w - 84 * w / innerWidth, 0, w, h]] };
   G.vistas.usar(G.vistaId, G.E); G.vistas.dpr = G.dEf || 1;
   if (G.ui && G.ui._mini) G.ui._mini.vistas = G.vistas; else if (G.ui) G.ui.minimapa(G.vistas);
@@ -207,6 +208,10 @@ function paso(dt, dtVisual) {
     for (const ev of B.sacar()) eventoBusqueda(ev);
     /* objetos físicos (conos, vallas, canecas) */
     { const cs = [{ x: C.x, y: C.y, z: C.z, r: V.clase === 'pie' ? .35 : Math.max(.4, (V.ancho || .8) / 2), masa: V.masa || 1400, vx: Math.cos(C.a) * C.v, vy: Math.sin(C.a) * C.v }]; for (const t of E.trafico) if (Math.hypot(t.x - C.x, t.y - C.y) < 140) cs.push({ x: t.x, y: t.y, z: 0, r: 1, masa: 1400, vx: Math.cos(t.a) * (t.v || 0), vy: Math.sin(t.a) * (t.v || 0) }); G.objetos.actualizar(dt, cs); }
+     if (G.piezasFisicas) G.piezasFisicas.paso(dt);
+     if (B.pinchado && !G.piezasSueltas.rueda && enCarro) {
+       G.piezasSueltas.rueda = true; G.piezasFisicas.soltar('rueda', C);
+     }
     /* el planeta: ¿cruzaste una puerta? */
     const cr = planeta.cruce(G.id, C.x, C.y, dt); if (cr && !G.viaje) { const desde = planeta.def(G.id), hacia = planeta.def(cr.a); entrarMundo(cr.a, {}, desde.tipo === 'ciudad' ? ['Saliendo de ' + desde.nombre, (planeta.puertas(G.id) && (planeta.puertas(G.id).siguiente.nombre || '')) ] : null); return; }
     if (!M.esCiudad) eventosRuta();
@@ -272,8 +277,13 @@ function escondites(dt) {
 }
 /* eventos de la carretera (los de la historia: la banda y los retenes a cierta altura del tramo) */
 /* las abolladuras por zona (se ven en el modelo 3D del carro): f frente, b atrás, l izquierda, r derecha */
-function abollar(z, fuerza) { const D = G.danoZonas; if (!D || !(z in D)) return; D[z] = Math.min(1, D[z] + clamp(fuerza, 0, 30) * .028 / (VEH(G.veh).salud || 1)); }
-function reparaZonas() { Object.assign(G.danoZonas, { f: 0, b: 0, l: 0, r: 0 }); }
+function abollar(z, fuerza) { const D = G.danoZonas; if (!D || !(z in D)) return; D[z] = Math.min(1, D[z] + clamp(fuerza, 0, 30) * .028 / (VEH(G.veh).salud || 1));
+  const tipo = { f: 'capo', b: 'baul', l: 'puerta_izq', r: 'puerta_der' }[z];
+  if (D[z] >= .75 && !G.piezasSueltas[z] && G.piezasFisicas && G.cuerpo?.veh.clase !== 'pie') {
+    G.piezasSueltas[z] = true; G.piezasFisicas.soltar(tipo, G.cuerpo);
+  }
+}
+function reparaZonas() { Object.assign(G.danoZonas, { f: 0, b: 0, l: 0, r: 0 }); G.piezasSueltas = {}; if (G.piezasFisicas) G.piezasFisicas.limpiar(); }
 /* Calle libre: lo que pasa en la carretera de la nada (al azar en cada viaje) */
 function eventosCarreteraLibre() {
   const r = () => Math.random(), L = [];
