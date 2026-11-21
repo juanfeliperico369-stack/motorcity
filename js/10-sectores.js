@@ -56,7 +56,7 @@ class Sectores1km {
     const { sx, sy } = this.zona(x, y);
     for (const { dx, dy } of this.cercanos) this.pedir(sx + dx, sy + dy);
     const E = this.mundo?._ED;
-    if (!E || !(E.cache instanceof Map) || !Number.isFinite(E.R) || E.R <= 0 || !Number.isInteger(E.nx) || E.nx <= 0) {
+    if (!E || !E.cache || typeof E.cache.keys !== 'function' || typeof E.cache.delete !== 'function' || !Number.isFinite(E.R) || E.R <= 0 || !Number.isInteger(E.nx) || E.nx <= 0) {
       return (this.ultimo = { sx, sy, antes: 0, despues: 0, evictas: 0, sectores: this.cache.size });
     }
     const ids = [...E.cache.keys()], antes = ids.length, max = this.maxRegiones;
