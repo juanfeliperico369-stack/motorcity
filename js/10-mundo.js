@@ -109,7 +109,7 @@ class Mundo {
     const completa = this._c.get(nombre);
     if (completa !== undefined) return completa[ty * this.W + tx];
     const raster = this._rasters && this._rasters[nombre];
-    return raster ? raster.valor(tx, ty) : this.capa(nombre)[ty * this.W + tx];
+    return raster ? raster.valorSeguro(tx, ty) : this.capa(nombre)[ty * this.W + tx];
   }
   diagnosticoRasters() {
     const salida = {};
