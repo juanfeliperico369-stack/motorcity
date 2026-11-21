@@ -675,3 +675,12 @@ La calidad automática baja el detalle si hace falta. Bajar la maqueta a menos d
 - En el pixel, las etiquetas salían gigantes.
 
 **Lo que sigue:** ver `CONTEXTO-IA.md` §5.
+
+## C-M34 · 20-nov-2026 · Entrega candidata de ChatGPT (NO PUBLICADA EN MAIN)
+
+Rama: ia/chatgpt/cm34-cache-20261120. Motor 4.0.3 base sin incremento de versión.
+- MC.Sectores1km: precarga de sectores por cercanía al centro con presupuesto LRU estable, rechazo de coordenadas y configuración inválida.
+- Test nuevo: pruebas/sectores-cm34.mjs (5/5 grupos Node locales); paso añadido a motor-city-qa.yml.
+- Investigación aplicada a futuras versiones: Build, Quake/PVS, GTA III/LOD, Godot/HLOD; separación entre caché ED1 y streaming MC4 real.
+- Informe técnico y evidencias: reportes/2026-11-20-chatgpt-cm34-sectores-y-motores.md.
+- Pendiente: CI completa, mediciones GPU reales, streaming MC4 por chunks y revisión por Claude antes de integrar.
