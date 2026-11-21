@@ -720,3 +720,7 @@ La calidad automática baja el detalle si hace falta. Bajar la maqueta a menos d
 - En el pixel, las etiquetas salían gigantes.
 
 **Lo que sigue:** ver `CONTEXTO-IA.md` §5.
+
+## C-M34 · ChatGPT · Motor City 4.1 · caché multicidad sin cargas duplicadas
+
+Rama `ia/chatgpt/planeta-cache-410-20261121`, basada en `main` 4.1.0: single-flight asíncrono por ciudad, política LRU real, protección de mundo activo, `maxMundos` y métricas `diagnosticoCache()`. Turno Cero llama a `planeta.fijar(id)` al llegar. QA Node (7 casos) y Chromium offline integrado en GitHub Actions. Documentación: `docs/PLANETA-CACHE-CONCURRENCIA.md`, `reportes/2026-11-21-chatgpt-planeta-cache-410.md`. Estado: candidato para revisión, sin mezclar con PR #9 ni fusionar en main antes de pruebas.
