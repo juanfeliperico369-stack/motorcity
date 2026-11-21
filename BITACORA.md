@@ -781,3 +781,12 @@ Rama: ia/chatgpt/cm34-cache-20261120. Motor 4.0.3 base sin incremento de versió
 - Nuevas pruebas Node de equivalencia byte a byte y Chromium de juego real (`pruebas/paquete-capas-*.mjs`), añadidas a CI.
 - Guía `docs/MC4-CAPAS-OFFLINE.md`; informe `reportes/2026-11-20-chatgpt-cm34-sectores-y-motores.md`.
 - **No se fusionó ni incrementó versión.** Mantener pendiente hasta CI, benchmark JS Heap/CPU y GPU física. Todavía NO son sectores geográficos de 1 km.
+
+## 21-nov-2026 · ChatGPT · C-M34 streaming territorial (PR #11, rama 4.2)
+
+- El MC4 original se mantiene intacto, pero `suelo` y `nivel` se empaquetan por sectores de aproximadamente 1 km y se decodifican bajo demanda. `MC.RasterMC4` contiene LRU de 16 sectores por raster, bordes parciales, `u8/i8` y materialización compatible con `Mundo.capa`.
+- `Mundo.desdePaquete/cargarPaquete` recibe proveedor opcional de sectores; el constructor y Turno Cero activan `mundos_rasters:true`; el HTML sigue offline y el resto de capas MC4 conserva sus bytes originales.
+- Portada de la PR #10 a `main` 4.2: `Planeta` deduplica cargas, usa LRU, protege el mundo activo y `liberarExcepto` descarga mundo anterior e invalida rutas. Un contador de época impide resucitar cargas antiguas tras cambiar de ciudad.
+- QA: `raster-sector-cm34.mjs`, `paquete-capas-cm34.mjs` (equivalencia byte a byte de Manhattan/Medellín/Guatapé), `planeta-cache-cm34.mjs` (9 casos), `getaway-contenido.mjs` actualizado a la nueva API, más Chromium offline. CI del último commit pendiente de confirmación; no mezclar runs anteriores.
+- Guía: `docs/MC4-STREAMING-TERRITORIAL.md`; informe: `reportes/2026-11-21-chatgpt-cm34-streaming-territorial.md`; relevo en `coord/buzon/20261121-1015-chatgpt-cm34-spatial.md`.
+- **Sin merge ni nueva versión.** ED1/vías/relieve no están fragmentados; falta medir memoria y FPS real.
