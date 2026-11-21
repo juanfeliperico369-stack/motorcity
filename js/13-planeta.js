@@ -73,7 +73,7 @@ Generador.carretera = function (op = {}) {
     const c = centro(y), lado = r.f() < .5 ? -1 : 1, px = c + lado * 46, biomaP = biomas[bioma(y)], lista = PARADAS_RUTA[biomaP], ruta = lista.filter(q => !op.id || !q.rutas || q.rutas.includes(op.id)), catalogo = ruta.length ? ruta : lista, ficha = catalogo[(n + sem) % catalogo.length], nomP = ficha.nombre_es || ficha.nombre, tipo = ficha.tipo, km = Math.round(y / 1000);
     if (BIOMAS_RUTA[biomas[bioma(y)]].mar && lado > 0) continue;
     const kind = tipo === 'fuel' || tipo === 'car_repair' ? 3 : tipo === 'church' ? 6 : tipo === 'motel' ? 1 : 8, pisos = tipo === 'motel' ? 2 : 1;
-    edJ.push([Math.round(px * 10) / 10, Math.round(y * 10) / 10, tipo === 'motel' ? 14 : 9, 7, Math.PI / 2, pisos, kind, nomP]); pon(px, y, TT.BLDG, 8);
+    edJ.push([Math.round(px * 10) / 10, Math.round(y * 10) / 10, tipo === 'motel' ? 14 : 9, 7, Math.PI / 2, pisos, kind, null]); /* EDJ[7] es anillo de vértices, no nombre. El rótulo vive en lugares[]. */ pon(px, y, TT.BLDG, 8);
     for (let a = -18; a <= 18; a += 6) pon(c + lado * 24, y + a, TT.AUTO, 4);
     lugares.push({ id: 'parada-' + n, nombre: nomP + (tipo === 'mirador' ? ' ' + km : ''), municipio: '', x: px, y, ancho: 30, alto: 24, dibujo: tipo, dato: 'Kilómetro ' + km + ' de ' + nombre + '. ' + ficha.ambiente + (nombre === 'Ruta del Atlántico' ? ' / ' + ficha.nombre_en : ''), secreto: false });
   }

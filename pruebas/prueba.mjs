@@ -449,9 +449,10 @@ console.log('19) Planeta 4.0: anillo de mundos, carreteras largas en la nada y g
   await P.mundo('medellin'); const T = await P.mundo('ruta_embalse'), c = T.carretera, yM = c.largo / 2, xM = c.centro(yM);
   const enVia = T.suelo(xM, yM), cotas = [.1, .5, .9].map(f => T.cota(c.centro(f * c.largo), f * c.largo));
   const Q = P.puertas('medellin', M), sale = P.cruce('medellin', Q.siguiente.x + Math.cos(Q.siguiente.a) * 3, Q.siguiente.y + Math.sin(Q.siguiente.a) * 3, 9);
+  const edificiosFinitos = T.edificiosEn(0,0,T.ancho,T.alto).every(e => !e.P || [...e.P].every(Number.isFinite));
   const L = P.llegada('ruta_embalse', 'medellin'); P.llegadaT = 0; const alFinal = P.cruce('ruta_embalse', L.x, c.largo - 10, 9);
   await P.mundo('guatape'); const QG = P.puertas('guatape', MG), G = P.enGlobo('ruta_embalse', xM, yM);
-  ok(cierra && ciudades === 3 && (enVia === MC.TT.AVE || enVia === MC.TT.ROAD) && cotas.every(Number.isFinite) && T.lugares.length > 0 && sale && sale.a === 'ruta_embalse' && alFinal && alFinal.a === 'guatape' && QG.anterior && QG.siguiente && G && Number.isFinite(G.lon) && Number.isFinite(G.lat),
+  ok(cierra && ciudades === 3 && (enVia === MC.TT.AVE || enVia === MC.TT.ROAD) && cotas.every(Number.isFinite) && T.lugares.length > 0 && edificiosFinitos && sale && sale.a === 'ruta_embalse' && alFinal && alFinal.a === 'guatape' && QG.anterior && QG.siguiente && G && Number.isFinite(G.lon) && Number.isFinite(G.lat),
     'planeta: el anillo cierra con 3 ciudades, el tramo tiene su autopista y paradas, se sale de Medellín al embalse y del embalse se llega a Guatapé', { lugares: T.lugares.length, cotas: cotas.map(Math.round), sale: sale && sale.a, llega: alFinal && alFinal.a, globo: G && [+G.lon.toFixed(1), +G.lat.toFixed(1)] });
 }
 
