@@ -65,3 +65,30 @@ const cubierto={x:0,y:0,a:0,a0:0,origen:{x:0,y:0},fase:0,ultima:{x:10,y:0},busqu
 for(let i=0;i<25;i++)pie.paso(cubierto,.05,{jugador:{x:100,y:30},mundo:pared,alarma:true});
 assert(cubierto.x < 4.1,'no atraviesa edificios al buscar');
 console.log('C-M32: detección, cobertura, memoria y persecución a pie OK');
+
+
+/* C-M33 · LOD de geometría GLB: dos niveles con triángulos estables y sin alterar el modelo. */
+const modeloCtx={MC:{},Malla:class {constructor(){this.d=[];}},clamp:(v,a,b)=>Math.max(a,Math.min(b,v)),hex3:()=>[1,1,1]};
+vm.runInNewContext(f('js/45-glb.js'),modeloCtx);
+const mdl=modeloCtx.MC.Modelos, tri=new Float32Array(120*21);
+for(let i=0;i<120;i++){
+ const o=i*21,sz=1+i/120;
+ tri[o]=i%8;tri[o+1]=0;tri[o+2]=0;
+ tri[o+3]=i%8+sz;tri[o+4]=0;tri[o+5]=0;
+ tri[o+6]=i%8;tri[o+7]=sz;tri[o+8]=0;
+ tri[o+9]=0;tri[o+10]=0;tri[o+11]=1;
+ tri[o+12]=.5;tri[o+13]=.5;tri[o+14]=.5;
+}
+const mo={id:'vehiculo_test',tris:tri,n:120,frente:'x',largo:4,ancho:2,alto:1.7};
+const lod0=mdl.indicesLOD(mo,0),lod1=mdl.indicesLOD(mo,1),lod2=mdl.indicesLOD(mo,2);
+assert(lod0===null && lod1.length===77 && lod2.length===36);
+assert(lod2.every(i=>lod1.includes(i)),'LOD2 es subconjunto de LOD1');
+assert.equal(mdl.nivelLOD(0),0);assert.equal(mdl.nivelLOD(70),1);assert.equal(mdl.nivelLOD(140),2);
+assert.equal(mdl.nivelLOD(1,{forzarLOD:2}),2);
+assert.strictEqual(mdl.indicesLOD(mo,1),lod1,'caché por modelo');
+const mL=new modeloCtx.Malla();
+mL.modelo(mo,0,0,0,0,{distancia:150});
+assert.equal(mL.d.length,36*30,'la malla dinámica dibuja el número de triángulos LOD2');
+const full=new modeloCtx.Malla();full.modelo(mo,0,0,0,0,{distancia:0});
+assert.equal(full.d.length,120*30,'distancia cero conserva 100 % de geometría');
+console.log('C-M33 · LOD0/LOD1/LOD2: 120, 77, 36 triángulos, caché y render OK');

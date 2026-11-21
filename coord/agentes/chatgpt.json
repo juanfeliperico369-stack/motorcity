@@ -3,7 +3,7 @@
   "agente": "chatgpt",
   "rama": "ia/chatgpt/4-0-2-gemini-auditoria",
   "rol": "Auditoría del contenido 4.0, catalogación de paradas, pruebas",
-  "fase_actual": "G-H21/22/23, C-M36, C-M32 base, C-M33 9 rigs",
+  "fase_actual": "G-H21/22/23, C-M32 base, C-M33 render LOD, C-M36 audio",
   "estado": "PR en revisión",
   "ultima_actualizacion_utc": "2026-11-21T03:12:00Z",
   "zonas_reclamadas": [
@@ -16,7 +16,9 @@
     "js/28-accion-pie.js",
     "juegos/getaway/30-historia.js",
     "juegos/getaway/arte3d/generar_actores_rig.py",
-    "juegos/getaway/arte3d/validar_actores_rig.py"
+    "juegos/getaway/arte3d/validar_actores_rig.py",
+    "js/45-glb.js",
+    "js/45-gl.js"
   ],
   "no_toco": [
     "ramas ajenas",
