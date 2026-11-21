@@ -3,7 +3,7 @@
   "agente": "chatgpt",
   "rama": "ia/chatgpt/4-0-2-gemini-auditoria",
   "rol": "Auditoría del contenido 4.0, catalogación de paradas, pruebas",
-  "fase_actual": "C-M31 WebGL (capa), C-M32 base, C-M33 LOD, C-M35 piezas, C-M36 audio, G-H21/22/23",
+  "fase_actual": "C-M31 GPU, C-M32 base, C-M33 LOD, C-M34 cache ED1, C-M35 piezas, C-M36 audio, G-H21/22/23",
   "estado": "PR en revisión",
   "ultima_actualizacion_utc": "2026-11-21T03:12:00Z",
   "zonas_reclamadas": [
@@ -21,7 +21,8 @@
     "js/45-gl.js",
     "js/32-piezas.js",
     "js/13-globo-gpu.js",
-    "juegos/getaway/index.html"
+    "juegos/getaway/index.html",
+    "js/10-sectores.js"
   ],
   "no_toco": [
     "ramas ajenas",

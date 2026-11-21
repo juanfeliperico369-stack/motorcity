@@ -86,7 +86,7 @@ async function entrarMundo(id, spawn = {}, texto = null) {
   const v0 = G.cuerpo ? G.cuerpo.v : 0, heat0 = G.busq ? G.busq.heat : 0, desde = G.id;
   const M = await mundoListo(id);
   if (G.vistas) G.vistas.liberar();
-  G.id = id; G.M = M; G._esp = null;
+  G.id = id; G.M = M; G._esp = null; G.sectores = id === 'nueva_york' ? new MC.Sectores1km(M, { lado: 1000, radio: 1, maxRegiones: 36 }) : null; G._sectoresT = 0;
   let L = spawn.x != null ? spawn : spawn.lugar ? resolver(spawn.lugar) : null;
   if (!L && desde) L = planeta.llegada(id, desde);
   if (!L) { const c = M.carretera ? M.carretera.inicio : M.viaCercana(M.ancho / 2, M.alto / 2, 2000) || { x: M.ancho / 2, y: M.alto / 2 }; L = { x: c.x, y: c.y, a: c.a ?? c.ang ?? 0 }; }
@@ -209,6 +209,7 @@ function paso(dt, dtVisual) {
     /* objetos físicos (conos, vallas, canecas) */
     { const cs = [{ x: C.x, y: C.y, z: C.z, r: V.clase === 'pie' ? .35 : Math.max(.4, (V.ancho || .8) / 2), masa: V.masa || 1400, vx: Math.cos(C.a) * C.v, vy: Math.sin(C.a) * C.v }]; for (const t of E.trafico) if (Math.hypot(t.x - C.x, t.y - C.y) < 140) cs.push({ x: t.x, y: t.y, z: 0, r: 1, masa: 1400, vx: Math.cos(t.a) * (t.v || 0), vy: Math.sin(t.a) * (t.v || 0) }); G.objetos.actualizar(dt, cs); }
      if (G.piezasFisicas) G.piezasFisicas.paso(dt);
+     if (G.sectores && (G._sectoresT -= dt) <= 0) { G._sectoresT = 2; G.sectorStats = G.sectores.actualizar(C.x, C.y); }
      if (B.pinchado && !G.piezasSueltas.rueda && enCarro) {
        G.piezasSueltas.rueda = true; G.piezasFisicas.soltar('rueda', C);
      }

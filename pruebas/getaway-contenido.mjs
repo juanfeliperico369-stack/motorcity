@@ -133,3 +133,21 @@ const pantalla=f('juegos/getaway/index.html');
 assert(pantalla.includes('id="ggl"')&&pantalla.includes('id="gcv"'),'2 lienzos: GPU y 2D, conservan fallback');
 assert(f('juegos/getaway/40-dibujo.js').includes('planeta.globo(c.getContext'),'fallback 2D intacto');
 console.log('C-M31: shader WebGL2 y fallback 2D disponibles');
+
+
+/* C-M34 parcial: sectores de 1 km y presupuesto de caché de edificios ED1. */
+const scCtx={MC:{}};
+vm.runInNewContext(f('js/10-sectores.js'),scCtx);
+const bldCache=new Map();
+for(let i=0;i<90;i++)bldCache.set(i+(i%6)*60,[{id:i}]);
+const fakeWorld={_ED:{cache:bldCache,R:640,nx:60},edificiosEn:(x0,y0,x1,y1)=>[{x0,y0,x1,y1}]};
+const cacheSector=new scCtx.MC.Sectores1km(fakeWorld,{lado:1000,maxRegiones:20,maxSectores:9});
+assert.deepEqual(JSON.parse(JSON.stringify(cacheSector.zona(2505,3999))),{sx:2,sy:3});
+const previo=cacheSector.pedir(2,3);assert.equal(previo.edificios().length,1);
+assert.strictEqual(cacheSector.pedir(2,3),previo);
+const infoSector=cacheSector.actualizar(2505,3999);
+assert(infoSector.antes>=80&&infoSector.despues<=20&&infoSector.sectores===9);
+assert(infoSector.evictas===infoSector.antes-infoSector.despues);
+assert([...fakeWorld._ED.cache.keys()].every(k=>k>=0),'cache consistente');
+cacheSector.limpiar();assert.equal(cacheSector.cache.size,0);
+console.log('C-M34 parcial: sectores 1 km con LRU, ED1 decodificado acotado a 20 regiones');
