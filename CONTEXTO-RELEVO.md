@@ -183,3 +183,7 @@
 - **Hecho:** `MC.GloboGPU` usa un shader WebGL2 con franjas de biomas del anillo, ruido geográfico ficticio, sombreado solar, atmósfera Rayleigh aproximada, estrellas y posición del jugador.
 - **Integración:** canvas GPU en overlay del planeta; si falla WebGL2, el `Planeta.globo` 2D original sigue disponible y táctil.
 - **Límite:** la transición sigue siendo por capa superpuesta (animada) y no todavía dentro del mismo renderizador de ciudad. Prueba de shader en Chromium pendiente de CI.
+
+
+### ChatGPT · 20-nov-2026 · QA real C-M31
+- Se amplió la prueba Chromium del juego compilado: abre el globo, verifica el lienzo WebGL2 y exige que el respaldo 2D sólo se use por ausencia de WebGL2. La PR permanece en borrador a la espera de Actions.

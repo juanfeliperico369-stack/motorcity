@@ -618,10 +618,14 @@ if (process.argv.includes('--navegador')) {
       await espera(800); const enRuta = G.id, letrero = document.querySelector('#viaje').textContent, c = G.M.carretera; G.planeta.llegadaT = 0; Object.assign(G.cuerpo, { x: c.centro(c.largo - 12), y: c.largo - 12 }); for (let i = 0; i < 400 && G.id !== 'medellin'; i++) await espera(100); for (let i = 0; i < 600 && G.transicion; i++) await espera(100);
       const medellin = G.id, metro = !!G.transporte && G.transporte.lineas.some(l => l.clase === 'metro'), modelos3d = MC.Modelos.L.size;
       G.Artefactos.cebo(); G.busq.ponerNivel(3); await espera(1500); const persigue = G.busq.rivales.length, tapa2 = MC.UI.verificar(G.ui);
-      return { paso0, obj, tapa, dialogo, enRuta, letrero: letrero.slice(0, 40), medellin, metro, modelos3d, persigue, tapa2, errores: MC.errores.length };
+      /* C-M31: abrir realmente el planeta en Chromium: WebGL2 si funciona, 2D si falta. */
+      G.Globo.abrir(); await espera(450);
+      const gpu = G.Globo.gpu, globo = { gpu: !!gpu?.ok, error: gpu?.error || '', ancho: document.querySelector('#ggl').width, respaldo: document.querySelector('#gcv').style.opacity };
+      G.Globo.cerrar();
+      return { paso0, obj, tapa, dialogo, enRuta, letrero: letrero.slice(0, 40), medellin, metro, modelos3d, persigue, tapa2, globo, errores: MC.errores.length };
     });
-    ok(portada.adultos && portada.modelos >= 45 && portada.mundos.length === 3 && r.paso0 === 'ir' && r.obj && !r.tapa.length && r.dialogo && r.enRuta === 'ruta_atlantico' && /Medellín/.test(r.letrero) && r.medellin === 'medellin' && r.metro && r.persigue >= 1 && !r.tapa2.length && !r.errores && !errs.length,
-      'Turno Cero en Chromium móvil: aviso 18+, 45 modelos, la historia arranca, el HUD no tapa el centro, Manhattan → Ruta del Atlántico → Medellín con su metro y la policía persigue', Object.assign({}, portada, r, { errs: errs.slice(0, 3) }));
+    ok(portada.adultos && portada.modelos >= 45 && portada.mundos.length === 3 && r.paso0 === 'ir' && r.obj && !r.tapa.length && r.dialogo && r.enRuta === 'ruta_atlantico' && /Medellín/.test(r.letrero) && r.medellin === 'medellin' && r.metro && r.persigue >= 1 && !r.tapa2.length && r.globo && (r.globo.gpu ? r.globo.respaldo === '0' && r.globo.ancho > 0 : /no disponible/i.test(r.globo.error) && r.globo.respaldo === '1') && !r.errores && !errs.length,
+      'Turno Cero en Chromium: historia, 45 modelos, Manhattan a Medellín, persecución y globo GPU con fallback 2D', Object.assign({}, portada, r, { errs: errs.slice(0, 3) }));
     await b.close();
   }
 }
