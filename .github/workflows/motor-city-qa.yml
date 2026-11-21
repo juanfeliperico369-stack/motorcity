@@ -40,6 +40,8 @@ jobs:
         run: node motor.mjs prueba
       - name: G-H21/22/23 · lugares, paradas y lenguaje
         run: node pruebas/getaway-contenido.mjs
+      - name: 4.5 · PVS horneado sin fugas (Guatapé y Manhattan)
+        run: node pruebas/pvs.mjs
       - name: Revisar arte Gemini
         run: node motor.mjs revisar-arte arte/gemini
       - name: Revisar arte ChatGPT
@@ -71,6 +73,10 @@ jobs:
         run: node motor.mjs construir
       - name: QA en Chromium
         run: node motor.mjs prueba --navegador
+      - name: 4.5 · sin conexión (sw.js)
+        run: node pruebas/sin-conexion.mjs
+      - name: 4.5 · Turno Cero, la historia entera hasta un final
+        run: node pruebas/getaway-historia.mjs
       - name: C-M34 · tres mundos offline con rasters de 1 km
         run: node pruebas/paquete-capas-browser.mjs
       - name: C-M34 · deduplicación y viaje real entre ciudades (Chromium offline)

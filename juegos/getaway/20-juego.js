@@ -161,7 +161,7 @@ function redensificar(d) { if (d === G.dEf) return; const k = d / G.dEf; G.camar
 /* ---------- subtítulos (llamadas que no frenan el volante) y escenas ---------- */
 const Subt = { cola: [], t: 0,
   decir(lineas) { for (const [q, x] of lineas) this.cola.push([q, x]); },
-  paso(dt) { const el = $('#subt'); if (this.t > 0) { this.t -= dt; if (this.t <= 0) el.hidden = true; return; } const s = this.cola.shift(); if (!s) return; const Q = TC.QUIEN[s[0]] || { n: s[0], c: '#fff' }; el.innerHTML = (s[0] === 'radio' ? '' : '<b style="color:' + Q.c + '">' + Q.n + ':</b> ') + suave(s[1]); el.hidden = false; this.t = Math.max(3, s[1].length * .058); },
+  paso(dt) { const el = $('#subt'); if (this.t > 0) { this.t -= dt; if (this.t <= 0) el.hidden = true; return; } const s = this.cola.shift(); if (!s) return; const Q = TC.QUIEN[s[0]] || { n: s[0], c: '#fff' }, Rr = TC.ROSTROS && TC.ROSTROS[s[0]] && MC.Rostro ? '<img class="cara" alt="" src="' + MC.Rostro.url(TC.ROSTROS[s[0]], 96) + '">' : ''; el.innerHTML = Rr + (s[0] === 'radio' ? '' : '<b style="color:' + Q.c + '">' + Q.n + ':</b> ') + suave(s[1]); el.hidden = false; this.t = Math.max(3, s[1].length * .058); },
   limpiar() { this.cola = []; this.t = 0; $('#subt').hidden = true; }
 };
 async function escena(lineas) {
@@ -170,7 +170,8 @@ async function escena(lineas) {
   for (const [q, x] of lineas) {
     if (token !== (G.narrativaEpoch || 0)) return;
     const Q = TC.QUIEN[q] || { n: q, c: '#fff' };
-    await G.ui.dialogo(q === 'radio' ? '<span style="color:#8a8578">· · ·</span>' : '<span style="color:' + Q.c + '">' + Q.n + '</span>', suave(x), ['▶']);
+    const cara = TC.ROSTROS && TC.ROSTROS[q] && MC.Rostro ? '<img class="retrato" alt="Retrato de ' + Q.n + '" src="' + MC.Rostro.url(TC.ROSTROS[q], 160, { expresion: /[!¡]|maldit|corr|ya\b/i.test(x) ? 'preocupada' : TC.ROSTROS[q].expresion }) + '">' : '';
+    await G.ui.dialogo(q === 'radio' ? '<span style="color:#8a8578">· · ·</span>' : cara + '<span style="color:' + Q.c + '">' + Q.n + '</span>', suave(x), ['▶']);
   }
   if (token === (G.narrativaEpoch || 0)) G.pausa = false;
 }

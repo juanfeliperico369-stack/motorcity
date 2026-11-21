@@ -1,6 +1,6 @@
 {
   "proyecto": "TURNO CERO: MANHATTAN",
-  "version": "0.3.0-preproduccion",
+  "version": "0.3.1-preproduccion",
   "licencia": "CC0-1.0 - geometria procedural original",
   "escala": "1 unidad = 1 metro; glTF Y-up",
   "nota": "Modelos GLB para bloqueo de escenas y adaptación; NO assets de lanzamiento ni modelos detallados / animados. Sin datos GIS oficiales.",
@@ -164,9 +164,9 @@
       "id": "personaje_mara",
       "categoria": "personajes",
       "archivo": "personaje_mara.glb",
-      "vertices": 2170,
-      "triangulos": 1404,
-      "bytes": 70344,
+      "vertices": 2408,
+      "triangulos": 1560,
+      "bytes": 77944,
       "bounds_metros": [
         [
           -0.36,
@@ -186,9 +186,9 @@
       "id": "personaje_nadia",
       "categoria": "personajes",
       "archivo": "personaje_nadia.glb",
-      "vertices": 2050,
-      "triangulos": 1348,
-      "bytes": 66632,
+      "vertices": 2288,
+      "triangulos": 1504,
+      "bytes": 74232,
       "bounds_metros": [
         [
           -0.36,
@@ -208,9 +208,9 @@
       "id": "personaje_guard",
       "categoria": "personajes",
       "archivo": "personaje_guard.glb",
-      "vertices": 1972,
-      "triangulos": 1276,
-      "bytes": 64020,
+      "vertices": 2210,
+      "triangulos": 1432,
+      "bytes": 71620,
       "bounds_metros": [
         [
           -0.36,
@@ -230,9 +230,9 @@
       "id": "personaje_courier",
       "categoria": "personajes",
       "archivo": "personaje_courier.glb",
-      "vertices": 2020,
-      "triangulos": 1296,
-      "bytes": 65496,
+      "vertices": 2258,
+      "triangulos": 1452,
+      "bytes": 73096,
       "bounds_metros": [
         [
           -0.36,
@@ -252,9 +252,9 @@
       "id": "personaje_operative",
       "categoria": "personajes",
       "archivo": "personaje_operative.glb",
-      "vertices": 2116,
-      "triangulos": 1340,
-      "bytes": 68436,
+      "vertices": 2354,
+      "triangulos": 1496,
+      "bytes": 76036,
       "bounds_metros": [
         [
           -0.36,
@@ -274,9 +274,9 @@
       "id": "personaje_informant",
       "categoria": "personajes",
       "archivo": "personaje_informant.glb",
-      "vertices": 1984,
-      "triangulos": 1288,
-      "bytes": 64424,
+      "vertices": 2222,
+      "triangulos": 1444,
+      "bytes": 72024,
       "bounds_metros": [
         [
           -0.36,

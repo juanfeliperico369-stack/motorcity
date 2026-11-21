@@ -423,9 +423,16 @@ def person(m,role):
         m.ball(s*.31,.86,.06,.05,.07,.045,skin,rings=5,segs=8)       # mano
     m.cyl(0,1.66,0,.06,.10,skin,segments=10)                          # cuello
     m.ball(0,1.80,.0,.10,.125,.11,skin,rings=8,segs=12)              # cabeza
-    for s in (-1,1): m.box(s*.037,1.81,.104,.02,.015,.008,BLACK)      # ojos
-    m.box(0,1.775,.11,.02,.03,.015,SAND)                              # nariz
-    m.box(0,1.74,.098,.05,.008,.006,RED_DARK)                         # boca
+    # 0.3.1 · rostro: blanco del ojo, iris, cejas, orejas, nariz con aletas y labios
+    for s in (-1,1):
+        m.box(s*.038,1.81,.103,.032,.017,.006,'#EDE6DA')               # blanco del ojo
+        m.box(s*.038,1.81,.1065,.014,.015,.004,'#2B1D14')              # iris y pupila
+        m.box(s*.040,1.832,.104,.04,.009,.008,hair)                    # ceja
+        m.ball(s*.103,1.80,-.005,.016,.03,.022,skin,rings=4,segs=6)    # oreja
+    m.box(0,1.778,.112,.022,.034,.018,skin)                            # nariz
+    for s in (-1,1): m.box(s*.012,1.763,.112,.012,.008,.012,'#8A5634')  # aletas
+    m.box(0,1.744,.101,.05,.008,.008,RED_DARK)                         # labio de arriba
+    m.box(0,1.736,.1,.042,.009,.008,'#B5645A')                         # labio de abajo
     # peinado de cada uno
     if role=='nadia':
         m.ball(0,1.86,-.015,.112,.085,.12,hair,rings=6,segs=12); m.ball(0,1.88,-.12,.06,.06,.06,hair,rings=5,segs=8)   # moño
@@ -557,7 +564,7 @@ def make_models():
         mesh=Mesh();fn(mesh);pts,tris,size=mesh.export(OUT/(name+'.glb'))
         bounds=[round(min(p[i] for p in mesh.p),3) for i in range(3)],[round(max(p[i] for p in mesh.p),3) for i in range(3)]
         manifest.append({'id':name,'categoria':category,'archivo':name+'.glb','vertices':pts,'triangulos':tris,'bytes':size,'bounds_metros':bounds,'estado':'proxy_3d_no_final','uso':use})
-    (Path(__file__).parent/'manifest.json').write_text(json.dumps({'proyecto':'TURNO CERO: MANHATTAN','version':'0.3.0-preproduccion','licencia':'CC0-1.0 - geometria procedural original','escala':'1 unidad = 1 metro; glTF Y-up','nota':'Modelos GLB para bloqueo de escenas y adaptación; NO assets de lanzamiento ni modelos detallados / animados. Sin datos GIS oficiales.','total':len(manifest),'assets':manifest},ensure_ascii=False,indent=2),encoding='utf8')
+    (Path(__file__).parent/'manifest.json').write_text(json.dumps({'proyecto':'TURNO CERO: MANHATTAN','version':'0.3.1-preproduccion','licencia':'CC0-1.0 - geometria procedural original','escala':'1 unidad = 1 metro; glTF Y-up','nota':'Modelos GLB para bloqueo de escenas y adaptación; NO assets de lanzamiento ni modelos detallados / animados. Sin datos GIS oficiales.','total':len(manifest),'assets':manifest},ensure_ascii=False,indent=2),encoding='utf8')
     print(f'{len(manifest)} GLB 2.0 assets creados: {sum(x["bytes"] for x in manifest)/1024:.0f} KiB')
     print(f'Geometría: {sum(x["triangulos"] for x in manifest):,} triángulos; {sum(x["vertices"] for x in manifest):,} vértices')
     return manifest

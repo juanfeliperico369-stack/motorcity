@@ -10,13 +10,13 @@
    Uso: MC.Rostro.dibujar(g, rasgos, x, y, tam, { expresion, t })  ·  MC.Rostro.url(rasgos, 128) → dataURL (con caché)
         MC.Rostro.azar(semilla) → rasgos de una persona cualquiera (guardias, transeúntes)
    ===================================================================== */
-const PIELES = ['#f1d3bd', '#e8bd98', '#d9a47c', '#c68a5e', '#a96f45', '#8a5634', '#6b3f24', '#4e2c18'];
-const PELOS = ['#16110d', '#2b1d14', '#4a3020', '#6e4a2c', '#9a6b3c', '#c4924f', '#d9b77a', '#8a8580', '#c9c5bf'];
+const ROSTRO_PIELES = ['#f1d3bd', '#e8bd98', '#d9a47c', '#c68a5e', '#a96f45', '#8a5634', '#6b3f24', '#4e2c18'];
+const ROSTRO_PELOS = ['#16110d', '#2b1d14', '#4a3020', '#6e4a2c', '#9a6b3c', '#c4924f', '#d9b77a', '#8a8580', '#c9c5bf'];
 const Rostro = {
   _cache: new Map(),
   azar(semilla = 1) {
     const r = mulberry32((semilla * 2654435761) >>> 0), el = L => L[(r() * L.length) | 0], fem = r() < .45;
-    return { piel: el(PIELES), pelo: el(PELOS.slice(0, 7)), ojos: el(['#3b2414', '#4a2f1a', '#2c5d3f', '#3d5f86', '#6b4a2b']), peinado: fem ? el(['largo', 'moño', 'cola', 'rizado', 'corto']) : el(['corto', 'rapado', 'rizado', 'calvo', 'corto']),
+    return { piel: el(ROSTRO_PIELES), pelo: el(ROSTRO_PELOS.slice(0, 7)), ojos: el(['#3b2414', '#4a2f1a', '#2c5d3f', '#3d5f86', '#6b4a2b']), peinado: fem ? el(['largo', 'moño', 'cola', 'rizado', 'corto']) : el(['corto', 'rapado', 'rizado', 'calvo', 'corto']),
       barba: fem ? 'ninguna' : el(['ninguna', 'sombra', 'bigote', 'candado', 'completa', 'ninguna']), edad: r() * .8, nariz: el(['recta', 'ancha', 'aguilena']), ropa: el(['#2b343d', '#475563', '#6b2f2a', '#2f5d45', '#1d2833', '#7a6a55']), fem,
       labios: fem ? el(['#b5645a', '#9a4a48', '#c27a6a']) : null, acc: r() < .2 ? ['gafas'] : r() < .15 ? ['arete'] : [] };
   },
@@ -28,7 +28,7 @@ const Rostro = {
   /* dibuja el retrato en un cuadrado de lado tam con esquina en (x, y) */
   dibujar(g, R, x, y, tam, op = {}) {
     const ex = op.expresion || R.expresion || 'neutral', t = op.t || 0, parpadeo = op.t != null && (t % 4.2) < .12;
-    const piel = hex3(R.piel || PIELES[3]), pelo = R.pelo || PELOS[1], css = (c, k = 0) => css3(k >= 0 ? mez3(c, [1, 1, 1], k) : mez3(c, [0, 0, 0], -k)), sombra = css(piel, -.22), luz = css(piel, .16), med = css(piel, 0);
+    const piel = hex3(R.piel || ROSTRO_PIELES[3]), pelo = R.pelo || ROSTRO_PELOS[1], css = (c, k = 0) => css3(k >= 0 ? mez3(c, [1, 1, 1], k) : mez3(c, [0, 0, 0], -k)), sombra = css(piel, -.22), luz = css(piel, .16), med = css(piel, 0);
     const edad = R.edad || 0, canas = edad > .65 || R.peinado === 'canoso';
     g.save(); g.translate(x, y); g.scale(tam / 100, tam / 100);
     /* fondo: un círculo suave del color del personaje */
