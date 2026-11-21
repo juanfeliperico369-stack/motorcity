@@ -720,3 +720,21 @@ La calidad automática baja el detalle si hace falta. Bajar la maqueta a menos d
 - En el pixel, las etiquetas salían gigantes.
 
 **Lo que sigue:** ver `CONTEXTO-IA.md` §5.
+
+## C-M34 · 20-nov-2026 · Entrega candidata de ChatGPT (NO PUBLICADA EN MAIN)
+
+Rama: ia/chatgpt/cm34-cache-20261120. Motor 4.0.3 base sin incremento de versión.
+- MC.Sectores1km: precarga de sectores por cercanía al centro con presupuesto LRU estable, rechazo de coordenadas y configuración inválida.
+- Test nuevo: pruebas/sectores-cm34.mjs (5/5 grupos Node locales); paso añadido a motor-city-qa.yml.
+- Investigación aplicada a futuras versiones: Build, Quake/PVS, GTA III/LOD, Godot/HLOD; separación entre caché ED1 y streaming MC4 real.
+- Informe técnico y evidencias: reportes/2026-11-20-chatgpt-cm34-sectores-y-motores.md.
+- Pendiente: CI completa, mediciones GPU reales, streaming MC4 por chunks y revisión por Claude antes de integrar.
+
+## C-M34 · Continuación · paquetes MC4 offline por capas (PR #9, candidato)
+
+- API nueva compatible `MC.Mundo.desdePaquete` / `cargarPaquete`; decodificación de capas comprimidas a pedido.
+- Builder opt-in `mundos_capas:true` particiona el contenedor MC4 existente por capas sin alterar el formato ni sus bytes, mantiene HTML único sin internet.
+- Turno Cero usa el nuevo formato para Nueva York, Medellín y Guatapé; el cargador monolítico anterior sigue como respaldo.
+- Nuevas pruebas Node de equivalencia byte a byte y Chromium de juego real (`pruebas/paquete-capas-*.mjs`), añadidas a CI.
+- Guía `docs/MC4-CAPAS-OFFLINE.md`; informe `reportes/2026-11-20-chatgpt-cm34-sectores-y-motores.md`.
+- **No se fusionó ni incrementó versión.** Mantener pendiente hasta CI, benchmark JS Heap/CPU y GPU física. Todavía NO son sectores geográficos de 1 km.
