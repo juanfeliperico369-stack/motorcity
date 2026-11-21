@@ -217,3 +217,12 @@
 - Se integró el commit 4.0.2 de Claude en la rama de ChatGPT con merge de dos padres.
 - G-H21: ocho coordenadas corregidas según el informe MC4 de Gemini (incluido refugio ficticio). El cotejo físico/catastral sigue sin hacerse.
 - G-H23: corregida la clave inexistente `coro` por `camara` en los subtítulos de la banda.
+
+
+### ChatGPT · 20–21 nov 2026 · integración Claude 4.0.2, Gemini PR #8 y nuevos QA
+- Merge de dos padres de `main` (Claude 4.0.2) con la rama PR #7 sin pisar las mecánicas de Run, carreras y accesibilidad.
+- Importación literal de 18 archivos artísticos de Gemini, 17 informes/capturas y 3 registros de coordinación de PR #8; los originales y la autoría permanecen inalterados.
+- G-H21/22/23: 8 correcciones geográficas, finca ficticia en punto con acceso al agua verificado por Gemini, 28 paradas originales con rutas/tipo, subtítulos y lenguaje con gramática correcta.
+- C-M32/31/34/35: persecución sin visión a través de muros, planeta responsive con etiquetas, caché de mundo anterior liberada al entrar, piezas 2D además de 3D. C-A16: seis modelos con UV/PBR 1024 generables y validables.
+- Corregido campo EDJ de geometría de paradas y controles de señuelo en móvil.
+- **Pendiente:** CI del último HEAD, GPU/RAM física, streaming MC4, PBR en shader y arte final de mallas. No fusionar PR #7 hasta verificar.
