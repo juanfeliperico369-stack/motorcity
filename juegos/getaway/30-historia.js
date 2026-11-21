@@ -153,12 +153,12 @@ async function tarjeta(p, h, s) { const tr = $('#transicion'); $('#trP').textCon
 const Contratos = {
   ofertas() { const L = TC.CONTRATOS.slice().sort(() => Math.random() - .5).slice(0, 3); return L.map(c => Object.assign({}, c, { pagoF: Math.round(c.pago[0] + Math.random() * (c.pago[1] - c.pago[0])) })); },
   menu() {
-    if (!G.M.esCiudad) return G.ui.aviso('📞 En la carretera no hay contratos: llega a una ciudad', 2000, 'contrato'); if (G.contrato) return G.ui.dialogo('📞 ' + G.contrato.c.n, G.contrato.c.texto, ['Seguir', 'Abandonar']).then(i => { if (i === 1) { G.contrato = null; G.objetivo = null; G.ui.aviso('Contrato abandonado'); } });
-    const O = this.ofertas(); G.ui.menu('📞 Contratos · ' + planeta.def(G.id).nombre, O.map((c, i) => ({ id: String(i), texto: '<b>' + c.n + '</b> · ' + plata(c.pagoF) + '<br><small>' + c.texto + ' · ' + '🚨'.repeat(c.heat) + '</small>' })), id => this.empezar(O[+id]));
+    if (!G.M.esCiudad) return G.ui.aviso('📞 En la carretera no hay contratos: llega a una ciudad', 2000, 'contrato'); if (G.contrato) return G.ui.dialogo('📞 ' + suave(G.contrato.c.n), suave(G.contrato.c.texto), ['Seguir', 'Abandonar']).then(i => { if (i === 1) { G.contrato = null; G.objetivo = null; G.ui.aviso('Contrato abandonado'); } });
+    const O = this.ofertas(); G.ui.menu('📞 Contratos · ' + planeta.def(G.id).nombre, O.map((c, i) => ({ id: String(i), texto: '<b>' + suave(c.n) + '</b> · ' + plata(c.pagoF) + '<br><small>' + suave(c.texto) + ' · ' + '🚨'.repeat(c.heat) + '</small>' })), id => this.empezar(O[+id]));
   },
   /* un punto sobre una calle para carros (no escaleras, senderos ni ciclorrutas: el rival y la policía también tienen que llegar) */
   punto(cx, cy, r0, r1) { const M = G.M, R = M.red('rueda'); for (let k = 0; k < 60; k++) { const a = Math.random() * TAU, d = r0 + Math.random() * (r1 - r0), q = R.cercana(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 80, e => e.k >= 1 && e.k <= 4); if (q && M.dentro(q.x, q.y)) return { x: q.x, y: q.y }; } return null; },
-  empezar(c) { const C = G.cuerpo, o = this.punto(C.x, C.y, 350, 1000), d = o && this.punto(o.x, o.y, 700, 1700); if (!o || !d) return G.ui.aviso('No hay calles para ese contrato aquí'); G.contrato = { c, o, d, fase: 0, t: 0, fuera: 0 }; G.objetivo = { x: o.x, y: o.y, texto: 'Recoger' }; G.ui.aviso('📞 ' + c.n + ': ve a recoger', 2200, 'contrato'); },
+  empezar(c) { const C = G.cuerpo, o = this.punto(C.x, C.y, 350, 1000), d = o && this.punto(o.x, o.y, 700, 1700); if (!o || !d) return G.ui.aviso('No hay calles para ese contrato aquí'); G.contrato = { c, o, d, fase: 0, t: 0, fuera: 0 }; G.objetivo = { x: o.x, y: o.y, texto: 'Recoger' }; G.ui.aviso('📞 ' + suave(c.n) + ': ve a recoger', 2200, 'contrato'); },
   paso(dt) {
     const K = G.contrato; if (!K || G.pausa) return; const C = G.cuerpo; K.t += dt;
     if (K.c.limite && K.t > K.c.limite) { G.ui.aviso('⏱ ' + K.c.n + ': se acabó el tiempo. Sin pago', 2600, 'contrato'); G.contrato = null; G.objetivo = null; return; }

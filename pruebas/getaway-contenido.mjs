@@ -151,3 +151,17 @@ assert(infoSector.evictas===infoSector.antes-infoSector.despues);
 assert([...fakeWorld._ED.cache.keys()].every(k=>k>=0),'cache consistente');
 cacheSector.limpiar();assert.equal(cacheSector.cache.size,0);
 console.log('C-M34 parcial: sectores 1 km con LRU, ED1 decodificado acotado a 20 regiones');
+
+
+/* G-H23: gramática y capitalización correctas, contratos también suavizados. */
+for (const [frase, esperado] of [
+ ['¡Hijueputas!','¡Desgraciados!'],
+ ['Malparida','Miserable'],
+ ['malparidos','miserables'],
+ ['¡Tombo!','¡Agente!'],
+ ['¡Güevones!','¡Bobos!'],
+ ['El sapo','El informante']
+]) assert.equal(fn(frase),esperado,'lenguaje suave: '+frase);
+const histSrc=f('juegos/getaway/30-historia.js');
+assert(histSrc.includes('suave(c.n)') && histSrc.includes('suave(c.texto)'),'filtrar título y descripción de contratos');
+console.log('G-H23 Gemini · capitalización, singular/plural, insultos y contratos OK');
