@@ -65,7 +65,7 @@ async function cargarCiudad(id) {
 const planeta = new MC.Planeta({ cargar: cargarCiudad, radioVisual: R_PLANETA });
 async function mundoListo(id) {
   const M = await planeta.mundo(id);
-  if (!M._nc) { M._nc = true; try { M.red('rueda'); } catch (e) { MC.falla('red ' + id, e); } try { MC.Terreno.agua(M); } catch (e) { /* sin agua */ } M.esCiudad = planeta.def(id).tipo === 'ciudad'; M.cfgCiudad = MC_CIUDADES[id] || null; }
+  if (!M._nc) { M._nc = true; try { M.red('rueda'); } catch (e) { MC.falla('red ' + id, e); } try { MC.Terreno.agua(M); } catch (e) { /* sin agua */ } M.esCiudad = planeta.def(id).tipo === 'ciudad'; M.cfgCiudad = MC_CIUDADES[id] || null; if (MC.PVS && !M.pvs) M.pvs = MC.PVS.deElemento(id); }
   return M;
 }
 

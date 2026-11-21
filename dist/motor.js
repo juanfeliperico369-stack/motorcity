@@ -5862,7 +5862,7 @@ class VistaGL {
   }
   /* una región de 160 m: suelo con textura de la losa y las cosas con volumen */
   _region(gx, gy, detalle) {
-    const M = this.mundo, gl = this.gl, R = this.R, O = this.O, x0 = gx * R, y0 = gy * R, n = 8, st = R / n, suelo = [];
+    const M = this.mundo, gl = this.gl, R = this.R, O = this.O, x0 = gx * R, y0 = gy * R, n = detalle >= 3 ? 16 : 8, st = R / n, suelo = [];   /* 4.5: el relieve cercano con malla de 10 m (lomas y taludes más fieles) */
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const P = [[i, j], [i + 1, j], [i + 1, j + 1], [i, j + 1]].map(([u, v]) => { const x = x0 + u * st, y = y0 + v * st, nn = M.normal(x, y, 10); return [x - O[0], M.cota(x, y) - O[2], y - O[1], nn[0], nn[1], nn[2], u / n, v / n]; }); for (const q of [P[0], P[2], P[1], P[0], P[3], P[2]]) suelo.push(...q); }
     /* texturas de lado potencia de 2 (512, 256 o 128 px por losa de 160 m) para tener mipmaps y filtro anisótropo: el piso se ve nítido a lo lejos */
     const res = (detalle > 3 ? 1024 : detalle > 2 ? 512 : detalle > 1 ? 256 : 128) / R, L = this.losas.losa(gx, gy, res, false, 3), tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -5941,9 +5941,12 @@ class VistaGL {
        - cono de visión horizontal: en las cámaras de manejo (tercera, primera, cine) las regiones detrás de la cámara tampoco.
        Las aéreas miran hacia abajo y no se recortan por cono. */
     const vis = [], fx = C.blanco[0] - C.ojo[0], fy = C.blanco[1] - C.ojo[1], fl = Math.hypot(fx, fy), rad = R * .75 + 30, finNiebla = fr[1] + rad, medio = Math.atan(Math.tan((C.fov || 1) / 2) * W / H) + .15, conCono = !aerea && fl > 1e-3 && Math.abs(C.ojo[2] - C.blanco[2]) < fl * 1.2;
+    /* 4.5 · PVS horneado (C‑M37, idea de Quake): con la cámara a ras de calle, lo que la tabla dice que no se ve no se dibuja */
+    const pvs = !aerea && M.pvs && C.ojo[2] - M.cota(C.ojo[0], C.ojo[1]) < M.pvs.he ? M.pvs.desde(C.ojo[0], C.ojo[1]) : null; let porPVS = 0;
     for (const r of this.regiones.values()) { if (r.gx == null) { vis.push(r); continue; } const rx = (r.gx + .5) * R - C.ojo[0], ry = (r.gy + .5) * R - C.ojo[1], d = Math.hypot(rx, ry); if (d - rad > finNiebla) continue;
+      if (pvs && !pvs.ve((r.gx + .5) * R, (r.gy + .5) * R)) { porPVS++; continue; }
       if (conCono && d > rad) { const f = (rx * fx + ry * fy) / fl, l = (-rx * fy + ry * fx) / fl; if (Math.abs(Math.atan2(l, f)) - Math.asin(Math.min(1, rad / d)) > medio) continue; } vis.push(r); }
-    this.recorte = { regiones: this.regiones.size, dibujadas: vis.length };
+    this.recorte = { regiones: this.regiones.size, dibujadas: vis.length, porPVS, pvs: !!pvs };
     /* regiones: suelo con su losa */
     gl.useProgram(this.pT.p); uni(this.pT); gl.activeTexture(gl.TEXTURE0); gl.uniform1i(this.pT.u.uS, 0);
     for (const r of vis) { gl.bindTexture(gl.TEXTURE_2D, r.tex); gl.bindBuffer(gl.ARRAY_BUFFER, r.suelo.b); this._attr(this.pT, [['aP', 3], ['aN', 3], ['aT', 2]], 8); gl.drawArrays(gl.TRIANGLES, 0, r.suelo.n / 8); }
@@ -6050,6 +6053,19 @@ Object.assign(Malla.prototype, {
         for (const [px, pz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) this.cajaF(tx + px * .9, zt + .55, tz + pz * .9, 0, .14, .14, 2.2, hex3('#2a2b2e'));
         this.cil(tx, zt + 2.7, tz, 1.25, 2.6, 9, hex3('#6b4e35'), 1.25, hex3('#5a412c')); this.cil(tx, zt + 5.3, tz, 1.35, 1.1, 9, hex3('#3b3d42'), 0);
       } else if (st.tanque || h2(sem, 3, 82) < .35) this.cil(tx, zt, tz, .62, 1.25, 7, hex3('#1d2228'), .62, hex3('#2b3138'));
+      /* 4.5 · la terraza: aires acondicionados y el cuarto de la escalera; las torres altas llevan corona, mástil o aguja */
+      if (!casa && detalle >= 3) {
+        const r0 = Math.min(e.hw, e.hd), gris = hex3('#9aa0a6'), osc = hex3('#5d636b');
+        if (r0 > 3.5) { const ang = Math.atan2(e.uy, e.ux), k = 1 + (h2(sem, 9, 88) * 3 | 0);
+          for (let j = 0; j < k; j++) { const u = (h2(sem, 10 + j, 88) - .5) * r0, v = (h2(sem, 20 + j, 88) - .5) * r0; this.cajaF(cx + u * e.ux - v * e.uy, zt + .55, cz + u * e.uy + v * e.ux, ang, 1.4, 1.0, .9, gris, 0, osc); }
+          if (H > 12) { const u = -r0 * .35, v = r0 * .3; this.cajaF(cx + u * e.ux - v * e.uy, zt + .55, cz + u * e.uy + v * e.ux, ang, 2.6, 2.2, 2.6, osc3(muro, .85), 0, techo); } }
+        if (H > 70) {
+          const tope = zt + .55, alto = H > 150 ? Math.min(60, H * .22) : H * .08, ang = Math.atan2(e.uy, e.ux);
+          if (H > 150) { this.cajaF(cx, tope, cz, ang, r0 * 1.1, r0 * 1.1, alto * .3, osc3(muro, .9), 0, acl3(muro, .1)); this.cil(cx, tope + alto * .3, cz, r0 * .18, alto * .7, 6, hex3('#c9cfd6'), .08); }
+          else if (h2(sem, 30, 88) < .5) { this.cajaF(cx, tope, cz, ang, r0 * 1.2, r0 * 1.2, alto, osc3(muro, .9), noche > .5 ? .35 : 0, acl3(muro, .15)); this.cil(cx, tope + alto, cz, .12, 6, 4, hex3('#c9cfd6'), .05); }
+          else this.cil(cx, tope, cz, .15, 9 + H * .05, 4, hex3('#c9cfd6'), .06);
+        }
+      }
     }
     if (detalle < 3 && !casa) return;
     /* fachada por cada muro: zócalo, ventanas con marco y vidrio, puerta, balcones y cornisa */
@@ -6114,7 +6130,7 @@ MC.Mundo3D = { PAL_ZOCALO };
    MODELOS GLB (4.0) · el mundo único 3D lee modelos glTF 2.0 binarios (.glb), sin librerías
    Para los 42 modelos de bloqueo de Codex («Turno Cero», CC0; juegos/getaway/arte3d): vehículos, personas,
    tecnología, edificios y escenarios, en metros y con color por vértice. Un juego los mete en su HTML
-   ("modelos" en juego.json → var MC_MODELOS = { id: 'base64' }) y la vista 3D los usa en vez de las cajas:
+   ("modelos" en juego.json → var MC_MODELOS = { id: 'base64' } o, desde 4.5, 'z:<bytes>:<base64 deflate>') y la vista 3D los usa en vez de las cajas:
    carros del tráfico, patrullas, camionetas de la banda, el carro del jugador y lo que el juego ponga en E.modelos3d.
    - Lee POSITION, COLOR_0 (u8 normalizado o float) e índices (u16/u32) de la primera malla; sin texturas ni huesos.
    - Color dominante = carrocería: se puede teñir por instancia (cada carro del tráfico con su color).
@@ -6159,7 +6175,8 @@ const Modelos = {
   get(id) { return this.L.get(id) || null; },
   /* GLB (ArrayBuffer, Uint8Array o base64) → { tris, n, bounds, frente } */
   leer(fuente, op = {}) {
-    let u8 = fuente; if (typeof fuente === 'string') u8 = Modelos._b64(fuente); else if (fuente instanceof ArrayBuffer) u8 = new Uint8Array(fuente);
+    let u8 = fuente; if (typeof fuente === 'string' && fuente.startsWith('z:')) { const i = fuente.indexOf(':', 2); u8 = inflarSync(deB64(fuente.slice(i + 1)), +fuente.slice(2, i)); }   /* 4.5: GLB comprimido en el HTML ('z:<bytes>:<base64 deflate>') */
+    else if (typeof fuente === 'string') u8 = Modelos._b64(fuente); else if (fuente instanceof ArrayBuffer) u8 = new Uint8Array(fuente);
     const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength); if (dv.getUint32(0, true) !== 0x46546C67) throw new Error('no es GLB');
     let o = 12, json = null, bin = null;
     while (o < u8.byteLength) { const len = dv.getUint32(o, true), tipo = dv.getUint32(o + 4, true), d = u8.subarray(o + 8, o + 8 + len); if (tipo === 0x4E4F534A) json = JSON.parse(new TextDecoder().decode(d)); else if (tipo === 0x004E4942) bin = d; o += 8 + len; }
@@ -6193,11 +6210,17 @@ const Modelos = {
     for (let t = 0; t < nt; t++) { const o2 = t * 21, gx = (T[o2] + T[o2 + 3] + T[o2 + 6]) / 3 - cx, gy = (T[o2 + 1] + T[o2 + 4] + T[o2 + 7]) / 3 - cy, gz = (T[o2 + 2] + T[o2 + 5] + T[o2 + 8]) / 3 - cz; if (gx * T[o2 + 9] + gy * T[o2 + 10] + gz * T[o2 + 11] < 0) { T[o2 + 9] = -T[o2 + 9]; T[o2 + 10] = -T[o2 + 10]; T[o2 + 11] = -T[o2 + 11]; } }
     /* la carrocería: el color con más área (las llantas tienen muchos triángulos pequeños) */
     let cuerpo = null, max = 0; for (const [k, n] of cuenta) { const [r, g, b] = k.split(',').map(Number); if (n > max) { max = n; cuerpo = k; } }
-    if (cuerpo) for (let t = 0; t < nt; t++) { const o2 = t * 21, key = Math.round(T[o2 + 12] * 255) + ',' + Math.round(T[o2 + 13] * 255) + ',' + Math.round(T[o2 + 14] * 255); if (key === cuerpo) T[o2 + 15] = 1; }
+    /* 4.5: los modelos 0.3.0 traen la oclusión ambiental horneada en el color: las caras de la carrocería más oscuras
+       (mismo color × 0,65–0,99) también se tiñen, y guardan su sombra en tono[] para que el tinte la respete */
+    let tono = null;
+    if (cuerpo) { const cb = cuerpo.split(',').map(Number);
+      for (let t = 0; t < nt; t++) { const o2 = t * 21, r = Math.round(T[o2 + 12] * 255), g = Math.round(T[o2 + 13] * 255), b = Math.round(T[o2 + 14] * 255), key = r + ',' + g + ',' + b; if (key === cuerpo) { T[o2 + 15] = 1; continue; }
+        if (cb[0] + cb[1] + cb[2] < 30) continue; const kr = (r + .5) / (cb[0] + .5), kg = (g + .5) / (cb[1] + .5), kb = (b + .5) / (cb[2] + .5), km = (kr + kg + kb) / 3;
+        if (km >= .65 && km < .995 && Math.max(Math.abs(kr - km), Math.abs(kg - km), Math.abs(kb - km)) < .035) { T[o2 + 15] = 1; (tono || (tono = new Float32Array(nt).fill(1)))[t] = km; } } }
     /* faros y luces traseras de los vehículos (se encienden de noche): blanco cálido adelante (+X), rojo atrás */
     if (mx[0] - mn[0] > 2 && mx[1] - mn[1] < 3.2) for (let t = 0; t < nt; t++) { const o2 = t * 21, r = T[o2 + 12], g = T[o2 + 13], b = T[o2 + 14], gx = (T[o2] + T[o2 + 3] + T[o2 + 6]) / 3;
       if (gx > mx[0] - .12 && r > .7 && g > .65 && b > .6) T[o2 + 15] = 2; else if (gx < mn[0] + .12 && r > .6 && g < .45 && b < .4) T[o2 + 15] = 3; }
-    return { tris: T, n: nt, bounds: [mn, mx], frente: op.frente || 'x', largo: mx[0] - mn[0], ancho: mx[2] - mn[2], alto: mx[1] - mn[1], piel, clips: piel ? Object.keys(piel.anim) : [] };
+    return { tris: T, n: nt, tono, bounds: [mn, mx], frente: op.frente || 'x', largo: mx[0] - mn[0], ancho: mx[2] - mn[2], alto: mx[1] - mn[1], piel, clips: piel ? Object.keys(piel.anim) : [] };
   },
   registrar(id, fuente, op = {}) { try { const m = Modelos.leer(fuente, Object.assign({ frente: /_rig$/.test(id) ? '-z' : /^personaje_/.test(id) ? 'z' : 'x' }, op)); m.id = id; Modelos.L.set(id, m); return m; } catch (e) { MC.falla('modelo ' + id, e); return null; } },
   /* todos los de un paquete { id: base64 } */
@@ -6238,7 +6261,7 @@ Malla.prototype.modelo = function (Mo, x, y, z, a, op = {}) {
   /* abolladuras por zona (frente, atrás, izquierda, derecha; 0–1): los vértices de esa punta se meten hacia adentro y bajan un poco */
   const L2 = (fz ? Mo.ancho : Mo.largo) * k / 2, W2 = (fz ? Mo.largo : Mo.ancho) * k / 2;
   for (let t = 0; t < n; t++) {
-    const o = (indices ? indices[t] : t) * 21, fl = T[o + 15], cuerpo = fl === 1, r0 = cuerpo && tin ? tin[0] : T[o + 12], g0 = cuerpo && tin ? tin[1] : T[o + 13], b0 = cuerpo && tin ? tin[2] : T[o + 14], m = 1 - osc, r = r0 * m, g = g0 * m, b = b0 * m, e = fl >= 2 ? (D && ((fl === 2 && D.f > .6) || (fl === 3 && D.b > .6)) ? 0 : 1) : e0;
+    const ti = indices ? indices[t] : t, o = ti * 21, fl = T[o + 15], cuerpo = fl === 1, sh = cuerpo && tin && Mo.tono ? Mo.tono[ti] : 1, r0 = cuerpo && tin ? tin[0] * sh : T[o + 12], g0 = cuerpo && tin ? tin[1] * sh : T[o + 13], b0 = cuerpo && tin ? tin[2] * sh : T[o + 14], m = 1 - osc, r = r0 * m, g = g0 * m, b = b0 * m, e = fl >= 2 ? (D && ((fl === 2 && D.f > .6) || (fl === 3 && D.b > .6)) ? 0 : 1) : e0;
     const nu = (fz ? T[o + 11] : T[o + 9]) * inv, nv = (fz ? -T[o + 9] : T[o + 11]) * inv, nx = nu * ca - nv * sa, nz = nu * sa + nv * ca, ny = T[o + 10];
     for (let j = 0; j < 3; j++) { const px = T[o + j * 3], py = T[o + j * 3 + 1], pz = T[o + j * 3 + 2]; let u = (fz ? pz : px) * k * inv, v = (fz ? -px : pz) * k * inv, h = py * ky;
       if (D) { const pf = u - L2 * .45, pb = -L2 * .45 - u, pl = v - W2 * .35, pr = -W2 * .35 - v;
@@ -6253,6 +6276,59 @@ function m4trs(t, q, sc) { const [x, y, z, w] = q, x2 = x + x, y2 = y + y, z2 = 
   return [(1 - (yy + zz)) * sc[0], (xy + wz) * sc[0], (xz - wy) * sc[0], 0, (xy - wz) * sc[1], (1 - (xx + zz)) * sc[1], (yz + wx) * sc[1], 0, (xz + wy) * sc[2], (yz - wx) * sc[2], (1 - (xx + yy)) * sc[2], 0, t[0], t[1], t[2], 1]; }
 function m4mul(a, b) { const o = new Array(16); for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) o[c * 4 + r] = a[r] * b[c * 4] + a[4 + r] * b[c * 4 + 1] + a[8 + r] * b[c * 4 + 2] + a[12 + r] * b[c * 4 + 3]; return o; }
 MC.Modelos = Modelos;
+
+/* ---- js/45-pvs.js ---- */
+/* =====================================================================
+   PVS · conjunto potencialmente visible, calculado por adelantado (4.5, C‑M37)
+   Idea de Quake (id Software, 1996), rehecha desde cero (sala limpia): el mapa se parte en celdas y, antes de jugar,
+   se calcula desde cada celda qué otras se alcanzan a ver. En el juego basta con mirar una tabla de bits.
+   Aquí la ciudad es un campo de alturas (suelo + edificios, 2,5D), así que el cálculo es el del horizonte de Comanche:
+   desde unos ojos repartidos por las calles de cada celda de 160 m se lanzan rayos en 720 direcciones y se marca toda
+   columna cuya cima asoma por encima del horizonte que va dejando lo más alto que el rayo ya cruzó
+   (herramientas/pvs.mjs, con varios núcleos). La comprobación (pruebas/pvs.mjs) usa cámaras al azar que no son esos ojos.
+   Formato (datos/<mundo>/pvs.bin): 'PVS1' · u32 largo del JSON · JSON { P, r, nx, ny, he, bytes, ... } · bits (deflate crudo).
+   Cada celda guarda una ventana de (2r+1)² bits alrededor suyo: 1 = se puede ver. Lo que cae fuera de la ventana no se
+   recorta con el PVS (lo recorta la niebla). Una celda sin ojos (agua, un edificio enorme) tiene la ventana llena de unos.
+   Uso: M.pvs = MC.PVS.leer(bytes); y en la vista 3D: const V = M.pvs.desde(x, y); V.ve(x2, y2)
+   ===================================================================== */
+class PVS {
+  constructor(meta, bits) {
+    this.meta = meta; this.P = meta.P; this.r = meta.r; this.nx = meta.nx; this.ny = meta.ny; this.he = meta.he || 16;
+    this.lado = 2 * this.r + 1; this.porCelda = Math.ceil(this.lado * this.lado / 8); this.bits = bits;
+    if (bits.length !== this.nx * this.ny * this.porCelda) throw new Error('PVS: tamaño inconsistente');
+  }
+  static leer(fuente) {
+    const u8 = typeof fuente === 'string' ? deB64(fuente) : fuente;
+    if (String.fromCharCode(u8[0], u8[1], u8[2], u8[3]) !== 'PVS1') throw new Error('no es un PVS1');
+    const n = u8[4] | u8[5] << 8 | u8[6] << 16 | u8[7] << 24, meta = JSON.parse(new TextDecoder().decode(u8.subarray(8, 8 + n)));
+    return new PVS(meta, inflarSync(u8.subarray(8 + n), meta.bytes));
+  }
+  /* del HTML de un juego: <script type="text/plain" id="pvs-<mundo>"> (si no está, null y todo sigue igual) */
+  static deElemento(id) { try { const el = typeof document !== 'undefined' && document.getElementById('pvs-' + id); return el ? PVS.leer(el.textContent.trim()) : null; } catch (e) { MC.falla && MC.falla('pvs ' + id, e); return null; } }
+  celda(x, y) { return [Math.floor(x / this.P), Math.floor(y / this.P)]; }
+  /* ¿desde la celda (cx, cy) se ve la celda (tx, ty)? */
+  veCelda(cx, cy, tx, ty) {
+    const dx = tx - cx, dy = ty - cy, r = this.r;
+    if (dx < -r || dx > r || dy < -r || dy > r || cx < 0 || cy < 0 || cx >= this.nx || cy >= this.ny) return true;
+    const b = (dy + r) * this.lado + dx + r, o = (cy * this.nx + cx) * this.porCelda;
+    return (this.bits[o + (b >> 3)] >> (b & 7) & 1) === 1;
+  }
+  /* desde un punto: la unión de las celdas que toca un cuadrado de ±margen (la cámara se mueve entre celdas y queda
+     unos metros detrás del jugador). Devuelve { ve(x, y), celdas } para preguntar por puntos del mundo. */
+  desde(x, y, margen = 28) {
+    const P = this.P, cs = [], vistas = new Set();
+    for (const [ax, ay] of [[-margen, -margen], [margen, -margen], [-margen, margen], [margen, margen]]) { const cx = Math.floor((x + ax) / P), cy = Math.floor((y + ay) / P), k = cx + ',' + cy; if (!vistas.has(k)) { vistas.add(k); cs.push([cx, cy]); } }
+    return { celdas: cs, ve: (px, py) => { const tx = Math.floor(px / P), ty = Math.floor(py / P); for (const [cx, cy] of cs) if (this.veCelda(cx, cy, tx, ty)) return true; return false; } };
+  }
+  /* cuántas celdas de la ventana se ven, en promedio (para el informe y las pruebas) */
+  resumen() {
+    let tot = 0, llenas = 0; const W2 = this.lado * this.lado;
+    for (let c = 0; c < this.nx * this.ny; c++) { let n = 0; const o = c * this.porCelda; for (let b = 0; b < W2; b++) n += this.bits[o + (b >> 3)] >> (b & 7) & 1; if (n === W2) llenas++; else tot += n; }
+    const conDatos = this.nx * this.ny - llenas;
+    return { celdas: this.nx * this.ny, conDatos, ventana: W2, vistasMedia: conDatos ? +(tot / conDatos).toFixed(1) : W2, recorteMedio: conDatos ? +(1 - tot / conDatos / W2).toFixed(3) : 0 };
+  }
+}
+MC.PVS = PVS;
 
 /* ---- js/46-vistas.js ---- */
 /* =====================================================================
@@ -8542,7 +8618,7 @@ const Publico = {
 };
 MC.Publico = Publico;
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-raster-sector.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","46-vistas.js","47-clasicos.js","47-colormap.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-raster-sector.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","45-pvs.js","46-vistas.js","47-clasicos.js","47-colormap.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;

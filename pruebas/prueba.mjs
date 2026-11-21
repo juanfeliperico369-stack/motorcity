@@ -499,6 +499,16 @@ console.log('21) Manejo 4.0.2: reversa, vuelta en tres puntos y piloto de la IA'
   ok(vRev < -2 && vRev > -8.6 && intentos >= 3 && llego >= intentos - 1, 'manejo: con el carro quieto, frenar es reversa (hasta 8 m/s); el piloto de la IA arranca de espaldas y llega a su destino por la calle', { reversa: +vRev.toFixed(1), llego, de: intentos, segundos: tiempos });
 }
 
+console.log('24) PVS 4.5 (Quake): la tabla horneada de lo que se ve desde cada celda de 160 m');
+{ const fp = path.join(RAIZ, 'datos/guatape/pvs.bin');
+  if (fs.existsSync(fp)) { const pv = MC.PVS.leer(new Uint8Array(fs.readFileSync(fp))), rs = pv.resumen();
+    /* las vecinas siempre se ven; desde un punto se unen las celdas que toca su margen; fuera de la ventana no recorta */
+    let vecinas = true, cx = 0, cy = 0; for (let k = 0; k < pv.nx * pv.ny; k++) { const x = k % pv.nx, y = k / pv.nx | 0; for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) if (!pv.veCelda(x, y, x + i, y + j)) vecinas = false; }
+    for (let k = 0; k < pv.nx * pv.ny; k++) { const x = k % pv.nx, y = k / pv.nx | 0; let n = 0; for (let j = -pv.r; j <= pv.r; j++) for (let i = -pv.r; i <= pv.r; i++) n += pv.veCelda(x, y, x + i, y + j) ? 0 : 1; if (n > 20) { cx = x; cy = y; break; } }
+    const V = pv.desde((cx + .5) * pv.P, (cy + .5) * pv.P), fuera = pv.veCelda(cx, cy, cx + pv.r + 3, cy);
+    ok(rs.conDatos > 100 && rs.recorteMedio > .2 && vecinas && fuera && V.celdas.length === 1 && V.ve((cx + .5) * pv.P, (cy + .5) * pv.P), 'pvs: Guatapé horneado, las vecinas siempre visibles, la ventana recorta y lo de afuera no se toca', rs);
+  } else console.log('  · sin datos/guatape/pvs.bin (node herramientas/pvs.mjs guatape)'); }
+
 console.log('23) COLORMAP 4.4 (Doom): paleta de 256, tabla RGB15 y 32 niveles de luz por búsqueda en tabla');
 { const w = 64, h = 32, data = new Uint8ClampedArray(w * h * 4); for (let i = 0; i < w * h; i++) { data[i * 4] = 200; data[i * 4 + 1] = 120; data[i * 4 + 2] = 60; data[i * 4 + 3] = 255; }
   const img = { data, width: w, height: h }, T = MC.Colormap.tablas(); MC.Colormap.aplicar(img, { cx: 0, cy: 16, base: 0, caida: 30 / (w * w) });
