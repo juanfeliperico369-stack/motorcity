@@ -14,7 +14,7 @@
 > 3. **Nunca borres la entrada de otra IA.** Este documento es un relevo: se suma, no se reescribe.
 > 4. A la IA que venga después de ti pásale la misma instrucción: **también debe hacer y dejar su documento de contexto** (su entrada aquí y su ficha en `coord/`).
 
-**Última actualización:** 21‑nov‑2026, Claude (motor 4.4.0).
+**Última actualización:** 21‑nov‑2026, Claude (motor **4.5.0**). Lo entregado y los enlaces están en el § 0.
 
 > **El autor confirmó que Codex, ChatGPT y Antigravity ya no siguen. Claude asumió todo lo que quedaba.** La tabla del § 5 dice qué se hizo y qué queda, y por qué.
 **Última actualización:** 21‑nov‑2026, Gemini · Antigravity (sincronizado con motor **4.0.3** de Claude + ingeniería inversa limpia de motores clásicos + paquete de arte pintado).
@@ -29,6 +29,21 @@
 **Rama de trabajo:** `claude/motor-city-engine-xu7p4y` en los cuatro repositorios. Las otras IA trabajan en sus ramas (`ia/<agente>/<tema>`, entrega Gemini actual en `ia/antigravity/motorcity-4.2`). `main` de `motorcity` se avanza en rápido para GitHub Pages.
 
 ---
+
+## 0. Entregables de la 4.5.0 (HTML, APK y enlaces)
+| Juego | Enlace | HTML (un solo archivo) | APK |
+|---|---|---|---|
+| Página del motor | <https://juanfeliperico369-stack.github.io/motorcity/> | `index.html` | — |
+| **Turno Cero** (18+) | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.5.0/MotorCity-getaway.apk> |
+| **Motor City · Carreras** (nuevo) | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/carreras.html> | `dist/juegos/carreras.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.5.0/MotorCity-carreras.apk> |
+| **Extremo** (nuevo) | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/extremo.html> | `dist/juegos/extremo.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.5.0/MotorCity-extremo.apk> |
+| Mandados (demo) | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html> | `dist/juegos/mandados.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.5.0/MotorCity-mandados.apk> |
+| Juega EnCicla | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | <https://github.com/juanfeliperico369-stack/BicicletasUno/releases/download/v2.0.1/JuegaEnCicla-v2.0.1-debug.apk> |
+| El Metro | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://github.com/juanfeliperico369-stack/MetroZero/releases/download/v2.0.1/el-metro.apk> (código 27) |
+| Run Scooter | <https://juanfeliperico369-stack.github.io/RunRunZero/> | `RunRunZero/web/index.html` | <https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk> |
+
+Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (Capacitor 7). El proxy de esta sesión no deja subir etiquetas: el flujo, lanzado a mano, crea él mismo la release `v<VERSION.json>`. EnCicla (`android.yml`) y El Metro (`apk.yml`) hacen lo mismo con la versión de cada juego; Run Scooter la publica en su página con cada empuje a `main`.
+**Juegos hermanos:** por decisión del autor siguen con su propio Motor del Valle; reciben el motor en `motor-city/` como referencia y un informe detallado en `docs/INFORME-MOTOR-CITY-4.5.md` (qué se cambió, qué mejoró, qué falta auditar, qué les toca y cómo usar el motor sin dejar el suyo).
 
 ## 1. La misión
 **Motor City** es un motor de mundo abierto en **un solo HTML, sin internet ni librerías**. Convierte lugares reales (datos abiertos) o inventados en mundos jugables con leyes reales:
@@ -99,11 +114,11 @@
 | 6 | ~~COLORMAP de Doom (C‑M39)~~ | **Hecho en 4.4 (Claude)** | `js/47-colormap.js` y 🕹️ Retro 1993 en ⏸ Menú. |
 | 7 | ~~Pool de partículas y escalador dinámico~~ | **Hecho (Antigravity, unido en 4.4)** | `js/88-vida.js` y `js/05-gpu.js`. |
 | 8 | ~~Run por la carretera de la nada (C‑R40)~~ | **Hecho en 4.4 (Claude)** | `RunRunZero`: 🛣️ en la portada. Copiado al motor con `herramientas/importar-run.mjs`. |
-| 9 | **PVS de Quake (C‑M37)** | Pendiente (Claude) | Hay que calcularlo por adelantado en `herramientas/construir.mjs`, con la huella y la altura de cada edificio por sector de 1 km. Hacerlo en tiempo real haría desaparecer edificios que sí se ven. Hoy el recorte por niebla y cono ya ahorra cerca del 70 % en tercera persona. |
-| 10 | **Bici a Guatapé (EnCicla) y bus a Guatapé (El Metro)** | Pendiente (Claude) | Esos juegos tienen su propio mapa del Valle. Hay que darles el lector MC4 del motor (`MC.Mundo` y `MC.Planeta`) como un modo aparte, que son las zonas Z4 y Z5 de El Metro. Es una tarea grande: un modo nuevo en cada juego. |
-| 11 | **El Metro: crónicas (Z3)** | Pendiente (Claude) | Narrativa aditiva en `37-cronicas.js`, que guarde en `Save.d.cronicas`. |
-| 12 | **El globo en la misma escena 3D (C‑M31)** | Pendiente (Claude) | Hoy el globo WebGL2 es una vista aparte, con animación al alejar. |
-| 13 | **LOD retopologizados y más actores con esqueleto (C‑M33)** | Pendiente: arte | Hay LOD0, LOD1 y LOD2 automáticos. Para mallas retocadas a mano hace falta una herramienta de arte 3D (Blender) que no hay en la VM. |
+| 9 | ~~PVS de Quake (C‑M37)~~ | **Hecho en 4.5 (Claude)** | `herramientas/pvs.mjs` + `js/45-pvs.js`: Manhattan recorta 26 % y Guatapé 28 % a ras de calle, sin fugas grandes (`pruebas/pvs.mjs`). Medellín medido (15 %) y fuera del HTML por peso. |
+| 10 | **Guatapé en los juegos hermanos** | **Sus IA** (decisión del autor 4.5) | Va en `docs/INFORME-MOTOR-CITY-4.5.md` de cada uno, con el cómo: el lector MC4 del motor como un modo aparte (`datos/guatape/mundo.mc4`, 0,4 MB). |
+| 11 | **El Metro: crónicas (Z3)** | **Sus IA** (4.5) | En el informe de MetroZero. |
+| 12 | **El globo en la misma escena 3D (C‑M31)** | Pendiente | Sigue como vista aparte con animación al alejar. Falta dibujar la esfera (radio = 1/2k de la curvatura) en `js/45-gl.js` cuando la cámara aérea pase de unos kilómetros, y subir el tope de la cámara aérea. |
+| 13 | **LOD retopologizados y más actores con esqueleto (C‑M33)** | Pendiente: arte | En 4.5 los 42 modelos se rehicieron (generador 0.3.1, AO, caras); LOD a mano sigue necesitando Blender. |
 | 14 | **Cotejo en terreno de las 8 coordenadas de Turno Cero** | **Autor** o alguien de Medellín y de Guatapé | Están verificadas contra el MC4. |
 | 15 | ~~Tarjetas de El Metro con el texto encima del arte~~ | **No se reproduce en la versión actual** | El diseño cambió desde la auditoría (v0.2.0). |
 
@@ -239,6 +254,14 @@
 - **Hecho:** `MC.Sectores1km`: sectores de 1 km con caché LRU de metadatos; limita a 36 las regiones de edificios ED1 decodificadas cerca de la cámara de Manhattan, cada 2 s. El mundo sigue funcional fuera de la caché porque ED1 crudo permanece disponible.
 - **Prueba:** en Node se crean 90 regiones ficticias y el sectorizador reduce a <=20 sin perder la API; se conservan guardados.
 - **No hecho:** el MC4 comprimido de 10,2 MB y las capas de suelo, relieve y viales siguen cargándose en el juego completo. Streaming real necesita dividir el formato/binarios en construcción y lector sectorizado.
+### Claude · 21‑nov‑2026 · 4.5.0 · PVS, modelos, manejo, efectos, rostros, Hunter Assassin, Carreras y Extremo
+- **Pedido:** retocar modelos 3D, 2D y pixel; PVS; topografías, casas y edificios (sin cambiar el mapa); informe detallado a cada repositorio y que sigan con su motor del Valle; en el motor y el juego de prueba, todo lo que falta. Después: manejo y controles, rostros, árboles con lógica, vehículos que suben por algunas cosas, la forma cenital de *Hunter Assassin* y explosiones, choques, derrapes y cosas rotas. Autorizado a publicar.
+- **Hecho:** ver `BITACORA.md` (4.5.0), `docs/PEDIDOS.md` § 16 y `docs/INVESTIGACION-MANEJO.md`.
+  - El hallazgo más importante: los carros de Turno Cero usan el modelo de bicicleta de `js/36-taller.js`, que frenaba en seco y rebotaba al rozar cualquier cosa. Ahora comparte con la física base el choque que desliza, el desatascador y la asistencia.
+- **Cómo se probó:** 144 Node, 156 navegador, `pruebas/pvs.mjs`, `pruebas/sin-conexion.mjs`, `pruebas/carreras.mjs` y `pruebas/getaway-historia.mjs` (Final A en 162 s, 0 errores). Capturas revisadas: modelos, retratos, derrape y explosión, carreras.
+- **Falta:** el globo en la misma escena (§ 5, fila 12); probar la sensación del manejo con las manos en un celular (autor); LOD a mano (arte); 4 paletas de obras y los 10 reels que piden iniciar sesión.
+- **Riesgo:** la asistencia de manejo corrige el volante; si a alguien no le gusta, se apaga en ⏸ Menú. Los números para afinar están en `docs/INVESTIGACION-MANEJO.md` § 5.
+
 ### Claude · 21‑nov‑2026 · 4.4.0 · lo que quedaba de las otras IA
 - **Pedido del autor:** «Y ya ni lo harán, resuelve tú lo que falta». Codex, ChatGPT y Antigravity ya no siguen.
 - **Hecho:**
@@ -1195,6 +1218,8 @@ No hace falta conectar ninguna aplicación.
 
 # ANEXO 0. Tareas de cada IA (`TAREAS-IA.md`)
 
+
+> **4.5 (21‑nov‑2026), decisión del autor:** EnCicla, El Metro y Run Scooter **siguen con su propio motor**. Reciben Motor City en `motor-city/` como referencia y un informe detallado en `docs/INFORME-MOTOR-CITY-4.5.md` de cada repositorio. Las tareas de «migrar a motor-city» quedan anuladas. Lo de este motor: `CONTEXTO-RELEVO.md` § 0 y § 5.
 
 > **Si te dijeron «mira el repositorio y haz tu parte», empieza aquí.**
 > 1. Busca abajo **quién eres** y haz **solo tu parte**, en el orden indicado.
