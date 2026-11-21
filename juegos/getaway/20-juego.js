@@ -76,7 +76,7 @@ function resolver(clave) {
 function sitiosEspeciales() {
   if (G._esp && G._esp.id === G.id) return G._esp.L; const L = [];
   for (const k of Object.keys(TC.LUGARES)) { const r = resolver(k); if (r && (r.taller || r.escondite)) L.push(r); }
-  if (!G.M.esCiudad) for (const l of G.M.lugares) { if (/Taller|Bomba|Paradero/.test(l.nombre || '')) { const q = G.M.viaCercana(l.x, l.y, 80); L.push({ x: q ? q.x : l.x, y: q ? q.y : l.y, n: l.nombre, taller: /Taller/.test(l.nombre), escondite: !/Taller/.test(l.nombre) }); } }
+  if (!G.M.esCiudad) for (const l of G.M.lugares) { const tipo = l.dibujo || '', taller = tipo === 'car_repair' || /Taller/.test(l.nombre || ''), escondite = ['fuel','motel','restaurant','bar'].includes(tipo) || /Bomba|Paradero/.test(l.nombre || ''); if (taller || escondite) { const q = G.M.viaCercana(l.x, l.y, 80); L.push({ x: q ? q.x : l.x, y: q ? q.y : l.y, n: l.nombre, taller, escondite }); } }
   G._esp = { id: G.id, L }; return L;
 }
 

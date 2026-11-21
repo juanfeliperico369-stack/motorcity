@@ -5,6 +5,11 @@ import vm from 'node:vm';
 import assert from 'node:assert/strict';
 const f=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const q=JSON.parse(f('contenido/paradas-carretera.json'));
+assert(q.autor?.includes('Gemini'),'se conserva autoría del catálogo original');
+for(const registros of Object.values(q.biomas))for(const item of registros){
+ assert(item.id && item.nombre_es && item.nombre===item.nombre_es && item.nombre_en,'id/ES/EN');
+ assert(Array.isArray(item.rutas) && item.rutas.length,'rutas específicas');
+}
 const biomas=['costa','llanura','desierto','bosque','montana','nieve','lagos'];
 for(const b of biomas){assert.equal(q.biomas[b]?.length,4,'4 paradas '+b);for(const x of q.biomas[b]) assert(x.nombre&&x.nombre_en&&x.ambiente&&x.tipo);}
 assert.equal(new Set(biomas.flatMap(b=>q.biomas[b].map(x=>x.nombre))).size,28);
@@ -193,3 +198,11 @@ assert(inicio.includes('const token = G.narrativaEpoch || 0') && inicio.includes
 assert(historiaE.includes('G.narrativaEpoch = (G.narrativaEpoch || 0) + 1'));
 assert(historiaE.includes("querySelectorAll('.dialogo')") && historiaE.includes('Subt.limpiar()'));
 console.log('G-H20 · diálogos inválidos cancelados y subtítulos limpios al entrar Calle libre');
+
+
+/* G-H22: catálogo Gemini por rutas; G-H24: sólo ciudad activa en caché MC4. */
+assert(fuente.includes("q.rutas.includes(op.id)"),'sólo elegir paradas compatibles con carretera');
+assert(fuente.includes("id: d.id"),'pasar id de ruta al generador');
+assert(fuente.includes("this.cache.clear(); this.cache.set(id, M)"),'no conservar dos ciudades MC4 simultáneas');
+assert(f('juegos/getaway/20-juego.js').includes("tipo === 'car_repair'"),'reparación por tipo estructurado, no sólo nombre');
+console.log('Gemini G-H22/G-H24: metadatos de ruta y una sola ciudad en caché OK');
