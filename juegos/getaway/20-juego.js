@@ -145,9 +145,14 @@ const Subt = { cola: [], t: 0,
   limpiar() { this.cola = []; this.t = 0; $('#subt').hidden = true; }
 };
 async function escena(lineas) {
+  const token = G.narrativaEpoch || 0;
   G.pausa = true; Subt.limpiar();
-  for (const [q, x] of lineas) { const Q = TC.QUIEN[q] || { n: q, c: '#fff' }; await G.ui.dialogo(q === 'radio' ? '<span style="color:#8a8578">· · ·</span>' : '<span style="color:' + Q.c + '">' + Q.n + '</span>', suave(x), ['▶']); }
-  G.pausa = false;
+  for (const [q, x] of lineas) {
+    if (token !== (G.narrativaEpoch || 0)) return;
+    const Q = TC.QUIEN[q] || { n: q, c: '#fff' };
+    await G.ui.dialogo(q === 'radio' ? '<span style="color:#8a8578">· · ·</span>' : '<span style="color:' + Q.c + '">' + Q.n + '</span>', suave(x), ['▶']);
+  }
+  if (token === (G.narrativaEpoch || 0)) G.pausa = false;
 }
 async function decision(D) {
   G.pausa = true; const i = await G.ui.dialogo('<span style="color:#e8a33c">❓ ' + D.pregunta + '</span>', '', D.opciones.map(o => o.texto)); G.pausa = false;
@@ -262,7 +267,7 @@ function eventoBusqueda(ev) {
   else if (ev.tipo === 'escondido') U.aviso('🅿️ Escondida: la policía te perdió', 2400, 'nivel');
   else if (ev.tipo === 'alerta' && ev.causa) U.aviso('+alerta: ' + ev.causa, 1800, 'alerta');
   else if (ev.tipo === 'abolladura') abollar(ev.zona, ev.fuerza);
-  else if (ev.tipo === 'embestida') { Snd.golpe(ev.fuerza / 16); G.camara.sacudir(Math.min(.35, ev.fuerza * .025)); if (MC.Vida) MC.Vida.emitir('chispa', ev.x, ev.y, 10); if (ev.quien === 'rival' && ev.bando === 'banda' && (insultoT -= 1) <= 0) { insultoT = 4; Subt.decir([['coro', TC.INSULTOS_BANDA[(Math.random() * TC.INSULTOS_BANDA.length) | 0]]]); } }
+  else if (ev.tipo === 'embestida') { Snd.golpe(ev.fuerza / 16); G.camara.sacudir(Math.min(.35, ev.fuerza * .025)); if (MC.Vida) MC.Vida.emitir('chispa', ev.x, ev.y, 10); if (ev.quien === 'rival' && ev.bando === 'banda' && (insultoT -= 1) <= 0) { insultoT = 4; Subt.decir([['camara', TC.INSULTOS_BANDA[(Math.random() * TC.INSULTOS_BANDA.length) | 0]]]); } }
   else if (ev.tipo === 'disparo') { Snd.disparo(d); }
   else if (ev.tipo === 'herido') { G.disparosRecibidos++; if (C.veh.clase === 'pie' || C.veh.clase === 'moto' || C.veh.clase === 'rueda') G.vida = Math.max(0, G.vida - .09); else G.vida = Math.max(0, G.vida - .025); $('#vineta').classList.add('herido'); clearTimeout(G._vt); G._vt = setTimeout(() => $('#vineta').classList.remove('herido'), 350); }
   else if (ev.tipo === 'fuera') { G.destrozados++; U.aviso(ev.bando === 'banda' ? '💥 Una camioneta de la banda, fuera' : '💥 Patrulla destrozada', 1800, 'fuera'); Snd.golpe(1); G.humo.push({ x: ev.x, y: ev.y, t: 0 }); if (Math.random() < .5) Subt.decir([['mara', TC.INSULTOS_MARA[(Math.random() * TC.INSULTOS_MARA.length) | 0]]]); if (G.hist) Historia.fuera(ev); if (G.contrato) Contratos.fuera(ev); }

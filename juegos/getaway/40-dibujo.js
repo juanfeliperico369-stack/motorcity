@@ -6,14 +6,17 @@
    a la izquierda, la búsqueda en una cinta estrecha, el volante abajo y lo secundario en el menú.
    ===================================================================== */
 const LENGUAJE_SUAVE = [
-  [/hijueputas?/gi, 'desgraciados'], [/malparid[oa]s?/gi, 'miserables'],
-  [/gonorreas?/gi, 'caramba'], [/güevones?/gi, 'bobos'], [/güevón/gi, 'bobo'],
-  [/tombos?/gi, 'agentes'], [/mierdas?/gi, 'rayos'],
-  [/jodid[oa]s?/gi, 'complicados'], [/cabr[oó]n(?:es)?/gi, 'canallas'],
-  [/\bputas?\b/gi, 'pesados'], [/\bputos?\b/gi, 'pesados'],
-  [/\bcarajo\b/gi, 'rayos'], [/\bcoño\b/gi, 'caramba']
+  [/hijueputas?/gi, m => /s$/i.test(m) ? 'desgraciados' : 'desgraciado'],
+  [/malparid[oa]s?/gi, m => /s$/i.test(m) ? 'miserables' : 'miserable'],
+  [/gonorreas?/gi, m => /s$/i.test(m) ? 'canallas' : 'canalla'],
+  [/(?:güe|gue|hue)vones/gi, 'bobos'], [/(?:güe|gue|hue)v[oó]n/gi, 'bobo'],
+  [/tombos?/gi, m => /s$/i.test(m) ? 'agentes' : 'agente'],
+  [/mierdas?/gi, 'rayos'], [/jodid[oa]s?/gi, 'complicados'],
+  [/cabr[oó]n(?:es)?/gi, 'canalla'], [/\bputas?\b/gi, 'pesados'],
+  [/\bputos?\b/gi, 'pesados'], [/\bcarajo\b/gi, 'rayos'],
+  [/\bcoño\b/gi, 'caramba'], [/\bel sapo\b/gi, 'el informante']
 ];
-const suave = t => (leerG().suave ? LENGUAJE_SUAVE.reduce((s, [r, x]) => s.replace(r, x), String(t)) : t);
+const suave = t => (leerG().suave ? LENGUAJE_SUAVE.reduce((s,[r,x]) => s.replace(r,m => { const v = typeof x === 'function' ? x(m) : x; return /^[A-ZÁÉÍÓÚÑÜ]/.test(m) ? v.charAt(0).toLocaleUpperCase('es') + v.slice(1) : v; }),String(t)) : String(t));
 let hudT2 = 0, mapaPts = [];
 function dibujar(dt) {
   const g = G.g, E = G.E, V = G.vistas, W = G.W, H = G.H; if (!E) return;

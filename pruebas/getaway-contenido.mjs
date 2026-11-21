@@ -151,3 +151,45 @@ assert(infoSector.evictas===infoSector.antes-infoSector.despues);
 assert([...fakeWorld._ED.cache.keys()].every(k=>k>=0),'cache consistente');
 cacheSector.limpiar();assert.equal(cacheSector.cache.size,0);
 console.log('C-M34 parcial: sectores 1 km con LRU, ED1 decodificado acotado a 20 regiones');
+
+
+/* G-H23: gramática y capitalización correctas, contratos también suavizados. */
+for (const [frase, esperado] of [
+ ['¡Hijueputas!','¡Desgraciados!'],
+ ['Malparida','Miserable'],
+ ['malparidos','miserables'],
+ ['¡Tombo!','¡Agente!'],
+ ['¡Güevones!','¡Bobos!'],
+ ['El sapo','El informante']
+]) assert.equal(fn(frase),esperado,'lenguaje suave: '+frase);
+const histSrc=f('juegos/getaway/30-historia.js');
+assert(histSrc.includes('suave(c.n)') && histSrc.includes('suave(c.texto)'),'filtrar título y descripción de contratos');
+console.log('G-H23 Gemini · capitalización, singular/plural, insultos y contratos OK');
+
+
+/* C-M32 + Claude 4.0.2: persecución sólo con visión, nunca teletransporta tras pared. */
+const sensor={x:0,y:0,a:0,a0:0,vista:24,cono:1.05,origen:{x:0,y:0}};
+const presa={x:12,y:0};
+const bloqueo=pie.perseguir(sensor,presa,pared,.05);
+assert.equal(bloqueo.visible,false);
+assert.equal(sensor.x,0,'no persigue al jugador invisible');
+const okVista=pie.perseguir(sensor,presa,libre,.05);
+assert(okVista.visible&&okVista.movio&&sensor.x>0);
+const ultimaVista=sensor.ultima.x;
+presa.x=200;presa.y=100;
+const ciega=pie.perseguir(sensor,presa,libre,.05);
+assert(!ciega.movio&&!ciega.golpe&&sensor.ultima.x===ultimaVista);
+const cercaGuard={x:0,y:0,a:0,vista:24,cono:1.05};
+assert(pie.perseguir(cercaGuard,{x:1,y:0},libre,.05).golpe,'sólo golpea visible y próximo');
+const bloqueada={x:0,y:0,a:0,vista:24,cono:1.05};
+assert(!pie.perseguir(bloqueada,{x:5,y:0},pared,.05).golpe,'no golpea tras un muro');
+console.log('C-M32 · persecución tras alarma respeta línea de visión, obstáculos y último avistamiento');
+
+
+/* G-H20: cambio de modo invalida diálogos/narración previos sin resolverlos en segundo plano. */
+const inicio=f('juegos/getaway/20-juego.js');
+const historiaE=f('juegos/getaway/30-historia.js');
+assert(inicio.includes('const token = G.narrativaEpoch || 0') && inicio.includes('if (token !== (G.narrativaEpoch || 0)) return;'));
+assert(historiaE.includes('G.narrativaEpoch = (G.narrativaEpoch || 0) + 1'));
+assert(historiaE.includes("querySelectorAll('.dialogo')") && historiaE.includes('Subt.limpiar()'));
+console.log('G-H20 · diálogos inválidos cancelados y subtítulos limpios al entrar Calle libre');

@@ -10,11 +10,13 @@ const Historia = {
   cap: 0, i: 0, sub: null, p: null, est: {}, ocupado: false,
   pasosDe() { return this.sub || TC.HISTORIA[this.cap].pasos; },
   async empezar(cap, i = 0, op = {}) {
+    const token = G.narrativaEpoch || 0;
     G.hist = this; G.contrato = null; G.modo = 'historia'; this.p = null; this.ocupado = true; this.cap = cap;   /* nada se completa mientras cambia de capítulo */ this.sub = op.sub ? (TC.HISTORIA[cap].pasos.find(q => q.tipo === 'si' && G.flags[q.flag]) || {}).pasos || null : null; const H = TC.HISTORIA[cap];
     if (i === 0) { G.cebos = 2; G.reloj.min = H.hora * 60; G.climaForzado = H.clima; if (G.clima) G.clima.forzar(H.clima); }
     if (op.donde) await entrarMundo(op.donde.mundo, { x: op.donde.x, y: op.donde.y, a: op.donde.a, heat: 0 });
     else if (G.id !== H.mundo) await entrarMundo(H.mundo, { lugar: H.inicio, heat: 0 });
     if (i === 0) { await tarjeta('Acto ' + H.acto + ' · Capítulo ' + H.cap, H.titulo, TC.QUIEN.mara.n); if (H.intro && !op.sinIntro) await escena(H.intro); }
+    if ((G.narrativaEpoch || 0) !== token || G.modo !== 'historia') return;
     this.empezarPaso(i);
   },
   empezarPaso(i) {
@@ -153,12 +155,12 @@ async function tarjeta(p, h, s) { const tr = $('#transicion'); $('#trP').textCon
 const Contratos = {
   ofertas() { const L = TC.CONTRATOS.slice().sort(() => Math.random() - .5).slice(0, 3); return L.map(c => Object.assign({}, c, { pagoF: Math.round(c.pago[0] + Math.random() * (c.pago[1] - c.pago[0])) })); },
   menu() {
-    if (!G.M.esCiudad) return G.ui.aviso('📞 En la carretera no hay contratos: llega a una ciudad', 2000, 'contrato'); if (G.contrato) return G.ui.dialogo('📞 ' + G.contrato.c.n, G.contrato.c.texto, ['Seguir', 'Abandonar']).then(i => { if (i === 1) { G.contrato = null; G.objetivo = null; G.ui.aviso('Contrato abandonado'); } });
-    const O = this.ofertas(); G.ui.menu('📞 Contratos · ' + planeta.def(G.id).nombre, O.map((c, i) => ({ id: String(i), texto: '<b>' + c.n + '</b> · ' + plata(c.pagoF) + '<br><small>' + c.texto + ' · ' + '🚨'.repeat(c.heat) + '</small>' })), id => this.empezar(O[+id]));
+    if (!G.M.esCiudad) return G.ui.aviso('📞 En la carretera no hay contratos: llega a una ciudad', 2000, 'contrato'); if (G.contrato) return G.ui.dialogo('📞 ' + suave(G.contrato.c.n), suave(G.contrato.c.texto), ['Seguir', 'Abandonar']).then(i => { if (i === 1) { G.contrato = null; G.objetivo = null; G.ui.aviso('Contrato abandonado'); } });
+    const O = this.ofertas(); G.ui.menu('📞 Contratos · ' + planeta.def(G.id).nombre, O.map((c, i) => ({ id: String(i), texto: '<b>' + suave(c.n) + '</b> · ' + plata(c.pagoF) + '<br><small>' + suave(c.texto) + ' · ' + '🚨'.repeat(c.heat) + '</small>' })), id => this.empezar(O[+id]));
   },
   /* un punto sobre una calle para carros (no escaleras, senderos ni ciclorrutas: el rival y la policía también tienen que llegar) */
   punto(cx, cy, r0, r1) { const M = G.M, R = M.red('rueda'); for (let k = 0; k < 60; k++) { const a = Math.random() * TAU, d = r0 + Math.random() * (r1 - r0), q = R.cercana(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 80, e => e.k >= 1 && e.k <= 4); if (q && M.dentro(q.x, q.y)) return { x: q.x, y: q.y }; } return null; },
-  empezar(c) { const C = G.cuerpo, o = this.punto(C.x, C.y, 350, 1000), d = o && this.punto(o.x, o.y, 700, 1700); if (!o || !d) return G.ui.aviso('No hay calles para ese contrato aquí'); G.contrato = { c, o, d, fase: 0, t: 0, fuera: 0 }; G.objetivo = { x: o.x, y: o.y, texto: 'Recoger' }; G.ui.aviso('📞 ' + c.n + ': ve a recoger', 2200, 'contrato'); },
+  empezar(c) { const C = G.cuerpo, o = this.punto(C.x, C.y, 350, 1000), d = o && this.punto(o.x, o.y, 700, 1700); if (!o || !d) return G.ui.aviso('No hay calles para ese contrato aquí'); G.contrato = { c, o, d, fase: 0, t: 0, fuera: 0 }; G.objetivo = { x: o.x, y: o.y, texto: 'Recoger' }; G.ui.aviso('📞 ' + suave(c.n) + ': ve a recoger', 2200, 'contrato'); },
   paso(dt) {
     const K = G.contrato; if (!K || G.pausa) return; const C = G.cuerpo; K.t += dt;
     if (K.c.limite && K.t > K.c.limite) { G.ui.aviso('⏱ ' + K.c.n + ': se acabó el tiempo. Sin pago', 2600, 'contrato'); G.contrato = null; G.objetivo = null; return; }
@@ -168,5 +170,19 @@ const Contratos = {
   fuera(ev) { if (G.contrato && ev.bando === 'banda') G.contrato.fuera++; }
 };
 const Libre = {
-  async empezar(id, donde) { G.hist = null; G.modo = 'libre'; Historia.p = null; G.climaForzado = null; await entrarMundo(id, donde || {}); await tarjeta('Calle libre', planeta.def(id).nombre, 'Contratos 📞 · el planeta entero 🌍 · las carreteras de la nada'); G.ui.aviso('📞 Toca Contratos para trabajar · 🌍 para ver el planeta', 3200, 'libre'); }
+  async empezar(id, donde) {
+    /* G-H20: cancelamos diálogos antiguos sin dejar al Acto anterior continuar por detrás. */
+    G.narrativaEpoch = (G.narrativaEpoch || 0) + 1;
+    Subt.limpiar();
+    if (G.ui?.capa) {
+      for (const d of G.ui.capa.querySelectorAll('.dialogo')) {
+        const first = d.querySelector('button'); if (first) first.click(); else d.remove();
+      }
+      for (const m of G.ui.capa.querySelectorAll('.menu')) m.remove();
+    }
+    G.pausa = false; G.hist = null; G.modo = 'libre'; Historia.p = null; G.climaForzado = null;
+    await entrarMundo(id, donde || {});
+    await tarjeta('Calle libre', planeta.def(id).nombre, 'Contratos 📞 · el planeta entero 🌍 · las carreteras de la nada');
+    G.ui.aviso('📞 Toca Contratos para trabajar · 🌍 para ver el planeta', 3200, 'libre');
+  }
 };

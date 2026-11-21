@@ -180,7 +180,7 @@ class Planeta {
     /* nombres de las ciudades y el jugador */
     const proy = (latD, lonD) => { const la = latD * Math.PI / 180, lo = lonD * Math.PI / 180 - lon0, x = Math.cos(la) * Math.sin(lo), y = Math.sin(la), z = Math.cos(la) * Math.cos(lo), v = -(y * Math.cos(tilt) - z * Math.sin(tilt)), zz = y * Math.sin(tilt) + z * Math.cos(tilt); return { x: cx + x * R, y: cy + v * R, ve: zz > 0 }; };
     g.font = '700 ' + Math.max(11, R * .07) + 'px system-ui'; g.textAlign = 'left';
-    for (const C of ciudades) { const p = proy(C.lat ?? ruta(C.lon * Math.PI / 180), C.lon); if (!p.ve) continue; g.fillStyle = '#ffd34d'; g.beginPath(); g.arc(p.x, p.y, Math.max(3, R * .02), 0, TAU); g.fill(); g.fillStyle = '#fff'; g.shadowColor = '#000'; g.shadowBlur = 4; g.fillText(C.nombre, p.x + 8, p.y + 4); g.shadowBlur = 0; }
+    for (const C of ciudades) { const p = proy(C.lat ?? ruta(C.lon * Math.PI / 180), C.lon); if (!p.ve) continue; g.fillStyle = '#ffd34d'; g.beginPath(); g.arc(p.x, p.y, Math.max(3, R * .02), 0, TAU); g.fill(); g.fillStyle = '#fff'; g.shadowColor = '#000'; g.shadowBlur = 4; const tw = g.measureText(C.nombre).width; g.fillText(C.nombre, clamp(p.x + 8, 8, Math.max(8, W - tw - 8)), clamp(p.y + 4, 14, H - 14)); g.shadowBlur = 0; }
     if (op.yo) { const G = this.enGlobo(op.yo.id, op.yo.x, op.yo.y), p = proy(G.lat, G.lon); if (p.ve) { g.fillStyle = '#2ee6a6'; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath(); g.arc(p.x, p.y, Math.max(4, R * .028), 0, TAU); g.fill(); g.stroke(); } }
   }
 }

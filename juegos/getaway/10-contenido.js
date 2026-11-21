@@ -28,23 +28,23 @@ TC.QUIEN = {
 /* ---------- lugares: calles y barrios reales; los negocios son inventados ---------- */
 TC.LUGARES = {
   ny_taller: { mundo: 'nueva_york', n: 'Taller Vega (sur de Chelsea)', lat: 40.7432, lon: -74.0055, taller: true },
-  ny_argenta: { mundo: 'nueva_york', n: 'Depósito de Argenta Quay (Gansevoort Street)', lat: 40.7395, lon: -74.0080 },
+  ny_argenta: { mundo: 'nueva_york', n: 'Depósito de Argenta Quay (Gansevoort Street)', lat: 40.73939, lon: -74.00792 },
   ny_nadia: { mundo: 'nueva_york', n: 'Water Street con Old Slip (Lower Manhattan)', lat: 40.7040, lon: -74.0085 },
-  ny_noah: { mundo: 'nueva_york', n: 'Azotea de la radio de Noah (Eldridge Street)', lat: 40.7175, lon: -73.9915 },
-  ny_muelle4: { mundo: 'nueva_york', n: 'Muelle 4 de Argenta Quay (Cherry Street, East River)', lat: 40.7112, lon: -73.9855 },
+  ny_noah: { mundo: 'nueva_york', n: 'Azotea de la radio de Noah (Eldridge Street)', lat: 40.71767, lon: -73.99222 },
+  ny_muelle4: { mundo: 'nueva_york', n: 'Muelle 4 de Argenta Quay (Cherry Street, East River)', lat: 40.71171, lon: -73.9849 },
   ny_harlem: { mundo: 'nueva_york', n: 'Garaje de la 145 (Harlem)', lat: 40.8240, lon: -73.9440, escondite: true },
-  ny_oeste: { mundo: 'nueva_york', n: 'Parqueadero de la 30 Oeste', lat: 40.7530, lon: -74.0010, escondite: true },
+  ny_oeste: { mundo: 'nueva_york', n: 'Parqueadero de la 30 Oeste', lat: 40.75225, lon: -74.00086, escondite: true },
   ny_les: { mundo: 'nueva_york', n: 'Garaje de Delancey (Lower East Side)', lat: 40.7185, lon: -73.9870, escondite: true },
   md_efrain: { mundo: 'medellin', n: 'Taller de Don Efraín (Barrio Colombia)', lat: 6.2265, lon: -75.5745, taller: true },
   md_lleras: { mundo: 'medellin', n: 'Parque Lleras (El Poblado)', lat: 6.2087, lon: -75.5677 },
   md_bodega: { mundo: 'medellin', n: 'Bodega 9 de Argenta Andina (Itagüí)', lat: 6.1745, lon: -75.6050 },
   md_torre: { mundo: 'medellin', n: 'Torre de Argenta Andina (El Poblado)', lat: 6.2010, lon: -75.5735 },
-  md_centro: { mundo: 'medellin', n: 'Parqueadero La Playa (Centro)', lat: 6.2470, lon: -75.5650, escondite: true },
-  md_bello: { mundo: 'medellin', n: 'Lavadero El Último Brillo (Bello)', lat: 6.3330, lon: -75.5580, escondite: true },
-  md_envigado: { mundo: 'medellin', n: 'Garaje de la 40 Sur (Envigado)', lat: 6.1720, lon: -75.5850, escondite: true },
+  md_centro: { mundo: 'medellin', n: 'Parqueadero La Playa (Centro)', lat: 6.24921, lon: -75.56502, escondite: true },
+  md_bello: { mundo: 'medellin', n: 'Lavadero El Último Brillo (Bello)', lat: 6.33368, lon: -75.55846, escondite: true },
+  md_envigado: { mundo: 'medellin', n: 'Garaje de la 40 Sur (Envigado)', lat: 6.16694, lon: -75.58799, escondite: true },
   gu_taller: { mundo: 'guatape', n: 'Taller Sin Nombre (Guatapé)', lat: 6.2328, lon: -75.1590, taller: true },
   gu_malecon: { mundo: 'guatape', n: 'Malecón de Guatapé', lugar: 'Malecon De Guatape' },
-  gu_finca: { mundo: 'guatape', n: 'Refugio La Esperanza (escenario ficticio)', lat: 6.2301, lon: -75.1648, ficcion: true },
+  gu_finca: { mundo: 'guatape', n: 'Refugio La Esperanza (escenario ficticio)', lat: 6.23636, lon: -75.18186, ficcion: true },
   gu_piedra: { mundo: 'guatape', n: 'Pie de la Piedra del Peñol', lugar: 'Guatapé Represa, Piedra Mirador' }
 };
 

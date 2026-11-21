@@ -21,6 +21,26 @@ const AccionPie = {
     }
     return false;
   },
+  /* Persecución en alarma: sólo acercarse si el jugador sigue visible. La búsqueda de
+     la última posición vista ya la hace paso(). Nunca leer la posición actual a ciegas. */
+  perseguir(q, jugador, mundo, dt, op = {}) {
+    if (!q || !jugador || q.fuera || q.distraido > 0 || !(dt > 0))
+      return { visible: false, golpe: false, movio: false };
+    const radio = op.radio ?? q.vista ?? 24, alcance = op.alcance ?? 1.1, rapidez = op.rapidez ?? 4.6;
+    const visible = this.ver(q, jugador, mundo, { rango: radio });
+    if (!visible) return { visible: false, golpe: false, movio: false };
+    q.ultima = { x: jugador.x, y: jugador.y };
+    q.busquedaT = 5; q.estado = 'alerta';
+    const dx = jugador.x - q.x, dy = jugador.y - q.y, d = Math.hypot(dx, dy);
+    if (d <= alcance) return { visible: true, golpe: true, movio: false };
+    const paso = Math.min(d-alcance, rapidez*Math.min(dt,.05));
+    const nx = q.x + dx/d*paso, ny = q.y + dy/d*paso;
+    if (mundo && typeof mundo.edificioEn === 'function' &&
+       (mundo.edificioEn(nx,ny,0) || mundo.edificioEn((nx+q.x)/2,(ny+q.y)/2,0)))
+      return { visible: true, golpe: false, movio: false };
+    q.x = nx; q.y = ny; q.a = Math.atan2(dy,dx);
+    return { visible: true, golpe: false, movio: true };
+  },
   paso(q, dt, op = {}) {
     if (!q || q.fuera || !(dt > 0)) return { ve: false, estado: 'fuera' };
     dt = Math.min(dt, .05);
