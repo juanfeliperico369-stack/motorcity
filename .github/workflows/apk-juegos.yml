@@ -1,5 +1,6 @@
 name: APK de los juegos de Motor City
-# 4.5: Turno Cero, Motor City · Carreras, Extremo y Mandados como APK de Android (Capacitor 7, compilación de depuración).
+# 4.6: un solo juego de prueba, Turno Cero (con Mandados, Carreras, Extremo, EnCicla y el Metro adentro), como APK de Android
+# (Capacitor 7, compilación de depuración). Gira con el celular: vertical u horizontal (antes estaba fijo en vertical).
 # Con una etiqueta v* se adjuntan a la release de esa etiqueta; a mano (workflow_dispatch), a la release v<VERSION.json>, que el flujo crea.
 on:
   workflow_dispatch:
@@ -17,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        juego: [getaway, carreras, extremo, mandados]
+        juego: [getaway]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,16 +31,13 @@ jobs:
         run: |
           case "${{ matrix.juego }}" in
             getaway) N="Turno Cero"; ID=turnocero; C="#0b0d12";;
-            carreras) N="Motor City Carreras"; ID=carreras; C="#1a0b0b";;
-            extremo) N="Extremo"; ID=extremo; C="#1a170b";;
-            mandados) N="Mandados"; ID=mandados; C="#0b1020";;
           esac
           mkdir -p cap/www && cp "dist/juegos/${{ matrix.juego }}.html" cap/www/index.html
           cd cap && npm init -y >/dev/null
           npm i --no-audit --no-fund @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
           printf '{"appId":"com.juanfeliperico.motorcity.%s","appName":"%s","webDir":"www","android":{"backgroundColor":"%s"}}' "$ID" "$N" "$C" > capacitor.config.json
           npx cap add android && npx cap sync android
-          sed -i '0,/<activity/s//<activity android:screenOrientation="portrait"/' android/app/src/main/AndroidManifest.xml
+          sed -i '0,/<activity/s//<activity android:screenOrientation="sensor"/' android/app/src/main/AndroidManifest.xml
       - name: Compilar APK
         run: cd cap/android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon -q
       - name: Nombrar
@@ -54,5 +52,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then TAG="$GITHUB_REF_NAME"; else TAG="v$(node -p "require('./VERSION.json').version")"; fi
-          for i in 1 2 3 4; do gh release view "$TAG" >/dev/null 2>&1 && break; gh release create "$TAG" --target "$GITHUB_SHA" --title "Motor City $TAG" --notes "APK de depuración de los juegos de Motor City: Turno Cero (18+), Motor City · Carreras, Extremo y Mandados." && break; sleep $((i*4)); done
+          for i in 1 2 3 4; do gh release view "$TAG" >/dev/null 2>&1 && break; gh release create "$TAG" --target "$GITHUB_SHA" --title "Motor City $TAG" --notes "APK de depuración del juego de prueba de Motor City: Turno Cero (18+), con los modos Mandados, Carreras, Extremo, EnCicla y el Metro. Vertical u horizontal." && break; sleep $((i*4)); done
           for i in 1 2 3; do gh release upload "$TAG" "MotorCity-${{ matrix.juego }}.apk" --clobber && break; sleep 5; done

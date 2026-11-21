@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 4.5.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 4.6.0 · no se edita a mano: edita los documentos de origen -->
 
 # Documento de relevo · Motor City y *Turno Cero*
 
@@ -30,20 +30,19 @@
 
 ---
 
-## 0. Entregables de la 4.5.0 (HTML, APK y enlaces)
+## 0. Entregables de la 4.6.0 (HTML, APK y enlaces)
+> **Un solo juego de prueba (decisión del autor en 4.6):** Turno Cero. Adentro, 🎮 Modos: Carreras, Extremo, Mandados, EnCicla y manejar el Metro, el tranvía y el Metroplús. Los juegos sueltos Carreras y Extremo se borraron; Mandados queda solo como banco interno de pruebas automáticas.
+
 | Juego | Enlace | HTML (un solo archivo) | APK |
 |---|---|---|---|
 | Página del motor | <https://juanfeliperico369-stack.github.io/motorcity/> | `index.html` | — |
-| **Turno Cero** (18+) | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.5.0/MotorCity-getaway.apk> |
-| **Motor City · Carreras** (nuevo) | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/carreras.html> | `dist/juegos/carreras.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.5.0/MotorCity-carreras.apk> |
-| **Extremo** (nuevo) | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/extremo.html> | `dist/juegos/extremo.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.5.0/MotorCity-extremo.apk> |
-| Mandados (demo) | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html> | `dist/juegos/mandados.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.5.0/MotorCity-mandados.apk> |
+| **Turno Cero** (18+), el juego de prueba con todo | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.6.0/MotorCity-getaway.apk> |
 | Juega EnCicla | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | <https://github.com/juanfeliperico369-stack/BicicletasUno/releases/download/v2.0.1/JuegaEnCicla-v2.0.1-debug.apk> |
-| El Metro | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://github.com/juanfeliperico369-stack/MetroZero/releases/download/v2.0.1/el-metro.apk> (código 27) |
+| El Metro | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://github.com/juanfeliperico369-stack/MetroZero/releases/download/v2.0.2/el-metro.apk> (código 28) |
 | Run Scooter | <https://juanfeliperico369-stack.github.io/RunRunZero/> | `RunRunZero/web/index.html` | <https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk> |
 
 Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (Capacitor 7). El proxy de esta sesión no deja subir etiquetas: el flujo, lanzado a mano, crea él mismo la release `v<VERSION.json>`. EnCicla (`android.yml`) y El Metro (`apk.yml`) hacen lo mismo con la versión de cada juego; Run Scooter la publica en su página con cada empuje a `main`.
-**Juegos hermanos:** por decisión del autor siguen con su propio Motor del Valle; reciben el motor en `motor-city/` como referencia y un informe detallado en `docs/INFORME-MOTOR-CITY-4.5.md` (qué se cambió, qué mejoró, qué falta auditar, qué les toca y cómo usar el motor sin dejar el suyo).
+**Juegos hermanos:** por decisión del autor siguen con su propio Motor del Valle; reciben el motor en `motor-city/` como referencia y un informe detallado en `docs/INFORME-MOTOR-CITY-4.6.md` (y el de la 4.5) (qué se cambió, qué mejoró, qué falta auditar, qué les toca y cómo usar el motor sin dejar el suyo).
 
 ## 1. La misión
 **Motor City** es un motor de mundo abierto en **un solo HTML, sin internet ni librerías**. Convierte lugares reales (datos abiertos) o inventados en mundos jugables con leyes reales:
@@ -121,6 +120,8 @@ Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (
 | 13 | **LOD retopologizados y más actores con esqueleto (C‑M33)** | Pendiente: arte | En 4.5 los 42 modelos se rehicieron (generador 0.3.1, AO, caras); LOD a mano sigue necesitando Blender. |
 | 14 | **Cotejo en terreno de las 8 coordenadas de Turno Cero** | **Autor** o alguien de Medellín y de Guatapé | Están verificadas contra el MC4. |
 | 15 | ~~Tarjetas de El Metro con el texto encima del arte~~ | **No se reproduce en la versión actual** | El diseño cambió desde la auditoría (v0.2.0). |
+| 16 | **Sentir el manejo nuevo (4.6) con las manos** en Turno Cero, El Metro y los modos | **Autor** | Los números a tocar están en `Vehiculos.ARCADE` (motor) y `Libre.ARC` (El Metro): `accK`, `brkK`, `w0`, `w1`, `tw`. Ver `docs/INVESTIGACION-MANEJO.md` § 0. |
+| 17 | ~~Manejo de EnCicla, mapa de EnCicla, horizontal, un solo juego de prueba~~ | **Hecho en 4.6 (Claude)** | `js/32-fisica.js`, `js/70-mapa.js`, `juegos/getaway/60-modos.js`, `MetroZero/src/js/36-libre.js`. |
 
 ## 6. Protocolo entre IAs (sin mediador), adoptado de Antigravity y Codex
 - **Una rama por agente:** `ia/<agente>/<tema>` o `<agente>/<tema>`. Nunca `push --force` sobre la rama de otro, ni sobre `main` ni sobre `gh-pages`.
@@ -606,6 +607,13 @@ Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (
   3. **Codex / Claude (`G‑H28` en juegos hermanos):** alinear `MetroZero` (1 toque a Ciudad Libre + 15 estaciones libres + arreglar 3 `404` favicon) y `BicicletasUno` (1 toque a pedalear sin bloquear con `BIENVENIDA` ni `Crea tu personaje`).
   4. **Codex (4.1/4.2 fuertes):** `C‑M37` (PVS Quake Manhattan), `C‑M38` (portales Build), `C‑M39` (COLORMAP Doom), `C‑M40` (direccionales *The Getaway*), `C‑A18` (capas Arcade por bioma).
   5. **Autor / QA físico:** completar tabla § 1.4 de `reportes/2026-11-21-gemini-clasicos-4.1.md` en celular físico con GPU.
+
+### Claude · 21‑nov‑2026 · 4.6.0
+- **Qué pidió el autor:** el manejo y el movimiento eran injugables (toscos, lentos, derrapes por nada, solo vertical, mapa que congela); basarse en EnCicla y no en El Metro, y arreglar El Metro; un solo juego de prueba con todo (los cuatro dentro de Turno Cero, con lo de EnCicla y El Metro).
+- **Qué hice:** el modelo de manejo de EnCicla en el motor (con subpasos y prueba §26), el mapa grande de EnCicla (`js/70-mapa.js`), horizontal en Turno Cero y en los APK, 🎮 Modos en Turno Cero (`juegos/getaway/60-modos.js`: Carreras, Extremo, Mandados, EnCicla, Metro, Laboratorio), y el mismo manejo en El Metro. Borré `juegos/carreras/` y `juegos/extremo/`.
+- **Cómo se prueba:** `node pruebas/prueba.mjs` (145), `node motor.mjs prueba --navegador` (157), `node pruebas/modos.mjs` (los cinco modos y el mapa), El Metro `node tools/test.mjs 100` (0 errores).
+- **Lo que queda:** la sensación en un celular real (autor) y el globo en la misma escena 3D (C‑M31).
+
 
 # MOTOR CITY · Documento único
 
@@ -1946,6 +1954,19 @@ Esta página conserva la historia original de los pedidos, incluso estados de 2.
 | Documento detallado a cada repositorio; que sigan con su motor del Valle | ✅ | `docs/INFORME-MOTOR-CITY-4.5.md` en BicicletasUno, MetroZero y RunRunZero; el motor va en `motor-city/` como referencia. |
 | El mapa | No se tocó | Por pedido del autor: es de las IA que lo desarrollan. El PVS es un dato derivado del mapa, no lo cambia. |
 | HTML, APK y enlace de cada juego | ✅ | Ver `CONTEXTO-RELEVO.md` § 1. |
+
+### 17. «Injugables, toscos como GTA IV… básate en EnCicla, arregla El Metro, el mapa congela, no hay horizontal» y «un solo juego de prueba con todo» (4.6, esta sesión)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Manejo fluido, que arranque, avance y retome rápido, sin derrapes por nada | ✅ | El modelo de EnCicla (`30-ride.js`) en `js/32-fisica.js` (`_arcade`) y `js/31-vehiculos.js` (`ARCADE`); subpasos de 25 ms; prueba §26. |
+| Movimiento del personaje como en EnCicla | ✅ | A pie, el mismo modelo: gira al instante y trota con el joystick a fondo. |
+| Horizontal | ✅ | Portada y HUD de Turno Cero a 860×412; los APK giran con el celular (Turno Cero y Run Scooter). |
+| El mapa: brújula, acercar y alejar, que no congele | ✅ | `js/70-mapa.js`: vista general armada de a poco, detalle con presupuesto, pausa, ✕ + − ◎ 🧭, tocar = destino. Tocar el minimapa lo abre. |
+| Arreglar El Metro | ✅ | `MetroZero/src/js/36-libre.js` (`driveArcade`, a pie y cámara). APK 2.0.2 (código 28). |
+| Un solo juego de prueba: los cuatro en Turno Cero | ✅ | `juegos/getaway/60-modos.js`: 🏁 Carreras, 🚵 Extremo, 📦 Mandados, 🚲 EnCicla (racha por la ciclorruta, semáforo en rojo, rebalanceo), 🚇 Metro, tranvía y Metroplús (manejar y parar en el andén), 🧪 Laboratorio. `pruebas/modos.mjs`. |
+| Lo que dije que faltaba | Parcial | Hecho: mapa, horizontal, manejo. Pendiente: el globo en la misma escena 3D (C‑M31) y la prueba en un celular real. |
+| HTML, APK y enlace de cada juego | ✅ | `CONTEXTO-RELEVO.md` § 0. |
+
 
 
 ---
@@ -4091,6 +4112,18 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 21-nov-2026 · 4.6.0 · El manejo de EnCicla, el mapa de EnCicla, horizontal y un solo juego de prueba con todo
+- **El autor:** «injugables: toscos como GTA IV; derrapa por nada, va lento, avanza lento, retoma lento; no hay horizontal; te basaste en El Metro: básate en EnCicla y arregla El Metro de paso; el mapa no deja elegir en la brújula y al abrirlo el juego deja de funcionar; el de EnCicla acerca, aleja y no se ralentiza». Luego: «la idea no era tener 4 juegos de prueba sino uno: entrega los cuatro en Turno Cero y rescata lo de EnCicla y El Metro».
+- **Manejo (motor, `js/32-fisica.js`, `js/31-vehiculos.js`):** el modelo de `BicicletasUno/src/js/30-ride.js` para carros, motos, bicis y a pie: el vehículo gira hacia donde apunta el joystick con una velocidad de giro que baja con la velocidad, la velocidad persigue un objetivo (empuje × (0,3 + 0,7·cos Δ)) con aceleración y frenado firmes, las llantas agarran (derrape solo con freno de mano), asistencia de esquinas de EnCicla y reversa. Tabla `Vehiculos.ARCADE` por tipo. El modelo de llantas de Turno Cero (`ManejoCarro`) queda solo en «simulación».
+- **Al ritmo del reloj:** la física da subpasos de 25 ms (antes, con dt topado en 50 ms, a pocos cuadros por segundo todo iba en cámara lenta); búsqueda, persecución, objetos y guardias a pie, igual. Prueba §26: 0→90 % en 2,7 s, radio de 4,8 m a 20 m/s sin derrapar, freno de mano que derrapa y se endereza en 0,1 s, y a 15 y a 60 cuadros por segundo el carro recorre lo mismo.
+- **Cámara:** mira menos adelante (0,45·v, tope 1/6 de la vista) y sigue más rápido.
+- **Mapa grande (`js/70-mapa.js`):** como el de EnCicla: una vista general del mundo armada de a poco (y en los ratos libres mientras se juega), el detalle con presupuesto por cuadro, el juego en pausa mientras está abierto, ✕ + − ◎ 🧭 (norte o rumbo arriba), tocar = destino (pegado al lugar o la estación más cercana), nombres que no se montan y la escala. Tocar el minimapa (que ahora marca la N) lo abre. Antes repintaba más de mil losas de Medellín en cada movimiento del dedo.
+- **Horizontal:** portada de Turno Cero a dos columnas, HUD que no se monta (artefactos arriba al centro, subtítulos más abajo); el APK gira con el celular (antes, fijo en vertical); Run Scooter también.
+- **Un solo juego de prueba:** `juegos/getaway/60-modos.js`, 🎮 Modos en Turno Cero (portada, botón y ⏸ Menú): 🏁 Carreras (circuito o sprint con 3 rivales, récords), 🚵 Extremo (bajada en bici de montaña, saltos y derrapes), 📦 Mandados (tres entregas con reloj y paquete que se daña), 🚲 EnCicla (rebalanceo de estaciones, racha por la ciclorruta, multa por semáforo en rojo) y 🚇 Metro, tranvía y Metroplús (manejas el tren por la línea real y paras en el andén), más 🧪 Laboratorio (estilo, hora, clima y cualquier vehículo). Sin policía mientras dura un modo. `juegos/carreras/` y `juegos/extremo/` se borraron (su código vive en Turno Cero); Mandados queda solo como banco interno de pruebas (público simulado y capturas), fuera de la portada y de las entregas.
+- **El Metro (MetroZero):** el mismo manejo de EnCicla en la ciudad libre (taxi 0→90 % en 2,7 s, antes más de 10; giro de 16 m a 72 km/h; sin derrape sin freno de mano), a pie trota con el joystick a fondo, y la cámara mira menos adelante. APK 2.0.2 (código 28).
+- **Pruebas:** 145 Node y 157 en navegador; `pruebas/modos.mjs` juega los cinco modos de punta a punta y abre el mapa (reemplaza a `pruebas/carreras.mjs`); El Metro 100 partidas con 0 errores.
+- **Falta:** probar la sensación con las manos en un celular (autor); el globo en la misma escena 3D (C‑M31) sigue pendiente.
 
 ### 21-nov-2026 · 4.5.0 · PVS, modelos y ciudad pulidos, manejo que no se traba, efectos, rostros, Hunter Assassin, y los juegos Motor City y Extremo
 - **El autor:** retocar modelos 3D, 2D y pixel; el PVS; Guatapé en los juegos hermanos; topografías, relieve, casas y edificios; luego, «mejor un informe detallado a cada repositorio y que sigan con su motor del Valle, solo compárteles el motor»; y en el motor y el juego de prueba, todo lo que falta, sin cambiar el mapa. Después: manejo y controles («ahí yace toda la jugabilidad»), rostros detallados, árboles con lógica, vehículos que suben por algunas cosas, la forma cenital de *Hunter Assassin* y explosiones, choques, derrapes y cosas rotas.
