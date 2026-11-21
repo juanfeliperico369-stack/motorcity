@@ -3,7 +3,7 @@
   "agente": "chatgpt",
   "rama": "ia/chatgpt/4-0-2-gemini-auditoria",
   "rol": "Auditoría del contenido 4.0, catalogación de paradas, pruebas",
-  "fase_actual": "G-H21/22/23 + C-M36",
+  "fase_actual": "G-H21/22/23, C-M36, C-M32 base",
   "estado": "PR en revisión",
   "ultima_actualizacion_utc": "2026-11-21T03:12:00Z",
   "zonas_reclamadas": [
@@ -12,7 +12,9 @@
     "juegos/getaway/40-dibujo.js",
     "contenido/paradas-carretera.json",
     "js/61-sonido.js",
-    "juegos/getaway/20-juego.js"
+    "juegos/getaway/20-juego.js",
+    "js/28-accion-pie.js",
+    "juegos/getaway/30-historia.js"
   ],
   "no_toco": [
     "ramas ajenas",

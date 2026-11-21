@@ -44,3 +44,24 @@ const muro={edificioEn:(x,y)=>x>=4&&x<=6&&Math.abs(y)<1};
 assert.equal(audio.ocluido(muro,{x:0,y:0},{x:10,y:0}),true);
 assert.equal(audio.ocluido(muro,{x:0,y:3},{x:10,y:3}),false);
 console.log('C-M36: atenuación, Doppler, filtro y oclusión OK');
+
+/* C-M32: IA terrestre determinista con memoria limitada y geometría de cobertura. */
+const pieCtx={MC:{}};
+vm.runInNewContext(f('js/28-accion-pie.js'),pieCtx);
+const pie=pieCtx.MC.AccionPie;
+const libre={edificioEn:()=>false};
+const pared={edificioEn:(x,y)=>x>4&&x<6&&y>-2&&y<2};
+assert.equal(pie.ver({x:0,y:0,a:0,vista:24,cono:1.05},{x:8,y:0},libre),true);
+assert.equal(pie.ver({x:0,y:0,a:0,vista:24,cono:1.05},{x:8,y:0},pared),false);
+assert.equal(pie.ver({x:0,y:0,a:0,vista:24,cono:1.05},{x:-8,y:0},libre),false);
+const guard={x:0,y:0,a:0,a0:0,origen:{x:0,y:0},fase:0,vista:24,cono:1.05};
+const j={x:8,y:0};let observado=pie.paso(guard,.04,{jugador:j,mundo:libre,alarma:true});
+assert(observado.ve && guard.ultima.x===8);
+j.x=180;j.y=100;
+for(let i=0;i<40;i++)pie.paso(guard,.05,{jugador:j,mundo:libre,alarma:true});
+assert(guard.ultima.x===8 && guard.estado==='busqueda','no conoce el nuevo lugar del jugador oculto');
+assert(guard.x<8,'avanza a ultima vista sin teleport');
+const cubierto={x:0,y:0,a:0,a0:0,origen:{x:0,y:0},fase:0,ultima:{x:10,y:0},busquedaT:3,vista:24,cono:1.05};
+for(let i=0;i<25;i++)pie.paso(cubierto,.05,{jugador:{x:100,y:30},mundo:pared,alarma:true});
+assert(cubierto.x < 4.1,'no atraviesa edificios al buscar');
+console.log('C-M32: detección, cobertura, memoria y persecución a pie OK');

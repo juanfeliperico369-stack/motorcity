@@ -91,15 +91,19 @@ const Historia = {
   /* ---- sigilo: guardias con vista (24 m, 60°) y línea de visión; el cebo los distrae; si te ven, entrada a las malas ---- */
   ponerGuardias(p) {
     const m = resolver(p.a); if (!m) return; const M = G.M, n = p.guardias || 3;
-    for (let k = 0; k < n * 6 && G.guardias.length < n; k++) { const ang = k / n * TAU + (k % 3) * .4, r = 20 + (k % 4) * 7, x = m.x + Math.cos(ang) * r, y = m.y + Math.sin(ang) * r; if (M.edificioEn(x, y, 0) || M.suelo(x, y) === MC.TT.WATER) continue; G.guardias.push({ x, y, a0: ang, a: ang, vista: 24, cono: 1.05, distraido: 0, fase: k * 1.7, modelo: MC.Modelos.tiene('personaje_guard_rig') ? 'personaje_guard_rig' : k % 2 ? 'personaje_operative' : 'personaje_guard' }); }
+    for (let k = 0; k < n * 6 && G.guardias.length < n; k++) { const ang = k / n * TAU + (k % 3) * .4, r = 20 + (k % 4) * 7, x = m.x + Math.cos(ang) * r, y = m.y + Math.sin(ang) * r; if (M.edificioEn(x, y, 0) || M.suelo(x, y) === MC.TT.WATER) continue; G.guardias.push({ x, y, a0: ang, a: ang, origen: { x, y }, estado: 'patrulla', ultima: null, busquedaT: 0, vista: 24, cono: 1.05, distraido: 0, fase: k * 1.7, modelo: MC.Modelos.tiene('personaje_guard_rig') ? 'personaje_guard_rig' : k % 2 ? 'personaje_operative' : 'personaje_guard' }); }
     for (const q of G.guardias) { const Mo = MC.Modelos.get(q.modelo); G.modelos3d.push(q.m3 = { id: q.modelo, x: q.x, y: q.y, a: q.a, k: Mo ? 1.75 / Mo.alto : 1, clip: 'idle_breath', fase: q.fase }); }
     for (let k = 0; k < 4; k++) { const ang = k * 1.6 + .5, x = m.x + Math.cos(ang) * 14, y = m.y + Math.sin(ang) * 14; if (!M.edificioEn(x, y, 0)) G.modelos3d.push({ id: G.id === 'nueva_york' ? 'escenario_container' : k % 2 ? 'escenario_container' : 'escenario_barrier', x, y, a: ang }); }
     G.modelos3d.push({ id: 'escenario_checkpoint', x: m.x, y: m.y, a: m.a || 0 });
   },
   sigilo(dt, d) {
     const C = G.cuerpo, E = this.est; let visto = false;
-    for (const q of G.guardias) { q.fase += dt; if (q.distraido > 0) { q.distraido -= dt; q.a = Math.atan2((G.ceboVis ? G.ceboVis.y : q.y) - q.y, (G.ceboVis ? G.ceboVis.x : q.x) - q.x); } else q.a = q.a0 + Math.sin(q.fase * .6) * .9; if (q.m3) { q.m3.a = q.a; q.m3.clip = q.distraido > 0 ? 'interact_device' : q.alerta > 0 || E.alarma ? 'sprint_loop' : 'idle_breath'; }
-      if (q.fuera) continue; if (q.distraido > 0 || E.alarma) continue; const dx = C.x - q.x, dy = C.y - q.y, dd = Math.hypot(dx, dy); if (dd < q.vista && Math.abs(angDif(Math.atan2(dy, dx), q.a)) < q.cono && G.busq.vista(q.x, q.y, C.x, C.y)) { visto = true; q.alerta = 1; } else q.alerta = Math.max(0, (q.alerta || 0) - dt); }
+    for (const q of G.guardias) {
+      const ve = MC.AccionPie.paso(q, dt, { jugador: C, mundo: G.M, alarma: E.alarma, cebo: G.ceboVis, distraido: q.distraido > 0 });
+      if (q.distraido > 0) q.distraido = Math.max(0, q.distraido - dt);
+      if (q.m3) { q.m3.x = q.x; q.m3.y = q.y; q.m3.a = q.a; q.m3.clip = q.estado === 'distraccion' ? 'interact_device' : q.estado === 'alerta' || q.estado === 'busqueda' ? 'sprint_loop' : 'idle_breath'; }
+      if (ve.ve && q.distraido <= 0) visto = true;
+    }
     E.vistoT = visto ? E.vistoT + dt : Math.max(0, E.vistoT - dt * .5);
     /* a pie y pegada a un guardia: ✊ reducirlo sin matarlo (la animación de golpe no letal de Codex) */
     G.puedeReducir = C.veh.clase === 'pie' ? G.guardias.find(q => !q.fuera && Math.hypot(q.x - C.x, q.y - C.y) < 2.6) || null : null;
