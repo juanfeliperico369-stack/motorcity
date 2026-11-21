@@ -30,7 +30,7 @@ for (const id of ciudades) {
   const mlen = bin.readUInt32LE(4), base = 8 + mlen;
   const meta = JSON.parse(bloques.get('mc4meta-' + id));
   assert.equal(meta.formato, 'MC4');
-  assert.equal(JSON.stringify(meta), bin.subarray(8, base).toString('utf8'));
+  assert.deepEqual(meta, JSON.parse(bin.subarray(8, base).toString('utf8')));
   for (const [nombre, c] of Object.entries(meta.capas)) {
     const texto = bloques.get('mc4-' + id + '-' + nombre);
     assert(texto, 'falta ' + id + '/' + nombre);
