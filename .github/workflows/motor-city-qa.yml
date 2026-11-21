@@ -77,6 +77,8 @@ jobs:
         run: node pruebas/sin-conexion.mjs
       - name: 4.5 · Turno Cero, la historia entera hasta un final
         run: node pruebas/getaway-historia.mjs
+      - name: 4.5 · Motor City (carreras) y Extremo
+        run: node pruebas/carreras.mjs
       - name: C-M34 · tres mundos offline con rasters de 1 km
         run: node pruebas/paquete-capas-browser.mjs
       - name: C-M34 · deduplicación y viaje real entre ciudades (Chromium offline)

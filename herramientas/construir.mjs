@@ -152,7 +152,9 @@ if (fs.existsSync(dirJ) && !process.argv.includes('--sin-juegos')) for (const id
   const arteJ = (J.arte || []).map(a => paqueteArte(a)).filter(Boolean); if (arteJ.length) mundoJ += 'var MC_ARTE = {' + arteJ.join(',') + '};\n';
   /* 4.0: modelos GLB ("modelos": "arte/modelos/turno-cero") → var MC_MODELOS = { id: base64 } (MC.Modelos los lee) */
   if (J.modelos) { const dm = path.join(RAIZ, J.modelos), MOD = {}; if (fs.existsSync(dm)) for (const f of fs.readdirSync(dm).filter(f => f.endsWith('.glb')).sort()) { const b = fs.readFileSync(path.join(dm, f)); MOD[f.slice(0, -4)] = 'z:' + b.length + ':' + zlib.deflateRawSync(b, { level: 9 }).toString('base64'); }   /* 4.5: comprimidos (2 MB → 0,4 MB en el HTML) */ else console.warn('⚠ ' + id + ': falta ' + J.modelos); mundoJ += 'var MC_MODELOS = ' + JSON.stringify(MOD) + ';\n'; }
-  const jsJ = fs.readdirSync(jd).filter(f => f.endsWith('.js')).sort().map(f => fs.readFileSync(path.join(jd, f), 'utf8')).join('\n');
+  /* 4.5: "comparte": ["carreras"] en juego.json antepone el código de otro juego (Extremo usa el de Carreras con otro modo) */
+  const dirsJ = (J.comparte || []).map(c => path.join(dirJ, c)).concat([jd]);
+  const jsJ = dirsJ.flatMap(dd => fs.readdirSync(dd).filter(f => f.endsWith('.js')).sort().map(f => fs.readFileSync(path.join(dd, f), 'utf8'))).join('\n');
   const chk = path.join(DIST, '.juego.check.js'); fs.writeFileSync(chk, jsJ); try { execSync('node --check ' + JSON.stringify(chk), { stdio: 'inherit' }); } finally { fs.unlinkSync(chk); }
   const out = fs.readFileSync(path.join(jd, 'index.html'), 'utf8').replace('/*CSS*/', () => fs.existsSync(path.join(jd, 'estilo.css')) ? fs.readFileSync(path.join(jd, 'estilo.css'), 'utf8') : '').replace('/*MUNDO*/', () => mundoJ).replace('/*MOTOR*/', () => motor + (J.run && fs.existsSync(path.join(RAIZ, 'run', 'run-scooter.js')) ? '\n' + fs.readFileSync(path.join(RAIZ, 'run', 'run-scooter.js'), 'utf8') : '')).replace('/*JUEGO*/', () => `(function(){'use strict';\n${jsJ}\n})();`).replace('<!--MUNDOS-->', () => mundosHTML).replaceAll('%VERSION%', VER.version)
     .replace('__PORTADA_BG__', () => {
