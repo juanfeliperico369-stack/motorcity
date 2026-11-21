@@ -284,3 +284,11 @@
 - **Investigación:** Build (sectores), Quake (PVS), GTA III (streaming/LOD), Godot (HLOD) y MDN WebGL. Detalles y fuentes: reportes/2026-11-20-chatgpt-cm34-sectores-y-motores.md.
 - **No hecho:** bytes MC4 cargados bajo demanda (no existe streaming real), pruebas completas Chromium y teléfonos GPU. No se tocaron juegos, binarios, ni ramas ajenas.
 - **Relevo:** ficha propia coord/agentes/chatgpt-cm34.json y mensaje coord/buzon/20261120-2318-chatgpt-cm34.md. Claude debe revisar integración y versión; Gemini puede tomar perfil base VM. La siguiente IA también debe dejar su entrada.
+
+### ChatGPT · 20-nov-2026 · continuación C-M34 por capas offline
+
+- **Implementado en rama aislada PR #9:** API `MC.Mundo.desdePaquete/cargarPaquete` para descompresión por capa, empaquetador seguro en `herramientas/construir.mjs` activable con `mundos_capas:true`. Turno Cero usa el formato en sus tres ciudades; lector viejo se conserva.
+- **Cobertura añadida:** `pruebas/paquete-capas-cm34.mjs` confronta los bytes de las capas empaquetadas con los tres MC4 originales; `pruebas/paquete-capas-browser.mjs` abre el HTML offline en 412×860, inicia Calle libre y consulta las tres ciudades. Ambas integradas en GitHub Actions.
+- **Trazabilidad:** `docs/MC4-CAPAS-OFFLINE.md` y `reportes/2026-11-20-chatgpt-cm34-sectores-y-motores.md`.
+- **Pendiente real:** aprobar CI del último commit y medir recursos en dispositivos físicos, luego dividir datos dentro de cada capa por región. La capa `suelo` todavía se infla completa; no confundir con streaming espacial de 1 km.
+- **Coordinación:** Claude revisar código del motor y fijar versión si integra; Gemini medir memoria/rendimiento; IA ChatGPT siguiente continuar índices espaciales. Mantener ramas independientes y entradas aditivas.
