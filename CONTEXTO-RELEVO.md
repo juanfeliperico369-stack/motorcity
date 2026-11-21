@@ -32,15 +32,15 @@
 | Juego | Enlace | HTML (un solo archivo) | APK |
 |---|---|---|---|
 | Página del motor | <https://juanfeliperico369-stack.github.io/motorcity/> | `index.html` | — |
-| **Turno Cero** (18+) | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | release `v4.5.0` de motorcity: `MotorCity-getaway.apk` |
-| **Motor City · Carreras** (nuevo) | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/carreras.html> | `dist/juegos/carreras.html` | `MotorCity-carreras.apk` |
-| **Extremo** (nuevo) | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/extremo.html> | `dist/juegos/extremo.html` | `MotorCity-extremo.apk` |
-| Mandados (demo) | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html> | `dist/juegos/mandados.html` | `MotorCity-mandados.apk` |
-| Juega EnCicla | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | su flujo `android.yml` |
-| El Metro | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | su flujo `apk.yml` |
-| Run Scooter | <https://juanfeliperico369-stack.github.io/RunRunZero/> | `RunRunZero/web/index.html` | `RunScooter.apk` en su página |
+| **Turno Cero** (18+) | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.5.0/MotorCity-getaway.apk> |
+| **Motor City · Carreras** (nuevo) | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/carreras.html> | `dist/juegos/carreras.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.5.0/MotorCity-carreras.apk> |
+| **Extremo** (nuevo) | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/extremo.html> | `dist/juegos/extremo.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.5.0/MotorCity-extremo.apk> |
+| Mandados (demo) | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/mandados.html> | `dist/juegos/mandados.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.5.0/MotorCity-mandados.apk> |
+| Juega EnCicla | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | <https://github.com/juanfeliperico369-stack/BicicletasUno/releases/download/v2.0.1/JuegaEnCicla-v2.0.1-debug.apk> |
+| El Metro | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://github.com/juanfeliperico369-stack/MetroZero/releases/download/v2.0.1/el-metro.apk> (código 27) |
+| Run Scooter | <https://juanfeliperico369-stack.github.io/RunRunZero/> | `RunRunZero/web/index.html` | <https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk> |
 
-Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (Capacitor 7) con la etiqueta `v4.5.0`.
+Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (Capacitor 7). El proxy de esta sesión no deja subir etiquetas: el flujo, lanzado a mano, crea él mismo la release `v<VERSION.json>`. EnCicla (`android.yml`) y El Metro (`apk.yml`) hacen lo mismo con la versión de cada juego; Run Scooter la publica en su página con cada empuje a `main`.
 **Juegos hermanos:** por decisión del autor siguen con su propio Motor del Valle; reciben el motor en `motor-city/` como referencia y un informe detallado en `docs/INFORME-MOTOR-CITY-4.5.md` (qué se cambió, qué mejoró, qué falta auditar, qué les toca y cómo usar el motor sin dejar el suyo).
 
 ## 1. La misión
