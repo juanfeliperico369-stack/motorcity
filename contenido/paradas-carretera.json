@@ -1,0 +1,188 @@
+{
+  "version": "4.0.2-pre",
+  "nota": "Paradas ficticias. No representan empresas reales.",
+  "biomas": {
+    "costa": [
+      {
+        "nombre": "Bomba Brisa de Sal",
+        "nombre_en": "Saltwind Fuel",
+        "tipo": "fuel",
+        "ambiente": "Lámparas cálidas bajo una brisa de mar."
+      },
+      {
+        "nombre": "Taller La Boya",
+        "nombre_en": "The Buoy Garage",
+        "tipo": "car_repair",
+        "ambiente": "Motores y redes húmedas junto al mar."
+      },
+      {
+        "nombre": "Paradero Faro Viejo",
+        "nombre_en": "Old Beacon Diner",
+        "tipo": "restaurant",
+        "ambiente": "Café junto a los cristales empañados."
+      },
+      {
+        "nombre": "Mirador del Salitre",
+        "nombre_en": "Salt Air Lookout",
+        "tipo": "mirador",
+        "ambiente": "La línea del mar desaparece en la bruma."
+      }
+    ],
+    "llanura": [
+      {
+        "nombre": "Bomba Horizonte Bajo",
+        "nombre_en": "Low Horizon Fuel",
+        "tipo": "fuel",
+        "ambiente": "Camiones diminutos en la recta interminable."
+      },
+      {
+        "nombre": "Taller Tres Vientos",
+        "nombre_en": "Three Winds Garage",
+        "tipo": "car_repair",
+        "ambiente": "Herramientas en un galpón abierto."
+      },
+      {
+        "nombre": "Paradero La Lumbre",
+        "nombre_en": "Lamplight Diner",
+        "tipo": "restaurant",
+        "ambiente": "Comida caliente bajo una luz amarilla."
+      },
+      {
+        "nombre": "Motel Kilómetro Azul",
+        "nombre_en": "Blue Mile Motel",
+        "tipo": "motel",
+        "ambiente": "Un letrero cansado vibra con el viento."
+      }
+    ],
+    "desierto": [
+      {
+        "nombre": "Bomba Polvo Rojo",
+        "nombre_en": "Red Dust Fuel",
+        "tipo": "fuel",
+        "ambiente": "La arena golpea las ventanillas."
+      },
+      {
+        "nombre": "Taller La Calima",
+        "nombre_en": "Heat Haze Garage",
+        "tipo": "car_repair",
+        "ambiente": "Metal caliente y una sombra mínima."
+      },
+      {
+        "nombre": "Paradero Las Agujas",
+        "nombre_en": "Needles Diner",
+        "tipo": "restaurant",
+        "ambiente": "Un ventilador antiguo mueve el aire seco."
+      },
+      {
+        "nombre": "Mirador del Mediodía",
+        "nombre_en": "High Noon Lookout",
+        "tipo": "mirador",
+        "ambiente": "La carretera tiembla entre las dunas."
+      }
+    ],
+    "bosque": [
+      {
+        "nombre": "Bomba Los Helechos",
+        "nombre_en": "Fernwood Fuel",
+        "tipo": "fuel",
+        "ambiente": "Musgo sobre la marquesina."
+      },
+      {
+        "nombre": "Taller Raíz Vieja",
+        "nombre_en": "Old Root Workshop",
+        "tipo": "car_repair",
+        "ambiente": "Ramas mojadas y faros entre los pinos."
+      },
+      {
+        "nombre": "Paradero Sombra Larga",
+        "nombre_en": "Long Shade Diner",
+        "tipo": "restaurant",
+        "ambiente": "La conversación baja cuando cruje el bosque."
+      },
+      {
+        "nombre": "Mirador Copa Alta",
+        "nombre_en": "High Canopy Lookout",
+        "tipo": "mirador",
+        "ambiente": "Una vía estrecha entre las copas."
+      }
+    ],
+    "montana": [
+      {
+        "nombre": "Bomba Alto de Piedra",
+        "nombre_en": "Stonecrest Fuel",
+        "tipo": "fuel",
+        "ambiente": "Viento frío detrás de la estación."
+      },
+      {
+        "nombre": "Taller Curva Cerrada",
+        "nombre_en": "Hairpin Garage",
+        "tipo": "car_repair",
+        "ambiente": "Frenos calientes y grava en la cuneta."
+      },
+      {
+        "nombre": "Paradero La Cornisa",
+        "nombre_en": "Ledge Diner",
+        "tipo": "restaurant",
+        "ambiente": "La ventana da directamente al barranco."
+      },
+      {
+        "nombre": "Mirador del Cóndor",
+        "nombre_en": "Condor Ridge Lookout",
+        "tipo": "mirador",
+        "ambiente": "Las nubes quedan debajo del camino."
+      }
+    ],
+    "nieve": [
+      {
+        "nombre": "Bomba Último Refugio",
+        "nombre_en": "Last Shelter Fuel",
+        "tipo": "fuel",
+        "ambiente": "Hielo alrededor de los surtidores."
+      },
+      {
+        "nombre": "Taller Cadena Norte",
+        "nombre_en": "North Chain Garage",
+        "tipo": "car_repair",
+        "ambiente": "Neumáticos de invierno junto a la estufa."
+      },
+      {
+        "nombre": "Paradero Escarcha",
+        "nombre_en": "Frostline Diner",
+        "tipo": "restaurant",
+        "ambiente": "Cristales blancos ocultan la carretera."
+      },
+      {
+        "nombre": "Motel Ventisca",
+        "nombre_en": "Snowdrift Motel",
+        "tipo": "motel",
+        "ambiente": "Una sola puerta iluminada en la nevada."
+      }
+    ],
+    "lagos": [
+      {
+        "nombre": "Bomba Agua Clara",
+        "nombre_en": "Clearwater Fuel",
+        "tipo": "fuel",
+        "ambiente": "Reflejos verdes bajo los surtidores."
+      },
+      {
+        "nombre": "Taller El Pescador",
+        "nombre_en": "Fisher's Workshop",
+        "tipo": "car_repair",
+        "ambiente": "Motores de lancha junto a los carros."
+      },
+      {
+        "nombre": "Paradero Orilla Norte",
+        "nombre_en": "North Shore Diner",
+        "tipo": "restaurant",
+        "ambiente": "Café con vista al muelle de tablas."
+      },
+      {
+        "nombre": "Mirador Los Espejos",
+        "nombre_en": "Mirror Lake Lookout",
+        "tipo": "mirador",
+        "ambiente": "Las montañas duplicadas en el agua."
+      }
+    ]
+  }
+}

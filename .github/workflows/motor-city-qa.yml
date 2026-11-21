@@ -30,6 +30,8 @@ jobs:
         run: node motor.mjs construir
       - name: Pruebas Node
         run: node motor.mjs prueba
+      - name: G-H21/22/23 · lugares, paradas y lenguaje
+        run: node pruebas/getaway-contenido.mjs
       - name: Revisar arte Gemini
         run: node motor.mjs revisar-arte arte/gemini
       - name: Revisar arte ChatGPT

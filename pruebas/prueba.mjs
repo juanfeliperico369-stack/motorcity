@@ -639,10 +639,14 @@ if (process.argv.includes('--navegador')) {
       G.busq.limpiar(); let run = false; if (cic) { G.Extras.entrarRun(); await espera(2500); run = !!G.enRun; document.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape' })); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape' })); await espera(800); }
       const q = G.M.viaCercana(...Object.values(G.M.geoAMetros(6.2265, -75.5745)), 200); G.cuerpo.setVeh('tc_vega'); Object.assign(G.cuerpo, { x: q.x, y: q.y, a: q.ang, v: 0 }); G.Contratos.empezar(Object.assign({}, TC.CONTRATOS.find(x => x.tipo === 'carrera'), { pagoF: 300 })); const K = G.contrato, x0 = K && K.carrera.cuerpo.x, y0 = K && K.carrera.cuerpo.y; await espera(9000);
       const rival = K && G.contrato === K ? Math.round(Math.hypot(K.carrera.cuerpo.x - x0, K.carrera.cuerpo.y - y0)) : -1; G.contrato = null;
-      return { paso0, obj, tapa, dialogo, enRuta, letrero: letrero.slice(0, 40), medellin, metro, modelos3d, persigue, tapa2, run, salioRun: !G.enRun, rival, errores: MC.errores.length };
+      /* C-M31: abrir realmente el planeta en Chromium: WebGL2 si funciona, 2D si falta. */
+      G.Globo.abrir(); await espera(450);
+      const gpu = G.Globo.gpu, globo = { gpu: !!gpu?.ok, error: gpu?.error || '', ancho: document.querySelector('#ggl').width, respaldo: document.querySelector('#gcv').style.opacity };
+      G.Globo.cerrar();
+      return { paso0, obj, tapa, dialogo, enRuta, letrero: letrero.slice(0, 40), medellin, metro, modelos3d, persigue, tapa2, run, salioRun: !G.enRun, rival, globo, errores: MC.errores.length };
     });
-    ok(portada.adultos && portada.modelos >= 45 && portada.mundos.length === 3 && r.paso0 === 'ir' && r.obj && !r.tapa.length && r.dialogo && r.enRuta === 'ruta_atlantico' && /Medellín/.test(r.letrero) && r.medellin === 'medellin' && r.metro && r.persigue >= 1 && !r.tapa2.length && r.run && r.salioRun && r.rival > 40 && !r.errores && !errs.length,
-      'Turno Cero en Chromium móvil: aviso 18+, 45 modelos, la historia arranca, el HUD no tapa el centro, Manhattan → Ruta del Atlántico → Medellín con su metro, la policía persigue, Run en la ciclovía y una carrera con el rival en marcha', Object.assign({}, portada, r, { errs: errs.slice(0, 3) }));
+    ok(portada.adultos && portada.modelos >= 45 && portada.mundos.length === 3 && r.paso0 === 'ir' && r.obj && !r.tapa.length && r.dialogo && r.enRuta === 'ruta_atlantico' && /Medellín/.test(r.letrero) && r.medellin === 'medellin' && r.metro && r.persigue >= 1 && !r.tapa2.length && r.run && r.salioRun && r.rival > 40 && r.globo && (r.globo.gpu ? r.globo.respaldo === '0' && r.globo.ancho > 0 : /no disponible/i.test(r.globo.error) && r.globo.respaldo === '1') && !r.errores && !errs.length,
+      'Turno Cero en Chromium móvil: aviso 18+, 45 modelos, la historia arranca, el HUD no tapa el centro, Manhattan → Ruta del Atlántico → Medellín con su metro, la policía persigue, Run en la ciclovía y una carrera con el rival en marcha y el globo GPU con respaldo 2D', Object.assign({}, portada, r, { errs: errs.slice(0, 3) }));
     await b.close();
   }
 }

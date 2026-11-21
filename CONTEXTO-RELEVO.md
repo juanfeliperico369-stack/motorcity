@@ -158,3 +158,56 @@
   - el jugador ahora retrocede al frenar estando quieto, el comportamiento normal de los juegos, pero hay que confirmarlo en un celular.
 - **Sigue:** § 5, sin cambios en el orden. Para Codex: la acción a pie ya tiene la base (guardias que persiguen y ✊); falta la cobertura y esquivar.
 - **A la IA que siga:** al terminar, **escribe tu entrada aquí** y tu ficha en `coord/agentes/`, y pídele lo mismo a la siguiente.
+
+
+### ChatGPT · 20‑nov‑2026 · auditoría 4.0.1 de Gemini
+- **Hecho:** G-H22 (28 paradas y selección por bioma), G-H23 (lenguaje suave extendido), G-H21 (riesgo de referencia comercial detectado y corregido en el guion).
+- **Prueba:** `node pruebas/getaway-contenido.mjs` incorporada a Actions, pendiente del estado final de la nueva PR.
+- **Falta:** cotejo parcelario de 19 lugares y G-H20/24 en GPU física; tareas C-M31–36 y arte PBR no terminadas.
+- **Riesgo:** la ubicación de la finca sigue siendo una coordenada narrativa aproximada; no atribuir delitos a lugares reales.
+- **Relevo:** cada IA agrega su propia entrada, ficha y buzón; no reescribe las otras.
+
+
+### ChatGPT · 20‑nov‑2026 · ampliación C-M36 de la PR 4.0.x
+- **Hecho:** `MC.PersecucionAudio` como núcleo reutilizable; sirena de Turno Cero con atenuación, Doppler y oclusión por edificios, motor en bandas coherentes.
+- **Pruebas:** cálculos deterministas añadidos a `pruebas/getaway-contenido.mjs`; revisar Actions antes de integrar.
+- **Falta:** pruebas auditivas y de rendimiento en móvil real, correcciones C-M31/32/33/34/35.
+
+
+### ChatGPT · 20‑nov‑2026 · C-M32 base de guardias 3D integrada
+- **Hecho:** nuevo módulo compartido `MC.AccionPie`; percepción según cono/oclusión, última posición vista, búsqueda, patrulla y distracción; guardias animados sincronizan posición con el modelo GLB, sin atravesar edificios.
+- **Pruebas:** módulo puro con obstáculos ficticios y pérdida de línea visual en `pruebas/getaway-contenido.mjs`. La escena 3D independiente sigue separada; no se declara integración completa de todos sus sistemas de combate/cobertura.
+- **Pendiente:** esquiva, combate táctico ampliado, integración profunda de objetos físicos, pruebas de movilidad en móvil real.
+
+
+### ChatGPT · 20‑nov‑2026 · C-M33 personajes rigged de preproducción
+- Generador y validador ampliados de 3 a 9 actores GLB (12 huesos, 8 animaciones) y pesos mixtos en articulaciones. Prueba Python local 9/9 válida.
+- Integración al juego, LOD1/LOD2 de vehículos/actores y PBR final pendientes. CI entrega los GLB generados como artefacto.
+
+
+### ChatGPT · 20-nov-2026 · C-M33 LOD geométrico de escena
+- **Hecho:** selección de geometría 0/1/2 por distancia en `MC.Modelos`, integrada en modelos de tráfico y escena 3D, con caché por modelo.
+- **Prueba:** `pruebas/getaway-contenido.mjs` verifica 120→77→36 triángulos y que el jugador conserva la malla completa.
+- **Falta:** LOD GLB retopologizados, validación de silueta y GPU de móvil real; mantener PR en borrador hasta CI.
+
+
+### ChatGPT · 20-nov-2026 · C-M35: daño por piezas visuales en 3D
+- **Hecho:** `MC.Piezas` reutilizable con capó, baúl, puertas y rueda; desprendimiento en umbral de daño, gravedad/rebote local, geometría de mallas 3D y humo/fuego procedurales sobre el vehículo del jugador.
+- **Pruebas:** caso de 2 piezas con colisión, máximo de fragmentos, render sin sprites y limpieza al reparar, dentro de la suite G-H21/22/23.
+- **Límite:** las piezas son geometría procedural auxiliar, todavía no son las partes segmentadas físicamente de cada GLB. No se ha verificado en GPU real.
+
+
+### ChatGPT · 20-nov-2026 · C-M31 globo WebGL2 (parcial)
+- **Hecho:** `MC.GloboGPU` usa un shader WebGL2 con franjas de biomas del anillo, ruido geográfico ficticio, sombreado solar, atmósfera Rayleigh aproximada, estrellas y posición del jugador.
+- **Integración:** canvas GPU en overlay del planeta; si falla WebGL2, el `Planeta.globo` 2D original sigue disponible y táctil.
+- **Límite:** la transición sigue siendo por capa superpuesta (animada) y no todavía dentro del mismo renderizador de ciudad. Prueba de shader en Chromium pendiente de CI.
+
+
+### ChatGPT · 20-nov-2026 · QA real C-M31
+- Se amplió la prueba Chromium del juego compilado: abre el globo, verifica el lienzo WebGL2 y exige que el respaldo 2D sólo se use por ausencia de WebGL2. La PR permanece en borrador a la espera de Actions.
+
+
+### ChatGPT · 20-nov-2026 · C-M34 memoria ED1 por sectores (parcial)
+- **Hecho:** `MC.Sectores1km`: sectores de 1 km con caché LRU de metadatos; limita a 36 las regiones de edificios ED1 decodificadas cerca de la cámara de Manhattan, cada 2 s. El mundo sigue funcional fuera de la caché porque ED1 crudo permanece disponible.
+- **Prueba:** en Node se crean 90 regiones ficticias y el sectorizador reduce a <=20 sin perder la API; se conservan guardados.
+- **No hecho:** el MC4 comprimido de 10,2 MB y las capas de suelo, relieve y viales siguen cargándose en el juego completo. Streaming real necesita dividir el formato/binarios en construcción y lector sectorizado.
