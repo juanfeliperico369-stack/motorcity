@@ -145,9 +145,14 @@ const Subt = { cola: [], t: 0,
   limpiar() { this.cola = []; this.t = 0; $('#subt').hidden = true; }
 };
 async function escena(lineas) {
+  const token = G.narrativaEpoch || 0;
   G.pausa = true; Subt.limpiar();
-  for (const [q, x] of lineas) { const Q = TC.QUIEN[q] || { n: q, c: '#fff' }; await G.ui.dialogo(q === 'radio' ? '<span style="color:#8a8578">· · ·</span>' : '<span style="color:' + Q.c + '">' + Q.n + '</span>', suave(x), ['▶']); }
-  G.pausa = false;
+  for (const [q, x] of lineas) {
+    if (token !== (G.narrativaEpoch || 0)) return;
+    const Q = TC.QUIEN[q] || { n: q, c: '#fff' };
+    await G.ui.dialogo(q === 'radio' ? '<span style="color:#8a8578">· · ·</span>' : '<span style="color:' + Q.c + '">' + Q.n + '</span>', suave(x), ['▶']);
+  }
+  if (token === (G.narrativaEpoch || 0)) G.pausa = false;
 }
 async function decision(D) {
   G.pausa = true; const i = await G.ui.dialogo('<span style="color:#e8a33c">❓ ' + D.pregunta + '</span>', '', D.opciones.map(o => o.texto)); G.pausa = false;

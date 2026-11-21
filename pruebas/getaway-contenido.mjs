@@ -184,3 +184,12 @@ assert(pie.perseguir(cercaGuard,{x:1,y:0},libre,.05).golpe,'sólo golpea visible
 const bloqueada={x:0,y:0,a:0,vista:24,cono:1.05};
 assert(!pie.perseguir(bloqueada,{x:5,y:0},pared,.05).golpe,'no golpea tras un muro');
 console.log('C-M32 · persecución tras alarma respeta línea de visión, obstáculos y último avistamiento');
+
+
+/* G-H20: cambio de modo invalida diálogos/narración previos sin resolverlos en segundo plano. */
+const inicio=f('juegos/getaway/20-juego.js');
+const historiaE=f('juegos/getaway/30-historia.js');
+assert(inicio.includes('const token = G.narrativaEpoch || 0') && inicio.includes('if (token !== (G.narrativaEpoch || 0)) return;'));
+assert(historiaE.includes('G.narrativaEpoch = (G.narrativaEpoch || 0) + 1'));
+assert(historiaE.includes("querySelectorAll('.dialogo')") && historiaE.includes('Subt.limpiar()'));
+console.log('G-H20 · diálogos inválidos cancelados y subtítulos limpios al entrar Calle libre');

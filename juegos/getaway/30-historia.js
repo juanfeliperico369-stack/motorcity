@@ -10,11 +10,13 @@ const Historia = {
   cap: 0, i: 0, sub: null, p: null, est: {}, ocupado: false,
   pasosDe() { return this.sub || TC.HISTORIA[this.cap].pasos; },
   async empezar(cap, i = 0, op = {}) {
+    const token = G.narrativaEpoch || 0;
     G.hist = this; G.contrato = null; G.modo = 'historia'; this.p = null; this.ocupado = true; this.cap = cap;   /* nada se completa mientras cambia de capítulo */ this.sub = op.sub ? (TC.HISTORIA[cap].pasos.find(q => q.tipo === 'si' && G.flags[q.flag]) || {}).pasos || null : null; const H = TC.HISTORIA[cap];
     if (i === 0) { G.cebos = 2; G.reloj.min = H.hora * 60; G.climaForzado = H.clima; if (G.clima) G.clima.forzar(H.clima); }
     if (op.donde) await entrarMundo(op.donde.mundo, { x: op.donde.x, y: op.donde.y, a: op.donde.a, heat: 0 });
     else if (G.id !== H.mundo) await entrarMundo(H.mundo, { lugar: H.inicio, heat: 0 });
     if (i === 0) { await tarjeta('Acto ' + H.acto + ' · Capítulo ' + H.cap, H.titulo, TC.QUIEN.mara.n); if (H.intro && !op.sinIntro) await escena(H.intro); }
+    if ((G.narrativaEpoch || 0) !== token || G.modo !== 'historia') return;
     this.empezarPaso(i);
   },
   empezarPaso(i) {
@@ -168,5 +170,19 @@ const Contratos = {
   fuera(ev) { if (G.contrato && ev.bando === 'banda') G.contrato.fuera++; }
 };
 const Libre = {
-  async empezar(id, donde) { G.hist = null; G.modo = 'libre'; Historia.p = null; G.climaForzado = null; await entrarMundo(id, donde || {}); await tarjeta('Calle libre', planeta.def(id).nombre, 'Contratos 📞 · el planeta entero 🌍 · las carreteras de la nada'); G.ui.aviso('📞 Toca Contratos para trabajar · 🌍 para ver el planeta', 3200, 'libre'); }
+  async empezar(id, donde) {
+    /* G-H20: cancelamos diálogos antiguos sin dejar al Acto anterior continuar por detrás. */
+    G.narrativaEpoch = (G.narrativaEpoch || 0) + 1;
+    Subt.limpiar();
+    if (G.ui?.capa) {
+      for (const d of G.ui.capa.querySelectorAll('.dialogo')) {
+        const first = d.querySelector('button'); if (first) first.click(); else d.remove();
+      }
+      for (const m of G.ui.capa.querySelectorAll('.menu')) m.remove();
+    }
+    G.pausa = false; G.hist = null; G.modo = 'libre'; Historia.p = null; G.climaForzado = null;
+    await entrarMundo(id, donde || {});
+    await tarjeta('Calle libre', planeta.def(id).nombre, 'Contratos 📞 · el planeta entero 🌍 · las carreteras de la nada');
+    G.ui.aviso('📞 Toca Contratos para trabajar · 🌍 para ver el planeta', 3200, 'libre');
+  }
 };
