@@ -18,9 +18,9 @@
 - unió las entregas nuevas de ChatGPT/Codex (C‑M34 por capas, arte de Gemini, PBR) y de Antigravity (técnicas clásicas sobre datos reales);
 - agregó el recorte por región en el 3D;
 - en Turno Cero, la historia ahora se descubre en el mundo abierto (📖).
-**Última actualización:** 21‑nov‑2026, Gemini · Antigravity (sincronizado con motor **4.0.3** de Claude + ingeniería inversa limpia de motores clásicos + paquete de arte pintado).
+**Última actualización:** 21‑nov‑2026, Gemini · Antigravity (sobre motor **4.2.0** `7580543` en `ia/antigravity/motorcity-4.2`: pool circular sin basura en `js/88-vida.js`, escalador EMA con histéresis en `js/05-gpu.js` + `js/46-vistas.js`, verificación RAM post-GC 4.2.0, auditoría `G‑H25..28` y revisión PR #10).
 
-**Rama de trabajo:** `claude/motor-city-engine-xu7p4y` en los cuatro repositorios. Las otras IA trabajan en sus ramas (`ia/<agente>/<tema>`, entrega Gemini en `ia/antigravity/motorcity-4.0`). `main` de `motorcity` se avanza en rápido para GitHub Pages.
+**Rama de trabajo:** `claude/motor-city-engine-xu7p4y` en los cuatro repositorios. Las otras IA trabajan en sus ramas (`ia/<agente>/<tema>`, entrega Gemini actual en `ia/antigravity/motorcity-4.2`). `main` de `motorcity` se avanza en rápido para GitHub Pages.
 
 ---
 
@@ -415,6 +415,34 @@
   3. **Claude / Codex:** integrar `CulleoUrbano` (`93,5–95,0 %` descarte medido en MC4 real), `hornearAOUrbano`, `FisicaDriver`, `PoolParticulas` y `EscaladorDinamico` de `mc-clasico.js`, corregir encuadre/etiquetas de `MC.GloboGPU` y adoptar `arte/gemini/turno-cero/`;
   4. **Autor / QA físico:** medición real con GPU física en celular Android/iOS (tabla § 1.3 de `reportes/2026-11-21-gemini-turno-cero.md`).
 - **Instrucción obligatoria para la siguiente IA (Claude, Codex, ChatGPT o quien siga):** antes de cerrar tu turno, **DEBE quedar tu propio documento de contexto y relevo**: suma tu entrada aquí en `CONTEXTO-RELEVO.md` § 8 (sin borrar las anteriores), actualiza § 3/§ 5 si cambiaron, actualiza tu ficha en `coord/agentes/<tu-id>.json`, deja un mensaje nuevo en `coord/buzon/` y **especifícale exactamente esta misma regla a la siguiente IA**.
+
+### Gemini · Antigravity («hydrogen») · 21‑nov‑2026 (fases 5 y 6) · Motor City 4.2.0: pool `MC.Vida` (Burnout 3), escalador `MC.ResDinamica` (SotC), auditoría `G‑H25..28`, verificación RAM post-GC y PR #10 (`ia/antigravity/motorcity-4.2`)
+- **En respuesta directa al pedido de Claude (`coord/buzon/20261121-1800-claude-4.2.md`):**
+  - **`js/88-vida.js` (`MC.Vida` · pool circular sin basura, técnica *Burnout 3*):** banco preasignado de `260` ranuras, `emitir()` en `O(1)` sin `shift()` y `actualizar()` con *swap-and-pop* `O(1)` sin `splice()`, auto-recuperación si código externo limpia `V.P.length = 0`, y `MC.Vida.poolDiagnostico()`. **Medido (`pruebas/vida-y-resdinamica.mjs`):** `20.000` emisiones en `500` cuadros en **`36,03 ms`** (`0,072 ms/cuadro`), **`creados: 260`** exactos (`0` basura en ejecución, `0` fugas).
+  - **`js/05-gpu.js` + `js/46-vistas.js` (`MC.ResDinamica` · técnica *Shadow of the Colossus*):** lazo cerrado EMA con zona muerta (`[72 %..92 %]` del objetivo), respuesta asimétrica, cuantización `escalaPaso` (`0,05`) con enfriamiento (`8` cuadros) para evitar redimensionar el lienzo 3D cada cuadro, `factorNiebla` acoplado (`0,62..1,00` expuesto en `E.factorNiebla`) y `diagnostico()`. **Medido:** `0` cambios en `300` cuadros dentro de zona muerta; `3` cambios al caer a `0,50` bajo `40 ms`; pasa intacta `pruebas/prueba.mjs:102`.
+  - **Suite unitaria nueva:** [`pruebas/vida-y-resdinamica.mjs`](pruebas/vida-y-resdinamica.mjs) (**7/7 en verde**).
+- **Auditoría completa 4.1 (`G‑H25..28`, incorporada aquí tras cierre de PR #8) y verificación 4.2.0 + PR #10:**
+  - [`reportes/2026-11-21-gemini-clasicos-4.1.md`](reportes/2026-11-21-gemini-clasicos-4.1.md) + 18 WebP (`455,5 KB`): `G‑H25` (Arcade/Vuelo + bug ALTA `hor..H` congelado en ciudad + plantilla celular físico), `G‑H26` (sigilo Thief + bug ALTA móvil `⚡` no activa `e.correr` a pie: `1,53 m/s < 4,2`) y `G‑H28` (Turno Cero 4.1+ cumple en 1 toque; El Metro `v0.2.0` exige 3 toques y bloquea 14/15 estaciones + 3 `404` favicon; EnCicla `v1.7.1` bloquea con 2 modales seguidos `BIENVENIDA 1/4` + `Crea tu personaje`).
+  - [`reportes/2026-11-21-gemini-tecnicas-clasicas-extra.md`](reportes/2026-11-21-gemini-tecnicas-clasicas-extra.md) (`G‑H27`): catálogo en sala limpia de 14 clásicos y motores permisivos (*Driver*, *Midtown Madness* ARTS/AGE, *Hard Drivin'*, *Stunt Car Racer*, *Crazy Taxi*, *The Getaway*, *Burnout 3*, *Jak & Daxter*, *Shadow of the Colossus*, *Silent Hill*, *Unreal 1*, Cube 2 `zlib`, Irrlicht `zlib`, Torque 3D `MIT`).
+  - [`reportes/2026-11-21-gemini-4.2-pool-escalador-y-pr10.md`](reportes/2026-11-21-gemini-4.2-pool-escalador-y-pr10.md) + 4 WebP (`108,5 KB`):
+    - **✅ Memoria multi-ciudad 4.2.0 post-GC (`HeapProfiler.collectGarbage`):** `Medellín 51,5 MB → Manhattan 197,3 MB → Guatapé 8,4 MB → Medellín 51,9 MB` (**fuga multi-ciudad 100 % eliminada**, `-188,9 MB` liberados al salir de Manhattan);
+    - **✅ Portada 4.2.0 con arte pintado de Gemini y `MC.GloboGPU`:** verificados limpios en `412×860`;
+    - **⚠️ `⏸ Menú` en 4.2.0 (`02-menu-pausa-420.webp`):** sigue cortado por arriba (`primerBotonTop: -224 px` en `412×860`);
+    - **PR #10 (`ia/chatgpt/planeta-cache-410-20261121`):** diseño excelente (single-flight + LRU + `fijar(id)`), actualmente `CONFLICTING` contra `main` 4.2.0; rebasar preservando la evacuación en `juegos/getaway/20-juego.js:112-114`.
+- **Cómo lo probé:**
+  - `node motor.mjs construir` (compilación limpia de `dist/motor.js`, `dist/juegos/getaway.html`, `dist/juegos/mandados.html`, `dist/motor-city.html`);
+  - `node pruebas/vida-y-resdinamica.mjs` (**7/7 verde**);
+  - `node motor.mjs prueba --navegador` (**153/153 verde**, `109,1 s`, `0` errores consola, CPU 4× bajo `17 ms`);
+  - `node pruebas/paquete-capas-browser.mjs` (**verde**, 3 ciudades offline, `0` errores), `node pruebas/paquete-capas-cm34.mjs` (**verde**), `node pruebas/sectores-cm34.mjs` (**5/5**), `node pruebas/getaway-contenido.mjs` (**verde**), `node experimentos/tecnicas-clasicas/prueba-clasico.mjs` (**6/6**);
+  - verificación visual `412×860` + perfilado CDP post-GC + `node motor.mjs documento`.
+- **Falta (prioridad inmediata para la siguiente IA):**
+  1. **Claude (URGENTE — 4.2.1):** integrar esta PR `ia/antigravity/motorcity-4.2` y corregir los 3 bugs ALTA verificados con captura: (a) recorte superior de `⏸ Menú` (`-224 px`, `js/56-ui.js`), (b) fondo inferior `hor..H` + `lighter` nocturno en `MC.Arcade` (`js/47-clasicos.js:152`), (c) botón táctil `⚡` mapeado a `e.correr` a pie + umbrales de sigilo (`juegos/getaway/20-juego.js:200` y `55-clasicos.js:22,24,27`), más margen derecho al rótulo de `56-abierto.js`.
+  2. **ChatGPT / Codex (PR #10):** rebasar `ia/chatgpt/planeta-cache-410-20261121` sobre `main` 4.2.0 conservando la evacuación de ciudad previa de `20-juego.js:112-114`.
+  3. **Codex / Claude (`G‑H28` en juegos hermanos):** alinear `MetroZero` (1 toque a Ciudad Libre + 15 estaciones libres + arreglar 3 `404` favicon) y `BicicletasUno` (1 toque a pedalear sin bloquear con `BIENVENIDA` ni `Crea tu personaje`).
+  4. **Codex (4.1/4.2 fuertes):** `C‑M37` (PVS Quake Manhattan), `C‑M38` (portales Build), `C‑M39` (COLORMAP Doom), `C‑M40` (direccionales *The Getaway*), `C‑A18` (capas Arcade por bioma).
+  5. **Autor / QA físico:** completar tabla § 1.4 de `reportes/2026-11-21-gemini-clasicos-4.1.md` en celular físico con GPU.
+- **Instrucción obligatoria para la siguiente IA (Claude, Codex, ChatGPT o quien siga):** antes de cerrar tu turno, **DEBE quedar tu propio documento de contexto y relevo**: suma tu entrada aquí en `CONTEXTO-RELEVO.md` § 8 (sin borrar las anteriores), actualiza § 3/§ 5 si cambiaron, actualiza tu ficha en `coord/agentes/<tu-id>.json`, deja un mensaje nuevo en `coord/buzon/` y **especifícale exactamente esta misma regla a la siguiente IA** para que nunca se pierda el hilo del proyecto.
+
 
 # MOTOR CITY · Documento único
 
