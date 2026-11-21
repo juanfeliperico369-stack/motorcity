@@ -53,10 +53,11 @@ h1{margin:6px 0 4px;font:700 clamp(22px,4vw,34px)/1.05 var(--serif);text-transfo
 .pill.ok b{color:var(--ok)}
 .pill.warn b{color:#ff8a80}
 
-.side{background:var(--surf);border:1px solid var(--line);border-radius:8px;padding:14px;display:grid;gap:12px}
+.side{background:var(--surf);border:1px solid var(--line);border-radius:8px;padding:14px;display:grid;gap:12px;min-width:0;overflow:hidden}
+.side select{width:100%;max-width:100%;min-width:0;text-overflow:ellipsis}
 .side h2{margin:0;font:700 17px/1.2 var(--serif)}
 .side p{margin:0;color:var(--muted);font-size:12.5px}
-.toggles{display:grid;gap:8px}
+.toggles{display:grid;gap:8px;min-width:0}
 .tgl{
   display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;
   padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surf2);
@@ -126,8 +127,17 @@ h1{margin:6px 0 4px;font:700 clamp(22px,4vw,34px)/1.05 var(--serif);text-transfo
         </div>
       </div>
       <aside class="side">
-        <h2>Toggles en tiempo real</h2>
-        <p>Desactiva y activa cada truco clásico para ver cómo bajan las llamadas de dibujo y gana profundidad el cañón urbano. Usa <b>WASD / flechas</b> o los botones táctiles.</p>
+        <h2>Cañón urbano real (MC4)</h2>
+        <p>Prueba en vivo con <b>edificios reales de Motor City 4.0.3</b> (Overture/OSM). Activa o apaga cada técnica clásica y maneja con <b>WASD / flechas</b> o los botones táctiles.</p>
+        <label class="slider-row">
+          <span><span>Escenario de datos</span><b id="lblCanon">Chelsea · NY</b></span>
+          <select id="selCanon" style="min-height:42px;background:var(--surf2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:0 10px;font:600 12.5px var(--sans)">
+            <option value="ny_chelsea">Manhattan · Chelsea (309 edificios reales MC4)</option>
+            <option value="ny_midtown">Manhattan · Midtown (231 edificios reales MC4)</option>
+            <option value="md_poblado">Medellín · El Poblado (518 edificios reales MC4)</option>
+            <option value="sintetico">Cuadrícula sintética (144 edificios)</option>
+          </select>
+        </label>
         <div class="toggles">
           <label class="tgl"><span>Oclusión 1D (Build Engine)</span><input type="checkbox" id="tgOcc" checked></label>
           <label class="tgl"><span>Niebla = Far Plane (Silent Hill)</span><input type="checkbox" id="tgFog" checked></label>
@@ -151,26 +161,35 @@ h1{margin:6px 0 4px;font:700 clamp(22px,4vw,34px)/1.05 var(--serif);text-transfo
   <section class="panel" id="tab-voxel">
     <div class="stage-grid">
       <div class="canvas-box">
-        <canvas id="cvVoxel" width="320" height="200" style="image-rendering:pixelated" aria-label="Terreno 3D Voxel Space de Guatapé sin WebGL"></canvas>
+        <canvas id="cvVoxel" width="320" height="200" style="image-rendering:pixelated" aria-label="Terreno 3D Voxel Space real SRTM sin WebGL"></canvas>
         <div class="hud-bar">
           <span class="pill ok">Render: <b>100% CPU Canvas 2D (0 WebGL)</b></span>
-          <span class="pill">Tiempo cuadro: <b id="vxMs">0 ms</b></span>
+          <span class="pill">Relieve: <b id="vxSrc">Guatapé SRTM real</b></span>
+          <span class="pill">Tiempo: <b id="vxMs">0 ms</b></span>
           <span class="pill">Columnas: <b id="vxCols">0</b></span>
-          <span class="pill">Altura cámara: <b id="vxAlt">122 m</b></span>
+          <span class="pill">Altura: <b id="vxAlt">155</b></span>
         </div>
       </div>
       <aside class="side">
-        <h2>Voxel Space sobre Guatapé</h2>
-        <p>Algoritmo de <b>Comanche (1992)</b> y <b>Outcast (1999)</b>: lanza rayos de adelante hacia atrás con búfer de horizonte <code>yBuf</code> sobre un mapa de alturas con el embalse y la <b>Piedra del Peñol</b>. Corre fluido sin GPU.</p>
+        <h2>Voxel Space sobre SRTM real</h2>
+        <p>Algoritmo de <b>Comanche (1992)</b> y <b>Outcast (1999)</b> leyendo el relieve <b>NASA SRTM + agua/vías reales</b> de los archivos <code>mundo.mc4</code> de Motor City a ~1 ms/cuadro sin WebGL.</p>
         <label class="slider-row">
-          <span><span>Altitud de vuelo</span><b id="lblAlt">122</b></span>
-          <input type="range" id="rgAlt" min="65" max="220" value="122">
+          <span><span>Mapa de relieve</span><b id="lblVxMap">SRTM MC4</b></span>
+          <select id="selVoxel" style="min-height:42px;background:var(--surf2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:0 10px;font:600 12.5px var(--sans)">
+            <option value="guatape">Guatapé y El Peñol · SRTM real (1813–2028 m)</option>
+            <option value="medellin">Medellín · Valle de Aburrá SRTM real (1446–2789 m)</option>
+            <option value="proc">Guatapé procedural clásico</option>
+          </select>
+        </label>
+        <label class="slider-row">
+          <span><span>Altitud de vuelo</span><b id="lblAlt">165</b></span>
+          <input type="range" id="rgAlt" min="65" max="245" value="165">
         </label>
         <label class="slider-row">
           <span><span>Distancia de horizonte</span><b id="lblVxDist">155</b></span>
           <input type="range" id="rgVxDist" min="70" max="240" value="155">
         </label>
-        <label class="tgl"><span>Piloto automático sobre la Piedra</span><input type="checkbox" id="tgAutoVx" checked></label>
+        <label class="tgl"><span>Piloto automático panorámico</span><input type="checkbox" id="tgAutoVx" checked></label>
       </aside>
     </div>
   </section>
@@ -189,7 +208,7 @@ h1{margin:6px 0 4px;font:700 clamp(22px,4vw,34px)/1.05 var(--serif);text-transfo
       </div>
       <aside class="side">
         <h2>RenderWare CStreaming + GOAL</h2>
-        <p>Compara la retención de 2 ciudades completas en memoria (<b>258,9 MB</b> medidos en auditoría) frente al anillo predictivo con presupuesto rígido y evacuación al cruzar de ciudad.</p>
+        <p>Compara la retención de 3 ciudades medidas en Chromium móvil (<b>270,7 MB</b> en 4.0.3 y <b>279,6 MB</b> en PR #9) frente al anillo predictivo con presupuesto rígido y evacuación al cruzar de ciudad.</p>
         <div class="toggles">
           <button type="button" class="tgl" id="btnCityNY"><span>🗽 Saltar a Nueva York</span><b>10 MB MC4</b></button>
           <button type="button" class="tgl" id="btnCityMD"><span>🚠 Saltar a Medellín</span><b>6,8 MB MC4</b></button>
@@ -201,7 +220,7 @@ h1{margin:6px 0 4px;font:700 clamp(22px,4vw,34px)/1.05 var(--serif);text-transfo
         </label>
         <div class="mem-bars">
           <div class="mbar">
-            <div class="mbar-top"><span>Sin evacuar ciudad previa (4.0.x)</span><span style="color:#ff8a80">258,9 MB</span></div>
+            <div class="mbar-top"><span>NY→MD→GU sin evacuar (4.0.3 / PR #9)</span><span style="color:#ff8a80">270–280 MB</span></div>
             <div class="mtrack"><div class="mfill" style="width:100%;background:var(--crimson)"></div></div>
           </div>
           <div class="mbar">
@@ -220,10 +239,12 @@ h1{margin:6px 0 4px;font:700 clamp(22px,4vw,34px)/1.05 var(--serif);text-transfo
 </main>
 
 <script src="./mc-clasico.js"></script>
+<script src="./datos-reales-mc4.js"></script>
 <script>
 (function () {
   'use strict';
   const C = window.MCClasico;
+  const REAL = window.MC_DATOS_REALES || null;
 
   /* ---------- Tabs ---------- */
   let tabActiva = 'urbano';
@@ -253,29 +274,48 @@ h1{margin:6px 0 4px;font:700 clamp(22px,4vw,34px)/1.05 var(--serif);text-transfo
     b.addEventListener('pointercancel', off);
   });
 
-  /* ---------- TAB 1: CAÑÓN URBANO ---------- */
+  /* ---------- TAB 1: CAÑÓN URBANO (REAL MC4 + SINTÉTICO) ---------- */
   const cvU = document.getElementById('cvUrbano');
   const gU = cvU.getContext('2d');
-  const edificios = [];
-  for (let gx = -9; gx <= 9; gx++) {
-    for (let gy = -9; gy <= 9; gy++) {
-      if (Math.abs(gx) % 3 === 0 || Math.abs(gy) % 3 === 0) continue; /* avenidas estilo Manhattan */
-      const seed = Math.abs(gx * 73 + gy * 139);
-      edificios.push({
-        x: gx * 28,
-        y: gy * 28,
-        r: 11.5,
-        h: 16 + (seed % 58),
-        hue: (seed % 3 === 0) ? [108, 72, 62] : (seed % 3 === 1) ? [64, 72, 82] : [92, 84, 74]
+  let edificios = [];
+  let aoVals = new Float32Array(0);
+  const car = { x: 0, y: 0, a: 0.25, v: 9 };
+
+  function cargarCanon(id) {
+    const list = [];
+    if (id !== 'sintetico' && REAL && REAL.canones && REAL.canones[id]) {
+      const src = REAL.canones[id];
+      const pal = id.startsWith('md_')
+        ? [[152, 92, 68], [134, 86, 68], [108, 96, 86]]
+        : [[108, 72, 62], [66, 74, 86], [92, 84, 74]];
+      src.edificios.forEach((e, idx) => {
+        list.push({ x: e[0], y: e[1], r: e[2], h: e[3], hue: pal[idx % pal.length] });
       });
+      document.getElementById('lblCanon').textContent = src.calle || id;
+    } else {
+      for (let gx = -9; gx <= 9; gx++) {
+        for (let gy = -9; gy <= 9; gy++) {
+          if (Math.abs(gx) % 3 === 0 || Math.abs(gy) % 3 === 0) continue;
+          const seed = Math.abs(gx * 73 + gy * 139);
+          list.push({
+            x: gx * 28, y: gy * 28, r: 11.5, h: 16 + (seed % 58),
+            hue: (seed % 3 === 0) ? [108, 72, 62] : (seed % 3 === 1) ? [64, 72, 82] : [92, 84, 74]
+          });
+        }
+      }
+      document.getElementById('lblCanon').textContent = 'Sintético';
     }
+    edificios = list;
+    aoVals = C.hornearAOUrbano(edificios, 42);
+    car.x = 0; car.y = 0; car.a = 0.25; car.v = 9;
   }
-  const aoVals = C.hornearAOUrbano(edificios, 44);
+  cargarCanon(REAL ? 'ny_chelsea' : 'sintetico');
+  document.getElementById('selCanon').addEventListener('change', e => cargarCanon(e.target.value));
+
   const culleo = new C.CulleoUrbano(96);
   const driver = new C.FisicaDriver();
   const pool = new C.PoolParticulas(256);
   const escalador = new C.EscaladorDinamico({ metaMs: 16.6, inicial: 1.0 });
-  const car = { x: 0, y: 0, a: 0, v: 12 };
 
   const rgFog = document.getElementById('rgFog');
   rgFog.addEventListener('input', () => { document.getElementById('lblFog').textContent = rgFog.value + ' m'; });
@@ -411,14 +451,33 @@ h1{margin:6px 0 4px;font:700 clamp(22px,4vw,34px)/1.05 var(--serif);text-transfo
     document.getElementById('stDpr').textContent = (usarEsc ? esc.escala : 1).toFixed(2) + '×';
   }
 
-  /* ---------- TAB 2: VOXEL SPACE (COMANCHE / GUATAPÉ) ---------- */
+  /* ---------- TAB 2: VOXEL SPACE (SRTM REAL MC4 + PROCEDURAL) ---------- */
   const cvV = document.getElementById('cvVoxel');
   const gV = cvV.getContext('2d');
   const imgV = gV.createImageData(cvV.width, cvV.height);
   const bufV = new Uint32Array(imgV.data.buffer);
-  const voxel = new C.VoxelTerreno(256);
-  const vxCam = { x: 88, y: 165, z: 122, a: -0.65 };
+  const voxel = new C.VoxelTerreno(128);
+  const vxCam = { x: 46, y: 74, z: 165, a: -0.55 };
 
+  function cargarVoxel(id) {
+    if (id !== 'proc' && REAL && REAL.relieves && REAL.relieves[id]) {
+      const snap = REAL.relieves[id];
+      voxel.cargarDesdeSnapshot(snap);
+      vxCam.x = snap.tam * 0.36; vxCam.y = snap.tam * 0.62; vxCam.a = -0.55;
+      document.getElementById('vxSrc').textContent = id === 'guatape' ? 'Guatapé SRTM real' : 'Medellín SRTM real';
+      document.getElementById('lblVxMap').textContent = `${snap.minCotaM}–${snap.maxCotaM} m`;
+    } else {
+      voxel.tam = 256; voxel.mascara = 255;
+      voxel.alturas = new Uint8Array(256 * 256);
+      voxel.colores = new Uint32Array(256 * 256);
+      voxel.generarGuatape();
+      vxCam.x = 88; vxCam.y = 165; vxCam.a = -0.65;
+      document.getElementById('vxSrc').textContent = 'Guatapé procedural';
+      document.getElementById('lblVxMap').textContent = 'Procedural 256×256';
+    }
+  }
+  cargarVoxel(REAL ? 'guatape' : 'proc');
+  document.getElementById('selVoxel').addEventListener('change', e => cargarVoxel(e.target.value));
   document.getElementById('rgAlt').addEventListener('input', e => { document.getElementById('lblAlt').textContent = e.target.value; });
   document.getElementById('rgVxDist').addEventListener('input', e => { document.getElementById('lblVxDist').textContent = e.target.value; });
 
@@ -426,23 +485,25 @@ h1{margin:6px 0 4px;font:700 clamp(22px,4vw,34px)/1.05 var(--serif);text-transfo
     const t0 = performance.now();
     const auto = document.getElementById('tgAutoVx').checked;
     vxCam.z = +document.getElementById('rgAlt').value;
+    const tam = voxel.tam;
+    const vel = tam === 128 ? 9 : 16;
     if (auto) {
       vxCam.a += 0.22 * dt;
-      vxCam.x = (vxCam.x + Math.sin(vxCam.a) * 16 * dt + 256) % 256;
-      vxCam.y = (vxCam.y - Math.cos(vxCam.a) * 16 * dt + 256) % 256;
+      vxCam.x = (vxCam.x + Math.sin(vxCam.a) * vel * dt + tam) % tam;
+      vxCam.y = (vxCam.y - Math.cos(vxCam.a) * vel * dt + tam) % tam;
     } else {
       const giro = (keys.has('ArrowRight') || keys.has('KeyD')) ? 1 : (keys.has('ArrowLeft') || keys.has('KeyA')) ? -1 : 0;
       const av = (keys.has('ArrowUp') || keys.has('KeyW')) ? 1 : (keys.has('ArrowDown') || keys.has('KeyS')) ? -1 : 0;
       vxCam.a += giro * 1.4 * dt;
-      vxCam.x = (vxCam.x + Math.sin(vxCam.a) * av * 26 * dt + 256) % 256;
-      vxCam.y = (vxCam.y - Math.cos(vxCam.a) * av * 26 * dt + 256) % 256;
+      vxCam.x = (vxCam.x + Math.sin(vxCam.a) * av * (vel * 1.6) * dt + tam) % tam;
+      vxCam.y = (vxCam.y - Math.cos(vxCam.a) * av * (vel * 1.6) * dt + tam) % tam;
     }
-    const r = voxel.renderizar(bufV, cvV.width, cvV.height, vxCam, { distancia: +document.getElementById('rgVxDist').value });
+    const r = voxel.renderizar(bufV, cvV.width, cvV.height, vxCam, { distancia: +document.getElementById('rgVxDist').value, escalaH: tam === 128 ? 55 : 110 });
     gV.putImageData(imgV, 0, 0);
     const ms = performance.now() - t0;
     document.getElementById('vxMs').textContent = ms.toFixed(1) + ' ms';
     document.getElementById('vxCols').textContent = r.columnasPintadas;
-    document.getElementById('vxAlt').textContent = vxCam.z + ' m';
+    document.getElementById('vxAlt').textContent = vxCam.z;
   }
 
   /* ---------- TAB 3: STREAMING RENDERWARE ---------- */

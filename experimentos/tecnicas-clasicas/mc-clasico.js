@@ -310,6 +310,32 @@
       this.colores = new Uint32Array(tam * tam);
       this.generarGuatape();
     }
+    cargarDesdeSnapshot(snap) {
+      const N = snap.tam || 128;
+      this.tam = N;
+      this.mascara = N - 1;
+      this.alturas = new Uint8Array(N * N);
+      this.colores = new Uint32Array(N * N);
+      const binH = typeof atob === 'function' ? atob(snap.alturasB64) : Buffer.from(snap.alturasB64, 'base64').toString('binary');
+      const binS = typeof atob === 'function' ? atob(snap.suelosB64) : Buffer.from(snap.suelosB64, 'base64').toString('binary');
+      for (let i = 0; i < N * N; i++) {
+        const h = binH.charCodeAt(i);
+        const s = binS.charCodeAt(i);
+        this.alturas[i] = h;
+        let r, g, b;
+        if (s === 8 || s === 9) { r = 24; g = 74; b = 88; } /* agua / embalse / rio */
+        else if (s === 4 || s === 5 || s === 14 || s === 11) { r = 74; g = 76; b = 82; } /* vias y puentes */
+        else if (s === 2 || s === 3 || s === 10 || s === 12) { r = 166; g = 112; b = 92; } /* urbano ladrillo/edificios */
+        else if (s === 6 || s === 7) { r = 118; g = 114; b = 104; } /* anden / ciclorruta */
+        else if (h > 195) { r = 92; g = 96; b = 92; } /* roca alta / monolito / cumbre */
+        else if (h > 125) { r = 52; g = 96; b = 56; } /* ladera verde andina */
+        else { r = 44; g = 86; b = 48; } /* valle / pasto */
+        /* toque sutil de guayacanes en laderas verdes */
+        if ((s === 0 || s === 1) && ((i * 37) & 127) === 0) { r = 218; g = 172; b = 54; }
+        this.colores[i] = (255 << 24) | (b << 16) | (g << 8) | r;
+      }
+      return this;
+    }
     generarGuatape() {
       const N = this.tam;
       for (let y = 0; y < N; y++) {

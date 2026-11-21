@@ -305,6 +305,29 @@
   - **Claude / Codex:** integrar las técnicas ya probadas de `mc-clasico.js` en `js/13-planeta.js` (`StreamAnillo`: evacuar ciudad previa para eliminar el salto a `258,9 MB`), `js/45-gl.js` (`CulleoUrbano` + `hornearAOUrbano`), `js/32-fisica.js`/`js/45-glb.js` (`FisicaDriver` + `PoolParticulas`), `js/40-vistas.js` (`EscaladorDinamico`), y adoptar/combinar `arte/gemini/turno-cero/`; además revisar § 5 filas 1, 7–12 (celular real GPU, EnCicla Codex, El Metro Z3–Z5 en `MetroZero`).
 - **Instrucción obligatoria para la siguiente IA (Claude, Codex, ChatGPT o quien siga):** antes de cerrar tu turno, **DEBE quedar tu propio documento de contexto y relevo**: suma tu entrada aquí en `CONTEXTO-RELEVO.md` § 8 (sin borrar las anteriores), actualiza § 3/§ 5 si cambiaron, actualiza tu ficha en `coord/agentes/<tu-id>.json`, deja un mensaje nuevo en `coord/buzon/` y **especifícale exactamente esta misma regla a la siguiente IA**.
 
+### Gemini · Antigravity («hydrogen») · 21‑nov‑2026 (fase 4) · datos reales MC4 en técnicas clásicas, verificación visual 4.0.3 y auditoría PR #9 (`ia/antigravity/motorcity-4.0`)
+- **Hecho (100 % aditivo, cero cambios en `js/`, `herramientas/`, `pruebas/` ni `juegos/getaway/`):**
+  - **Conexión de técnicas clásicas a los MC4 reales (`datos/{guatape,medellin,nueva_york}/mundo.mc4`):**
+    - [`experimentos/tecnicas-clasicas/extraer-mc4-demo.mjs`](experimentos/tecnicas-clasicas/extraer-mc4-demo.mjs) + [`benchmark-mc4-real.json`](experimentos/tecnicas-clasicas/benchmark-mc4-real.json) + [`datos-reales-mc4.js`](experimentos/tecnicas-clasicas/datos-reales-mc4.js) (`101,7 KB`): extrae relieve **SRTM/NASA real** de Guatapé (`1.813–2.028 m`) y Medellín (`1.446–2.789 m`) y huellas reales Overture/OSM de Manhattan Chelsea (`309` edificios), Midtown (`231`), El Poblado (`518`) y Centro Medellín (`520`);
+    - **Benchmarks medidos sobre edificios reales:** `CulleoUrbano` (Build 1D + Silent Hill) descarta **94,8 %** en Chelsea (`309 → 16` en `1,89 ms`), **93,5 %** en Midtown (`231 → 15`), **95,0 %** en El Poblado (`518 → 26`, PVS RLE `-62 %`) y **94,4 %** en Centro Medellín (`520 → 29`); `VoxelTerreno.cargarDesdeSnapshot` dibuja Guatapé SRTM real en **`0,99 ms/cuadro`** en Canvas 2D puro (`0 WebGL`);
+    - actualizado [`experimentos/tecnicas-clasicas/laboratorio.html`](experimentos/tecnicas-clasicas/laboratorio.html) para jugar/volar directamente sobre Manhattan Chelsea/Midtown, El Poblado y el SRTM real de Guatapé y el Valle de Aburrá.
+  - **Verificación visual de 4.0.3 y auditoría completa de PR #9 (`ia/chatgpt/cm34-cache-20261120`):** [`reportes/2026-11-21-gemini-verificacion-4.0.3-y-pr9.md`](reportes/2026-11-21-gemini-verificacion-4.0.3-y-pr9.md) + 4 capturas WebP (`reportes/img/verificacion-4.0.3/`):
+    - **4.0.3 confirmado corregido:** portada 18+ completa sobre el pliegue en `412×860` y `G CEBO` limpio en `turno-cero-accion-3d.html`;
+    - **REGRESIÓN VISUAL ALTA encontrada en 4.0.3 (`02-menu-pausa-403.webp`):** al oscurecer el overlay del menú de pausa, la caja del menú quedó desplazada por encima del borde superior en `412×860`, cortando el título y los primeros 4 botones (`▶ Seguir`, `Cámara`, `Sonido`, `Lenguaje`);
+    - **PR #9 (`C‑M34` paquete por capas):** `construir.mjs` OK, `sectores-cm34.mjs` 5/5 OK, `paquete-capas-cm34.mjs` OK y `paquete-capas-browser.mjs` OK (`0` errores); baja el arranque HTML **-60 %** (`1.748 → 693 ms`) y el heap inicial de NY (`231,2 → 218,7 MB`), **pero tanto 4.0.3 (`270,7 MB`) como PR #9 (`279,6 MB` / `328,1 MB` reservados) siguen acumulando las 3 ciudades en RAM al viajar `NY → MD → GU`** por falta de evacuación en `MC.Planeta`.
+- **Cómo lo probé:**
+  - `node experimentos/tecnicas-clasicas/extraer-mc4-demo.mjs` sobre los 3 `mundo.mc4` reales;
+  - `node experimentos/tecnicas-clasicas/prueba-clasico.mjs` (**6/6 verde**, ahora cubriendo también `VoxelTerreno.cargarDesdeSnapshot` con SRTM real de Guatapé);
+  - verificación visual en Chromium de `laboratorio.html` (datos reales Chelsea + Guatapé SRTM) y de `4.0.3` (`412×860`), + benchmark comparativo CDP `4.0.3` vs `PR #9`;
+  - `node motor.mjs prueba` y `node pruebas/getaway-contenido.mjs` en verde + `node motor.mjs documento` regenerado.
+- **Falta (prioridad inmediata para la siguiente IA):**
+  1. **Claude (ALTA — 4.0.4):** corregir el centrado vertical/scroll del menú de pausa en `412×860` (`02-menu-pausa-403.webp`: usar `align-items: flex-start; overflow-y: auto; padding-top: max(16px, env(safe-area-inset-top))` en el overlay de menú) para que `▶ Seguir` vuelva a ser visible;
+  2. **Claude / Codex (ALTA):** evacuar el mundo anterior al cambiar de ciudad en `MC.Planeta` (`StreamAnillo.cambiarCiudad`, ahorra ~`190–210 MB` tanto en `4.0.3` como en `PR #9`);
+  3. **Claude / Codex:** integrar `CulleoUrbano` (`93,5–95,0 %` descarte medido en MC4 real), `hornearAOUrbano`, `FisicaDriver`, `PoolParticulas` y `EscaladorDinamico` de `mc-clasico.js`, corregir encuadre/etiquetas de `MC.GloboGPU` y adoptar `arte/gemini/turno-cero/`;
+  4. **Autor / QA físico:** medición real con GPU física en celular Android/iOS (tabla § 1.3 de `reportes/2026-11-21-gemini-turno-cero.md`).
+- **Instrucción obligatoria para la siguiente IA (Claude, Codex, ChatGPT o quien siga):** antes de cerrar tu turno, **DEBE quedar tu propio documento de contexto y relevo**: suma tu entrada aquí en `CONTEXTO-RELEVO.md` § 8 (sin borrar las anteriores), actualiza § 3/§ 5 si cambiaron, actualiza tu ficha en `coord/agentes/<tu-id>.json`, deja un mensaje nuevo en `coord/buzon/` y **especifícale exactamente esta misma regla a la siguiente IA**.
+
+
 
 # MOTOR CITY · Documento único
 

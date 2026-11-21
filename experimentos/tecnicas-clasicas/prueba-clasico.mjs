@@ -52,11 +52,21 @@ assert.equal(ao.length, edificios.length);
 assert.ok(ao.every(v => Number.isFinite(v) && v >= 0.34 && v <= 1.0), 'AO horneado debe quedar en [0.34, 1]');
 console.log('✓ 3) Quake PVS + RLE + AO Horneado:', { rleBytes: rle.length, rawBytes: pvs.palabras * 4, aoMin: +Math.min(...ao).toFixed(2), aoMax: +Math.max(...ao).toFixed(2) });
 
-/* 4. Comanche / Outcast VoxelTerreno */
+/* 4. Comanche / Outcast VoxelTerreno (procedural + SRTM real MC4) */
 const vt = new C.VoxelTerreno(128);
 const buf = new Uint32Array(160 * 90);
 const resV = vt.renderizar(buf, 160, 90, { x: 40, y: 40, z: 120, a: 0.4 });
 assert.ok(resV.columnasPintadas > 200, 'VoxelTerreno debe proyectar columnas visibles');
+const snapPath = new URL('./datos-reales-mc4.js', import.meta.url);
+if (fs.existsSync(snapPath)) {
+  const txt = fs.readFileSync(snapPath, 'utf8');
+  const jsonStart = txt.indexOf('{');
+  const parsed = JSON.parse(txt.slice(jsonStart, txt.lastIndexOf('}') + 1));
+  vt.cargarDesdeSnapshot(parsed.relieves.guatape);
+  const resReal = vt.renderizar(buf, 160, 90, { x: 52, y: 64, z: 170, a: 0.35 });
+  assert.ok(resReal.columnasPintadas > 200, 'VoxelTerreno debe proyectar relieve SRTM real de Guatape');
+  resV.srtmGuatapeCols = resReal.columnasPintadas;
+}
 console.log('✓ 4) Comanche/Outcast VoxelTerreno:', resV);
 
 /* 5. Driver PS1 FisicaDriver + Burnout 3 PoolParticulas */
