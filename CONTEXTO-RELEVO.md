@@ -12,10 +12,10 @@
 > 3. **Nunca borres la entrada de otra IA.** Este documento es un relevo: se suma, no se reescribe.
 > 4. A la IA que venga después de ti pásale la misma instrucción: **también debe hacer y dejar su documento de contexto** (su entrada aquí y su ficha en `coord/`).
 
-**Última actualización:** 21‑nov‑2026, Claude (motor 4.2.0). Hizo tres cosas:
-- unió las entregas nuevas de ChatGPT/Codex (C‑M34 por capas, arte de Gemini, PBR) y de Antigravity (técnicas clásicas sobre datos reales);
-- agregó el recorte por región en el 3D;
-- en Turno Cero, la historia ahora se descubre en el mundo abierto (📖).
+**Última actualización:** 21‑nov‑2026, Claude (motor 4.3.0). Hizo tres cosas:
+- arregló todo lo que encontró la auditoría móvil de Antigravity (G‑H25, G‑H26 y G‑H28);
+- unió la caché del planeta de ChatGPT;
+- dejó «mundo abierto primero» en los tres juegos.
 **Última actualización:** 21‑nov‑2026, Gemini · Antigravity (sincronizado con motor **4.0.3** de Claude + ingeniería inversa limpia de motores clásicos + paquete de arte pintado).
 **Última actualización:** 21‑nov‑2026, Gemini · Antigravity (sincronizado con motor **4.1.0** de Claude `2d4118f`: auditoría móvil 4.1.0 de `🏁 Arcade`, `⛰️ Vuelo`, sigilo Thief `#gema`/`👂`, mundo abierto primero en Turno Cero + El Metro + EnCicla, y catálogo `G‑H27`).
 - Base integrada de Claude (**4.1.0**): unió entregas 4.0.3 de ChatGPT/Codex y Gemini/Antigravity, y trajo motores clásicos (`js/47-clasicos.js`: OutRun, Comanche, Thief, Wolfenstein, Elite) y «mundo abierto primero» en Turno Cero.
@@ -48,7 +48,7 @@
 | Juegos | `node motor.mjs sincronizar ../BicicletasUno` y `../MetroZero`. Después, en cada juego, sus pruebas:<ul><li>EnCicla: `node tools/build.js && node tests/run.js`;</li><li>El Metro: `node tools/build.mjs && node tools/test.mjs 100 && node tools/todo.mjs`;</li><li>Run: `node tools/build.mjs && node tools/sim.mjs 100 240`.</li></ul> |
 
 ## 3. Estado (21‑nov‑2026)
-- **Motor 4.2.0**, con las entregas de ChatGPT/Codex y de Gemini/Antigravity unidas, y todas las pruebas en verde. Lo nuevo:
+- **Motor 4.3.0**, con las entregas de ChatGPT/Codex y de Gemini/Antigravity unidas, y todas las pruebas en verde. Lo nuevo:
   - **motores clásicos** en `js/47-clasicos.js`: las vistas 🏁 Arcade (OutRun) y ⛰️ Vuelo (Voxel Space), la gema y el ruido de Thief, el DDA y las semillas de Elite. Ver `docs/INVESTIGACION-MOTORES-CLASICOS.md`. Ya trae:
   - **`MC.Planeta`**: anillo de ciudades y carreteras generadas, globo y horizonte curvo;
   - **`MC.Busqueda`**: búsqueda de 0 a 5 con los umbrales de Codex y la última posición vista;
@@ -73,6 +73,7 @@
 | 3.0–3.1 | Mundo único 3D con cámaras aéreas, fachadas, árboles low-poly, `MC.Objetos`, mapa grande; `MC.Persecucion` (Codex) y sombras solares (Codex) |
 | 4.0 | Todo lo de § 3, más Manhattan craqueado y `docs/TURNO-CERO.md` |
 | 4.0.2 | Reversa y vuelta en tres puntos; `MC.Manejo.pilotar` (la IA sale de atascos); `rutaA` por la forma de la calle. En Turno Cero: Run en la ciclovía, carreras, guardias a pie y accesibilidad. |
+| 4.3.0 | <ul><li>Arreglos de la auditoría de Antigravity: Arcade sin fantasmas, ⚡ = correr a pie, el menú que no se corta, la gema de color, los faros solo de noche y los búferes del Vuelo.</li><li>Unida la caché del planeta de ChatGPT.</li><li>Mundo abierto primero en El Metro y EnCicla.</li></ul> |
 | 4.2.0 | Unidas:<ul><li>C‑M34 (MC4 por capas bajo demanda);</li><li>el arte de Gemini en la portada y el PBR de los GLB;</li><li>la técnica clásica de Antigravity sobre datos reales.</li></ul>Recorte por región en el 3D (niebla y cono). La IA atropella lo menor del andén. Vuelo sin pausa. En Turno Cero: 📖 en el mundo abierto y la carrera con la meta adelante. |
 | 4.1.0 | Motores clásicos, rehechos desde cero:<ul><li>`MC.Arcade`: carretera pseudo-3D;</li><li>`MC.VoxelSpace`: vuelo;</li><li>`MC.Sigilo`: gema de luz y ruido por caminos;</li><li>`MC.DDA` y `MC.Semilla`.</li></ul>En Turno Cero: sigilo con gema y oído, y las cámaras 🏁 y ⛰️. |
 | 4.0.3 | Unidas las entregas de ChatGPT/Codex (globo WebGL2, sectores de 1 km, LOD, piezas, audio, acción a pie con línea de visión) y de Gemini/Antigravity (auditoría, 56 paradas). Claude terminó lo que quedó a medias: la prueba roja de la línea de visión, el lenguaje suave con concordancia, lo que faltaba de G‑H20/G‑H21 y las zonas Z1/Z2 de El Metro. |
@@ -228,6 +229,48 @@
 - **Hecho:** `MC.Sectores1km`: sectores de 1 km con caché LRU de metadatos; limita a 36 las regiones de edificios ED1 decodificadas cerca de la cámara de Manhattan, cada 2 s. El mundo sigue funcional fuera de la caché porque ED1 crudo permanece disponible.
 - **Prueba:** en Node se crean 90 regiones ficticias y el sectorizador reduce a <=20 sin perder la API; se conservan guardados.
 - **No hecho:** el MC4 comprimido de 10,2 MB y las capas de suelo, relieve y viales siguen cargándose en el juego completo. Streaming real necesita dividir el formato/binarios en construcción y lector sectorizado.
+### Claude · 21‑nov‑2026 · 4.3.0 · lo que encontró la auditoría y el mundo abierto en los tres juegos
+- **Pedido del autor:** «retoma y sigue, hay cosas nuevas».
+- **Lo nuevo de las otras IA:**
+  - la auditoría móvil de Antigravity (G‑H25, G‑H26, G‑H28) y su catálogo G‑H27;
+  - la caché del planeta de ChatGPT (`ia/chatgpt/planeta-cache-410-20261121`).
+
+  Se unieron las dos.
+- **Hecho, cada hallazgo de la auditoría:**
+  - **Arcade:**
+    - el suelo se pinta antes que los segmentos;
+    - los trapecios se solapan 0,7 px;
+    - el haz de noche baja a 0,11;
+  - **⚡ a pie = correr**, en `js/33-controles.js` (motor: vale para todos los juegos);
+  - **sigilo** (`55-clasicos.js`): agachada con menos de 1 m/s; ruido al correr; faros × noche y con `DDA.bloqueado`; gema que cambia de tono y leyenda la primera vez;
+  - **menú ⏸** (`index.html`): `position:fixed`, `top:50%` y `transform` con `!important`, porque el `top` en línea de `MC.UI` lo empujaba hacia arriba;
+  - **Vuelo:** búferes reusados (`_libres`) y el carro visible de noche.
+- **Mundo abierto primero:**
+  - **El Metro:** `src/js/97-abierto.js` y los íconos en `src/iconos/`;
+  - **EnCicla:** `src/js/98n-abierto.js`.
+
+  Los dos son aditivos y sus pruebas quedan actualizadas.
+- **Probé:**
+  - Node: 141;
+  - el contenido de Turno Cero;
+  - la caché del planeta en Node y en Chromium;
+  - la batería de Chromium;
+  - El Metro: 100 partidas, 0 errores;
+  - EnCicla: en verde;
+  - mediciones a `412 × 860`:
+    - menú: arriba en 148 px;
+    - a pie con ⚡: 4,25 m/s;
+    - El Metro: 1 toque, 0,4 s;
+    - EnCicla: 1 toque, 0,3 s.
+- **Riesgo:**
+  - la Arcade, en calles con giros cerrados, puede mostrar la vía de lado durante un momento (ya no deja basura en pantalla);
+  - el cambio de ⚡ también hace correr a pie en Mandados (es lo esperado).
+- **Sigue:**
+  - **El Metro (Antigravity):** las tarjetas `Est. 01` y `Est. 02`, con texto encima del arte y el título recortado;
+  - **EnCicla (Codex):** volver a subir sus arreglos;
+  - **todos:** medir en un celular real (la plantilla está en el reporte de Antigravity).
+- **A la IA que siga:** al terminar, **escribe tu entrada aquí**, deja tu ficha en `coord/agentes/` y un mensaje en `coord/buzon/`, y pídele lo mismo a la siguiente.
+
 ### Claude · 21‑nov‑2026 · 4.2.0 · unir, recortar y abrir la historia
 - **Pedido del autor:** «continúa desarrollando y mejorando».
 - **Hecho:**
