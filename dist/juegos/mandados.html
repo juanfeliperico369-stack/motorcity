@@ -2155,15 +2155,16 @@ const Terreno = {
   arbolLosaEn(M, x, y, r) {
     const cel = 7; for (let gy = Math.floor((y - 3) / cel) * cel; gy <= y + 3; gy += cel) for (let gx = Math.floor((x - 3) / cel) * cel; gx <= x + 3; gx += cel) {
       const tt = M.suelo(gx, gy); if (tt !== TT.GRASS && tt !== TT.MOUNT && tt !== TT.PLAZA) continue; const Z = M.estilo(gx, gy), dens = tt === TT.MOUNT ? .55 : tt === TT.PLAZA ? .18 : (Z.arboles || .4) * .55; if (h2(gx, gy, 41) > dens) continue;
-      const tx = gx + h2(gx, gy, 42) * cel, ty = gy + h2(gx, gy, 43) * cel; if (Math.hypot(tx - x, ty - y) < .38 + r) return { t: 'arbol', x: tx, y: ty };
+      const tx = gx + h2(gx, gy, 42) * cel, ty = gy + h2(gx, gy, 43) * cel; if (Math.hypot(tx - x, ty - y) < .38 + r && (!MC.Arboleda || MC.Arboleda.sembrable(M, tx, ty, 3, tt))) return { t: 'arbol', x: tx, y: ty };   /* 4.5: el mismo filtro que los árboles que se ven */
     }
     return null;
   },
   /* el obstáculo que toca el círculo (x, y, r): mobiliario, naturaleza, árboles de las losas y lo que diga el juego */
   obstaculo(C, x, y, r) {
     const M = C.mundo, k = 3 + r;
-    if (MC.Mobiliario) for (const p of Mobiliario.en(M, x - k, y - k, x + k, y + k, 200)) { const R = OBST_R[p.t]; if (R && Math.hypot(p.x - x, p.y - y) < R + r) return p; }
-    if (MC.Naturaleza) for (const p of Naturaleza.en(M, x - k, y - k, x + k, y + k)) { const R = p.t === 'roca' ? p.s * .45 : OBST_R[p.t]; if (R && (p.t !== 'roca' || p.s > .7 || C.veh.clase !== 'pie') && Math.hypot(p.x - x, p.y - y) < R + r) return p; }
+    if (MC.Mobiliario) for (const p of Mobiliario.en(M, x - k, y - k, x + k, y + k, 200)) { const R = OBST_R[p.t]; if (R && Math.hypot(p.x - x, p.y - y) < R + r && !(M._rotos && MC.Rotos.esta(M, p))) return p; }
+    /* 4.5: las rocas pequeñas no paran un carro (se pasan con un tumbo); a pie solo estorban las grandes */
+    if (MC.Naturaleza) for (const p of Naturaleza.en(M, x - k, y - k, x + k, y + k)) { const R = p.t === 'roca' ? p.s * .45 : OBST_R[p.t]; if (R && (p.t !== 'roca' || p.s > (C.veh.clase === 'pie' ? .7 : .45)) && Math.hypot(p.x - x, p.y - y) < R + r && !(M._rotos && MC.Rotos.esta(M, p))) return p; }
     if (Terreno.arbolLosaEn(M, x, y, r)) return { t: 'arbol' };
     if (C.obstaculos) for (const o of C.obstaculos()) if (Math.hypot(o.x - x, o.y - y) < (o.r || .5) + r) return o;
     return null;
@@ -3026,7 +3027,7 @@ const Mobiliario = {
   en(mundo, x0, y0, x1, y1, max = 2000) {
     if (!mundo._rejillaVias) return []; const { G, C } = mundo._rejillaVias(), VV = mundo.vias(), vis = new Set(), out = [];
     for (let gy = Math.floor(y0 / C); gy <= Math.floor(y1 / C); gy++) for (let gx = Math.floor(x0 / C); gx <= Math.floor(x1 / C); gx++) { const a = G.get(gx * 65536 + gy); if (a) for (let q = 0; q < a.length; q += 2) vis.add(a[q]); }
-    for (const i of vis) { for (const p of Mobiliario.deVia(mundo, VV[i], i)) if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1) { out.push(p); if (out.length >= max) return out; } }
+    for (const i of vis) { for (const p of Mobiliario.deVia(mundo, VV[i], i)) if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && !(mundo._rotos && MC.Rotos.esta(mundo, p))) { out.push(p); if (out.length >= max) return out; } }
     return out;
   },
   /* dibujo en las vistas 2D: cebras en el piso (antes de lo demás); el resto, de pie con su sombra de contacto */
@@ -3332,6 +3333,7 @@ const Naturaleza = {
       const x = (gx + r()) * S, y = (gy + r()) * S, u = r(), s = r(); if (!M.dentro(x, y)) continue; const tt = M.suelo(x, y);
       if (tt === TT.WATER || tt === TT.CANAL) { const ag = Terreno.aguaEn(M, x, y); if (ag && ag.prof < .45 && ag.tipo !== 'mar' && u < .35) L.push({ t: 'junco', x, y, s: .6 + s }); else if (ag && ag.tipo !== 'lago' && ag.tipo !== 'mar' && ag.prof < .9 && u < .12) L.push({ t: 'roca', x, y, s: .4 + s * .8 }); continue; }
       if (VIA_TT.has(tt) || tt === TT.BLDG || tt === TT.BRICK || M.edificioEn(x, y, 1)) continue;
+      if (MC.Arboleda && MC.Arboleda.despejada(M, x, y)) continue;   /* 4.5: ni palmas ni rocas en una cancha o una piscina */
       const pend = Terreno.pendiente(M, x, y), alt = M.cota(x, y);
       if (tt === TT.ROCA) { if (u < .55) L.push({ t: 'roca', x, y, s: .5 + s * 2.5 }); continue; }
       if (tt === TT.ARENA) { if (u < .1) L.push({ t: 'palma', x, y, s: .8 + s * .4 }); else if (u < .16) L.push({ t: 'roca', x, y, s: .4 + s }); continue; }
@@ -3342,7 +3344,7 @@ const Naturaleza = {
     }
     C.set(k, L); if (C.size > 20000) C.delete(C.keys().next().value); return L;
   },
-  en(M, x0, y0, x1, y1, max = 3000) { const S = Naturaleza.CELDA, out = []; for (let gy = Math.floor(y0 / S); gy <= Math.floor(y1 / S); gy++) for (let gx = Math.floor(x0 / S); gx <= Math.floor(x1 / S); gx++) { for (const p of Naturaleza._celda(M, gx, gy)) if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1) { out.push(p); if (out.length >= max) return out; } } return out; },
+  en(M, x0, y0, x1, y1, max = 3000) { const S = Naturaleza.CELDA, out = []; for (let gy = Math.floor(y0 / S); gy <= Math.floor(y1 / S); gy++) for (let gx = Math.floor(x0 / S); gx <= Math.floor(x1 / S); gx++) { for (const p of Naturaleza._celda(M, gx, gy)) if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && !(M._rotos && MC.Rotos.esta(M, p))) { out.push(p); if (out.length >= max) return out; } } return out; },
   /* dibujo 2D: pr(x, y, h) del mundo a la pantalla, z = px por metro */
   objeto(D, p) {
     const { g, pr, z, P, noche, modo } = D, [x, y] = pr(p.x, p.y, 0), cen = modo === 'cenital', fa = MC.arte.f('naturaleza'); if (fa && fa(g, p, x, y, z, D) === true) return;
@@ -3505,9 +3507,31 @@ const Arboleda = {
     for (let y = by * B; y < (by + 1) * B; y += cel) for (let x = bx * B; x < (bx + 1) * B; x += cel) {
       const tt = M.suelo(x, y); if (tt !== TT.GRASS && tt !== TT.MOUNT && tt !== TT.PLAZA) continue; const Z = M.estilo(x, y), dens = tt === TT.MOUNT ? .55 : tt === TT.PLAZA ? .18 : (Z.arboles || .4) * .55; if (h2(x, y, 41) > dens) continue;
       const tx = x + h2(x, y, 42) * cel, ty = y + h2(x, y, 43) * cel, r = 2.2 + h2(x, y, 44) * 2.6, s = h2(x, y, 45), e = this.especie(tt, s, r), E = this.ESPECIES[e];
+      /* 4.5 · con lógica: nada en una cancha, una pista o una piscina, ni encima de la calle; en las plazas duras (que en el mapa
+         incluyen canchas y estadios) los árboles van en el borde, no en la mitad */
+      if (!this.sembrable(M, tx, ty, r, tt)) continue;
       L.push({ x: tx, y: ty, r, s, e, h: r * (2.05 + h2(x, y, 46) * .5) * E.alto, v: (h2(x, y, 47) * 3) | 0, espejo: h2(x, y, 48) < .5 });
     }
     C.set(k, L); if (C.size > 6000) C.delete(C.keys().next().value); return L;
+  },
+  /* zonas sin árboles: canchas (con 3 m de margen), piscinas y pistas de los sitios del mapa, en una rejilla de 64 m */
+  _despejadas(M) {
+    if (M._despejo) return M._despejo; const G = new Map(), Cs = 64, poner = (x0, y0, x1, y1, z) => { for (let gy = Math.floor(y0 / Cs); gy <= Math.floor(y1 / Cs); gy++) for (let gx = Math.floor(x0 / Cs); gx <= Math.floor(x1 / Cs); gx++) { const k = gx * 65536 + gy; (G.get(k) || G.set(k, []).get(k)).push(z); } };
+    let S = null; try { S = M.sitios ? M.sitios() : null; } catch (e) { S = null; }
+    if (S) { for (const c of S.C || []) { const z = { c, ca: Math.cos(c.ang), sa: Math.sin(c.ang), hl: c.largo / 2 + 3, ha: c.ancho / 2 + 3 }, R = Math.hypot(z.hl, z.ha); poner(c.x - R, c.y - R, c.x + R, c.y + R, z); }
+      for (const q of S.P || []) poner(q.caja[0] - 2, q.caja[1] - 2, q.caja[2] + 2, q.caja[3] + 2, { R: q.R }); }
+    return (M._despejo = { G, Cs });
+  },
+  despejada(M, x, y) {
+    const D = this._despejadas(M), L = D.G.get(Math.floor(x / D.Cs) * 65536 + Math.floor(y / D.Cs)); if (!L) return false;
+    for (const z of L) { if (z.c) { const dx = x - z.c.x, dy = y - z.c.y, u = dx * z.ca + dy * z.sa, v = -dx * z.sa + dy * z.ca; if (Math.abs(u) < z.hl && Math.abs(v) < z.ha) return true; } else if (z.R.some(R => dentroPol(R, x, y))) return true; }
+    return false;
+  },
+  sembrable(M, x, y, r = 3, tt = M.suelo(x, y)) {
+    const t2 = M.suelo(x, y); if (t2 !== TT.GRASS && t2 !== TT.MOUNT && t2 !== TT.PLAZA) return false;
+    if (this.despejada(M, x, y)) return false;
+    if (tt === TT.PLAZA || t2 === TT.PLAZA) { const d = 7; let dentro = 0; for (const [a, b] of [[d, 0], [-d, 0], [0, d], [0, -d]]) if (M.suelo(x + a, y + b) === TT.PLAZA) dentro++; if (dentro >= 4) return false; }
+    return true;
   },
   en(M, x0, y0, x1, y1, max = 2000) { const B = this.BLOQUE, out = []; for (let by = Math.floor(y0 / B); by <= Math.floor(y1 / B); by++) for (let bx = Math.floor(x0 / B); bx <= Math.floor(x1 / B); bx++) for (const t of this._bloque(M, bx, by)) if (t.x >= x0 && t.x <= x1 && t.y >= y0 && t.y <= y1) { out.push(t); if (out.length >= max) return out; } return out; },
   /* ---------- horneado: un lienzo por especie, variante y vista ---------- */
@@ -3726,7 +3750,11 @@ Object.assign(MC, { Personaje });
    ===================================================================== */
 const VEH_SUELO_RUEDA = [.55, .25, .3, .3, 1, 1, .7, 1.15, 0, 0, .85, 1, .75, 0, .95, .9, .35];   // por tipo de casilla (TT)
 const VEH_SUELO_PIE = [.85, .6, .7, .7, .95, .95, 1, 1, 0, 0, 1, 1, 1, 0, .9, 1, .8];
-const VEH_SUELO_CARRO = [.25, .1, 0, 0, 1, 1, .3, .5, 0, 0, .5, 1, 0, 0, 1, .9, 0];
+/* 4.5 · por dónde puede meterse un carro (verosímil, no todo es pared): pasto y tierra despacio, el ladrillo del borde de la calle y
+   el andén como en GTA (despacio y atropellando lo menor), arena, nieve y roca suelta a paso de tortuga; escalas y edificios no */
+const VEH_SUELO_CARRO = [.32, .12, .45, 0, 1, 1, .45, .55, 0, 0, .55, 1, 0, .25, 1, .9, 0, .28, .3, .22];
+/* la moto sí baja y sube escalas (despacio) y se mete por donde el carro no cabe */
+const VEH_SUELO_MOTO = [.45, .2, .6, 0, 1, 1, .55, .85, 0, 0, .7, 1, .3, .35, 1, .9, .3, .35, .25, .28];
 const VEH_LISTA = [
   /* a pie y micromovilidad (Juega EnCicla, Run Scooter y Gemini) */
   { id: 'pie', n: 'A pie', icon: '🚶', clase: 'pie', cuerpo: 'pie', vmax: 1.6, vcorre: 4.6, acc: 3, freno: 8, giro: [6, 5], largo: .5, ancho: .5, masa: 70, suelo: VEH_SUELO_PIE, loma: [1.1, .6, 1.15], salto: 1, run: 1 },
@@ -3747,7 +3775,7 @@ const VEH_LISTA = [
   { id: 'triciclo', n: 'Triciclo de carga', icon: '🚲', de: 'bici', vmax: 5.5, acc: 1, giro: [2.2, 1], largo: 2.4, ancho: 1.1, masa: 160, carga: 1, color: '#ffb300' },
   { id: 'jetpack', n: 'Jetpack', icon: '🚀', clase: 'aire', cuerpo: 'pie', vmax: 14, acc: 5, freno: 5, giro: [3, 2], largo: .6, ancho: .6, masa: 90, suelo: VEH_SUELO_PIE, loma: [0, 1, 1], vuela: 1, techo: 60, run: 1, futuro: 1, color: '#ff7043' },
   /* motor (Juega EnCicla: camión de Balance; El Metro: buses; Motor City: carros, motos y lo que viene) */
-  { id: 'moto', n: 'Moto', icon: '🏍️', clase: 'moto', cuerpo: 'sentado', vmax: 22, acc: 5, freno: 8, giro: [2.6, .9], largo: 2, ancho: .8, masa: 260, suelo: VEH_SUELO_CARRO, loma: [.3, .85, 1.1], electrico: 0, via: 1, salto: .4, color: '#1d1f24', manubrio: [.5, 1.05] },
+  { id: 'moto', n: 'Moto', icon: '🏍️', clase: 'moto', cuerpo: 'sentado', vmax: 22, acc: 5, freno: 8, giro: [2.6, .9], largo: 2, ancho: .8, masa: 260, suelo: VEH_SUELO_MOTO, loma: [.3, .85, 1.1], electrico: 0, via: 1, salto: .4, color: '#1d1f24', manubrio: [.5, 1.05] },
   { id: 'carro', n: 'Carro', icon: '🚗', clase: 'auto', cuerpo: 'sentado', vmax: 25, acc: 3.6, freno: 8.5, giro: [1.8, .55], largo: 4.3, ancho: 1.8, masa: 1200, suelo: VEH_SUELO_CARRO, loma: [.2, .9, 1.05], via: 1, color: '#c43a26' },
   { id: 'taxi', n: 'Taxi', icon: '🚕', de: 'carro', color: '#f2c400' },
   { id: 'camion', n: 'Camión de Balance', icon: '🚚', clase: 'pesado', cuerpo: 'sentado', vmax: 14, acc: 1.6, freno: 6, giro: [1.2, .4], largo: 6.5, ancho: 2.3, masa: 6500, suelo: VEH_SUELO_CARRO, loma: [.6, .6, 1.08], via: 1, color: '#7ab800' },
@@ -3756,7 +3784,7 @@ const VEH_LISTA = [
   { id: 'formula', n: 'Fórmula', icon: '🏁', de: 'carro', vmax: 90, acc: 14, freno: 30, giro: [2.2, .5], largo: 5.6, ancho: 2, masa: 800, color: '#d50000', futuro: 1 },
   { id: 'nascar', n: 'Óvalo (NASCAR)', icon: '🏁', de: 'carro', vmax: 80, acc: 9, freno: 14, largo: 5.2, masa: 1500, color: '#2962ff', futuro: 1 },
   { id: 'drift', n: 'Carro de drift', icon: '💨', de: 'carro', vmax: 45, acc: 7, deriva: 1, color: '#00e5ff', futuro: 1 },
-  { id: 'todoterreno', n: 'Todoterreno', icon: '🚙', de: 'carro', vmax: 30, suelo: [.8, .65, 0, 0, 1, 1, .6, .7, 0, 0, .8, 1, 0, 0, 1, .9, .3], via: 0, color: '#6d4c41', futuro: 1 },
+  { id: 'todoterreno', n: 'Todoterreno', icon: '🚙', de: 'carro', vmax: 30, suelo: [.8, .65, .6, 0, 1, 1, .6, .7, 0, 0, .8, 1, 0, .6, 1, .9, .3, .6, .55, .5], via: 0, color: '#6d4c41', futuro: 1 },
   /* aire y agua (los juegos que vienen) */
   { id: 'avioneta', n: 'Avioneta', icon: '🛩️', clase: 'aire', cuerpo: 'sentado', vmax: 60, vmin: 22, acc: 6, freno: 3, giro: [.9, .7], largo: 8, ancho: 10, masa: 900, suelo: VEH_SUELO_CARRO, loma: [0, 1, 1], vuela: 1, techo: 1200, color: '#eceff1', futuro: 1 },
   { id: 'avion', n: 'Avión de combate', icon: '✈️', de: 'avioneta', vmax: 260, vmin: 70, acc: 30, giro: [1.6, 1.1], techo: 9000, color: '#78909c', futuro: 1 },
@@ -3798,6 +3826,7 @@ MC.Vehiculos = Vehiculos;
    - Saltos con gravedad, vuelo (jetpack y avionetas) y agua (lanchas).
    Entrada: { giro: −1..1, acel: −1..1, dir: {x,y,m}|null (rumbo deseado en el mundo), salto, turbo, correr, sube, baja }
    ===================================================================== */
+const CALZADA_TT = new Set([4, 5, 11, 14]);   /* calle, avenida, puente y autopista: salir de ahí es subir un bordillo */
 const MENOR_IA = new Set(['poste', 'banca', 'paradero', 'caneca', 'hidrante']), BORDE_IA = new Set([TT.BLDG, TT.BRICK]);   /* lo menor del andén que la IA atropella (4.2) */
 const GRAV = 19.6;   // gravedad de juego (el doble de la real: saltos cortos y con peso)
 class Cuerpo {
@@ -3824,7 +3853,7 @@ class Cuerpo {
   get altura() { return this.alturaSuelo + this.z; }
   vmax() { const V = this.veh, base = V.id === 'pie' ? (this.corriendo ? V.vcorre : V.vmax) : V.vmax; return base * this.escala * (Vehiculos.escala || 1); }
   /* ¿puede este vehículo estar en (x, y)? */
-  puede(x, y) {
+  puede(x, y, sondeo = false) {
     const V = this.veh; if (V.clase === 'aire' && this.z > 3) return this.mundo.dentro(x, y);
     if (this.paso) return true;
     /* un tablero o una rampa que queda entre los pies y la cabeza es una pared (no se atraviesa ni se pasa por debajo) */
@@ -3839,7 +3868,10 @@ class Cuerpo {
       if (!enVia && Terreno.sitioEn(this.mundo, x, y)) return this._bloquea('un edificio');
       /* árboles, postes, bancas, rocas, palmas… y lo que el juego diga (tráfico, gente). 4.0.2: los carros de la IA (this.ia) sobre la calle no chocan con lo menor del andén y el separador */
       /* 4.2: y en el andén, los carros de la IA tampoco se trancan con lo menor (poste, banca, paradero, caneca, hidrante): lo atropellan como en GTA; árboles y rocas sí los paran */
-      if (!(this.z > 1.2) && !(this.ia && enVia)) { const o = Terreno.obstaculo(this, x, y, V.clase === 'pie' ? .25 : Math.min(.9, (V.ancho || .6) / 2)); if (o && !(this.ia && V.clase !== 'pie' && MENOR_IA.has(o.t))) return this._bloquea(o.t ? ({ arbol: 'un árbol', poste: 'un poste', roca: 'una roca', banca: 'una banca', paradero: 'un paradero', palma: 'una palma' }[o.t] || 'algo') : (o.motivo || 'algo')); }
+      if (!(this.z > 1.2) && !(this.ia && enVia)) { const o = Terreno.obstaculo(this, x, y, V.clase === 'pie' ? .25 : Math.min(.9, (V.ancho || .6) / 2)); /* 4.5: lo que se rompe (canecas, conos, bancas, hidrantes, postes, paraderos…) no frena en seco: se lo lleva por delante si va rápido */
+        if (o && !sondeo && MC.Rotos && MC.Rotos.puede(o, this)) { MC.Rotos.romper(this.mundo, o, this); return true; }
+        if (o && sondeo && MC.Rotos && MC.Rotos.puede(o, this)) return true;
+        if (o && !(this.ia && V.clase !== 'pie' && MENOR_IA.has(o.t))) return this._bloquea(o.t ? ({ arbol: 'un árbol', poste: 'un poste', roca: 'una roca', banca: 'una banca', paradero: 'un paradero', palma: 'una palma' }[o.t] || 'algo') : (o.motivo || 'algo')); }
     }
     return true;
   }
@@ -3850,7 +3882,12 @@ class Cuerpo {
     this.corriendo = !!E.correr && V.id === 'pie';
     /* rumbo deseado (joystick que apunta en el mundo) o giro (volante) */
     let acel = E.acel || 0, giro = E.giro || 0;
-    if (E.dir && E.dir.m > .08) { const des = Math.atan2(E.dir.y, E.dir.x), d = angDif(this.a, des); giro = clamp(d * 2.2, -1, 1); acel = E.dir.m * (Math.abs(d) > 2.2 && V.clase !== 'pie' ? .2 : 1); if (V.clase === 'pie' && Math.abs(d) > .1) this.a += clamp(d, -dt * 9, dt * 9); }
+    /* 4.5 · el joystick apunta en el mundo: el giro sigue la dirección con amortiguación (no zigzaguea a alta velocidad) y el acelerador
+       se recoge en las curvas cerradas para poder darlas (como la asistencia de frenado de los juegos de carreras para celular) */
+    if (E.dir && E.dir.m > .08) { const des = Math.atan2(E.dir.y, E.dir.x), d = angDif(this.a, des); giro = clamp(d * 2.2 - (this.giroV || 0) * .12, -1, 1); acel = E.dir.m * (V.clase === 'pie' ? 1 : clamp(1.15 - Math.abs(d) * .55, .25, 1)); if (V.clase === 'pie' && Math.abs(d) > .1) this.a += clamp(d, -dt * 9, dt * 9); }
+    /* 4.5 · asistencia que evita estrellarse: mira adelante (más lejos cuanto más rápido); si hay pared y el jugador no está girando
+       fuerte, empuja el volante hacia el lado libre que más se parece a lo que pide. Se apaga con E.asistencia === false */
+    ({ giro, acel } = this._asistencia(E, giro, acel, dt));
     /* suelo, pendiente y velocidad objetivo */
     this.tt = M.suelo(this.x, this.y); this.pend = this.paso ? 0 : M.pendiente(this.x, this.y, this.a, 12); this.tBloqueo = Math.max(0, (this.tBloqueo || 0) - dt); if (!this.tBloqueo) this.bloqueo = null;
     /* el terreno manda en la velocidad: vadear, nadar, arena, nieve, monte (MC.Terreno) */
@@ -3864,7 +3901,7 @@ class Cuerpo {
     if (!V.electrico && V.clase === 'rueda' && !this.enAire && this.pend < -.03 && acel <= 0) this.v += -this.pend * 9.8 * .55 * dt;   // la bajada empuja
     /* giro: más ágil quieto que rápido; inercia corta */
     const tg = lerp(V.giro[0], V.giro[1], clamp(Math.abs(this.v) / Math.max(1, vmax), 0, 1)) * giro * (V.clase === 'pie' ? 0 : 1) * (this.v < 0 ? -1 : 1);
-    this.giroV = lerp(this.giroV, tg, Math.min(1, dt * 10)); if (V.clase !== 'pie' || !E.dir) this.a += this.giroV * dt * (V.clase === 'pie' ? 1 : Math.min(1, .25 + Math.abs(this.v) / 2.5));
+    this.giroV = lerp(this.giroV, tg * (E.derrape && Math.abs(this.v) > 6 ? 1.45 : 1), Math.min(1, dt * 10)); if (V.clase !== 'pie' || !E.dir) this.a += this.giroV * dt * (V.clase === 'pie' ? 1 : Math.min(1, .25 + Math.abs(this.v) / 2.5));
     if (V.clase === 'pie' && !E.dir) this.a += giro * V.giro[0] * dt;
     /* vuelo */
     if (V.clase === 'aire') this._vuelo(dt, E);
@@ -3881,14 +3918,17 @@ class Cuerpo {
     const auto = V.clase === 'auto' || V.clase === 'pesado';
     const suelto = auto && !this.paso && (this.tt === TT.NIEVE || (this.tt === TT.LAND || this.tt === TT.GRASS) && (E.lluvia || E.clima?.lluvia || 0) > .35);
     const rumboPrevio = this.rumboRodado ?? this.a;
-    this.rumboRodado = suelto ? rumboPrevio + Math.atan2(Math.sin(this.a-rumboPrevio), Math.cos(this.a-rumboPrevio)) * (1-Math.exp(-dt*2.8)) : this.a;
+    /* 4.5 · agarre: el rumbo por donde rueda sigue a la trompa con un retraso; en piso suelto o con el freno de mano (E.derrape)
+       el retraso es grande y el carro derrapa (y avisa 'derrape' para las marcas de llanta y el humo) */
+    const agarre = !auto ? 99 : E.derrape && Math.abs(this.v) > 6 ? 1.6 : suelto ? 2.8 : 16 - clamp(Math.abs(this.v) / 30, 0, 1) * 6;
+    const desliz = angDif(rumboPrevio, this.a); this.rumboRodado = agarre >= 99 ? this.a : rumboPrevio + desliz * (1 - Math.exp(-dt * agarre));
+    this.deslizamiento = auto ? Math.abs(angDif(this.rumboRodado, this.a)) : 0;
+    if (auto && this.deslizamiento > .22 && Math.abs(this.v) > 6 && !this.enAire) { this.eventos.push('derrape'); this.v *= 1 - dt * .35 * Math.min(1, this.deslizamiento); }
     this.inclinacion = auto ? Math.atan(clamp(this.pend,-.65,.65)) : 0;
     const dx = Math.cos(this.rumboRodado) * this.v * dt, dy = Math.sin(this.rumboRodado) * this.v * dt, nx = this.x + dx, ny = this.y + dy;
-    if (this.puede(nx, ny)) { this.x = nx; this.y = ny; }
-    else if (this.puede(nx, this.y)) { this.x = nx; this.v *= .7; }
-    else if (this.puede(this.x, ny)) { this.y = ny; this.v *= .7; }
-    else { if (Math.abs(this.v) > 2.5) { this.eventos.push('choque'); this.choque = .4; MC.emit('choque', this); } this.v *= -.15; }
+    const x0m = this.x, y0m = this.y; this._mover(dx, dy, dt);
     this.choque = Math.max(0, this.choque - dt);
+    this._despues(E, x0m, y0m, dt);
     this._niveles(dt);
     this.fase += Math.abs(this.v) * dt * (V.clase === 'pie' ? (this.corriendo ? 2.4 : 3.2) : V.cuerpo === 'pedalea' ? 1.6 : 1.2);
     this.estado = this.nadando && V.clase === 'pie' ? (this.buceando ? 'bucea' : 'nada') : Personaje.estadoPara(V, Math.abs(this.v), this.enAire && V.clase !== 'aire');
@@ -3909,6 +3949,52 @@ class Cuerpo {
      tableros con su rampa). El cuerpo se apoya en la más alta que le quede a la altura de un escalón; lo que queda
      entre los pies y la cabeza es pared; lo que queda arriba de la cabeza se pasa por debajo. Si el apoyo desaparece,
      cae con gravedad (y aterriza en lo que haya abajo). Las barandas no dejan caer del tablero. */
+  /* 4.5 · moverse con choques: en vez de trabarse contra los ejes del mapa, desliza a lo largo de la pared (su normal se estima
+     tanteando alrededor del punto bloqueado), pierde velocidad según el ángulo del golpe (rasante: casi nada; de frente: casi toda)
+     y el carro se alinea con la pared, como en los juegos de carreras arcade */
+  _mover(dx, dy, dt) {
+    const L = Math.hypot(dx, dy); if (L < 1e-7) return;
+    if (this.puede(this.x + dx, this.y + dy)) { this.x += dx; this.y += dy; return; }
+    const V = this.veh, auto = V.clase !== 'pie' && V.clase !== 'rueda', r = Math.max(.5, Math.min(1.4, (V.ancho || .6) * .65)), px = this.x + dx, py = this.y + dy; let bx = 0, by = 0;
+    for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, cx = Math.cos(a), cy = Math.sin(a); if (!this.puede(px + cx * r, py + cy * r, true)) { bx += cx; by += cy; } }
+    const bl = Math.hypot(bx, by), nx = bl > .01 ? -bx / bl : -dx / L, ny = bl > .01 ? -by / bl : -dy / L, ux = dx / L, uy = dy / L, dot = ux * nx + uy * ny, impacto = clamp(-dot, 0, 1);
+    let tx = ux - dot * nx, ty = uy - dot * ny; const tl = Math.hypot(tx, ty); let movio = false;
+    if (tl > .05) { tx /= tl; ty /= tl; const s = L * tl; if (this.puede(this.x + tx * s, this.y + ty * s, true)) { this.x += tx * s; this.y += ty * s; movio = true; } }
+    if (!movio) { if (this.puede(this.x + dx, this.y, true)) { this.x += dx; movio = true; } else if (this.puede(this.x, this.y + dy, true)) { this.y += dy; movio = true; } }
+    const sp = Math.abs(this.v);
+    if (sp * impacto > 2.5 && !(this.choque > .15)) { this.eventos.push('choque'); this.choque = .4; this.impacto = sp * impacto; this.normalChoque = [nx, ny]; MC.emit('choque', this); }
+    if (movio) { this.v *= 1 - Math.min(.95, impacto * impacto * .9 + dt * .6);
+      if (auto && tl > .05) { const dir = this.v >= 0 ? Math.atan2(ty, tx) : Math.atan2(-ty, -tx); this.a += angDif(this.a, dir) * Math.min(1, dt * 7) * (1 - impacto * .6); this.rumboRodado = this.a; } }
+    else { this.v *= auto ? -.18 : 0; if (this.puede(this.x + nx * .06, this.y + ny * .06, true)) { this.x += nx * .06; this.y += ny * .06; } }
+  }
+  /* 4.5 · asistencia que evita estrellarse: mira adelante (más lejos cuanto más rápido); si hay pared y el jugador no está girando
+     fuerte, empuja el volante hacia el lado libre que más se parece a lo que pide, y no deja ir a fondo hacia la pared.
+     Como la «dirección asistida» de los juegos de carreras para celular. Se apaga con E.asistencia === false */
+  _asistencia(E, giro, acel, dt) {
+    const V = this.veh; if (V.clase === 'pie' || V.clase === 'aire' || this.ia || E.asistencia === false || Math.abs(this.v) < 3) { this._asis = 0; this._asisFreno = 0; return { giro, acel }; }
+    if ((this._tAsis = (this._tAsis || 0) - dt) <= 0) {
+      this._tAsis = .08; const la = clamp(Math.abs(this.v) * .45, 3, 12), sg = this.v >= 0 ? 1 : -1, libre = da => this.puede(this.x + Math.cos(this.a + da) * la * sg, this.y + Math.sin(this.a + da) * la * sg, true);
+      this._asis = 0; this._asisFreno = 0;
+      if (!libre(0)) { const pide = E.dir ? angDif(this.a, Math.atan2(E.dir.y, E.dir.x)) : giro; for (const da of (pide >= 0 ? [.3, -.3, .6, -.6] : [-.3, .3, -.6, .6])) if (libre(da)) { this._asis = Math.sign(da) * sg * (Math.abs(da) > .4 ? .75 : .5); break; } this._asisFreno = 1; }
+    }
+    if (this._asis && Math.abs(giro) < .7) giro = clamp(giro + this._asis, -1, 1);
+    if (this._asisFreno && acel > .5 && Math.abs(this.v) > 9) acel = .5;
+    return { giro, acel };
+  }
+  /* 4.5 · después de moverse: desatascar si empuja y no avanza, el empujón hacia el hueco y el tumbo del bordillo */
+  _despues(E, x0m, y0m, dt) {
+    const V = this.veh, auto = V.clase === 'auto' || V.clase === 'pesado', empuja = (E.dir && E.dir.m > .3) || Math.abs(E.acel || 0) > .3;
+    if (!this.ia && empuja && V.clase !== 'aire' && !this.nadando && Math.hypot(this.x - x0m, this.y - y0m) < .015) this.atasco = (this.atasco || 0) + dt; else this.atasco = Math.max(0, (this.atasco || 0) - dt * 2);
+    if (this.atasco > .85) { this.atasco = 0; this._desatascar(E); }
+    if (this._empujon) { const q = this._empujon, f = Math.min(1, dt * 8), metido = !this.puede(this.x, this.y, true); if (metido || this.puede(this.x + q.x * f, this.y + q.y * f, true)) { this.x += q.x * f; this.y += q.y * f; } q.x *= 1 - f; q.y *= 1 - f; if (Math.hypot(q.x, q.y) < .02) this._empujon = null; }   /* metido dentro de algo: sale derecho hacia el hueco libre */
+    /* bordillo: al subir de la calzada al andén o a un patio, un tumbo (para la cámara y la suspensión) */
+    const ttN = this.mundo.suelo(this.x, this.y); if (auto && CALZADA_TT.has(this.tt) !== CALZADA_TT.has(ttN) && Math.abs(this.v) > 2) { this.tumbo = Math.min(1, Math.abs(this.v) / 12); this.eventos.push('bordillo'); } this.tumbo = Math.max(0, (this.tumbo || 0) - dt * 3);
+  }
+  _desatascar(E) {
+    const quiere = E.dir ? Math.atan2(E.dir.y, E.dir.x) : this.a + (this.v < 0 || (E.acel || 0) < 0 ? Math.PI : 0); let mejor = null, md = 1e9;
+    for (const d of [.8, 1.4, 2.2, 3.2]) { for (let k = 0; k < 16; k++) { const a = k / 16 * TAU, x = this.x + Math.cos(a) * d, y = this.y + Math.sin(a) * d; if (!this.puede(x, y, true)) continue; const pen = d * .6 + Math.abs(angDif(quiere, a)) * 1.2; if (pen < md) { md = pen; mejor = { x: x - this.x, y: y - this.y, a }; } } if (mejor) break; }
+    if (!mejor) return false; this._empujon = { x: mejor.x, y: mejor.y }; if (this.veh.clase !== 'pie') { this.a += angDif(this.a, mejor.a) * .5; this.rumboRodado = this.a; } this.v = 0; this.eventos.push('desatasco'); MC.emit('desatasco', this); return true;
+  }
   escalon() { const V = this.veh; return V.clase === 'pie' ? .5 : V.clase === 'aire' ? 1.2 : .35; }
   /* el escalón crece con lo que se avanza en el cuadro: la rampa más empinada sube ~0,62 m por metro */
   escalonDin() { return this.escalon() + Math.abs(this.v) * (this._dt || 1 / 60) * .7; }
@@ -4182,6 +4268,44 @@ class Piezas {
   }
 }
 MC.Piezas = Piezas;
+/* ---- js/32-rotos.js ---- */
+/* =====================================================================
+   ROTOS (4.5) · lo que un vehículo se lleva por delante: con lógica, no todo es pared
+   - Una caneca, un cono, una valla, una banca, un hidrante, un paradero o un poste no frenan en seco al carro: si va lo bastante
+     rápido para tumbarlo, lo tumba, pierde algo de velocidad (según la masa de lo que golpea) y sigue. Despacio, sí lo para.
+   - Un arbusto se aplasta; un árbol grande, una roca grande, un muro y un edificio no se rompen nunca.
+   - A pie y en bici no se rompe nada (se choca). La moto solo tumba lo liviano.
+   - Lo roto queda registrado en el mundo (M._rotos): no se vuelve a dibujar de pie ni a chocar, y MC.Efectos dibuja los restos
+     (el poste caído, la caneca regada, el chorro del hidrante). Evento: MC.on('rompe', { o, cuerpo, v }).
+   ===================================================================== */
+const ROMPE_V = { cono: 1, caneca: 2.5, arbusto: 1.5, valla: 3, banca: 4, hidrante: 5, paradero: 8, poste: 8.5 };   /* m/s mínimos para tumbarlo en carro */
+const ROMPE_FRENA = { cono: .98, caneca: .93, arbusto: .9, valla: .86, banca: .8, hidrante: .7, paradero: .62, poste: .55 };   /* velocidad que queda */
+const ROMPE_MOTO = new Set(['cono', 'caneca', 'arbusto', 'valla']);
+const Rotos = {
+  V: ROMPE_V,
+  clave(p) { return p.t + ':' + Math.round(p.x * 2) + ',' + Math.round(p.y * 2); },
+  esta(M, p) { return !!(M && M._rotos && p && p.t && M._rotos.has(Rotos.clave(p))); },
+  /* ¿este cuerpo, a esta velocidad, tumba ese objeto? */
+  puede(o, C) {
+    const lim = o && ROMPE_V[o.t], cl = C.veh.clase; if (lim == null || cl === 'pie' || cl === 'rueda' || cl === 'agua') return false;
+    if (cl === 'moto' && !ROMPE_MOTO.has(o.t)) return false;
+    return Math.abs(C.v) >= lim * (cl === 'pesado' ? .55 : 1);
+  },
+  romper(M, o, C) {
+    if (!M || Rotos.esta(M, o)) return null; const v = Math.abs(C.v), r = { t: o.t, x: o.x, y: o.y, a: C.a, v, t0: MC.ahora ? MC.ahora() : Date.now(), dir: C.v >= 0 ? C.a : C.a + Math.PI };
+    (M._rotos || (M._rotos = new Map())).set(Rotos.clave(o), r);
+    const k = ROMPE_FRENA[o.t] ?? .8, masa = C.veh.masa || 1200; C.v *= 1 - (1 - k) * Math.min(1.4, 1500 / masa);
+    if (C.eventos) C.eventos.push('rompe');
+    MC.emit('rompe', { o: r, cuerpo: C, v });
+    /* que no se acumule sin fin en una partida larga: los más viejos se olvidan (vuelven a aparecer de pie, como en GTA) */
+    if (M._rotos.size > 400) M._rotos.delete(M._rotos.keys().next().value);
+    return r;
+  },
+  lista(M) { return M && M._rotos ? [...M._rotos.values()] : []; },
+  reparar(M) { if (M) M._rotos = null; }
+};
+MC.Rotos = Rotos;
+
 /* ---- js/33-controles.js ---- */
 /* =====================================================================
    CONTROLES · teclado, pantalla táctil (joystick virtual y gestos) y control de juegos (gamepad)
@@ -4544,16 +4668,30 @@ Cuerpo.prototype._actualizarBase = Cuerpo.prototype.actualizar;
 Cuerpo.prototype.actualizar = function (dt, E = {}) {
   const V = this.veh; if (V.dinamica !== 'carro') { this._carro = null; return this._actualizarBase(dt, E); }
   dt = Math.min(dt, .05); this.eventos.length = 0; if (!this._carro || this._carro.v !== V) { this._carro = new ManejoCarro(V); this._carro.vx = this.v; }
+  /* 4.5: si el juego cambió la velocidad desde afuera (teletransporte, salida de un cinemático), el modelo la toma */
+  if (Math.abs(this.v - this._carro.vx) > 1.5) { this._carro.vx = this.v; this._carro.vy = 0; this._carro.r = 0; }
   let acel = E.acel || 0, giro = E.giro || 0;
   if (E.dir && E.dir.m > .08) { const d = angDif(this.a, Math.atan2(E.dir.y, E.dir.x));
     /* 4.0.2: el destino quedó atrás → frena y, ya despacio, retrocede girando al revés (vuelta en tres puntos); antes se quedaba quieto */
     if (Math.abs(d) > 2.2) { if (this._carro.vx > 2) { acel = -.7; giro = clamp(d * 2, -1, 1); } else { acel = -.6 * Math.max(.5, E.dir.m); giro = -Math.sign(d); } }
-    else { giro = clamp(d * 2, -1, 1); acel = E.dir.m; } }
+    /* 4.5: giro amortiguado (sin zigzag a alta velocidad) y acelerador recogido en las curvas cerradas para poder darlas */
+    else { giro = clamp(d * 2 - this._carro.r * .25, -1, 1); acel = E.dir.m * clamp(1.15 - Math.abs(d) * .55, .25, 1); } }
+  ({ giro, acel } = this._asistencia(E, giro, acel, dt));
   this.tt = this.mundo.suelo(this.x, this.y); this.pend = this.mundo.pendiente(this.x, this.y, this.a, 12);
-  const agarre = (TT_SUPERFICIE[this.tt] || .5) / (this.tt === TT.CICLO ? 1.3 : 1) * Ambiente.agarre(this.clima), R = this._carro.paso(dt, null, { acel, giro, salto: E.salto || E.turbo && false }, { agarre: clamp(agarre, .1, 1), pend: this.pend });
-  const ca = Math.cos(this.a), sa = Math.sin(this.a), nx = this.x + (ca * R.avance - sa * R.lateral) * dt, ny = this.y + (sa * R.avance + ca * R.lateral) * dt;
-  if (this.puede(nx, ny)) { this.x = nx; this.y = ny; } else { if (Math.abs(R.avance) > 4) { this.eventos.push('choque'); MC.emit('choque', this); } this._carro.vx *= -.2; this._carro.vy = 0; this._carro.r = 0; }
-  this.a += R.giro * dt; this.v = R.avance; this.derrape = R.derrape; this._niveles(dt); this.estado = 'sentado'; return this;
+  const Tp = Terreno.paso(this, this.x, this.y), suelo = Math.max(.15, Tp.ok === false ? .2 : Tp.f || 1);
+  const agarre = (TT_SUPERFICIE[this.tt] || .5) / (this.tt === TT.CICLO ? 1.3 : 1) * Ambiente.agarre(this.clima), turbo = !!E.turbo && acel > 0;
+  const R = this._carro.paso(dt, null, { acel: acel * (turbo ? 1.4 : 1), giro, salto: !!(E.derrape || E.salto) }, { agarre: clamp(agarre, .1, 1), pend: this.pend });
+  /* 4.5: el suelo, el daño (escala) y el turbo ponen el tope de velocidad, como en la física base */
+  const vlim = this.vmax() * suelo * (turbo ? 1.25 : 1); if (this._carro.vx > vlim) this._carro.vx -= (this._carro.vx - vlim) * Math.min(1, dt * 2.5); if (this._carro.vx < -vlim * .4) this._carro.vx = -vlim * .4;
+  const ca = Math.cos(this.a), sa = Math.sin(this.a), dx = (ca * R.avance - sa * R.lateral) * dt, dy = (sa * R.avance + ca * R.lateral) * dt, x0m = this.x, y0m = this.y;
+  this.a += R.giro * dt; this.v = this._carro.vx;
+  /* 4.5: el mismo choque que la física base: desliza a lo largo de la pared, pierde según el ángulo y se alinea */
+  const v0 = this.v; this._mover(dx, dy, dt);
+  if (this.v !== v0) { const k = v0 ? clamp(this.v / v0, -.3, 1) : 0; this._carro.vx = this.v; this._carro.vy *= Math.max(0, k); this._carro.r *= k > .7 ? .7 : .2; }
+  this.choque = Math.max(0, (this.choque || 0) - dt);
+  this.derrape = R.derrape; this.deslizamiento = R.derrape; if (R.derrape > .22 && Math.abs(R.avance) > 6) this.eventos.push('derrape');
+  this._despues(E, x0m, y0m, dt);
+  this._niveles(dt); this.estado = 'sentado'; return this;
 };
 
 /* ---- js/37-manejo.js ---- */
@@ -5172,6 +5310,7 @@ const Vista2D = {
     if (E.cables) this.cables(dibCtx, E.cables);
     /* 2.7: el pase final del estilo (manga en grises, líneas de velocidad) y la vida (partículas, pájaros, onomatopeyas) */
     if (MC.Vida && op.vida !== false) MC.Vida.dibujar(dibCtx);
+    if (MC.Efectos && op.vida !== false) MC.Efectos.dibujar(g, pr, E);   /* 4.5: choques, derrapes, explosiones y restos */
     if (dibCtx.mapa) Estilo.final(g, W, H, E);
     /* etiquetas (estaciones, lugares) */
     if (op.etiquetas !== false) this.etiquetas(dibCtx);
@@ -5824,6 +5963,12 @@ class Malla {
     }
     /* techo: abanico (los polígonos de huella son casi convexos) o a dos aguas en casas rectangulares */
     if (op.dosAguas && n === 4) { const c = op.dosAguas, h = Math.min(2.4, c.ancho * .45), m = [(V[0][0] + V[1][0]) / 2, y1 + h, (V[0][1] + V[1][1]) / 2], m2 = [(V[2][0] + V[3][0]) / 2, y1 + h, (V[2][1] + V[3][1]) / 2], p = V.map(v => [v[0], y1, v[1]]); if (cw) { this.quad(p[0], m, m2, p[3], techo); this.quad(p[2], m2, m, p[1], techo); this.tri(p[0], p[1], m, muro); this.tri(p[2], p[3], m2, muro); } else { this.quad(p[0], p[3], m2, m, techo); this.quad(p[2], p[1], m, m2, techo); this.tri(p[0], m, p[1], muro); this.tri(p[2], m2, p[3], muro); } return; }
+    /* 4.5 · a cuatro aguas (casas con huella real y teja, iglesias, hitos): un tronco de pirámide hacia el centro.
+       Cada faldón queda con su propia luz (se lee el techo desde arriba en vez de una placa plana) */
+    if (op.cuatro && n >= 4 && n <= 24) { let cx = 0, cz = 0; for (const v of V) { cx += v[0] / n; cz += v[1] / n; }
+      const k = op.cuatro.k ?? .3, h = op.cuatro.alto, B = V.map(v => [v[0], y1, v[1]]), T = V.map(v => [cx + (v[0] - cx) * k, y1 + h, cz + (v[1] - cz) * k]);
+      for (let i = 0; i < n; i++) { const j = (i + 1) % n; if (cw) this.quad(B[i], T[i], T[j], B[j], techo); else this.quad(B[i], B[j], T[j], T[i], techo); }
+      const cum = op.cuatro.cumbrera || techo; for (let i = 1; i < n - 1; i++) { if (cw) this.tri(T[0], T[i + 1], T[i], cum); else this.tri(T[0], T[i], T[i + 1], cum); } return; }
     const top = V.map(v => [v[0], y1, v[1]]); for (let i = 1; i < n - 1; i++) { if (cw) this.tri(top[0], top[i + 1], top[i], techo); else this.tri(top[0], top[i], top[i + 1], techo); }
   }
   /* caja orientada: centro (x, y, z), largo en el rumbo a, ancho y alto */
@@ -5925,7 +6070,7 @@ class VistaGL {
     if (pot && this.aniso) gl.texParameterf(gl.TEXTURE_2D, this.aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, gl.getParameter(this.aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT))); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     const m = new Malla(), minH = detalle >= 2 ? 0 : detalle === 1 ? 10 : 24;
     for (const e of M.edificiosEn(x0, y0, x0 + R, y0 + R)) { if (e.x < x0 || e.x >= x0 + R || e.y < y0 || e.y >= y0 + R || e.h < minH) continue; const st2 = estiloEdificio(M, e), P = Mundo.esquinas(e); let zb = 1e9; for (let i = 0; i < P.length; i += 2) zb = Math.min(zb, M.cota(P[i], P[i + 1])); zb -= O[2] + .3; m.edificio3d(P, O, zb, e, st2, detalle, M.estilo(e.x, e.y)); }   /* 3.0: con fachada (js/45b-mundo3d.js) */
-    for (const q of M.sitios().E) { if (q.x < x0 || q.x >= x0 + R || q.y < y0 || q.y >= y0 + R) continue; const zb = M.cota(q.x, q.y) - O[2] - .3, mu = hex3(q.clase === 'iglesia' ? '#efe8d8' : '#d9d4c9'), te = hex3(q.techo === 'dos' || q.techo === 'cuatro' ? '#b5542f' : '#bdbcb6'); const h0 = q.partes ? Math.max(3, q.partes[0].z0) : q.h; m.prisma(q.R[0], O, zb, zb + h0, mu, te, { ventanas: detalle >= 2 ? 7 : 0 }); if (q.partes) for (const p of q.partes) m.prisma(p.B, O, zb + p.z0, zb + p.z1, mu, p.techo === 'aguja' ? hex3('#e3e6ea') : te); }
+    for (const q of M.sitios().E) { if (q.x < x0 || q.x >= x0 + R || q.y < y0 || q.y >= y0 + R) continue; const zb = M.cota(q.x, q.y) - O[2] - .3, mu = hex3(q.clase === 'iglesia' ? '#efe8d8' : '#d9d4c9'), te = hex3(q.techo === 'dos' || q.techo === 'cuatro' ? '#b5542f' : '#bdbcb6'); const h0 = q.partes ? Math.max(3, q.partes[0].z0) : q.h; m.prisma(q.R[0], O, zb, zb + h0, mu, te, { ventanas: detalle >= 2 ? 7 : 0, cuatro: q.techo === 'dos' || q.techo === 'cuatro' ? { alto: Math.min(7, Math.max(2, h0 * .28)), cumbrera: osc3(te, .85) } : null }); if (q.partes) for (const p of q.partes) m.prisma(p.B, O, zb + p.z0, zb + p.z1, mu, p.techo === 'aguja' ? hex3('#e3e6ea') : te); }
     for (const P of M.pasosEn(x0, y0, x0 + R, y0 + R)) { if (P.nivel <= 0) continue; const T = P.trazo || (P.trazo = new Trazo(P.p)), vi = P.tipo === 'viaducto', rampa = vi ? 0 : Math.min(P.largo * .4, P.peatonal ? 9 : 22), h = s => P.nivel * NIVEL_M * (vi ? 1 : suave(Math.min(s, P.largo - s) / rampa)), paso = 6;
       for (let s = 0; s < P.largo; s += paso) { const a = T.at(s), b = T.at(Math.min(P.largo, s + paso)); if (a.x < x0 || a.x >= x0 + R || a.y < y0 || a.y >= y0 + R) continue; const ha = M.cota(a.x, a.y) + h(s) - O[2], hb = M.cota(b.x, b.y) + h(Math.min(P.largo, s + paso)) - O[2], w = P.ancho / 2, nx = -Math.sin(a.a) * w, ny = Math.cos(a.a) * w, A = [a.x - O[0], a.y - O[1]], Bq = [b.x - O[0], b.y - O[1]], c = hex3(vi ? '#c9cfd8' : P.peatonal ? '#d8cfbd' : '#6a6f79'); m.quad([A[0] + nx, ha, A[1] + ny], [Bq[0] + nx, hb, Bq[1] + ny], [Bq[0] - nx, hb, Bq[1] - ny], [A[0] - nx, ha, A[1] - ny], c); m.quad([A[0] - nx, ha - 1, A[1] - ny], [A[0] - nx, ha, A[1] - ny], [Bq[0] - nx, hb, Bq[1] - ny], [Bq[0] - nx, hb - 1, Bq[1] - ny], hex3('#8e8a80')); m.quad([A[0] + nx, ha - 1, A[1] + ny], [Bq[0] + nx, hb - 1, Bq[1] + ny], [Bq[0] + nx, hb, Bq[1] + ny], [A[0] + nx, ha, A[1] + ny], hex3('#8e8a80'));
         if ((s % (vi ? 30 : 24)) < paso && h(s) > 3) m.caja(A[0], M.cota(a.x, a.y) - O[2], A[1], a.a, 1.4, vi ? 2.2 : 1, h(s) - 1, hex3('#9aa3ad')); } }
@@ -6096,9 +6241,9 @@ Object.assign(Malla.prototype, {
     for (let i = 0; i < n; i++) { const j = (i + 1) % n; A += V[i][0] * V[j][1] - V[j][0] * V[i][1]; }
     const sg = A > 0 ? 1 : -1, ctr = [cx, zb + H / 2, cz];   // normal hacia afuera: (dz, −dx) si la huella va antihoraria (A > 0)
     /* cuerpo y techo (a dos aguas con alero en casas rectangulares; plancha con pretil y tanque en el resto) */
-    const dos = !st.plano && !e.P && n === 4;
-    this.prisma(P, O, zb, zt, muro, techo, dos ? { dosAguas: { ancho: Math.min(e.hw, e.hd) * 2 } } : {});
-    if (dos) { const al = .45; for (let i = 0; i < n; i++) { const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 1) continue; const nx = (b[1] - a[1]) / L * sg, nz = -(b[0] - a[0]) / L * sg; this.quadF([a[0], zt - .05, a[1]], [b[0], zt - .05, b[1]], [b[0] + nx * al, zt - .25, b[1] + nz * al], [a[0] + nx * al, zt - .25, a[1] + nz * al], osc3(techo, .8), 0, [cx, zt - 3, cz]); } }
+    const dos = !st.plano && !e.P && n === 4, cuatro = !st.plano && !dos && n <= 16 && H <= 16;   /* 4.5: la huella real con teja lleva techo a cuatro aguas */
+    this.prisma(P, O, zb, zt, muro, techo, dos ? { dosAguas: { ancho: Math.min(e.hw, e.hd) * 2 } } : cuatro ? { cuatro: { alto: Math.min(2.6, Math.min(e.hw, e.hd) * .55), k: .25, cumbrera: osc3(techo, .88) } } : {});
+    if (dos || cuatro) { const al = .45; for (let i = 0; i < n; i++) { const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 1) continue; const nx = (b[1] - a[1]) / L * sg, nz = -(b[0] - a[0]) / L * sg; this.quadF([a[0], zt - .05, a[1]], [b[0], zt - .05, b[1]], [b[0] + nx * al, zt - .25, b[1] + nz * al], [a[0] + nx * al, zt - .25, a[1] + nz * al], osc3(techo, .8), 0, [cx, zt - 3, cz]); } }
     else if (detalle >= 3 || !casa) {
       for (let i = 0; i < n; i++) { const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < .8) continue; const nx = (b[1] - a[1]) / L * sg * .18, nz = -(b[0] - a[0]) / L * sg * .18, a2 = [a[0] - nx, a[1] - nz], b2 = [b[0] - nx, b[1] - nz]; this.quadF([a[0], zt, a[1]], [b[0], zt, b[1]], [b[0], zt + .55, b[1]], [a[0], zt + .55, a[1]], osc3(muro, .93), 0, ctr); this.quadF([a2[0], zt, a2[1]], [b2[0], zt, b2[1]], [b2[0], zt + .55, b2[1]], [a2[0], zt + .55, a2[1]], osc3(muro, .8), 0, [cx, zt + 5, cz]); this.quadF([a[0], zt + .55, a[1]], [b[0], zt + .55, b[1]], [b2[0], zt + .55, b2[1]], [a2[0], zt + .55, a2[1]], acl3(muro, .2), 0, [cx, zt - 5, cz]); }
       const tx = cx + (h2(sem, 4, 83) - .5) * Math.min(e.hw, 4), tz = cz + (h2(sem, 5, 83) - .5) * Math.min(e.hd, 4);
@@ -6128,7 +6273,7 @@ Object.assign(Malla.prototype, {
     for (let i = 0; i < n; i++) {
       const a = V[i], b = V[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 2) continue;
       pared(a, b, 0, 1, zb, zb + .95, .03, zoc);                                   // zócalo
-      if (!dos) pared(a, b, 0, 1, zt - .38, zt, .05, cor);                      // cornisa
+      if (!dos && !cuatro) pared(a, b, 0, 1, zt - .38, zt, .05, cor);                      // cornisa
       const cols = Math.max(1, Math.floor(L / 2.7)), pta = i === iL ? Math.floor(cols / 2) : -1;
       for (let p = 0; p < pisos; p++) for (let q = 0; q < cols; q++) {
         const um = (q + .5) / cols, w = Math.min(1.1, L / cols * .45) / L, y0 = zb + (p === 0 ? 1.15 : 1.0 + p * 3), y1 = y0 + (p === 0 ? 1.15 : 1.3);
@@ -6453,6 +6598,8 @@ class Vistas {
         E.factorNiebla = this.auto ? (this.res.factorNiebla ?? 1) : 1;
         if (this.usaRaster()) { if (!this.raster) this.raster = new Raster(this.mundo); if (!this._rb || this._rb.width !== rw || this._rb.height !== rh) this._rb = lienzo(rw, rh); this.raster.dibujar(this._rb.getContext('2d'), rw, rh, E); dst.drawImage(this._rb, 0, 0, w, h); }
         else { const cv = this.gl.dibujar(rw, rh, E, { presupuesto: 4 + 6 * this.calidad }); if (cv) dst.drawImage(cv, 0, 0, w, h); }
+        /* 4.5: los efectos (choques, derrapes, explosiones, restos) encima de la 3D, con la misma proyección */
+        if (MC.Efectos && this.gl && this.gl.mvp && !this.usaRaster()) { try { MC.Efectos.dibujar(dst, (x, y, z) => this.gl.aPantalla(x, y, z, w, h), E); } catch (e) { MC.falla('efectos', e); } }
         this._clima2D(dst, w, h, E, true);
       }
     } catch (e) { MC.falla('vista ' + v.id, e); }
@@ -8096,6 +8243,139 @@ const Pieles = {
 };
 MC.Pieles = Pieles;
 
+/* ---- js/88-efectos.js ---- */
+/* =====================================================================
+   EFECTOS (4.5) · explosiones, choques, derrapes y cosas rotas, con peso y lógica
+   Hecho desde la idea de los juegos de acción y carreras (Burnout, GTA, Need for Speed): el golpe se ve, se oye y se siente.
+   - EXPLOSIÓN: destello, bola de fuego que crece y se apaga, onda expansiva, pedazos que vuelan y rebotan, columna de humo
+     negro que sube unos segundos, mancha quemada en el piso y sacudida de cámara. MC.Efectos.explosion(x, y, k)
+   - CHOQUE: chispas que salen en abanico desde el punto del golpe, vidrio si fue duro, pedazos de lata si fue muy duro.
+   - DERRAPE: las dos llantas traseras dejan su marca (se borra despacio) y sueltan humo blanco.
+   - ROTOS (MC.Rotos): cada cosa deja sus restos: el poste tendido, la caneca regada con papeles, la banca en tablas, el cono
+     rodando, el paradero en vidrios y el hidrante con su chorro de agua unos segundos.
+   - FUEGO: un carro destrozado arde (llamas que titilan y humo) antes de estallar.
+   Todo vive en arreglos con tope (sin crear basura cada cuadro) y se dibuja encima de cualquier vista con pr(x, y, z).
+   Se enciende solo con los eventos del motor: 'choque', 'rompe' y 'derrape' (del cuerpo del jugador).
+   ===================================================================== */
+const Efectos = {
+  P: [], MAXP: 700, marcas: [], MAXM: 1200, restos: [], MAXR: 180, fuegos: [], ondas: [], _t: null, _ult: null,
+  _p(tipo, x, y, z, vx, vy, vz, vida, r, col) {
+    let p; if (this.P.length >= this.MAXP) { p = this.P[(this._i = ((this._i || 0) + 1) % this.P.length)]; } else { p = {}; this.P.push(p); }
+    p.tipo = tipo; p.x = x; p.y = y; p.z = z; p.vx = vx; p.vy = vy; p.vz = vz; p.t = 0; p.vida = vida; p.r = r; p.col = col || null; p.rot = Math.random() * TAU; p.vr = (Math.random() - .5) * 14; return p;
+  },
+  /* ---------- emisores ---------- */
+  chispas(x, y, n = 12, dir = null, k = 1) {
+    for (let i = 0; i < n; i++) { const a = dir == null ? Math.random() * TAU : dir + (Math.random() - .5) * 1.6, s = (4 + Math.random() * 9) * k; this._p('chispa', x, y, .5 + Math.random() * .6, Math.cos(a) * s, Math.sin(a) * s, 1 + Math.random() * 3, .25 + Math.random() * .35, .05); }
+  },
+  humo(x, y, n = 4, op = {}) {
+    for (let i = 0; i < n; i++) { const q = this._p('humo', x + (Math.random() - .5) * (op.r || 1), y + (Math.random() - .5) * (op.r || 1), op.z ?? .6, (Math.random() - .5) * .8 + (op.vx || 0), (Math.random() - .5) * .8 + (op.vy || 0), (op.sube ?? 1.4) * (.6 + Math.random() * .6), op.vida || 2.6 + Math.random() * 1.6, op.tam || .7 + Math.random() * .5, op.col || (op.negro ? '#1d1f23' : '#d9d6cf')); if (op.retardo) q.t = -op.retardo * (.6 + Math.random() * .8); }
+  },
+  pedazos(x, y, n = 8, col = '#2b343d', k = 1, tipo = 'pedazo') {
+    for (let i = 0; i < n; i++) { const a = Math.random() * TAU, s = (2 + Math.random() * 6) * k; this._p(tipo, x, y, .4 + Math.random(), Math.cos(a) * s, Math.sin(a) * s, 2 + Math.random() * 5 * k, 1.6 + Math.random() * 2.4, tipo === 'vidrio' ? .06 + Math.random() * .08 : .1 + Math.random() * .22 * k, col); }
+  },
+  agua(x, y, n = 6, alto = 6) { for (let i = 0; i < n; i++) { const a = Math.random() * TAU, s = .4 + Math.random() * .9; this._p('agua', x, y, .3, Math.cos(a) * s, Math.sin(a) * s, alto * (.8 + Math.random() * .4), 1.3, .09); } },
+  fuego(x, y, dur = 3, op = {}) { const f = { x, y, t: 0, dur, k: op.k || 1, sigue: op.sigue || null, alEstallar: op.alEstallar || null, estalla: op.estalla !== false }; this.fuegos.push(f); if (this.fuegos.length > 24) this.fuegos.shift(); return f; },
+  explosion(x, y, k = 1) {
+    this.ondas.push({ x, y, t: 0, k }); if (this.ondas.length > 12) this.ondas.shift();
+    this._p('flash', x, y, 1, 0, 0, 0, .22, 6 * k);
+    for (let i = 0; i < 26 * k; i++) { const a = Math.random() * TAU, s = (2 + Math.random() * 7) * k; this._p('fuego', x, y, .8 + Math.random() * 1.5, Math.cos(a) * s, Math.sin(a) * s, 2 + Math.random() * 4, .7 + Math.random() * .6, 1.2 + Math.random() * 1.4 * k); }
+    this.pedazos(x, y, 16 * k, '#1d2228', 1.4 * k); this.pedazos(x, y, 6 * k, '#4b9aab', 1.2 * k, 'vidrio'); this.chispas(x, y, 22 * k, null, 1.3 * k);
+    this.humo(x, y, 10 * k, { negro: true, r: 3 * k, sube: 2.4, vida: 5 + Math.random() * 3, tam: 1.6 * k, retardo: .35 });
+    this.resto('quemado', x, y, Math.random() * TAU, { r: 3.5 * k });
+    MC.emit('explosion', { x, y, k }); if (MC.Vida) { MC.Vida.impacto(.09 * k); MC.Vida.onomatopeya && MC.Vida.onomatopeya(x, y, '¡BOOM!', '#ff7a1a'); }
+  },
+  marca(x1, y1, x2, y2, w = .22, a = .55) { if (Math.hypot(x2 - x1, y2 - y1) > 3) return; const m = { x1, y1, x2, y2, w, a, t0: this._t || 0 }; if (this.marcas.length >= this.MAXM) this.marcas[(this._im = ((this._im || 0) + 1) % this.MAXM)] = m; else this.marcas.push(m); },
+  resto(t, x, y, a = 0, op = {}) { const r = Object.assign({ t, x, y, a, t0: this._t || 0, s: Math.random() }, op); if (this.restos.length >= this.MAXR) this.restos.shift(); this.restos.push(r);
+    if (t === 'hidrante') r.chorro = 9; return r; },
+  /* ---------- lo que pasa en el mundo ---------- */
+  _choque(C) {
+    const k = clamp((C.impacto || Math.abs(C.v) || 4) / 14, .3, 2.2), n = C.normalChoque, L = (C.veh.largo || 4) / 2, a = C.v >= 0 ? C.a : C.a + Math.PI, px = C.x + Math.cos(a) * L * .9, py = C.y + Math.sin(a) * L * .9, dir = n ? Math.atan2(n[1], n[0]) : a + Math.PI;
+    if (C.veh.clase === 'pie' || C.veh.clase === 'rueda') return;
+    this.chispas(px, py, (10 + 14 * k) | 0, dir, .8 + k * .4);
+    if (k > .7) this.pedazos(px, py, (4 * k) | 0, '#9fc4cf', .9, 'vidrio');
+    if (k > 1.1) { this.pedazos(px, py, (5 * k) | 0, C.veh.color || '#2b343d', 1); this.humo(px, py, 3, { tam: .6 }); }
+  },
+  _rompe(ev) {
+    const o = ev.o, v = ev.v || 8, d = o.dir || 0, ca = Math.cos(d), sa = Math.sin(d);
+    this.resto(o.t, o.x + ca * 1.2, o.y + sa * 1.2, d + (Math.random() - .5) * .8);
+    const col = { caneca: '#2f6b45', cono: '#ff6a1a', banca: '#7a5233', valla: '#e8e4d8', hidrante: '#c0392b', paradero: '#9fc4cf', poste: '#6b7078', arbusto: '#3e6b34' }[o.t] || '#6b7078';
+    this.pedazos(o.x, o.y, o.t === 'paradero' ? 18 : 8, col, clamp(v / 12, .6, 1.6), o.t === 'paradero' ? 'vidrio' : 'pedazo');
+    if (o.t === 'caneca') this.pedazos(o.x, o.y, 10, '#efe9da', .8, 'papel');
+    if (o.t === 'poste' || o.t === 'hidrante') this.chispas(o.x, o.y, 14, d, 1);
+    if (o.t === 'arbusto') this.pedazos(o.x, o.y, 12, '#4f8a3c', .7, 'hoja');
+  },
+  /* el jugador: marcas de llanta y humo al derrapar o frenar en seco */
+  _jugador(E, dt) {
+    const C = E.jugador && E.jugador.cuerpo; if (!C || !C.veh || (C.veh.clase !== 'auto' && C.veh.clase !== 'pesado' && C.veh.clase !== 'moto')) { this._ult = null; return; }
+    const der = C.eventos && C.eventos.includes('derrape'), fren = this._vPrev != null && (this._vPrev - Math.abs(C.v)) / Math.max(1e-3, dt) > 7.5 && Math.abs(C.v) > 5; this._vPrev = Math.abs(C.v);
+    const L = (C.veh.largo || 4.3) * .32, W = (C.veh.ancho || 1.8) * .42, ca = Math.cos(C.a), sa = Math.sin(C.a), moto = C.veh.clase === 'moto';
+    const ruedas = moto ? [[-L, 0]] : [[-L, W], [-L, -W]].concat(der ? [[L, W], [L, -W]] : []), pts = ruedas.map(([u, v]) => [C.x + u * ca - v * sa, C.y + u * sa + v * ca]);
+    if ((der || fren) && !C.enAire && !C.nadando) {
+      if (this._ult && this._ult.length === pts.length) for (let i = 0; i < pts.length; i++) this.marca(this._ult[i][0], this._ult[i][1], pts[i][0], pts[i][1], moto ? .14 : .2, der ? .5 : .38);
+      this._ult = pts; if (Math.random() < (der ? .7 : .35)) { const q = pts[(Math.random() * pts.length) | 0]; this.humo(q[0], q[1], 1, { tam: .5 + Math.min(1, C.deslizamiento || 0), sube: .7, vida: 1.6, z: .3 }); }
+    } else this._ult = null;
+  },
+  actualizar(E) {
+    const t = E && E.t != null ? E.t : (MC.ahora ? MC.ahora() / 1000 : 0), dt = this._t == null ? 0 : clamp(t - this._t, 0, .1); this._t = t; if (!dt) return;
+    if (E) this._jugador(E, dt);
+    for (let i = this.P.length - 1; i >= 0; i--) { const p = this.P[i]; p.t += dt; if (p.t < 0) continue; if (p.t > p.vida) { this.P[i] = this.P[this.P.length - 1]; this.P.pop(); continue; }
+      if (p.tipo === 'humo') { p.vx *= 1 - dt * .6; p.vy *= 1 - dt * .6; p.vz *= 1 - dt * .3; p.r += dt * .9; }
+      else if (p.tipo === 'fuego') { p.vx *= 1 - dt * 3; p.vy *= 1 - dt * 3; p.vz = p.vz * (1 - dt * 2) + dt * 3; }
+      else if (p.tipo === 'flash') { p.r += dt * 40; }
+      else { const g = p.tipo === 'papel' || p.tipo === 'hoja' ? 2.5 : 9.8; p.vz -= g * dt; p.rot += p.vr * dt; if (p.tipo === 'papel' || p.tipo === 'hoja') { p.vx += Math.sin(p.t * 3 + p.rot) * dt; p.vx *= 1 - dt; p.vy *= 1 - dt; } }
+      p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
+      if (p.z < 0 && p.tipo !== 'humo' && p.tipo !== 'fuego') { p.z = 0; if (p.tipo === 'chispa' || p.tipo === 'agua') p.t = p.vida; else { p.vz = -p.vz * .35; p.vx *= .55; p.vy *= .55; p.vr *= .5; } } }
+    for (let i = this.fuegos.length - 1; i >= 0; i--) { const f = this.fuegos[i]; f.t += dt; if (f.sigue) { if (f.sigue.veh && f.sigue.veh.clase === 'pie') f.sigue = null; else { f.x = f.sigue.x; f.y = f.sigue.y; } }   /* si se bajan, el fuego se queda en el carro */
+      if (Math.random() < .55) this._p('fuego', f.x + (Math.random() - .5) * 1.4 * f.k, f.y + (Math.random() - .5) * 1.4 * f.k, .7, (Math.random() - .5) * .4, (Math.random() - .5) * .4, 1.2 + Math.random() * 1.5, .45 + Math.random() * .3, .5 + Math.random() * .5 * f.k);
+      if (Math.random() < .3) this.humo(f.x, f.y, 1, { negro: true, sube: 2, vida: 3.5, tam: .9 * f.k });
+      if (f.t > f.dur) { this.fuegos.splice(i, 1); if (f.estalla) { this.explosion(f.x, f.y, f.k); if (f.alEstallar) f.alEstallar(f); } } }
+    for (let i = this.ondas.length - 1; i >= 0; i--) if ((this.ondas[i].t += dt) > .6) this.ondas.splice(i, 1);
+    for (const r of this.restos) if (r.chorro > 0) { r.chorro -= dt; if (Math.random() < .8) this.agua(r.x, r.y, 2, 4 + r.chorro * .4); }
+    /* lo muy viejo se va: marcas a los 40 s, restos a los 90 s (como en GTA, la calle se limpia sola) */
+    while (this.marcas.length && t - this.marcas[0].t0 > 40) this.marcas.shift();
+    while (this.restos.length && t - this.restos[0].t0 > 90) this.restos.shift();
+  },
+  /* ---------- dibujo encima de cualquier vista: pr(x, y, z) → [px, py] o null ---------- */
+  dibujar(g, pr, E) {
+    this.actualizar(E); if (!this.P.length && !this.marcas.length && !this.restos.length && !this.ondas.length) return;
+    const t = this._t || 0, esc = (x, y, z = 0) => { const a = pr(x, y, z), b = pr(x + 1, y, z); return a && b ? Math.max(.4, Math.hypot(b[0] - a[0], b[1] - a[1])) : 0; };
+    g.save();
+    /* 1. en el piso: marcas de llanta y restos */
+    g.lineCap = 'round'; for (const m of this.marcas) { const a = pr(m.x1, m.y1, 0), b = pr(m.x2, m.y2, 0); if (!a || !b) continue; const s = esc(m.x1, m.y1); const f = 1 - (t - m.t0) / 40; g.strokeStyle = 'rgba(18,18,20,' + (m.a * f).toFixed(3) + ')'; g.lineWidth = Math.max(1, m.w * s); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); }
+    for (const r of this.restos) this._resto(g, pr, r, esc(r.x, r.y), t);
+    /* 2. ondas expansivas */
+    for (const o of this.ondas) { const p = pr(o.x, o.y, .2), s = esc(o.x, o.y); if (!p) continue; const k = o.t / .6; g.strokeStyle = 'rgba(255,236,200,' + (.55 * (1 - k)).toFixed(3) + ')'; g.lineWidth = Math.max(1, (1 - k) * 6); g.beginPath(); g.ellipse(p[0], p[1], s * 14 * o.k * k, s * 14 * o.k * k * .62, 0, 0, TAU); g.stroke(); }
+    /* 3. partículas (el fuego y el destello se suman como luz) */
+    for (const p of this.P) { if (p.t < 0) continue; const q = pr(p.x, p.y, Math.max(0, p.z)); if (!q) continue; const s = esc(p.x, p.y, p.z), k = p.t / p.vida;
+      if (p.tipo === 'chispa') { const q2 = pr(p.x - p.vx * .035, p.y - p.vy * .035, Math.max(0, p.z - p.vz * .035)); if (!q2) continue; g.globalCompositeOperation = 'lighter'; g.strokeStyle = 'rgba(255,' + (200 - k * 120 | 0) + ',80,' + (1 - k).toFixed(2) + ')'; g.lineWidth = Math.max(1, s * .06); g.beginPath(); g.moveTo(q2[0], q2[1]); g.lineTo(q[0], q[1]); g.stroke(); g.globalCompositeOperation = 'source-over'; }
+      else if (p.tipo === 'fuego') { g.globalCompositeOperation = 'lighter'; const r = Math.max(1.5, p.r * s * (1 - k * .5)), gr = g.createRadialGradient(q[0], q[1], 0, q[0], q[1], r); gr.addColorStop(0, 'rgba(255,240,180,' + (.9 * (1 - k)).toFixed(2) + ')'); gr.addColorStop(.4, 'rgba(255,140,30,' + (.7 * (1 - k)).toFixed(2) + ')'); gr.addColorStop(1, 'rgba(200,40,0,0)'); g.fillStyle = gr; g.beginPath(); g.arc(q[0], q[1], r, 0, TAU); g.fill(); g.globalCompositeOperation = 'source-over'; }
+      else if (p.tipo === 'flash') { g.globalCompositeOperation = 'lighter'; const r = p.r * s * .25, gr = g.createRadialGradient(q[0], q[1], 0, q[0], q[1], r); gr.addColorStop(0, 'rgba(255,255,235,' + (1 - k).toFixed(2) + ')'); gr.addColorStop(1, 'rgba(255,200,120,0)'); g.fillStyle = gr; g.beginPath(); g.arc(q[0], q[1], r, 0, TAU); g.fill(); g.globalCompositeOperation = 'source-over'; }
+      else if (p.tipo === 'humo') { const r = Math.max(2, p.r * s), al = (p.col === '#1d1f23' ? .5 : .32) * (1 - k) * Math.min(1, p.t * 4); g.fillStyle = p.col; g.globalAlpha = al; g.beginPath(); g.arc(q[0], q[1], r, 0, TAU); g.fill(); g.globalAlpha = 1; }
+      else if (p.tipo === 'agua') { g.fillStyle = 'rgba(210,235,255,' + (.8 * (1 - k)).toFixed(2) + ')'; g.beginPath(); g.arc(q[0], q[1], Math.max(1, p.r * s), 0, TAU); g.fill(); }
+      else { const r = Math.max(1.2, p.r * s); g.save(); g.translate(q[0], q[1]); g.rotate(p.rot); g.globalAlpha = Math.min(1, (1 - k) * 3); g.fillStyle = p.col || '#2b343d'; if (p.tipo === 'vidrio') { g.beginPath(); g.moveTo(-r, 0); g.lineTo(0, -r * .6); g.lineTo(r, r * .3); g.closePath(); g.fill(); } else if (p.tipo === 'papel' || p.tipo === 'hoja') g.fillRect(-r, -r * .6, r * 2, r * 1.2); else g.fillRect(-r, -r * .45, r * 2, r * .9); g.restore(); } }
+    g.restore();
+  },
+  _resto(g, pr, r, s, t) {
+    const p = pr(r.x, r.y, 0); if (!p || !s) return; const ca = Math.cos(r.a), sa = Math.sin(r.a), P = (u, v, z = 0) => pr(r.x + u * ca - v * sa, r.y + u * sa + v * ca, z), viejo = clamp(1 - (t - r.t0 - 80) / 10, 0, 1); g.globalAlpha = viejo;
+    const linea = (a, b, w, col) => { if (!a || !b) return; g.strokeStyle = col; g.lineWidth = Math.max(1, w * s); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); };
+    const caja = (u, v, L, W, col) => { const q = [P(u - L / 2, v - W / 2), P(u + L / 2, v - W / 2), P(u + L / 2, v + W / 2), P(u - L / 2, v + W / 2)]; if (q.some(x => !x)) return; g.fillStyle = col; g.beginPath(); g.moveTo(q[0][0], q[0][1]); for (const x of q) g.lineTo(x[0], x[1]); g.closePath(); g.fill(); };
+    if (r.t === 'quemado') { g.fillStyle = 'rgba(15,12,10,.5)'; g.beginPath(); g.ellipse(p[0], p[1], (r.r || 3) * s, (r.r || 3) * s * .7, r.a, 0, TAU); g.fill(); }
+    else if (r.t === 'carro') { g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(p[0], p[1], 2.6 * s, 1.4 * s, 0, 0, TAU); g.fill(); caja(0, 0, 4.4, 1.8, '#1b1c1f'); caja(-.3, 0, 2, 1.5, '#2b2623'); }
+    else if (r.t === 'poste') { linea(P(0, 0), P(7.2, 0), .2, '#6b7078'); caja(7.4, 0, .7, .32, '#c9cfd6'); }
+    else if (r.t === 'caneca') { caja(0, 0, .8, .5, '#2f6b45'); for (let i = 0; i < 5; i++) caja(.6 + h2(i, r.s * 99 | 0, 3) * 1.6, (h2(i, 5, r.s * 99 | 0) - .5) * 1.6, .25, .18, '#efe9da'); }
+    else if (r.t === 'banca') { for (let i = 0; i < 3; i++) caja((i - 1) * .7, (h2(i, 2, 7) - .5) * .9, 1.3, .14, '#7a5233'); caja(.1, .3, .9, .1, '#3b3f45'); }
+    else if (r.t === 'cono') { const a = P(0, 0), b = P(.7, 0); if (a && b) { g.fillStyle = '#ff6a1a'; g.beginPath(); g.moveTo(b[0], b[1]); const n = [-sa, ca], w = .22 * s; g.lineTo(a[0] + n[0] * w, a[1] + n[1] * w); g.lineTo(a[0] - n[0] * w, a[1] - n[1] * w); g.closePath(); g.fill(); } }
+    else if (r.t === 'valla') { caja(0, 0, 2.2, .1, '#e8e4d8'); caja(-.6, 0, .4, .12, '#c0392b'); caja(.6, 0, .4, .12, '#c0392b'); }
+    else if (r.t === 'hidrante') { caja(0, 0, .35, .35, '#c0392b'); if (r.chorro > 0) { g.fillStyle = 'rgba(160,200,230,.35)'; g.beginPath(); g.ellipse(p[0], p[1], 2.4 * s, 1.6 * s, 0, 0, TAU); g.fill(); } }
+    else if (r.t === 'paradero') { linea(P(-1.5, 0), P(1.5, .3), .12, '#5d636b'); for (let i = 0; i < 9; i++) caja((h2(i, 1, 3) - .5) * 3, (h2(i, 2, 3) - .5) * 2, .2, .14, 'rgba(159,196,207,.8)'); }
+    else if (r.t === 'arbusto') { g.fillStyle = 'rgba(62,107,52,.75)'; g.beginPath(); g.ellipse(p[0], p[1], .9 * s, .45 * s, r.a, 0, TAU); g.fill(); }
+    g.globalAlpha = 1;
+  }
+};
+MC.on('choque', C => { if (C && C.veh) Efectos._choque(C); });
+MC.on('rompe', ev => { if (ev && ev.o) Efectos._rompe(ev); });
+MC.Efectos = Efectos;
+
 /* ---- js/88-vida.js ---- */
 /* =====================================================================
    VIDA · peso y vida en el mundo (2.7)
@@ -8671,7 +8951,7 @@ const Publico = {
 };
 MC.Publico = Publico;
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-raster-sector.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","45-pvs.js","46-vistas.js","47-clasicos.js","47-colormap.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-raster-sector.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","32-rotos.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","45-pvs.js","46-vistas.js","47-clasicos.js","47-colormap.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-efectos.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;
