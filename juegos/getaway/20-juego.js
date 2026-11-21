@@ -51,8 +51,7 @@ async function cargarCiudad(id) {
       const el = document.getElementById('mc4-' + id + '-' + nombre);
       return el ? el.textContent : null;
     }, cfg, (nombre, indice) => {
-      /* C-M34 territorial: un bloque de texto por raster, índice de offsets
-         Base64 para extraer SOLO el sector solicitado, sin conexión. */
+      /* C-M34: extraer solo el bloque de suelo/nivel consultado del HTML offline. */
       const info = meta.rasters && meta.rasters[nombre];
       if (!info || indice < 0 || indice + 1 >= info.indices.length) return null;
       const el = document.getElementById('mc4r-' + id + '-' + nombre);
@@ -107,16 +106,14 @@ async function entrarMundo(id, spawn = {}, texto = null) {
   const v0 = G.cuerpo ? G.cuerpo.v : 0, heat0 = G.busq ? G.busq.heat : 0, desde = G.id;
   const M = await mundoListo(id);
   if (G.vistas) G.vistas.liberar();
-  G.id = id; G.M = M; G._esp = null; G.sectores = id === 'nueva_york' ? new MC.Sectores1km(M, { lado: 1000, radio: 1, maxRegiones: 36 }) : null; G._sectoresT = 0;
+  G.id = id; G.M = M; planeta.fijar(id); G._esp = null; G.sectores = id === 'nueva_york' ? new MC.Sectores1km(M, { lado: 1000, radio: 1, maxRegiones: 36 }) : null; G._sectoresT = 0;
   let L = spawn.x != null ? spawn : spawn.lugar ? resolver(spawn.lugar) : null;
   if (!L && desde) L = planeta.llegada(id, desde);
   if (!L) { const c = M.carretera ? M.carretera.inicio : M.viaCercana(M.ancho / 2, M.alto / 2, 2000) || { x: M.ancho / 2, y: M.alto / 2 }; L = { x: c.x, y: c.y, a: c.a ?? c.ang ?? 0 }; }
   const q = M.viaCercana(L.x, L.y, 60);
   const C = new MC.Cuerpo(M, { x: q ? q.x : L.x, y: q ? q.y : L.y, a: L.a ?? (q ? q.ang : 0), veh: spawn.aPie ? 'pie' : G.veh }); C.v = spawn.aPie ? 0 : Math.min(v0, 18);
   G.cuerpo = C; C.obstaculos = obstaculos;
-  /* C-M34/G-H24: al entrar en un mundo, proteger el destino y liberar
-     el anterior desde el motor. También invalida rutas cacheadas y evita
-     que una precarga vieja vuelva a ocupar memoria después del viaje. */
+  /* C-M34: descargar el anterior e impedir resurrección de precargas obsoletas. */
   planeta.liberarExcepto(id);
   const lat = M.cfgCiudad ? (M.cfgCiudad.lat ?? M.metrosAGeo(C.x, C.y).lat) : (planeta.enGlobo(id, C.x, C.y).lat);
   G.clima = new MC.ClimaGlobal({ lat: Math.abs(lat) > 1 ? lat : 6.2, alt: M.cota(C.x, C.y) }); C.clima = G.clima; if (G.climaForzado) G.clima.forzar(G.climaForzado);

@@ -141,8 +141,6 @@ class Planeta {
     this._recortar(id);
     return this.cache.get(id) || null;
   }
-  /* Durante una transición jugable libera los residentes anteriores.
-     Los loaders previos a la descarga pueden resolver sin reinsertarse. */
   liberarExcepto(id) {
     this.fijar(id);
     this._epoca++;
