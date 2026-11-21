@@ -50,7 +50,14 @@ async function cargarCiudad(id) {
     return MC.Mundo.cargarPaquete(meta, nombre => {
       const el = document.getElementById('mc4-' + id + '-' + nombre);
       return el ? el.textContent : null;
-    }, cfg);
+    }, cfg, (nombre, indice) => {
+      /* C-M34 territorial: un bloque de texto por raster, índice de offsets
+         Base64 para extraer SOLO el sector solicitado, sin conexión. */
+      const info = meta.rasters && meta.rasters[nombre];
+      if (!info || indice < 0 || indice + 1 >= info.indices.length) return null;
+      const el = document.getElementById('mc4r-' + id + '-' + nombre);
+      return el ? el.textContent.slice(info.indices[indice], info.indices[indice + 1]) : null;
+    });
   }
   const el = document.getElementById('mc4-' + id);
   if (!el) throw new Error('Este juego no trae el mundo ' + id);
