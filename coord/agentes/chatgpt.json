@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "agente": "chatgpt",
+  "rama": "ia/chatgpt/4-0-2-gemini-auditoria",
+  "rol": "Auditoría del contenido 4.0, catalogación de paradas, pruebas",
+  "fase_actual": "G-H21/22/23",
+  "estado": "PR en revisión",
+  "ultima_actualizacion_utc": "2026-11-21T03:12:00Z",
+  "zonas_reclamadas": [
+    "js/13-planeta.js",
+    "juegos/getaway/10-contenido.js",
+    "juegos/getaway/40-dibujo.js",
+    "contenido/paradas-carretera.json"
+  ],
+  "no_toco": [
+    "ramas ajenas",
+    "datos geográficos binarios"
+  ],
+  "pendiente_para_compañeras": "G-H20/24 teléfono real y cotejo de 19 parcelas"
+}

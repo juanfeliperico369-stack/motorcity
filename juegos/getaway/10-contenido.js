@@ -44,7 +44,7 @@ TC.LUGARES = {
   md_envigado: { mundo: 'medellin', n: 'Garaje de la 40 Sur (Envigado)', lat: 6.1720, lon: -75.5850, escondite: true },
   gu_taller: { mundo: 'guatape', n: 'Taller Sin Nombre (Guatapé)', lat: 6.2328, lon: -75.1590, taller: true },
   gu_malecon: { mundo: 'guatape', n: 'Malecón de Guatapé', lugar: 'Malecon De Guatape' },
-  gu_finca: { mundo: 'guatape', n: 'Finca La Esperanza (refugio de El Contador)', lugar: 'La valentina finca hotel' },
+  gu_finca: { mundo: 'guatape', n: 'Refugio La Esperanza (escenario ficticio)', lat: 6.2301, lon: -75.1648, ficcion: true },
   gu_piedra: { mundo: 'guatape', n: 'Pie de la Piedra del Peñol', lugar: 'Guatapé Represa, Piedra Mirador' }
 };
 
@@ -53,7 +53,7 @@ TC.ARTEFACTOS = {
   dron: { cod: 'T02', n: 'Dron Cuervo', icon: '🛸', dur: 50, alcance: 70, recarga: 18, d: 'Cámara aérea de 70 m de radio y 50 s de batería. Marca a los rivales que ve. Tu carro se queda quieto mientras vuela.' },
   cebo: { cod: 'T05', n: 'Cebo acústico', icon: '📢', cargas: 2, dur: 9, d: 'Lleva a la policía que no te ve a revisar otro punto. Dos cargas por capítulo.' },
   pulso: { cod: 'T08', n: 'Pulso de interferencia', icon: '📡', recarga: 45, d: 'Apaga 4 s al rival más cercano o al helicóptero. Sube la alerta.' },
-  lente: { cod: 'T01', n: 'Lente espectral', icon: '👁️', dur: 8, recarga: 35, d: 'Filtro térmico: ves calor y electrónica a través de los muros por 8 s. Con lluvia pierde detalle.' },
+  lente: { cod: 'T01', n: 'Lente espectral', icon: '👁️', dur: 8, recarga: 35, d: 'Filtro térmico: resalta calor y electrónica visibles durante 8 s; no atraviesa muros. Con lluvia pierde detalle.' },
   rastreador: { cod: 'T03', n: 'Rastreador Cerbero', icon: '📍', d: 'Tocas un vehículo con el tuyo y queda marcado en el mapa.' },
   acceso: { cod: 'T06', n: 'Módulo de acceso', icon: '🔓', d: 'Abre una cerradura con un ejercicio de sincronización. Consume tiempo.' },
   camara: { cod: 'T11', n: 'Cámara de bolsillo', icon: '📷', d: 'Fotos con metadatos: pruebas válidas si el ángulo se puede verificar.' },
