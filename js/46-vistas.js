@@ -62,8 +62,9 @@ class Vistas {
       }
       else if (v.tipo === 'pano') { this.pano.dibujar(dst, w, h, E, px ? { k: clamp(Math.min(w, h * 1.4) / 70, 2, 40) * (zoomReal / 3.2) } : {}); }
       else if (v.tipo === 'gl') {
-        /* resolución dinámica: la 3D se dibuja a escala s y se agranda (bajar píxeles antes que cuadros) */
-        const s = this.auto ? this.res.escala : 1, rw = Math.max(64, Math.round(w * s)), rh = Math.max(48, Math.round(h * s));
+        /* resolución dinámica cuantizada (4.2 · Shadow of the Colossus): evita redimensionar el lienzo 3D cada cuadro */
+        const s = this.auto ? (this.res.escalaPaso ?? this.res.escala) : 1, rw = Math.max(64, Math.round(w * s)), rh = Math.max(48, Math.round(h * s));
+        E.factorNiebla = this.auto ? (this.res.factorNiebla ?? 1) : 1;
         if (this.usaRaster()) { if (!this.raster) this.raster = new Raster(this.mundo); if (!this._rb || this._rb.width !== rw || this._rb.height !== rh) this._rb = lienzo(rw, rh); this.raster.dibujar(this._rb.getContext('2d'), rw, rh, E); dst.drawImage(this._rb, 0, 0, w, h); }
         else { const cv = this.gl.dibujar(rw, rh, E, { presupuesto: 4 + 6 * this.calidad }); if (cv) dst.drawImage(cv, 0, 0, w, h); }
         this._clima2D(dst, w, h, E, true);
