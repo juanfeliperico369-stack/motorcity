@@ -25,17 +25,17 @@ jobs:
         run: python3 juegos/getaway/arte3d/generar_modelos.py
       - name: Comprobar 42 modelos GLB
         run: python3 juegos/getaway/arte3d/pruebas-modelos.py
-      - name: Generar 3 personajes con esqueleto y 8 clips cada uno
+      - name: Generar 9 personajes con esqueleto y 8 clips cada uno
         run: python3 juegos/getaway/arte3d/generar_actores_rig.py
       - name: Verificar glTF skin y animaciones
         run: python3 juegos/getaway/arte3d/validar_actores_rig.py
-      - name: Comprobar el total de 45 modelos
+      - name: Comprobar el total de 51 modelos
         run: |
           test "$(find juegos/getaway/arte3d/modelos -name '*.glb' -type f | wc -l)" -eq 42
-          test "$(find juegos/getaway/arte3d/rigged -name '*.glb' -type f | wc -l)" -eq 3
+          test "$(find juegos/getaway/arte3d/rigged -name '*.glb' -type f | wc -l)" -eq 9
       - uses: actions/upload-artifact@v4
         with:
-          name: turno-cero-45-modelos-glb
+          name: turno-cero-51-modelos-glb
           path: |
             juegos/getaway/arte3d/modelos/*.glb
             juegos/getaway/arte3d/rigged/*.glb

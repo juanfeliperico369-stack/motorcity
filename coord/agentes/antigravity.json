@@ -1,14 +1,15 @@
 {
   "agente": "antigravity",
-  "rol": "QA móvil, revisión multi-IA, arte conceptual/PBR aditivo, datos de mundo y pruebas (Gemini · Antigravity)",
+  "rol": "QA móvil, revisión multi-IA, arte conceptual/PBR aditivo, ingeniería inversa limpia de motores clásicos y pruebas",
   "rama": "ia/antigravity/motorcity-4.0",
-  "base": "288a258",
-  "version_motor": "4.0.2",
-  "actualizado": "2026-11-21T04:00:00Z",
+  "base": "ae098eb",
+  "version_motor": "4.0.3",
+  "actualizado": "2026-11-21T04:20:00Z",
   "estado": "entregado",
   "zonas_exclusivas": [
-    "contenido/paradas-carretera.json",
     "arte/gemini/turno-cero/",
+    "docs/MOTORES-CLASICOS-INGENIERIA.md",
+    "experimentos/tecnicas-clasicas/",
     "reportes/2026-11-21-gemini-herramientas-4.0.md",
     "reportes/2026-11-21-gemini-turno-cero.md",
     "reportes/2026-11-21-gemini-revision-pr7.md",
@@ -16,7 +17,8 @@
     "reportes/img/pr7-revision/",
     "coord/agentes/antigravity.json",
     "coord/buzon/20261121-0320-antigravity-relevo-4.0.md",
-    "coord/buzon/20261121-0400-antigravity-revision-pr7-y-arte.md"
+    "coord/buzon/20261121-0400-antigravity-revision-pr7-y-arte.md",
+    "coord/buzon/20261121-0420-antigravity-motores-clasicos.md"
   ],
   "zonas_no_tocadas": [
     "js/",
@@ -28,23 +30,20 @@
     "juegos/getaway/turno-cero-accion-3d.html"
   ],
   "tareas_completadas": [
-    "Sincronizacion limpia con Motor City 4.0.2 (288a258) sin conflictos ni cambios en JS/MJS",
-    "G-H22: contenido/paradas-carretera.json (28 paradas originales, 4 por bioma x 7 biomas)",
-    "G-H12/13/6: 4 skills externas + publico simulado + legacy-scan (6/6 dropWhen) + 151/151 navegador + 4/4 portada",
-    "G-H20/21/23/24: 12 capturas Turno Cero + 19 lugares verificados + filtro lenguaje + carga/JS Heap",
-    "Revision completa PR #7 (ia/chatgpt/4-0-2-gemini-auditoria): 151/151 navegador local + 3/3 GitHub Actions + benchmark memoria multi-ciudad (201.3 -> 258.9 MB) + capturas GloboGPU/Piezas + verificacion gu_finca (6.2301,-75.1648 agua40m:true)",
-    "Arte pintado aditivo C-A17/C-A16 en arte/gemini/turno-cero/: portada 1080x1920 + 5 laminas de acto 1280x720 + atlas PBR 3x3 1024x1024 + 9 losetas 256x256 + catalogo.json + galeria.html interactiva offline"
+    "Sincronizacion limpia con Motor City 4.0.3 (ae098eb) sin conflictos ni cambios en JS/MJS del motor",
+    "Fase 1 (integrada en 4.0.3): G-H20/21/22/23/24, G-H12/13/6, 12 capturas Turno Cero, 19 lugares, lenguaje y pruebas",
+    "Fase 2: revision tecnica/visual/memoria de PR #7 + paquete de arte pintado C-A17/C-A16 (arte/gemini/turno-cero/ + galeria.html)",
+    "Fase 3: investigacion e ingenieria inversa limpia de 10 motores clasicos (docs/MOTORES-CLASICOS-INGENIERIA.md) + modulo sin dependencias experimentos/tecnicas-clasicas/mc-clasico.js + suite prueba-clasico.mjs (6/6 verde) + laboratorio jugable offline laboratorio.html (verificado 412x860 y 1280x800)"
   ],
   "pendientes_siguiente_ia": [
-    "Claude / Codex: rebasar PR #7 sobre 4.0.2; evacuar cache de ciudad previa en MC.Planeta (-190 MB al viajar NY->Medellin); corregir encuadre/etiquetas en MC.GloboGPU; agregar respaldo 2D a MC.Piezas; aplicar 4 calles + 'coro'->'camara' + LENGUAJE_SUAVE + portada sobre el pliegue",
-    "Claude / ChatGPT: integrar arte/gemini/turno-cero/ (portada + 5 laminas + atlas PBR) o combinar con arte/chatgpt/turno-cero/",
-    "Autor / QA fisico: medir Turno Cero en celular Android/iOS real con GPU (tabla 1.3 de reportes/2026-11-21-gemini-turno-cero.md)",
+    "Claude / Codex: integrar tecnicas probadas de experimentos/tecnicas-clasicas/mc-clasico.js en js/13-planeta.js (StreamAnillo: evacuar ciudad previa para cortar el pico 258.9 MB), js/45-gl.js (CulleoUrbano 89-95% descarte + hornearAOUrbano), js/32-fisica.js/45-glb.js (FisicaDriver + PoolParticulas sin GC) y js/40-vistas.js (EscaladorDinamico)",
+    "Claude / ChatGPT: integrar arte/gemini/turno-cero/ (portada 1080x1920 + 5 laminas + atlas PBR 3x3) y ajustar encuadre/etiquetas de MC.GloboGPU + respaldo 2D de MC.Piezas",
+    "Autor / QA fisico: medir Turno Cero en celular real con GPU (tabla 1.3 de reportes/2026-11-21-gemini-turno-cero.md)",
     "OBLIGATORIO para la siguiente IA: dejar entrada en CONTEXTO-RELEVO.md seccion 8, ficha en coord/agentes/ y mensaje en coord/buzon/"
   ],
   "pruebas": {
-    "pr7_navegador_local": "151/151 verde (90.6 s, CPU 4x)",
-    "pr7_github_actions": "3/3 pass (nucleo/atlas, gltf, chromium movil)",
-    "pr7_heap_ny": "201.3 MB usados / 266.4 MB reservados (NY->Medellin sube a 258.9 MB / 316 MB)",
-    "arte_galeria_html": "verificada en Chromium 412x860 y 1280x800 (0 errores, 0 imagenes rotas, 0 desborde)"
+    "clasico_unitarias": "6/6 verde (StreamAnillo <=8MB, CulleoUrbano 94.8% descarte, PVS RLE bit-exacto, VoxelSpace 0.4ms CPU, Driver sin NaN, Escalador 60 FPS)",
+    "laboratorio_html": "verificado en Chromium 1280x800 y 412x860 (0 errores, 0 desborde, WCAG AA corregido en botones)",
+    "galeria_html": "verificada en Chromium 1280x800 y 412x860 (16/16 imagenes, 0 errores, 0 desborde)"
   }
 }

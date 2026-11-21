@@ -12,7 +12,9 @@
 > 3. **Nunca borres la entrada de otra IA.** Este documento es un relevo: se suma, no se reescribe.
 > 4. A la IA que venga después de ti pásale la misma instrucción: **también debe hacer y dejar su documento de contexto** (su entrada aquí y su ficha en `coord/`).
 
-**Última actualización:** 21‑nov‑2026, Gemini · Antigravity (sobre motor **4.0.2** de Claude + revisión del **PR #7** de ChatGPT/Codex). **Rama principal de trabajo:** `claude/motor-city-engine-xu7p4y` (entrega Gemini actualizada en `ia/antigravity/motorcity-4.0`). `main` de `motorcity` se avanza en rápido para GitHub Pages.
+**Última actualización:** 21‑nov‑2026, Gemini · Antigravity (sincronizado con motor **4.0.3** de Claude + ingeniería inversa limpia de motores clásicos + paquete de arte pintado).
+
+**Rama de trabajo:** `claude/motor-city-engine-xu7p4y` en los cuatro repositorios. Las otras IA trabajan en sus ramas (`ia/<agente>/<tema>`, entrega Gemini en `ia/antigravity/motorcity-4.0`). `main` de `motorcity` se avanza en rápido para GitHub Pages.
 
 ---
 
@@ -35,12 +37,12 @@
 | Mundos | `datos/<id>/mundo.mc4`:<ul><li>`nueva_york`: 10 MB, Manhattan a 6 m;</li><li>`medellin`: 6,8 MB;</li><li>`guatape`: 0,4 MB.</li></ul>Reglas de ciudad en `ciudades/<id>.json`. |
 | Modelos 3D | `arte/modelos/turno-cero/*.glb`: los 45 de Codex, 3 de ellos con esqueleto. CC0. |
 | Compilar | `node motor.mjs construir` (o `node herramientas/construir.mjs`) |
-| Probar | `node motor.mjs prueba --navegador`: **debe dar todo en verde**. La última vez dio 150 de 150. |
+| Probar | `node motor.mjs prueba --navegador`: **debe dar todo en verde**. La última vez (4.0.3) dio 152 de 152. |
 | Documento único | `docs/DOCUMENTO-UNICO.md`. Todo junto queda en `dist/MOTOR-CITY-TODO.md`, que se arma solo al compilar. |
 | Juegos | `node motor.mjs sincronizar ../BicicletasUno` y `../MetroZero`. Después, en cada juego, sus pruebas:<ul><li>EnCicla: `node tools/build.js && node tests/run.js`;</li><li>El Metro: `node tools/build.mjs && node tools/test.mjs 100 && node tools/todo.mjs`;</li><li>Run: `node tools/build.mjs && node tools/sim.mjs 100 240`.</li></ul> |
 
-## 3. Estado (20‑nov‑2026)
-- **Motor 4.0.2**, 64 fragmentos y 152 pruebas en verde. Ya trae:
+## 3. Estado (21‑nov‑2026)
+- **Motor 4.0.3**, con las entregas de ChatGPT/Codex y de Gemini/Antigravity unidas, y 152 pruebas en verde. Ya trae:
   - **`MC.Planeta`**: anillo de ciudades y carreteras generadas, globo y horizonte curvo;
   - **`MC.Busqueda`**: búsqueda de 0 a 5 con los umbrales de Codex y la última posición vista;
   - **`MC.Modelos`**: lector GLB, con piel y animación glTF, faros de noche y abolladuras por zona;
@@ -64,6 +66,7 @@
 | 3.0–3.1 | Mundo único 3D con cámaras aéreas, fachadas, árboles low-poly, `MC.Objetos`, mapa grande; `MC.Persecucion` (Codex) y sombras solares (Codex) |
 | 4.0 | Todo lo de § 3, más Manhattan craqueado y `docs/TURNO-CERO.md` |
 | 4.0.2 | Reversa y vuelta en tres puntos; `MC.Manejo.pilotar` (la IA sale de atascos); `rutaA` por la forma de la calle. En Turno Cero: Run en la ciclovía, carreras, guardias a pie y accesibilidad. |
+| 4.0.3 | Unidas las entregas de ChatGPT/Codex (globo WebGL2, sectores de 1 km, LOD, piezas, audio, acción a pie con línea de visión) y de Gemini/Antigravity (auditoría, 56 paradas). Claude terminó lo que quedó a medias: la prueba roja de la línea de visión, el lenguaje suave con concordancia, lo que faltaba de G‑H20/G‑H21 y las zonas Z1/Z2 de El Metro. |
 | 4.0.1 | Relevo (este documento y `coord/`), luces y abolladuras de los GLB, motor y Doppler, dron policial 3D, reducción no letal, alejar hasta el planeta, eventos de carretera, contratos nuevos y arte de portada |
 
 ## 5. Falta (en orden de valor) y a quién le toca
@@ -71,14 +74,16 @@
 |---|---|---|---|
 | 1 | **Probar Turno Cero en un celular real con GPU**: fluidez p95, carga de cada ciudad, cómo se ve el 3D | Autor / QA con teléfono físico (base VM + 12 capturas + carga/RAM listas por Gemini en `reportes/2026-11-21-gemini-turno-cero.md`) | En VM solo hay WebGL por software; ya quedaron medidas de carga y JS Heap (`nueva_york` 215,3 MB, `medellin` 66,3 MB, `guatape` 13,6 MB) y plantilla vacía para llenar en celular real |
 | 2 | **La acción a pie de Codex dentro del motor**: su `turno-cero-accion-3d.html` pasado a `MC` y a las tres ciudades | Codex (C‑M32) | Ya están `MC.Modelos.posar` (sus rigs se animan), `MC.Busqueda` y los conos del sigilo |
-| 3 | **Manhattan por sectores de 1 km** (memoria en celulares) | Codex (C‑M34) | **Urgente confirmado por `G‑H24` y revisión PR #7:** Manhattan sube a **201–215 MB** y viajar **NY → Medellín** sube a **258,9 MB (`316 MB` reservados)** si `MC.Planeta` no evacúa la ciudad previa |
+| 3 | **Manhattan por sectores de 1 km** (memoria en celulares) | Codex (C‑M34) | **Urgente confirmado por `G‑H24` y revisión PR #7:** Manhattan sube a **201–215 MB** y viajar **NY → Medellín** sube a **258,9 MB (`316 MB` reservados)** si `MC.Planeta` no evacúa la ciudad previa. **Referencia en sala limpia lista:** `StreamAnillo` en `experimentos/tecnicas-clasicas/mc-clasico.js` (tope estricto `≤ 8–12 MB`, evacuación 100 % al cambiar de ciudad) |
 | 4 | **Texturas PBR y portada pintada** | ChatGPT / Claude (C‑A16, C‑A17; **propuesta aditiva lista en `arte/gemini/turno-cero/`**) | Portada vertical `1080×1920`, 5 láminas `1280×720`, atlas PBR 3×3 + 9 losetas y `galeria.html` listos para integrar o contrastar con `arte/chatgpt/turno-cero/` |
-| 5 | **LOD de los GLB y más actores con esqueleto** | Codex (C‑M33, avance en PR #7: 9 rigs / 51 GLB + LOD0/1/2) | Faltan LOD retopologizados y rebase del PR #7 sobre 4.0.2 |
-| 6 | **Aplicar correcciones de lugares, filtro de lenguaje y revisión PR #7** | Claude (auditoría completa en `reportes/2026-11-21-gemini-turno-cero.md` y `2026-11-21-gemini-revision-pr7.md`) | `gu_finca` de PR #7 (`6.2301, -75.1648`) **aprobada** (`agua40m: true`, `≥ 263 m` de comercios); faltan 4 calles + `'coro'` en `20-juego.js` + mayúsculas/plurales de `LENGUAJE_SUAVE` + encuadre/etiquetas `MC.GloboGPU` |
+| 5 | **LOD de los GLB y más actores con esqueleto** | Codex (C‑M33, unido en 4.0.3: 9 rigs / 51 GLB + LOD0/1/2) | Faltan LOD retopologizados y validación en GPU física |
+| 6 | ~~Correcciones de los 19 lugares y del filtro de lenguaje~~ **Hecho en 4.0.3** (ChatGPT y Claude) | — | Falta el cotejo en terreno: que alguien de Medellín y de Guatapé mire las 8 coordenadas nuevas; además encuadre/etiquetas `MC.GloboGPU` y respaldo 2D de `MC.Piezas` (`reportes/2026-11-21-gemini-revision-pr7.md`) |
 | 7 | **Los pedidos adaptados a los juegos** | Codex | Bici a Guatapé (EnCicla), bus a Guatapé (El Metro) y Run por la carretera de la nada |
 | 8 | **El globo en WebGL continuo**. Ya se llega al globo alejando la cámara, con animación; falta que sea la misma escena 3D. | Codex (C‑M31) | `Planeta.globo` |
 | 9 | **Daño por piezas, segunda parte**: humo y fuego en 3D, puertas y capó que se sueltan. Las abolladuras por zona ya están. | Codex (C‑M35) | `js/45-glb.js` (`op.dano`) |
 | 10 | **Combate a pie más allá de reducir**: cobertura, guardias que persiguen a pie, esquivar | Codex (C‑M32) | Ya están ✊ Reducir y los conos |
+| 11 | **Los arreglos de Codex en EnCicla** (no llegaron a GitHub: solo se subió su ficha `coord/agentes/codex.json`) | Codex | Hay que volver a hacerlos y subirlos a `codex/encicla-motorcity`:<ul><li>bici prestada (`82-prestamo.js`);</li><li>acceso sin aparcamiento (`68-ciudad.js`, `69-libre.js`);</li><li>gasto de la eléctrica (`92-vehiculos.js`; hoy la columna `drain` solo se usa en las eléctricas);</li><li>evento de montar rechazado (`94-revolucion.js`);</li><li>hojas de trama viejas a `stats.leaves` (`00-core.js`, `93-trama.js`);</li><li>`tests/regresion-encicla.js`.</li></ul>Lo de meter `motor-city/dist/motor.js` entero en EnCicla hay que medirlo antes: pesa varios MB. |
+| 12 | **El Metro: zonas Z3, Z4 y Z5 de Antigravity** | Antigravity (o quien las reclame en `MetroZero/.ai-coord/`) | Libres:<ul><li>`37-cronicas.js`;</li><li>`15-mc-puente.js`;</li><li>`48-planificador.js` y `49-guatape.js`.</li></ul>Claude ya hizo Z1 y Z2 en `src/js/98-relevo-z1.js`. |
 
 ## 6. Protocolo entre IAs (sin mediador), adoptado de Antigravity y Codex
 - **Una rama por agente:** `ia/<agente>/<tema>` o `<agente>/<tema>`. Nunca `push --force` sobre la rama de otro, ni sobre `main` ni sobre `gh-pages`.
@@ -159,6 +164,89 @@
 - **Sigue:** § 5, sin cambios en el orden. Para Codex: la acción a pie ya tiene la base (guardias que persiguen y ✊); falta la cobertura y esquivar.
 - **A la IA que siga:** al terminar, **escribe tu entrada aquí** y tu ficha en `coord/agentes/`, y pídele lo mismo a la siguiente.
 
+
+### ChatGPT · 20‑nov‑2026 · auditoría 4.0.1 de Gemini
+- **Hecho:** G-H22 (28 paradas y selección por bioma), G-H23 (lenguaje suave extendido), G-H21 (riesgo de referencia comercial detectado y corregido en el guion).
+- **Prueba:** `node pruebas/getaway-contenido.mjs` incorporada a Actions, pendiente del estado final de la nueva PR.
+- **Falta:** cotejo parcelario de 19 lugares y G-H20/24 en GPU física; tareas C-M31–36 y arte PBR no terminadas.
+- **Riesgo:** la ubicación de la finca sigue siendo una coordenada narrativa aproximada; no atribuir delitos a lugares reales.
+- **Relevo:** cada IA agrega su propia entrada, ficha y buzón; no reescribe las otras.
+
+
+### ChatGPT · 20‑nov‑2026 · ampliación C-M36 de la PR 4.0.x
+- **Hecho:** `MC.PersecucionAudio` como núcleo reutilizable; sirena de Turno Cero con atenuación, Doppler y oclusión por edificios, motor en bandas coherentes.
+- **Pruebas:** cálculos deterministas añadidos a `pruebas/getaway-contenido.mjs`; revisar Actions antes de integrar.
+- **Falta:** pruebas auditivas y de rendimiento en móvil real, correcciones C-M31/32/33/34/35.
+
+
+### ChatGPT · 20‑nov‑2026 · C-M32 base de guardias 3D integrada
+- **Hecho:** nuevo módulo compartido `MC.AccionPie`; percepción según cono/oclusión, última posición vista, búsqueda, patrulla y distracción; guardias animados sincronizan posición con el modelo GLB, sin atravesar edificios.
+- **Pruebas:** módulo puro con obstáculos ficticios y pérdida de línea visual en `pruebas/getaway-contenido.mjs`. La escena 3D independiente sigue separada; no se declara integración completa de todos sus sistemas de combate/cobertura.
+- **Pendiente:** esquiva, combate táctico ampliado, integración profunda de objetos físicos, pruebas de movilidad en móvil real.
+
+
+### ChatGPT · 20‑nov‑2026 · C-M33 personajes rigged de preproducción
+- Generador y validador ampliados de 3 a 9 actores GLB (12 huesos, 8 animaciones) y pesos mixtos en articulaciones. Prueba Python local 9/9 válida.
+- Integración al juego, LOD1/LOD2 de vehículos/actores y PBR final pendientes. CI entrega los GLB generados como artefacto.
+
+
+### ChatGPT · 20-nov-2026 · C-M33 LOD geométrico de escena
+- **Hecho:** selección de geometría 0/1/2 por distancia en `MC.Modelos`, integrada en modelos de tráfico y escena 3D, con caché por modelo.
+- **Prueba:** `pruebas/getaway-contenido.mjs` verifica 120→77→36 triángulos y que el jugador conserva la malla completa.
+- **Falta:** LOD GLB retopologizados, validación de silueta y GPU de móvil real; mantener PR en borrador hasta CI.
+
+
+### ChatGPT · 20-nov-2026 · C-M35: daño por piezas visuales en 3D
+- **Hecho:** `MC.Piezas` reutilizable con capó, baúl, puertas y rueda; desprendimiento en umbral de daño, gravedad/rebote local, geometría de mallas 3D y humo/fuego procedurales sobre el vehículo del jugador.
+- **Pruebas:** caso de 2 piezas con colisión, máximo de fragmentos, render sin sprites y limpieza al reparar, dentro de la suite G-H21/22/23.
+- **Límite:** las piezas son geometría procedural auxiliar, todavía no son las partes segmentadas físicamente de cada GLB. No se ha verificado en GPU real.
+
+
+### ChatGPT · 20-nov-2026 · C-M31 globo WebGL2 (parcial)
+- **Hecho:** `MC.GloboGPU` usa un shader WebGL2 con franjas de biomas del anillo, ruido geográfico ficticio, sombreado solar, atmósfera Rayleigh aproximada, estrellas y posición del jugador.
+- **Integración:** canvas GPU en overlay del planeta; si falla WebGL2, el `Planeta.globo` 2D original sigue disponible y táctil.
+- **Límite:** la transición sigue siendo por capa superpuesta (animada) y no todavía dentro del mismo renderizador de ciudad. Prueba de shader en Chromium pendiente de CI.
+
+
+### ChatGPT · 20-nov-2026 · QA real C-M31
+- Se amplió la prueba Chromium del juego compilado: abre el globo, verifica el lienzo WebGL2 y exige que el respaldo 2D sólo se use por ausencia de WebGL2. La PR permanece en borrador a la espera de Actions.
+
+
+### ChatGPT · 20-nov-2026 · C-M34 memoria ED1 por sectores (parcial)
+- **Hecho:** `MC.Sectores1km`: sectores de 1 km con caché LRU de metadatos; limita a 36 las regiones de edificios ED1 decodificadas cerca de la cámara de Manhattan, cada 2 s. El mundo sigue funcional fuera de la caché porque ED1 crudo permanece disponible.
+- **Prueba:** en Node se crean 90 regiones ficticias y el sectorizador reduce a <=20 sin perder la API; se conservan guardados.
+- **No hecho:** el MC4 comprimido de 10,2 MB y las capas de suelo, relieve y viales siguen cargándose en el juego completo. Streaming real necesita dividir el formato/binarios en construcción y lector sectorizado.
+### Claude · 21‑nov‑2026 · 4.0.3 · terminar lo de las otras IA antes de que se queden sin uso
+- **Pedido del autor:** «ayúdalos a completar las tareas, están por quedar sin uso».
+- **Hecho:**
+  - **unidas las ramas:**
+    - `ia/chatgpt/4-0-2-gemini-auditoria`: sus primeros commits y sus 6 arreglos nuevos;
+    - `ia/antigravity/motorcity-4.0`: la auditoría, las capturas y las paradas;
+  - **ChatGPT dejó una prueba en rojo en su rama.** `AccionPie.ocluido` muestreaba cada 3 m y se saltaba muros de 2 m; ahora muestrea cada metro y `pruebas/getaway-contenido.mjs` pasa entera;
+  - **sobre los arreglos G‑H20 a G‑H23 de ChatGPT se suma:**
+    - «El testigo incómodo» en lugar de «El sapo»;
+    - el lenguaje suave en los finales, con género y número;
+    - `G CEBO` en la escena 3D;
+    - la ruta de `pruebas-modelos.py`;
+    - 56 paradas y la prueba de 8 por bioma;
+  - **El Metro:** las zonas Z1 y Z2 de Antigravity, sus 6 errores a 412 px, en `MetroZero/src/js/98-relevo-z1.js`. Probado con 100 partidas y 0 errores. Hay ficha y mensaje en `MetroZero/.ai-coord/`;
+  - **EnCicla y Run:** se unió el protocolo de coordinación de Codex y de Antigravity, solo sus fichas.
+- **Probé:**
+  - `node motor.mjs prueba --navegador`;
+  - `node pruebas/getaway-contenido.mjs`;
+  - `arte3d/pruebas-modelos.py` (42/42);
+  - en El Metro: `node tools/test.mjs 100` y la medición a `412 × 860`.
+- **Riesgo:**
+  - los arreglos de código de Codex en EnCicla se perdieron: no estaban en GitHub (§ 5, fila 11);
+  - las 8 coordenadas nuevas de Turno Cero se verificaron contra el MC4, no en terreno.
+- **Sigue:** § 5.
+- **A la IA que siga:** al terminar, **escribe tu entrada aquí**, deja tu ficha en `coord/agentes/` y un mensaje en `coord/buzon/`, y pídele lo mismo a la siguiente.
+
+### ChatGPT · 21-nov-2026 · correcciones de mapa/diálogos Gemini
+- Se integró el commit 4.0.2 de Claude en la rama de ChatGPT con merge de dos padres.
+- G-H21: ocho coordenadas corregidas según el informe MC4 de Gemini (incluido refugio ficticio). El cotejo físico/catastral sigue sin hacerse.
+- G-H23: corregida la clave inexistente `coro` por `camara` en los subtítulos de la banda.
+
 ### Gemini · Antigravity («hydrogen») · 21‑nov‑2026 · auditoría y datos sobre 4.0.1 (`ia/antigravity/motorcity-4.0`)
 - **Hecho (todas las tareas de Gemini en `TAREAS-IA.md` § 4.0, cero ediciones en `js/`, `herramientas/`, `pruebas/` ni `juegos/getaway/`):**
   - **`G‑H22`:** creado `contenido/paradas-carretera.json` con **28 paradas originales** (4 por cada uno de los 7 biomas de `MC.Planeta.BIOMAS`: `costa`, `llanura`, `desierto`, `bosque`, `montana`, `nieve`, `lagos`), bilingüe `nombre_es` / `nombre_en`, `tipo` compatible con `PARADAS_RUTA`, `rutas` y frase de `ambiente`.
@@ -191,22 +279,27 @@
 
 ### Gemini · Antigravity («hydrogen») · 21‑nov‑2026 (fase 2) · sincronizado a 4.0.2, revisión del PR #7 y paquete de arte pintado (`ia/antigravity/motorcity-4.0`)
 - **Hecho (en respuesta al relevo de ChatGPT `MOTOR_CITY_4_0_X_RELEVO_GEMINI_CHATGPT_NUEVA_FASE.md` y al pedido de mejorar arte y tecnología):**
-  - **Sincronización limpia con Motor City 4.0.2 (`288a258`):** fusionado `origin/main` en `ia/antigravity/motorcity-4.0` sin conflictos y conservando **cero modificaciones** en `js/`, `herramientas/`, `pruebas/` y `juegos/getaway/`.
-  - **Revisión técnica, visual y de memoria del PR #7 (`ia/chatgpt/4-0-2-gemini-auditoria`):** reporte completo [`reportes/2026-11-21-gemini-revision-pr7.md`](reportes/2026-11-21-gemini-revision-pr7.md) + 2 capturas WebP (`reportes/img/pr7-revision/`):
-    - verificado compilado limpio (`motor.js 853 KB · 68 archivos`), `0` colisiones `const`/`let` en el IIFE, `0` comentarios `//` nuevos, `pruebas/getaway-contenido.mjs` 7/7 OK, `node motor.mjs prueba --navegador` **151/151 en verde (`90,6 s`)** y CI de GitHub Actions **3/3 en verde**;
-    - **hallazgo ALTO de memoria:** en PR #7, Manhattan baja levemente (`215,3 → 201,3 MB`), pero al viajar **Manhattan → Medellín** en la misma sesión el JS Heap sube a **`258,9 MB` (`316 MB` reservados)** porque `planeta.mundo()` retiene la ciudad previa en caché; evacuar el mundo anterior al cambiar de ciudad ahorrará ~190 MB inmediatos;
-    - **hallazgos visuales (`412×860`):** `MC.GloboGPU` recorta lateralmente la esfera en retrato, pierde las etiquetas de ciudades y muestra banda polar plana; `MC.Piezas` no tiene respaldo visual en 2D software;
-    - **cartografía y texto:** la nueva `gu_finca` de PR #7 (`6.2301, -75.1648`) **queda verificada aprobada** en MC4 (`suelo: 1`, `agua40m: true` para lancha, `≥ 263 m` de comercios reales); en cambio PR #7 aún mantiene 4 calles desfasadas (`ny_noah`, `ny_oeste`, `md_centro`, `md_envigado`), el bug `'coro'` en `20-juego.js:262`, mayúsculas/plurales de `LENGUAJE_SUAVE` y `TC.CONTRATOS` sin `suave()`, además de requerir rebase sobre 4.0.2.
-  - **Arte pintado completo para *Turno Cero* (`arte/gemini/turno-cero/`, `1,2 MB` total en WebP, sin texto, revisado imagen por imagen):**
-    - portada vertical `1080×1920` (`portada-turno-cero.webp`, `162 KB`) + 5 láminas cinematográficas de acto `1280×720` (`acto1-manhattan.webp` … `acto5-guatape-amanecer.webp`) como propuesta aditiva lista para `C‑A17`;
-    - atlas ortográfico PBR 3×3 (`texturas/atlas-pbr-3x3.webp`, `1024×1024`) + 9 losetas individuales `256×256` + [`catalogo.json`](arte/gemini/turno-cero/catalogo.json) con paletas extraídas y parámetros `roughness`/`metalness` (base para `C‑A16`);
-    - galería editorial offline y prototipo de portada `412×860` sobre el pliegue en [`arte/gemini/turno-cero/galeria.html`](arte/gemini/turno-cero/galeria.html).
-- **Cómo lo probé:**
-  - en `/tmp/pr7-qa` (aislado sobre `origin/pr-7`): `node herramientas/construir.mjs`, `node pruebas/getaway-contenido.mjs`, `node motor.mjs prueba --navegador` (**151/151 verde, 90,6 s**), CDP `Performance.getMetrics` (Manhattan y transición Manhattan → Medellín) y 2 capturas revisadas a ojo;
-  - en `ia/antigravity/motorcity-4.0` (fusionado con **4.0.2**): `node motor.mjs prueba` (100 % verde), verificación visual de las 7 obras generadas + `galeria.html` en Chromium `412×860` y `1280×800` (`0` imágenes rotas, `0` desborde horizontal, `0` errores consola) y `node motor.mjs documento`.
-- **Falta:**
-  - **Claude / Codex:** 1) rebasar PR #7 sobre **4.0.2** y corregir los 4 hallazgos (evacuar caché de ciudad anterior en `MC.Planeta`, encuadre + etiquetas de `MC.GloboGPU`, respaldo 2D de `MC.Piezas`, 4 calles + `'coro'` + `LENGUAJE_SUAVE` + portada sobre el pliegue); 2) integrar el arte pintado `arte/gemini/turno-cero/` (o combinarlo con `arte/chatgpt/turno-cero/` si ChatGPT entrega su versión); 3) continuar `C‑M34` streaming real de MC4 por sectores, `C‑M31` transición continua WebGL, `C‑M32` combate/cobertura avanzada y `C‑M33`/`C‑M35` retopología/piezas GLB reales.
-  - **Autor / QA físico:** medición real con GPU física en Android/iOS (tabla § 1.3 de `reportes/2026-11-21-gemini-turno-cero.md`).
-- **Instrucción obligatoria para la siguiente IA:** al cerrar tu turno, **es obligatorio dejar tu propio documento de contexto y relevo**: suma tu entrada aquí en `CONTEXTO-RELEVO.md` § 8 (sin borrar las anteriores), actualiza § 3/§ 5 si cambiaron, actualiza tu ficha en `coord/agentes/<tu-id>.json`, deja un mensaje nuevo en `coord/buzon/` y **recuérdale exactamente esta misma obligación a la siguiente IA**.
+  - **Revisión técnica, visual y de memoria del PR #7:** reporte [`reportes/2026-11-21-gemini-revision-pr7.md`](reportes/2026-11-21-gemini-revision-pr7.md) + 2 capturas WebP (`reportes/img/pr7-revision/`), confirmando `151/151` navegador, 3/3 CI, `gu_finca` aprobada (`agua40m: true`), y detectando la retención multi-ciudad (`201,3 → 258,9 MB` / `316 MB` reservados al pasar NY → Medellín), recorte/etiquetas de `MC.GloboGPU` y falta de respaldo 2D de `MC.Piezas`.
+  - **Arte pintado aditivo para *Turno Cero* (`arte/gemini/turno-cero/`, `1,2 MB` total WebP, sin texto):** portada vertical `1080×1920`, 5 láminas de acto `1280×720`, atlas PBR 3×3 `1024×1024` + 9 losetas `256×256`, `catalogo.json` y galería offline interactiva `arte/gemini/turno-cero/galeria.html` (verificada `412×860` y `1280×800`, `0` errores).
 
+### Gemini · Antigravity («hydrogen») · 21‑nov‑2026 (fase 3) · sincronizado a 4.0.3 e ingeniería inversa limpia de motores clásicos (`ia/antigravity/motorcity-4.0`)
+- **Pedido del autor:** investigar motores viejos/descontinuados livianos pero potentísimos en sus años de gloria, documentar cómo los explotaron los mejores juegos y adaptar sus algoritmos (en sala limpia y sin dependencias) a Motor City.
+- **Hecho (100 % aditivo, 0 ediciones en `js/`, `herramientas/`, `pruebas/` ni `juegos/getaway/` sobre 4.0.3 `ae098eb`):**
+  - **Guía técnica y legal de 10 motores clásicos:** [`docs/MOTORES-CLASICOS-INGENIERIA.md`](docs/MOTORES-CLASICOS-INGENIERIA.md) — RenderWare 3.x (*GTA III–SA*, *Burnout 3*), id Tech 1–3 (*Doom/Quake*), Build Engine (*Duke Nukem 3D/Blood*), Voxel Space (*Comanche/Outcast*), Reflections (*Driver* PS1 en 2 MB RAM), GOAL (*Jak & Daxter* PS2), Team ICO (*Shadow of the Colossus*), Team Silent (*Silent Hill* PS1), Unreal Engine 1 y motores permisivos auditables (Cube 2 `zlib`, Irrlicht `zlib`, Torque 3D `MIT`), con matriz de licencias *clean-room* y mapa exacto hacia `js/`.
+  - **Módulo listo para integrar en sala limpia:** [`experimentos/tecnicas-clasicas/mc-clasico.js`](experimentos/tecnicas-clasicas/mc-clasico.js) (estilo `/* */`, cero `//`, cero dependencias):
+    - `StreamAnillo` (RenderWare `CStreaming` + GOAL): presupuesto rígido en KB, prefetcheo predictivo por vector de velocidad, LRU y evacuación 100 % al cambiar de ciudad;
+    - `CulleoUrbano` (Silent Hill `farPlane = fogEnd` + Build Engine horizonte 1D): descarta **89,6–94,8 %** de edificios ocluidos/fuera de niebla en cañones urbanos;
+    - `PVSRejilla` + RLE + `hornearAOUrbano` (Quake / id Tech 2–3): bitset PVS `O(1)` con compresión RLE exacta bit a bit + oclusión ambiental horneada por callejón para modelos *low-poly*;
+    - `VoxelTerreno` (Comanche / Outcast): raycaster 2.5D de mapa de alturas puro en CPU (`0,4 ms/cuadro` en Canvas 2D, 0 WebGL) sobre relieve de Guatapé y la Piedra del Peñol;
+    - `FisicaDriver` + `PoolParticulas` (Driver PS1 + Burnout 3): suspensión blanda de 4 resortes (cabeceo/balanceo/derrape) + pool circular `Float32Array` sin *garbage collection*;
+    - `EscaladorDinamico` (Shadow of the Colossus): lazo cerrado EMA para sostener 60 FPS ajustando DPR y distancia de niebla.
+  - **Suite unitaria:** [`experimentos/tecnicas-clasicas/prueba-clasico.mjs`](experimentos/tecnicas-clasicas/prueba-clasico.mjs) (**6/6 bloques en verde**).
+  - **Laboratorio interactivo jugable offline:** [`experimentos/tecnicas-clasicas/laboratorio.html`](experimentos/tecnicas-clasicas/laboratorio.html) con 4 pestañas en vivo (Cañón Urbano con toggles, Vuelo Voxel Space 60 FPS sobre Guatapé, Simulador `CStreaming` RenderWare y Catálogo de 10 motores).
+- **Cómo lo probé:**
+  - `node experimentos/tecnicas-clasicas/prueba-clasico.mjs`: **6/6 en verde** (presupuesto `≤ 8192 KB`, `94,8 %` descarte en cañón, RLE bit-exacto, Voxel Space OK, Driver sin `NaN`, Escalador convergente);
+  - `laboratorio.html` verificado en Chromium (`1280×800` y `412×860`): `89,6 %` descartados en vivo (`0,2 ms`), Voxel Space `0,4 ms` (`5.448` columnas), `0` errores, `0` desborde horizontal, y corregido contraste WCAG AA en botones de ciudad tras revisar capturas a ojo;
+  - `node motor.mjs prueba` + `node pruebas/getaway-contenido.mjs` sobre la rama sincronizada con **4.0.3** (`ae098eb`) y `node motor.mjs documento` regenerado.
+- **Falta:**
+  - **Claude / Codex:** integrar las técnicas ya probadas de `mc-clasico.js` en `js/13-planeta.js` (`StreamAnillo`: evacuar ciudad previa para eliminar el salto a `258,9 MB`), `js/45-gl.js` (`CulleoUrbano` + `hornearAOUrbano`), `js/32-fisica.js`/`js/45-glb.js` (`FisicaDriver` + `PoolParticulas`), `js/40-vistas.js` (`EscaladorDinamico`), y adoptar/combinar `arte/gemini/turno-cero/`; además revisar § 5 filas 1, 7–12 (celular real GPU, EnCicla Codex, El Metro Z3–Z5 en `MetroZero`).
+- **Instrucción obligatoria para la siguiente IA (Claude, Codex, ChatGPT o quien siga):** antes de cerrar tu turno, **DEBE quedar tu propio documento de contexto y relevo**: suma tu entrada aquí en `CONTEXTO-RELEVO.md` § 8 (sin borrar las anteriores), actualiza § 3/§ 5 si cambiaron, actualiza tu ficha en `coord/agentes/<tu-id>.json`, deja un mensaje nuevo en `coord/buzon/` y **especifícale exactamente esta misma regla a la siguiente IA**.
 
