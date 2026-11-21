@@ -12,7 +12,7 @@
 > 3. **Nunca borres la entrada de otra IA.** Este documento es un relevo: se suma, no se reescribe.
 > 4. A la IA que venga después de ti pásale la misma instrucción: **también debe hacer y dejar su documento de contexto** (su entrada aquí y su ficha en `coord/`).
 
-**Última actualización:** 20‑nov‑2026, Claude (motor 4.0.1). **Rama de trabajo:** `claude/motor-city-engine-xu7p4y` en los cuatro repositorios. `main` de `motorcity` se avanza en rápido para GitHub Pages.
+**Última actualización:** 21‑nov‑2026, Gemini · Antigravity (auditoría y datos sobre motor 4.0.1 de Claude). **Rama principal de trabajo:** `claude/motor-city-engine-xu7p4y` (entrega Gemini en `ia/antigravity/motorcity-4.0`). `main` de `motorcity` se avanza en rápido para GitHub Pages.
 
 ---
 
@@ -67,12 +67,12 @@
 ## 5. Falta (en orden de valor) y a quién le toca
 | # | Qué | Quién | Detalle |
 |---|---|---|---|
-| 1 | **Probar Turno Cero en un celular real con GPU**: fluidez p95, carga de cada ciudad, cómo se ve el 3D | Gemini (G‑H20, G‑H24) | Aquí solo hay WebGL por software; el 3D cae al respaldo 2D |
+| 1 | **Probar Turno Cero en un celular real con GPU**: fluidez p95, carga de cada ciudad, cómo se ve el 3D | Autor / QA con teléfono físico (base VM + 12 capturas + carga/RAM listas por Gemini en `reportes/2026-11-21-gemini-turno-cero.md`) | En VM solo hay WebGL por software; ya quedaron medidas de carga y JS Heap (`nueva_york` 215,3 MB, `medellin` 66,3 MB, `guatape` 13,6 MB) y plantilla vacía para llenar en celular real |
 | 2 | **La acción a pie de Codex dentro del motor**: su `turno-cero-accion-3d.html` pasado a `MC` y a las tres ciudades | Codex (C‑M32) | Ya están `MC.Modelos.posar` (sus rigs se animan), `MC.Busqueda` y los conos del sigilo |
-| 3 | **Manhattan por sectores de 1 km** (memoria en celulares) | Codex (C‑M34) | Hoy el MC4 entero se descomprime al llegar |
+| 3 | **Manhattan por sectores de 1 km** (memoria en celulares) | Codex (C‑M34) | **Urgente confirmado por `G‑H24`:** Manhattan entero sube el JS Heap a **215,3 MB** (`262,4 MB` reservados, `2,85 s`) |
 | 4 | **Texturas PBR y portada pintada** | ChatGPT (C‑A16, C‑A17) | Los GLB son de bloqueo, con color por vértice |
 | 5 | **LOD de los GLB y más actores con esqueleto** | Codex (C‑M33) | Faltan Nadia, Noah, Cross, El Contador y transeúntes |
-| 6 | **Verificar los 19 lugares de la historia y el filtro de lenguaje** | Gemini (G‑H21, G‑H23) | — |
+| 6 | **Aplicar correcciones de los 19 lugares y el filtro de lenguaje** | Claude (auditoría `G‑H21` y `G‑H23` completada por Gemini en `reportes/2026-11-21-gemini-turno-cero.md`) | Urge reemplazar `gu_finca` (hoy apunta al hotel real `La valentina finca hotel`), corregir 4 calles + `'coro'` en `20-juego.js:256` y pulir `LENGUAJE_SUAVE` |
 | 7 | **Los pedidos adaptados a los juegos** | Codex | Bici a Guatapé (EnCicla), bus a Guatapé (El Metro) y Run por la carretera de la nada |
 | 8 | **El globo en WebGL continuo**. Ya se llega al globo alejando la cámara, con animación; falta que sea la misma escena 3D. | Codex (C‑M31) | `Planeta.globo` |
 | 9 | **Daño por piezas, segunda parte**: humo y fuego en 3D, puertas y capó que se sueltan. Las abolladuras por zona ya están. | Codex (C‑M35) | `js/45-glb.js` (`op.dano`) |
@@ -140,3 +140,34 @@
 - **No toqué** el `src/` de los juegos: Antigravity y Codex trabajan allí en sus ramas (`ia/antigravity/…`, `codex/encicla-motorcity`). Al integrar, que fusionen sobre `claude/motor-city-engine-xu7p4y` siguiendo `coord/`.
 - **A la IA que siga:** empieza por § 5. Al terminar, **escribe tu entrada aquí** y tu ficha en `coord/agentes/`, y pídele lo mismo a la siguiente.
 - **A la IA que siga:** al terminar, **escribe tu entrada aquí** y tu ficha en `coord/agentes/`, y pídele lo mismo a la siguiente.
+
+### Gemini · Antigravity («hydrogen») · 21‑nov‑2026 · auditoría y datos sobre 4.0.1 (`ia/antigravity/motorcity-4.0`)
+- **Hecho (todas las tareas de Gemini en `TAREAS-IA.md` § 4.0, cero ediciones en `js/`, `herramientas/`, `pruebas/` ni `juegos/getaway/`):**
+  - **`G‑H22`:** creado `contenido/paradas-carretera.json` con **28 paradas originales** (4 por cada uno de los 7 biomas de `MC.Planeta.BIOMAS`: `costa`, `llanura`, `desierto`, `bosque`, `montana`, `nieve`, `lagos`), bilingüe `nombre_es` / `nombre_en`, `tipo` compatible con `PARADAS_RUTA`, `rutas` y frase de `ambiente`.
+  - **`G‑H12`, `G‑H13` y `G‑H6`:** reporte `reportes/2026-11-21-gemini-herramientas-4.0.md` con:
+    - instalación verificada de las 4 skills externas (`node motor.mjs skills --instalar --agente antigravity`: `hallmark`, `modern-web-guidance`, `find-skills`, `hyperframes`);
+    - auditoría de `node motor.mjs publico` (Sofía 8 años `mal` / 5 s atascada; Mark turista `revisar` / 35 % atascado; Don Gilberto y Valentina `bien`);
+    - auditoría de `npx -y modern-web-guidance@latest legacy-scan js --json`: **6 hallazgos (`js/structured-clone`)**, todos clasificados `dropWhen` (no aplicar) porque `pruebas/prueba.mjs` corre en `node:vm` sin `structuredClone` y `00-nucleo.js`/`49-hogar.js`/`92-guardado.js` dependen de normalización JSON.
+  - **`G‑H20`, `G‑H21`, `G‑H23` y `G‑H24`:** reporte integral `reportes/2026-11-21-gemini-turno-cero.md` + **12 capturas móviles WebP** (`reportes/img/turno-cero-4.0/`, 907 KB total, revisadas una por una):
+    - **`G‑H24` (carga y memoria):** `nueva_york` tarda `2.850 ms` y sube el JS Heap a **215,3 MB** (`262,4 MB` reservados); `medellin` `1.746 ms` / **66,3 MB**; `guatape` `985 ms` / **13,6 MB**. Confirma la urgencia de `C‑M34` (Manhattan por sectores de 1 km).
+    - **`G‑H21` (19 lugares):** `gu_finca` apunta al hotel real **`La valentina finca hotel`** como refugio del villano (ALTO — propuesta neutra verificada en MC4: `6.23636, -75.18186`, a 495 m del negocio más cercano); además 4 calles desfasadas (`ny_noah`, `ny_oeste`, `md_centro`, `md_envigado`) y 3 ajustes menores, todos con coordenadas exactas sobre vía en MC4.
+    - **`G‑H23` (lenguaje suave + bug real):** hallado bug real en `juegos/getaway/20-juego.js:256` (hablante `'coro'` no existe en `TC.QUIEN`, debe ser `'camara'`); `LENGUAJE_SUAVE` pierde mayúscula inicial, pluraliza `malparida`, omite `tombo`/`güevones` y no pasa por `TC.CONTRATOS` (`El sapo`).
+    - **`G‑H20` (revisión visual `412×860`):** portada 18+ empuja botones debajo del pliegue; menú de pausa deja sangrar el HUD subyacente; diálogo activo no se cierra al abrir `Menú` o cambiar a `Calle libre` y se solapa con `#subt`; etiqueta `Medellín` recortada en el globo; botón `G SEÑUELO` roza borde en `turno-cero-accion-3d.html`.
+  - **Protocolo `coord/`:** ficha actualizada en `coord/agentes/antigravity.json` (`estado: "entregado"`) y relevo en `coord/buzon/20261121-0320-antigravity-relevo-4.0.md`.
+- **Cómo lo probé:**
+  - `node motor.mjs prueba --navegador` (aislado sobre 4.0.1): **151/151 en verde (`89,8 s`)**, medianas CPU 4× (`cenital 5,1`, `ciudad3d 11,8`, `maqueta 13,5`, `lateral 11,9`, `pano 5,7 ms`), 12 estilos, 45 GLB y Turno Cero móvil `0` errores;
+  - `node pruebas/portada.mjs`: **4/4 perfiles en verde** (`320×640`, `412×860`, `860×412`, `1440×900`);
+  - 12 capturas móviles reales en Chromium `412×860` + `dist/juegos/turno-cero-accion-3d.html` en WebGL2 (`87` draw calls, `19.842` tris, `0` errores) + perfilado CDP `Performance.getMetrics` por ciudad;
+  - validación programática de los 19 lugares contra `datos/{nueva_york,medellin,guatape}/mundo.mc4` y de las 445 cadenas de `juegos/getaway/10-contenido.js`;
+  - verificado `git diff` sin modificaciones en `.js`/`.mjs` y `node motor.mjs documento` ejecutado para regenerar `dist/MOTOR-CITY-TODO.md`.
+- **Falta:**
+  - **Autor / QA físico:** probar *Turno Cero* en un **celular real con GPU** y llenar la tabla § 1.3 de `reportes/2026-11-21-gemini-turno-cero.md` (esta VM no tiene GPU física).
+  - **Claude:** integrar PR de `ia/antigravity/motorcity-4.0`, aplicar los parches puntuales (`gu_finca` + 4 calles, `'coro'` → `'camara'`, `suave()`, portada/menú/diálogos, etiqueta del globo y conexión de `contenido/paradas-carretera.json`).
+  - **Codex:** priorizar **`C‑M34`** (Manhattan por sectores de 1 km para bajar el pico de `215,3 MB` JS Heap), ajustar ancho del botón `G SEÑUELO` en `turno-cero-accion-3d.html`, corregir ruta en `juegos/getaway/arte3d/pruebas-modelos.py` (`arte/modelos/turno-cero/`), y continuar `C‑M31`, `C‑M32`, `C‑M33`, `C‑M35`.
+  - **ChatGPT:** `C‑A16` (texturas PBR para GLB) y `C‑A17` (portada pintada).
+- **Riesgos que dejo:**
+  - Manhattan (`nueva_york`) consume **215,3 MB de JS Heap** (`262,4 MB` reservados) al descomprimirse completo: riesgo alto de cierre por memoria en celulares de 2–3 GB hasta completar `C‑M34`.
+  - Ninguna captura de *Turno Cero* principal corrió aún sobre WebGL con GPU física (solo respaldo 2D en VM); la escena de Codex sí validó WebGL2 por SwiftShader.
+  - `pruebas/getaway-3d.mjs` usa `headless: false` y requiere `xvfb-run` en Linux sin X11.
+- **Instrucción obligatoria para la siguiente IA (Claude, Codex, ChatGPT o quien siga):** antes de cerrar tu turno, **DEBE quedar tu propio documento de contexto y relevo**: añade tu entrada aquí en `CONTEXTO-RELEVO.md` § 8 (sin borrar las entradas anteriores), actualiza § 3/§ 5 si cambiaron, actualiza tu ficha en `coord/agentes/<tu-id>.json`, deja un mensaje nuevo en `coord/buzon/` y **especifícale exactamente esta misma regla a la siguiente IA** para que nunca se pierda el hilo del proyecto.
+
