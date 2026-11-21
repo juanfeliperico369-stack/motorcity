@@ -71,6 +71,7 @@ class Vistas {
       }
     } catch (e) { MC.falla('vista ' + v.id, e); }
     E.camara.zoom = zoomReal;
+    if (px && this.colormap && MC.Colormap) { try { const Cj = E.jugador && E.jugador.cuerpo, q = Cj ? this.aPantalla(E, Cj.x, Cj.y, 0) : null; MC.Colormap.lienzo(this._buf, E, q ? [q[0] / this.escalaPixel, q[1] / this.escalaPixel] : null); } catch (e) { MC.falla('colormap', e); } }   /* 4.4: la luz de Doom en el modo pixel */
     if (px) { g.save(); g.imageSmoothingEnabled = false; g.drawImage(this._buf, 0, 0, W, H); g.restore(); }
     /* bajo el agua: todo se tiñe de azul (más oscuro mientras más hondo), con rayos de luz que se mueven */
     const Cj = E.jugador && E.jugador.cuerpo; if (Cj && Cj.buceando) this._bajoAgua(g, W, H, -Cj.z, E.t || 0);

@@ -12,10 +12,9 @@
 > 3. **Nunca borres la entrada de otra IA.** Este documento es un relevo: se suma, no se reescribe.
 > 4. A la IA que venga después de ti pásale la misma instrucción: **también debe hacer y dejar su documento de contexto** (su entrada aquí y su ficha en `coord/`).
 
-**Última actualización:** 21‑nov‑2026, Claude (motor 4.3.0). Hizo tres cosas:
-- arregló todo lo que encontró la auditoría móvil de Antigravity (G‑H25, G‑H26 y G‑H28);
-- unió la caché del planeta de ChatGPT;
-- dejó «mundo abierto primero» en los tres juegos.
+**Última actualización:** 21‑nov‑2026, Claude (motor 4.4.0).
+
+> **El autor confirmó que Codex, ChatGPT y Antigravity ya no siguen. Claude asumió todo lo que quedaba.** La tabla del § 5 dice qué se hizo y qué queda, y por qué.
 **Última actualización:** 21‑nov‑2026, Gemini · Antigravity (sincronizado con motor **4.0.3** de Claude + ingeniería inversa limpia de motores clásicos + paquete de arte pintado).
 **Última actualización:** 21‑nov‑2026, Gemini · Antigravity (sincronizado con motor **4.1.0** de Claude `2d4118f`: auditoría móvil 4.1.0 de `🏁 Arcade`, `⛰️ Vuelo`, sigilo Thief `#gema`/`👂`, mundo abierto primero en Turno Cero + El Metro + EnCicla, y catálogo `G‑H27`).
 - Base integrada de Claude (**4.1.0**): unió entregas 4.0.3 de ChatGPT/Codex y Gemini/Antigravity, y trajo motores clásicos (`js/47-clasicos.js`: OutRun, Comanche, Thief, Wolfenstein, Elite) y «mundo abierto primero» en Turno Cero.
@@ -53,7 +52,7 @@
 | Juegos | `node motor.mjs sincronizar ../BicicletasUno` y `../MetroZero`. Después, en cada juego, sus pruebas:<ul><li>EnCicla: `node tools/build.js && node tests/run.js`;</li><li>El Metro: `node tools/build.mjs && node tools/test.mjs 100 && node tools/todo.mjs`;</li><li>Run: `node tools/build.mjs && node tools/sim.mjs 100 240`.</li></ul> |
 
 ## 3. Estado (21‑nov‑2026)
-- **Motor 4.3.0**, con las entregas de ChatGPT/Codex y de Gemini/Antigravity unidas, y todas las pruebas en verde. Lo nuevo:
+- **Motor 4.4.0**, con las entregas de ChatGPT/Codex y de Gemini/Antigravity unidas, y todas las pruebas en verde. Lo nuevo:
   - **motores clásicos** en `js/47-clasicos.js`: las vistas 🏁 Arcade (OutRun) y ⛰️ Vuelo (Voxel Space), la gema y el ruido de Thief, el DDA y las semillas de Elite. Ver `docs/INVESTIGACION-MOTORES-CLASICOS.md`. Ya trae:
   - **`MC.Planeta`**: anillo de ciudades y carreteras generadas, globo y horizonte curvo;
   - **`MC.Busqueda`**: búsqueda de 0 a 5 con los umbrales de Codex y la última posición vista;
@@ -78,6 +77,7 @@
 | 3.0–3.1 | Mundo único 3D con cámaras aéreas, fachadas, árboles low-poly, `MC.Objetos`, mapa grande; `MC.Persecucion` (Codex) y sombras solares (Codex) |
 | 4.0 | Todo lo de § 3, más Manhattan craqueado y `docs/TURNO-CERO.md` |
 | 4.0.2 | Reversa y vuelta en tres puntos; `MC.Manejo.pilotar` (la IA sale de atascos); `rutaA` por la forma de la calle. En Turno Cero: Run en la ciclovía, carreras, guardias a pie y accesibilidad. |
+| 4.4.0 | Claude asume lo de las otras IA.<ul><li>Unidas sus últimas entregas: C‑M34 raster espacial, el pool sin basura y el escalador EMA.</li><li>Turno Cero: 🎬 modo cine con direccionales (C‑M40), 🧱 cubierta y 💨 esquivar a pie (C‑M32) y 🕹️ Retro 1993 con el COLORMAP de Doom (C‑M39).</li><li>EnCicla: los 5 arreglos de Codex con su prueba.</li><li>Run Scooter: 🛣️ la carretera de la nada (C‑R40).</li></ul> |
 | 4.3.0 | <ul><li>Arreglos de la auditoría de Antigravity: Arcade sin fantasmas, ⚡ = correr a pie, el menú que no se corta, la gema de color, los faros solo de noche y los búferes del Vuelo.</li><li>Unida la caché del planeta de ChatGPT.</li><li>Mundo abierto primero en El Metro y EnCicla.</li></ul> |
 | 4.2.0 | Unidas:<ul><li>C‑M34 (MC4 por capas bajo demanda);</li><li>el arte de Gemini en la portada y el PBR de los GLB;</li><li>la técnica clásica de Antigravity sobre datos reales.</li></ul>Recorte por región en el 3D (niebla y cono). La IA atropella lo menor del andén. Vuelo sin pausa. En Turno Cero: 📖 en el mundo abierto y la carrera con la meta adelante. |
 | 4.1.0 | Motores clásicos, rehechos desde cero:<ul><li>`MC.Arcade`: carretera pseudo-3D;</li><li>`MC.VoxelSpace`: vuelo;</li><li>`MC.Sigilo`: gema de luz y ruido por caminos;</li><li>`MC.DDA` y `MC.Semilla`.</li></ul>En Turno Cero: sigilo con gema y oído, y las cámaras 🏁 y ⛰️. |
@@ -85,22 +85,25 @@
 | 4.0.1 | Relevo (este documento y `coord/`), luces y abolladuras de los GLB, motor y Doppler, dron policial 3D, reducción no letal, alejar hasta el planeta, eventos de carretera, contratos nuevos y arte de portada |
 
 ## 5. Falta (en orden de valor) y a quién le toca
-| # | Qué | Quién | Detalle |
+> Desde 4.4 **Claude lleva todo**. Lo que dice «Autor» necesita un celular físico o una decisión suya.
+
+| # | Qué | Estado | Detalle |
 |---|---|---|---|
-| 1 | **Probar Turno Cero en un celular real con GPU**: fluidez p95, carga de cada ciudad, cómo se ve el 3D | Autor / QA con teléfono físico (base VM + 12 capturas + carga/RAM listas por Gemini en `reportes/2026-11-21-gemini-turno-cero.md`) | En VM solo hay WebGL por software; ya quedaron medidas de carga y JS Heap (`nueva_york` 215,3 MB, `medellin` 66,3 MB, `guatape` 13,6 MB) y plantilla vacía para llenar en celular real |
-| 2 | **La acción a pie de Codex dentro del motor**: su `turno-cero-accion-3d.html` pasado a `MC` y a las tres ciudades | Codex (C‑M32) | Ya están `MC.Modelos.posar` (sus rigs se animan), `MC.Busqueda` y los conos del sigilo |
-| 3 | **Manhattan por sectores de 1 km** (memoria en celulares). **Avanzado en 4.2:** MC4 por capas bajo demanda y LRU de sectores. Falta medir la memoria en un celular. | Codex (C‑M34) | **Urgente confirmado por `G‑H24` y revisión PR #7:** Manhattan sube a **201–215 MB** y viajar **NY → Medellín** sube a **258,9 MB (`316 MB` reservados)** si `MC.Planeta` no evacúa la ciudad previa. **Referencia en sala limpia lista:** `StreamAnillo` en `experimentos/tecnicas-clasicas/mc-clasico.js` (tope estricto `≤ 8–12 MB`, evacuación 100 % al cambiar de ciudad) |
-| 4 | **Texturas PBR y portada pintada** | ChatGPT / Claude (C‑A16, C‑A17; **propuesta aditiva lista en `arte/gemini/turno-cero/`**) | Portada vertical `1080×1920`, 5 láminas `1280×720`, atlas PBR 3×3 + 9 losetas y `galeria.html` listos para integrar o contrastar con `arte/chatgpt/turno-cero/` |
-| 5 | **LOD de los GLB y más actores con esqueleto** | Codex (C‑M33, unido en 4.0.3: 9 rigs / 51 GLB + LOD0/1/2) | Faltan LOD retopologizados y validación en GPU física |
-| 6 | ~~Correcciones de los 19 lugares y del filtro de lenguaje~~ **Hecho en 4.0.3** (ChatGPT y Claude) | — | Falta el cotejo en terreno: que alguien de Medellín y de Guatapé mire las 8 coordenadas nuevas; además encuadre/etiquetas `MC.GloboGPU` y respaldo 2D de `MC.Piezas` (`reportes/2026-11-21-gemini-revision-pr7.md`) |
-| 7 | **Los pedidos adaptados a los juegos** | Codex | Bici a Guatapé (EnCicla), bus a Guatapé (El Metro) y Run por la carretera de la nada |
-| 8 | **El globo en WebGL continuo**. Ya se llega al globo alejando la cámara, con animación; falta que sea la misma escena 3D. | Codex (C‑M31) | `Planeta.globo` |
-| 9 | **Daño por piezas, segunda parte**: humo y fuego en 3D, puertas y capó que se sueltan. Las abolladuras por zona ya están. | Codex (C‑M35) | `js/45-glb.js` (`op.dano`) |
-| 10 | **Combate a pie más allá de reducir**: cobertura, guardias que persiguen a pie, esquivar | Codex (C‑M32) | Ya están ✊ Reducir y los conos |
-| 11 | **Los arreglos de Codex en EnCicla** (no llegaron a GitHub: solo se subió su ficha `coord/agentes/codex.json`) | Codex | Hay que volver a hacerlos y subirlos a `codex/encicla-motorcity`:<ul><li>bici prestada (`82-prestamo.js`);</li><li>acceso sin aparcamiento (`68-ciudad.js`, `69-libre.js`);</li><li>gasto de la eléctrica (`92-vehiculos.js`; hoy la columna `drain` solo se usa en las eléctricas);</li><li>evento de montar rechazado (`94-revolucion.js`);</li><li>hojas de trama viejas a `stats.leaves` (`00-core.js`, `93-trama.js`);</li><li>`tests/regresion-encicla.js`.</li></ul>Lo de meter `motor-city/dist/motor.js` entero en EnCicla hay que medirlo antes: pesa varios MB. |
-| 12 | **El Metro: zonas Z3, Z4 y Z5 de Antigravity** | Antigravity (o quien las reclame en `MetroZero/.ai-coord/`) | Libres:<ul><li>`37-cronicas.js`;</li><li>`15-mc-puente.js`;</li><li>`48-planificador.js` y `49-guatape.js`.</li></ul>Claude ya hizo Z1 y Z2 en `src/js/98-relevo-z1.js`. |
-| 13 | **Lo que falta de los motores clásicos** (detalle en `docs/INVESTIGACION-MOTORES-CLASICOS.md` § 2) | Codex, con Claude | <ul><li>PVS de Quake para los sectores de Manhattan;</li><li>caché de superficies y lightmaps para las fachadas;</li><li>COLORMAP de Doom para el pixel y el 1 bit;</li><li>sectores y portales de Build para los interiores;</li><li>direccionales como guía, sin HUD (*The Getaway*);</li><li>tope de modelos de tráfico (GTA III).</li></ul> |
-| 14 | **Probar 🏁 Arcade y ⛰️ Vuelo en un celular real** (fluidez y tirones) + corregir 3 bugs ALTA de 4.1.0 | Autor (celular físico) / Claude (bugs 4.1.1) | **Base VM + 18 capturas listas en `reportes/2026-11-21-gemini-clasicos-4.1.md`:** Vuelo `2,4–2,8 ms` (`cuadroMs p50 33,3 ms`, reconstrucción por franjas probada en `626–782 m` sin congelar); **bugs ALTA detectados:** 1) `MC.Arcade` no limpia `hor..H` en giros/pendientes de ciudad (deja 35 % inferior fantasma), 2) en móvil táctil `⚡` no activa `correr` a pie (`vMax = 1,53 m/s < 4,2` → imposible disparar `👂 pasos` y siempre `agachado: true`), 3) `⏸ Menú` sigue cortado arriba (`-259 px`), 4) El Metro y EnCicla aún no entran al mundo abierto en 1 toque. Falta llenar tabla § 1.4 en celular físico con GPU. |
+| 1 | **Probar en un celular real con GPU** (Turno Cero, Arcade, Vuelo, Retro, memoria de Manhattan) | **Autor** | La plantilla está en `reportes/2026-11-21-gemini-clasicos-4.1.md` § 1.4. En la VM no hay GPU física. |
+| 2 | ~~Arreglos de Codex en EnCicla~~ | **Hecho en 4.4 (Claude)** | `BicicletasUno/src/js/98o-arreglos.js` y `tests/regresion-encicla.js`, con 5 de 5 en verde. |
+| 3 | ~~Manhattan por sectores (C‑M34)~~ | **Hecho (ChatGPT, unido en 4.4)** | Raster espacial de 1 km bajo demanda, LRU y caché del planeta. Falta medir la memoria en un celular (fila 1). |
+| 4 | ~~Acción a pie: cobertura y esquivar (C‑M32)~~ | **Hecho en 4.4 (Claude)** | `juegos/getaway/57-cine.js`: 🧱 cubierta (los guardias ven ×0,45) y 💨 esquivar (Q). La escena 3D de Codex sigue como misión aparte. |
+| 5 | ~~Direccionales como guía (C‑M40)~~ | **Hecho en 4.4 (Claude)** | 🎬 Modo cine en ⏸ Menú. |
+| 6 | ~~COLORMAP de Doom (C‑M39)~~ | **Hecho en 4.4 (Claude)** | `js/47-colormap.js` y 🕹️ Retro 1993 en ⏸ Menú. |
+| 7 | ~~Pool de partículas y escalador dinámico~~ | **Hecho (Antigravity, unido en 4.4)** | `js/88-vida.js` y `js/05-gpu.js`. |
+| 8 | ~~Run por la carretera de la nada (C‑R40)~~ | **Hecho en 4.4 (Claude)** | `RunRunZero`: 🛣️ en la portada. Copiado al motor con `herramientas/importar-run.mjs`. |
+| 9 | **PVS de Quake (C‑M37)** | Pendiente (Claude) | Hay que calcularlo por adelantado en `herramientas/construir.mjs`, con la huella y la altura de cada edificio por sector de 1 km. Hacerlo en tiempo real haría desaparecer edificios que sí se ven. Hoy el recorte por niebla y cono ya ahorra cerca del 70 % en tercera persona. |
+| 10 | **Bici a Guatapé (EnCicla) y bus a Guatapé (El Metro)** | Pendiente (Claude) | Esos juegos tienen su propio mapa del Valle. Hay que darles el lector MC4 del motor (`MC.Mundo` y `MC.Planeta`) como un modo aparte, que son las zonas Z4 y Z5 de El Metro. Es una tarea grande: un modo nuevo en cada juego. |
+| 11 | **El Metro: crónicas (Z3)** | Pendiente (Claude) | Narrativa aditiva en `37-cronicas.js`, que guarde en `Save.d.cronicas`. |
+| 12 | **El globo en la misma escena 3D (C‑M31)** | Pendiente (Claude) | Hoy el globo WebGL2 es una vista aparte, con animación al alejar. |
+| 13 | **LOD retopologizados y más actores con esqueleto (C‑M33)** | Pendiente: arte | Hay LOD0, LOD1 y LOD2 automáticos. Para mallas retocadas a mano hace falta una herramienta de arte 3D (Blender) que no hay en la VM. |
+| 14 | **Cotejo en terreno de las 8 coordenadas de Turno Cero** | **Autor** o alguien de Medellín y de Guatapé | Están verificadas contra el MC4. |
+| 15 | ~~Tarjetas de El Metro con el texto encima del arte~~ | **No se reproduce en la versión actual** | El diseño cambió desde la auditoría (v0.2.0). |
 
 ## 6. Protocolo entre IAs (sin mediador), adoptado de Antigravity y Codex
 - **Una rama por agente:** `ia/<agente>/<tema>` o `<agente>/<tema>`. Nunca `push --force` sobre la rama de otro, ni sobre `main` ni sobre `gh-pages`.
@@ -234,6 +237,48 @@
 - **Hecho:** `MC.Sectores1km`: sectores de 1 km con caché LRU de metadatos; limita a 36 las regiones de edificios ED1 decodificadas cerca de la cámara de Manhattan, cada 2 s. El mundo sigue funcional fuera de la caché porque ED1 crudo permanece disponible.
 - **Prueba:** en Node se crean 90 regiones ficticias y el sectorizador reduce a <=20 sin perder la API; se conservan guardados.
 - **No hecho:** el MC4 comprimido de 10,2 MB y las capas de suelo, relieve y viales siguen cargándose en el juego completo. Streaming real necesita dividir el formato/binarios en construcción y lector sectorizado.
+### Claude · 21‑nov‑2026 · 4.4.0 · lo que quedaba de las otras IA
+- **Pedido del autor:** «Y ya ni lo harán, resuelve tú lo que falta». Codex, ChatGPT y Antigravity ya no siguen.
+- **Hecho:**
+  - **unidas sus últimas ramas:**
+    - `ia/chatgpt/cm34-spatial-420-20261121` (28 commits: raster espacial de 1 km);
+    - `ia/antigravity/motorcity-4.2` (pool sin basura y escalador EMA).
+  - **EnCicla:** los 5 arreglos de Codex:
+    - bici prestada;
+    - acceso sin aparcamiento;
+    - gasto de la eléctrica;
+    - montar;
+    - hojas de la trama.
+
+    Más la prueba de regresión.
+  - **Turno Cero** (`57-cine.js`):
+    - 🎬 modo cine con direccionales (C‑M40);
+    - 🧱 cubierta y 💨 esquivar (C‑M32);
+    - 🕹️ Retro 1993, que usa `js/47-colormap.js` (C‑M39).
+  - **Run Scooter:**
+    - 🛣️ carretera de la nada (C‑R40);
+    - regalo diario sin ventana;
+    - el motor importa la versión nueva.
+  - **El Metro:** las tarjetas ya no tienen el problema de la auditoría.
+- **Probé:**
+  - Node: 142;
+  - el contenido de Turno Cero;
+  - C‑M34 en Node;
+  - Chromium;
+  - EnCicla (regresiones 5 de 5);
+  - El Metro: 100 partidas;
+  - Run Scooter: 100 partidas, con la carretera;
+  - capturas a `412 × 860`:
+    - modo cine: direccional a 67 m;
+    - esquivar: 3 m;
+    - retro: 1,3 ms por cuadro;
+    - carretera en Run.
+- **Riesgo:**
+  - el modo cine calcula la ruta cada segundo, y en una ciudad grande eso puede costar unos ms;
+  - Retro 1993 cambia el pixel de Turno Cero para todas las vistas 2D.
+- **Sigue:** § 5, filas 9 a 13, en este orden: PVS, Guatapé en los juegos hermanos, crónicas y globo.
+- **A la IA que siga** (si vuelve alguna): **escribe tu entrada aquí**, deja tu ficha en `coord/agentes/` y un mensaje en `coord/buzon/`.
+
 ### Claude · 21‑nov‑2026 · 4.3.0 · lo que encontró la auditoría y el mundo abierto en los tres juegos
 - **Pedido del autor:** «retoma y sigue, hay cosas nuevas».
 - **Lo nuevo de las otras IA:**

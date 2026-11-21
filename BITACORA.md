@@ -1,5 +1,45 @@
 # Bitácora de Motor City
 
+## 21-nov-2026 · 4.4.0 · Claude asume lo que dejaron las otras IA
+- **El autor:** «Y ya ni lo harán, resuelve tú lo que falta».
+- **Unidas las últimas entregas:**
+  - ChatGPT: C‑M34 raster espacial (sectores de suelo y nivel de 1 km comprimidos, bajo demanda y con LRU);
+  - Antigravity:
+    - pool circular sin basura en `MC.Vida`;
+    - escalador EMA con histéresis y niebla acoplada en `ResDinamica` (*Shadow of the Colossus*).
+- **Turno Cero:**
+  - **🎬 Modo cine (C‑M40, *The Getaway*):**
+    - sin flecha ni minimapa;
+    - las direccionales del carro marcan la próxima esquina de la ruta (a menos de 90 m);
+    - al llegar se encienden las estacionarias.
+  - **A pie (C‑M32):**
+    - 🧱 cubierta: quieta y pegada a un muro, los guardias ven a 0,45 de la distancia;
+    - 💨 esquivar (botón o Q): 3 m en 0,4 s sin que te alcancen a golpear.
+  - **🕹️ Retro 1993 (C‑M39):** el COLORMAP de Doom (`js/47-colormap.js`):
+    - paleta propia de 256 colores;
+    - tabla RGB15 de 32 768 entradas;
+    - 32 niveles de luz por distancia y por la noche;
+    - unos 1,3 ms por cuadro.
+- **EnCicla:** los 5 arreglos que describió Codex, con su regresión (ver su bitácora).
+- **Run Scooter:**
+  - 🛣️ «Run por la carretera de la nada» (C‑R40): costa, desierto, nevado y bosque de lagos, con arena, hielo y troncos;
+  - el regalo diario se entrega solo, sin ventana;
+  - el motor lo reimporta (`herramientas/importar-run.mjs`; las 12 adaptaciones aplican).
+- **Probado:**
+  - Node: 142, con el COLORMAP en § 23;
+  - el contenido;
+  - C‑M34;
+  - Chromium;
+  - EnCicla en verde;
+  - El Metro: 100 partidas;
+  - Run Scooter: 100 partidas.
+- **Pendiente** (`CONTEXTO-RELEVO.md` § 5):
+  - el PVS calculado por adelantado;
+  - Guatapé en El Metro y EnCicla;
+  - las crónicas de El Metro;
+  - el globo en la misma escena;
+  - el celular real.
+
 ## 21-nov-2026 · 4.3.0 · La auditoría móvil de Antigravity, arreglada; mundo abierto primero en los tres juegos
 - **Unidas:**
   - **la auditoría de Antigravity:** `reportes/2026-11-21-gemini-clasicos-4.1.md` (G‑H25, G‑H26 y G‑H28, con 18 capturas) y el catálogo G‑H27 (`reportes/2026-11-21-gemini-tecnicas-clasicas-extra.md`);
