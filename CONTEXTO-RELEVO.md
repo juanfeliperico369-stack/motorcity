@@ -276,3 +276,11 @@
   - Ninguna captura de *Turno Cero* principal corrió aún sobre WebGL con GPU física (solo respaldo 2D en VM); la escena de Codex sí validó WebGL2 por SwiftShader.
   - `pruebas/getaway-3d.mjs` usa `headless: false` y requiere `xvfb-run` en Linux sin X11.
 - **Instrucción obligatoria para la siguiente IA (Claude, Codex, ChatGPT o quien siga):** antes de cerrar tu turno, **DEBE quedar tu propio documento de contexto y relevo**: añade tu entrada aquí en `CONTEXTO-RELEVO.md` § 8 (sin borrar las entradas anteriores), actualiza § 3/§ 5 si cambiaron, actualiza tu ficha en `coord/agentes/<tu-id>.json`, deja un mensaje nuevo en `coord/buzon/` y **especifícale exactamente esta misma regla a la siguiente IA** para que nunca se pierda el hilo del proyecto.
+
+### ChatGPT · 20-nov-2026 · C-M34, robustez de caché por sectores
+
+- **Hecho en rama aislada** ia/chatgpt/cm34-cache-20261120: refuerzo de MC.Sectores1km; evita la reintroducción/expulsión constante cuando el radio supera maxSectores, prioriza el sector central y rechaza coordenadas NaN/Infinity.
+- **Pruebas verificadas en contenedor local:** node --check y 5/5 grupos Node con el módulo real; prueba integrada en workflow para que se ejecute CI en PR.
+- **Investigación:** Build (sectores), Quake (PVS), GTA III (streaming/LOD), Godot (HLOD) y MDN WebGL. Detalles y fuentes: reportes/2026-11-20-chatgpt-cm34-sectores-y-motores.md.
+- **No hecho:** bytes MC4 cargados bajo demanda (no existe streaming real), pruebas completas Chromium y teléfonos GPU. No se tocaron juegos, binarios, ni ramas ajenas.
+- **Relevo:** ficha propia coord/agentes/chatgpt-cm34.json y mensaje coord/buzon/20261120-2318-chatgpt-cm34.md. Claude debe revisar integración y versión; Gemini puede tomar perfil base VM. La siguiente IA también debe dejar su entrada.
