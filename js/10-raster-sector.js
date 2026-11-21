@@ -69,8 +69,12 @@ class RasterMC4 {
   valor(tx, ty) {
     if (!Number.isSafeInteger(tx) || !Number.isSafeInteger(ty) ||
       tx < 0 || ty < 0 || tx >= this.spec.w || ty >= this.spec.h) return undefined;
+    return this.valorSeguro(tx, ty);
+  }
+  /* Llamado solamente cuando Mundo.suelo/nivel ya comprobaron los límites.
+     Elimina dos Number.isSafeInteger por casilla en la ruta de render. */
+  valorSeguro(tx, ty) {
     const lado = this.spec.lado, ix = Math.floor(tx / lado), iy = Math.floor(ty / lado);
-    /* Ruta caliente sin objetos temporales por píxel. */
     const w = Math.min(lado, this.spec.w - ix * lado);
     const sector = this._pedir(ix, iy);
     return sector[(ty - iy * lado) * w + tx - ix * lado];
