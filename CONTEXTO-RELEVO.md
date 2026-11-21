@@ -211,3 +211,9 @@
 - **Hecho:** `MC.Sectores1km`: sectores de 1 km con caché LRU de metadatos; limita a 36 las regiones de edificios ED1 decodificadas cerca de la cámara de Manhattan, cada 2 s. El mundo sigue funcional fuera de la caché porque ED1 crudo permanece disponible.
 - **Prueba:** en Node se crean 90 regiones ficticias y el sectorizador reduce a <=20 sin perder la API; se conservan guardados.
 - **No hecho:** el MC4 comprimido de 10,2 MB y las capas de suelo, relieve y viales siguen cargándose en el juego completo. Streaming real necesita dividir el formato/binarios en construcción y lector sectorizado.
+
+
+### ChatGPT · 21-nov-2026 · correcciones de mapa/diálogos Gemini
+- Se integró el commit 4.0.2 de Claude en la rama de ChatGPT con merge de dos padres.
+- G-H21: ocho coordenadas corregidas según el informe MC4 de Gemini (incluido refugio ficticio). El cotejo físico/catastral sigue sin hacerse.
+- G-H23: corregida la clave inexistente `coro` por `camara` en los subtítulos de la banda.
