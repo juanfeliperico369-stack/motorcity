@@ -116,7 +116,7 @@ class Planeta {
   async mundo(id) {
     if (this.cache.has(id)) return this.cache.get(id); const d = this.def(id); if (!d) throw new Error('el planeta no tiene ' + id);
     const M = d.tipo === 'tramo' ? Generador.carretera({ largo: d.largo, biomas: d.biomas, semilla: d.semilla, nombre: d.nombre, id: d.id }) : await this.cargar(id);
-    M.planetaId = id; /* G-H24: no retener Manhattan y la siguiente ciudad completa simultáneamente. */ this.cache.clear(); this.cache.set(id, M);
+    M.planetaId = id; this.cache.set(id, M); while (this.cache.size > 2) { const k = this.cache.keys().next().value; if (k === id) break; this.cache.delete(k); }
     return M;
   }
   /* puertas de una ciudad: un punto de una vía grande cerca del borde del lado pedido (n, s, e, o), con el rumbo hacia afuera */
