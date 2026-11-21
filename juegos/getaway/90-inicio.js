@@ -14,7 +14,7 @@ function iniciarInterfaz() {
   ui.accion({ id: 'freno', icono: '🛑', texto: 'Freno', mantener: true, ctl: G.ctl });
   ui.accion({ id: 'turbo', icono: '⚡', texto: 'Turbo', mantener: true, ctl: G.ctl });
   const b = (k, icono, texto, al) => (BOT[k] = ui.boton({ id: k, icono, texto, al }));
-  b('menu', '⏸', 'Menú', menu); b('mapa', '🗺️', 'Mapa', () => ui.abrirMapa(G.vistas, G.M, mapaPts, { x: G.cuerpo.x, y: G.cuerpo.y, a: G.cuerpo.a })); b('globo', '🌍', 'Planeta', () => Globo.abrir()); b('camara', '🎥', 'Cámara', siguienteCamara);
+  b('menu', '⏸', 'Menú', menu); b('mapa', '🗺️', 'Mapa', abrirMapaTC); b('globo', '🌍', 'Planeta', () => Globo.abrir()); b('camara', '🎥', 'Cámara', siguienteCamara);
   b('taller', '🔧', 'Taller', menuTaller); b('metro', '🚇', 'Metro', menuTransporte); b('encicla', '🚲', 'EnCicla', () => { G.cuerpo.setVeh('bici'); G.ui.aviso('🚲 EnCicla: por la ciclorruta no te sigue nadie en carro', 2200); });
   b('lancha', '🚤', 'Lancha', () => { if (G.cuerpo.embarcar('lancha')) { G.ui.aviso('🚤 Al embalse: la policía se queda en la orilla', 2200); if (G.busq.nivel && !G.busq.visto) G.busq.esconder('embalse'); } });
   b('tierra', '🏝️', 'Tierra', () => { if (G.cuerpo.desembarcar()) G.ui.aviso('🏝️ En tierra: consigue un carro', 1800); });
@@ -34,10 +34,10 @@ function iniciarInterfaz() {
 const CAMARAS = ['cenital', 'ciudad3d', 'tercera', 'maqueta', 'arcade', 'vuelo'];   /* 4.1: 🏁 arcade (OutRun) y ⛰️ vuelo (Voxel Space de Comanche) */
 function siguienteCamara() { const i = CAMARAS.indexOf(G.vistaId); G.vistaId = CAMARAS[(i + 1) % CAMARAS.length]; const v = G.vistas.usar(G.vistaId, G.E); G.ui.aviso(v.icon + ' ' + v.n, 1400, 'vista'); escribirG({ vista: G.vistaId }); }
 function menu() {
-  const S = leerG(), it = [{ id: 'seguir', texto: '▶ Seguir' }, { id: 'cam', texto: '🎥 Cámara: ' + G.vistas.actual.n }, { id: 'cine', texto: '🎬 Modo cine: ' + (G.cine ? 'sí (guían las direccionales)' : 'no') }, { id: 'retro', texto: '🕹️ Retro 1993: ' + (G.retro ? 'sí (pixel con la luz de Doom)' : 'no') }, { id: 'asis', texto: '🛞 Asistencia de manejo: ' + (G.asistencia !== false ? 'sí (esquiva paredes)' : 'no (experto)') }, { id: 'sigcam', texto: '🔦 Sigilo desde arriba: ' + (S.sigiloCenital !== false ? 'sí' : 'no') }, { id: 'sonido', texto: Snd.on ? '🔊 Sonido: sí' : '🔇 Sonido: no' }, { id: 'suave', texto: S.suave ? '🗣️ Lenguaje: suave' : '🗣️ Lenguaje: fuerte' }, { id: 'acces', texto: '♿ Accesibilidad' }, { id: 'quien', texto: '👥 Personajes' }, { id: 'artef', texto: '🧰 Artefactos' }];
+  const S = leerG(), it = [{ id: 'seguir', texto: '▶ Seguir' }, { id: 'cam', texto: '🎥 Cámara: ' + G.vistas.actual.n }, { id: 'cine', texto: '🎬 Modo cine: ' + (G.cine ? 'sí (guían las direccionales)' : 'no') }, { id: 'retro', texto: '🕹️ Retro 1993: ' + (G.retro ? 'sí (pixel con la luz de Doom)' : 'no') }, { id: 'asis', texto: '🛞 Asistencia de manejo: ' + (G.asistencia ? 'sí (esquiva paredes)' : 'no') }, { id: 'sigcam', texto: '🔦 Sigilo desde arriba: ' + (S.sigiloCenital !== false ? 'sí' : 'no') }, { id: 'sonido', texto: Snd.on ? '🔊 Sonido: sí' : '🔇 Sonido: no' }, { id: 'suave', texto: S.suave ? '🗣️ Lenguaje: suave' : '🗣️ Lenguaje: fuerte' }, { id: 'acces', texto: '♿ Accesibilidad' }, { id: 'quien', texto: '👥 Personajes' }, { id: 'artef', texto: '🧰 Artefactos' }];
   if (G.hist) it.push({ id: 'reintentar', texto: '↩ Volver al último punto' }); it.push({ id: 'historia', texto: '📖 Historia (opcional)' }, { id: 'libre', texto: '🌎 Mundo abierto aquí' }, { id: 'portada', texto: '🏠 Portada' });
   G.ui.menu('Turno Cero · ' + planeta.def(G.id).nombre, it, async k => {
-    if (k === 'asis') { G.asistencia = G.asistencia === false; escribirG({ asistencia: G.asistencia }); G.ui.aviso(G.asistencia ? '🛞 Asistencia: el carro esquiva las paredes que vienen' : '🛞 Sin asistencia: todo depende de ti', 2200, 'asis'); return menu(); }
+    if (k === 'asis') { G.asistencia = !G.asistencia; escribirG({ asistencia: G.asistencia }); G.ui.aviso(G.asistencia ? '🛞 Asistencia: el carro esquiva las paredes que vienen' : '🛞 Sin asistencia: todo depende de ti', 2200, 'asis'); return menu(); }
     if (k === 'sigcam') { G.sigiloCenital(leerG().sigiloCenital === false); return menu(); }
     if (k === 'cam') siguienteCamara(); else if (k === 'retro') { G.retro = !G.retro; escribirG({ retro: G.retro }); G.vistas.pixel = G.retro; G.vistas.colormap = G.retro; G.ui.aviso(G.retro ? '🕹️ Retro 1993: pocos píxeles, 256 colores y la luz que se apaga con la distancia' : '🕹️ Retro apagado', 2600, 'retro'); } else if (k === 'cine') { G.cine = !G.cine; escribirG({ cine: G.cine }); document.body.classList.toggle('cine', G.cine); G.ui.aviso(G.cine ? '🎬 Modo cine: sin flecha ni minimapa; las direccionales del carro marcan la próxima esquina' : '🎬 Modo cine apagado', 3000, 'cine'); } else if (k === 'sonido') { if (Snd.on) Snd.apagar(); else Snd.prender(); escribirG({ sonido: Snd.on }); } else if (k === 'suave') escribirG({ suave: !S.suave });
     else if (k === 'acces') Extras.opcionesMenu();
@@ -59,6 +59,9 @@ function menuHistoria() {
     else if (/^cap\d+$/.test(k)) { const i = +k.slice(3); G.municion = i >= 3 ? 24 : 0; await Historia.empezar(i); }
   });
 }
+/* 4.6 · el mapa grande del motor (js/70-mapa.js, como el de EnCicla): pausa el juego, acerca y aleja sin congelar, 🧭 brújula, tocar = destino */
+function abrirMapaTC() { const ui = G.ui; if (!ui || !G.M) return; if (ui._mapa) return ui._mapa.cerrar(); let antes = false;
+  ui.abrirMapa(G.vistas, G.M, () => mapaPts, () => (G.cuerpo ? { x: G.cuerpo.x, y: G.cuerpo.y, a: G.cuerpo.a } : null), { destino: G.destinoLibre, pausa: v => { if (v) { antes = G.pausa; G.pausa = true; } else G.pausa = antes; }, alDestino: p => { G.destinoLibre = p; } }); }
 function tecla(k) {
   if (!G.M || G.pausa) return; const A = Artefactos;
   if (k === 'Digit1') A.dron(); else if (k === 'Digit2') A.cebo(); else if (k === 'Digit3') A.pulso(); else if (k === 'Digit4') A.lente(); else if (k === 'KeyF') A.disparar();

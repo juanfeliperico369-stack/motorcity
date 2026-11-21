@@ -3044,7 +3044,7 @@ const AccionPie = {
   },
   paso(q, dt, op = {}) {
     if (!q || q.fuera || !(dt > 0)) return { ve: false, estado: 'fuera' };
-    dt = Math.min(dt, .05);
+    if (dt > .051) { const n = Math.min(4, Math.ceil(dt / .05)); let r; for (let i = 0; i < n; i++) r = this.paso(q, Math.min(.05, dt / n), op); return r; } /* 4.6: subpasos */
     const J = op.jugador, M = op.mundo, cebo = op.cebo, t = (q.fase = (q.fase || 0) + dt);
     const ve = !op.distraido && this.ver(q,J,M), vistaAntes = !!q.ve;
     q.ve = ve;
@@ -3177,7 +3177,7 @@ class Busqueda {
     this._ev('bloqueo');
   }
   actualizar(dt, J, trafico = []) {
-    if (!J || !Number.isFinite(dt) || dt <= 0) return; dt = Math.min(dt, .05); this.t += dt; this._J = J; const M = this.mundo, vj = J.v || 0;
+    if (!J || !Number.isFinite(dt) || dt <= 0) return; if (dt > .051) { /* 4.6: subpasos (antes el tope de 50 ms ponía la búsqueda en cámara lenta a pocos cuadros por segundo) */ const n = Math.min(4, Math.ceil(dt / .05)); let r; for (let i = 0; i < n; i++) r = this.actualizar(Math.min(.05, dt / n), J, trafico); return r; } this.t += dt; this._J = J; const M = this.mundo, vj = J.v || 0;
     /* ¿alguien te ve? (cada 0,25 s: línea de visión de los rivales y la luz del helicóptero) */
     if ((this._vistaT -= dt) <= 0) { this._vistaT = .25; let v = false; for (const r of this.rivales) { if (r.roto || r.retirada) continue; const C = r.cuerpo, d = Math.hypot(C.x - J.x, C.y - J.y); r.ve = d < this.op.radioVista && this.vista(C.x, C.y, J.x, J.y); if (r.ve && r.bando === 'policia') v = true; } if (this.heli && !(this.heli.aturdido > 0) && Math.hypot(this.heli.lx - J.x, this.heli.ly - J.y) < 16) v = true; this.visto = v; if (v) this.ultima = { x: J.x, y: J.y, a: J.a || 0, t: this.t }; }
     if (this.cebo && (this.cebo.t -= dt) <= 0) this.cebo = null; if (this.heli && this.heli.aturdido > 0) this.heli.aturdido -= dt;
@@ -3373,7 +3373,8 @@ class Persecucion {
   }
   actualizar(dt, jugador, trafico = []) {
     if (this.estado !== 'activa' || !Number.isFinite(dt) || dt <= 0) return;
-    dt = Math.min(dt, .05); this.t += dt; this.turbo = Math.max(0, this.turbo - dt);
+    if (dt > .051) { const n = Math.min(4, Math.ceil(dt / .05)); let r; for (let i = 0; i < n; i++) r = this.actualizar(Math.min(.05, dt / n), jugador, trafico); return r; } /* 4.6: subpasos */
+    this.t += dt; this.turbo = Math.max(0, this.turbo - dt);
     this.casiChoques(jugador, trafico);
     let mejor = Infinity;
     for (const p of this.rivales) {
@@ -4200,7 +4201,8 @@ class Objetos {
   /* cuerpos: [{ x, y, z, r, masa, vx, vy }] (el jugador, el tráfico): los que chocan empujan */
   actualizar(dt, cuerpos = []) {
     if (!Number.isFinite(dt) || dt <= 0) return;
-    dt = Math.min(dt, .05); const M = this.M, G = 9.81;
+    if (dt > .051) { const n = Math.min(4, Math.ceil(dt / .05)); let r; for (let i = 0; i < n; i++) r = this.actualizar(Math.min(.05, dt / n), cuerpos); return r; } /* 4.6: subpasos */
+    const M = this.M, G = 9.81;
     for (const o of this.L) {
       for (const c of cuerpos) {
         const dx = o.x - c.x, dy = o.y - c.y, d = Math.hypot(dx, dy), R = o.r + (c.r || .4); if (d >= R || d < 1e-4 || Math.abs((c.z || 0) - o.z) > o.h + 1.5) continue;
@@ -7715,7 +7717,7 @@ const UI = {
 #${id} .mision{max-width:min(320px,70vw);padding:8px 12px;border-radius:var(--r);background:var(--f);border-left:4px solid var(--a)}
 #${id} .dialogo{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);width:min(520px,92vw);padding:14px;border-radius:var(--r);background:var(--f);border:1px solid var(--b)}#${id} .dialogo .opts{display:grid;gap:6px;margin-top:10px}#${id} .dialogo button{font-size:15px;text-align:left;padding:10px}
 #${id} .menu{position:absolute;right:66px;top:max(10px,env(safe-area-inset-top));max-height:78vh;overflow:auto;width:min(300px,72vw);padding:8px;border-radius:var(--r);background:var(--f);border:1px solid var(--b);display:grid;gap:4px}#${id} .menu button{text-align:left;font-size:14px;padding:8px 10px}
-#${id} .mapaG{position:fixed;inset:0;z-index:60;background:#0b0f14;touch-action:none}#${id} .mapaG canvas{width:100%;height:100%;display:block}#${id} .mapaG button{position:absolute;top:calc(env(safe-area-inset-top) + 12px);right:12px;width:48px;height:48px;border-radius:50%;border:0;background:#fff;color:#111;font:800 20px system-ui}#${id} .mapaG small{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 14px);text-align:center;color:#fff;font:600 13px system-ui;text-shadow:0 1px 3px #000}
+#${id} .mapaG{position:fixed;inset:0;z-index:60;background:#0b0f14;touch-action:none;pointer-events:auto}#${id} .mapaG canvas{width:100%;height:100%;display:block}#${id} .mapaB{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));display:flex;flex-direction:column;gap:8px}#${id} .mapaB button{width:48px;height:48px;border-radius:50%;border:2px solid #0006;background:#fffffff0;color:#111;font:800 22px/1 system-ui;box-shadow:0 2px 8px #0008;cursor:pointer}#${id} .mapaB button.x{order:-1;background:#111;color:#fff;border-color:#fff8}@media (max-height:420px){#${id} .mapaB{gap:6px}#${id} .mapaB button{width:44px;height:44px;font-size:20px}}#${id} .mapaG small{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 14px);text-align:center;color:#fff;font:600 13px system-ui;text-shadow:0 1px 3px #000}
 #${id} canvas.mini{position:absolute;right:10px;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 96px);width:120px;height:120px;border-radius:50%;border:2px solid var(--b);background:#0006}
 #${id} .fichas>*,#${id} .botones>*,#${id} .mision,#${id} .vel,#${id} .barras{transition:opacity .6s}#${id} .dim{opacity:.75}#${id}.foco .fichas,#${id}.foco .botones,#${id}.foco .mision,#${id}.foco .barras{opacity:.18}#${id} .izq .aviso{pointer-events:none}#${id}.cine>*{opacity:0!important;pointer-events:none!important}
 @media (orientation:landscape){#${id} .izq{right:auto;max-width:24vw}#${id} .fichas{max-height:66px}#${id} .ficha{max-width:23vw}#${id} .mision .d{-webkit-line-clamp:1}}@media (orientation:landscape) and (max-height:500px){#${id} .ficha{padding:4px 8px;font-size:12px}#${id} .mision,#${id} .aviso{font-size:12px}}
@@ -7753,28 +7755,14 @@ const UI = {
       dialogo(titulo, texto, opciones = ['Listo']) { return new Promise(res => { const d = div('dialogo p'); d.setAttribute('role', 'dialog'); d.innerHTML = '<b>' + titulo + '</b><div>' + texto + '</div><div class="opts"></div>'; opciones.forEach((o, i) => { const b = document.createElement('button'); b.textContent = o; b.onclick = () => { d.remove(); res(i); }; d.querySelector('.opts').appendChild(b); if (!i) setTimeout(() => b.focus(), 50); }); }); },
       menu(titulo, items, al) { const m = div('menu p'); m.innerHTML = '<b style="padding:4px">' + titulo + '</b>'; for (const it of items) { const b = document.createElement('button'); b.innerHTML = it.texto; b.onclick = () => { m.remove(); al(it.id); }; m.appendChild(b); } const cerrar = () => m.remove(); setTimeout(() => document.addEventListener('keydown', function k(e) { if (e.key === 'Escape') { cerrar(); document.removeEventListener('keydown', k); } }), 0); return m; },
       /* minimapa redondo con las losas del motor, girado con la cámara */
-      minimapa(vistas) { const c = document.createElement('canvas'); c.className = 'mini'; c.width = c.height = 240; capa.appendChild(c); ui._mini = { c, vistas }; return c; },
-      pintarMinimapa(x, y, yaw = 0, puntos = []) { const M = ui._mini; if (!M) return; const g = M.c.getContext('2d'), L = M.vistas.losas, z = .45, R = 120; g.save(); g.clearRect(0, 0, 240, 240); g.beginPath(); g.arc(R, R, R, 0, TAU); g.clip(); g.translate(R, R); g.rotate(-yaw); g.scale(z, z); g.translate(-x, -y); const s = L.L, gx0 = Math.floor((x - 300) / s), gy0 = Math.floor((y - 300) / s); for (let gy = gy0; gy <= gy0 + 4; gy++) for (let gx = gx0; gx <= gx0 + 4; gx++) { const t = L.losa(gx, gy, .5, true, false) || L.losa(gx, gy, .0625, false, false); if (t) g.drawImage(t, gx * s, gy * s, s, s); } for (const p of puntos) { g.fillStyle = p.color || '#ffc23a'; g.beginPath(); g.arc(p.x, p.y, 12, 0, TAU); g.fill(); } g.restore(); g.fillStyle = '#39ffb3'; g.beginPath(); g.moveTo(R, R - 9); g.lineTo(R + 6, R + 7); g.lineTo(R - 6, R + 7); g.fill(); },
-      /* 3.0: el MAPA GRANDE (al tocar el minimapa). Ver todo el mundo ya no es alejar la cámara del juego (eso lo pone lento):
-         es una hoja aparte, que se pinta solo al abrirla y al moverla. Arrastrar = mover; pellizco o rueda = zoom; ✕ = cerrar. */
-      abrirMapa(vistas, M, puntos = [], yo = null) {
-        if (ui._mapa) return ui._mapa; const o = div('mapaG'), c = document.createElement('canvas'), x = document.createElement('button'), t = document.createElement('small'); o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', 'Mapa');
-        x.textContent = '✕'; x.setAttribute('aria-label', 'Cerrar el mapa'); t.textContent = 'Arrastra para mover · pellizca para acercar'; o.append(c, x, t); capa.appendChild(o);
-        const L = vistas.losasLejos || vistas.losas, s = L.L, d = Math.min(2, devicePixelRatio || 1); let k = Math.min(innerWidth / M.ancho, innerHeight / M.alto) * 1.6, cx = yo ? yo.x : M.ancho / 2, cy = yo ? yo.y : M.alto / 2;
-        const RES = [.0625, .125, .25, .5], pintar = () => { const W = c.width = Math.round(innerWidth * d), H = c.height = Math.round(innerHeight * d), g = c.getContext('2d'), z = k * d, res = RES.find(r => r >= z) || .5;
-          g.fillStyle = '#1d3b4f'; g.fillRect(0, 0, W, H); g.setTransform(z, 0, 0, z, W / 2 - cx * z, H / 2 - cy * z); g.imageSmoothingEnabled = true;
-          const x0 = cx - W / 2 / z, x1 = cx + W / 2 / z, y0 = cy - H / 2 / z, y1 = cy + H / 2 / z;
-          for (let gy = Math.floor(Math.max(0, y0) / s); gy <= Math.floor(Math.min(M.alto, y1) / s); gy++) for (let gx = Math.floor(Math.max(0, x0) / s); gx <= Math.floor(Math.min(M.ancho, x1) / s); gx++) { const q = L.losa(gx, gy, res, false, 0); if (q) g.drawImage(q, gx * s, gy * s, s + .5 / z, s + .5 / z); }
-          g.setTransform(1, 0, 0, 1, 0, 0); const P = (wx, wy) => [W / 2 + (wx - cx) * z, H / 2 + (wy - cy) * z];
-          for (const p of puntos) { const [px, py] = P(p.x, p.y); g.fillStyle = p.color || '#ffc23a'; g.strokeStyle = '#000'; g.lineWidth = 2 * d; g.beginPath(); g.arc(px, py, 7 * d, 0, TAU); g.fill(); g.stroke(); if (p.texto) { g.font = '700 ' + 12 * d + 'px system-ui'; g.fillStyle = '#fff'; g.fillText(p.texto, px + 10 * d, py + 4 * d); } }
-          if (yo) { const [px, py] = P(yo.x, yo.y); g.save(); g.translate(px, py); g.rotate((yo.a || 0) + Math.PI / 2); g.fillStyle = '#2ee6a6'; g.strokeStyle = '#06261c'; g.lineWidth = 2 * d; g.beginPath(); g.moveTo(0, -11 * d); g.lineTo(8 * d, 9 * d); g.lineTo(0, 4 * d); g.lineTo(-8 * d, 9 * d); g.closePath(); g.fill(); g.stroke(); g.restore(); } };
-        const dedos = new Map(); let base = null;
-        c.addEventListener('pointerdown', e => { c.setPointerCapture(e.pointerId); dedos.set(e.pointerId, [e.clientX, e.clientY]); base = dedos.size === 2 ? [...dedos.values()] : null; });
-        c.addEventListener('pointermove', e => { const a = dedos.get(e.pointerId); if (!a) return; if (dedos.size === 1) { cx -= (e.clientX - a[0]) / k; cy -= (e.clientY - a[1]) / k; } dedos.set(e.pointerId, [e.clientX, e.clientY]); if (dedos.size === 2 && base) { const v = [...dedos.values()], d0 = Math.hypot(base[0][0] - base[1][0], base[0][1] - base[1][1]), d1 = Math.hypot(v[0][0] - v[1][0], v[0][1] - v[1][1]); if (d0 > 10) k = clamp(k * d1 / d0, .03, 3); base = v; } pintar(); });
-        const fin = e => { dedos.delete(e.pointerId); base = null; }; c.addEventListener('pointerup', fin); c.addEventListener('pointercancel', fin);
-        c.addEventListener('wheel', e => { e.preventDefault(); k = clamp(k * Math.exp(-e.deltaY * .0015), .03, 3); pintar(); }, { passive: false });
-        x.onclick = () => { o.remove(); ui._mapa = null; }; pintar(); return (ui._mapa = { o, pintar });
-      },
+      minimapa(vistas, al) { const c = document.createElement('canvas'); c.className = 'mini p'; c.width = c.height = 240; c.setAttribute('role', 'button'); c.setAttribute('aria-label', 'Abrir el mapa'); c.style.cursor = 'pointer'; c.addEventListener('click', e => { e.stopPropagation(); const f = al || ui._alMini; if (f) f(); }); capa.appendChild(c); ui._mini = { c, vistas }; if (al) ui._alMini = al; return c; },   // 4.6: tocar el minimapa (la brújula) abre el mapa grande
+      pintarMinimapa(x, y, yaw = 0, puntos = []) { const M = ui._mini; if (!M) return; const g = M.c.getContext('2d'), L = M.vistas.losas, z = .45, R = 120; g.save(); g.clearRect(0, 0, 240, 240); g.beginPath(); g.arc(R, R, R, 0, TAU); g.clip(); g.translate(R, R); g.rotate(-yaw); g.scale(z, z); g.translate(-x, -y); const s = L.L, gx0 = Math.floor((x - 300) / s), gy0 = Math.floor((y - 300) / s); for (let gy = gy0; gy <= gy0 + 4; gy++) for (let gx = gx0; gx <= gx0 + 4; gx++) { const t = L.losa(gx, gy, .5, true, false) || L.losa(gx, gy, .0625, false, false); if (t) g.drawImage(t, gx * s, gy * s, s, s); } g.restore(); const th = -yaw, cs = Math.cos(th), sn = Math.sin(th);   /* 4.6: los puntos lejanos quedan en el borde (no se pierden) y la N marca el norte */
+        for (const p of puntos) { const dx = (p.x - x) * z, dy = (p.y - y) * z; let sx = dx * cs - dy * sn, sy = dx * sn + dy * cs; const dd = Math.hypot(sx, sy), lej = dd > R - 12; if (lej) { sx *= (R - 12) / dd; sy *= (R - 12) / dd; } g.fillStyle = p.color || '#ffc23a'; g.strokeStyle = '#000a'; g.lineWidth = 2; g.beginPath(); g.arc(R + sx, R + sy, lej ? 7 : 6, 0, TAU); g.fill(); g.stroke(); }
+        g.fillStyle = '#39ffb3'; g.beginPath(); g.moveTo(R, R - 9); g.lineTo(R + 6, R + 7); g.lineTo(R - 6, R + 7); g.fill();
+        const nx = R + sn * (R - 14), ny = R - cs * (R - 14); g.fillStyle = '#0009'; g.beginPath(); g.arc(nx, ny, 12, 0, TAU); g.fill(); g.fillStyle = '#ff5a4a'; g.font = '800 16px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('N', nx, ny + 1); g.textAlign = 'start'; g.textBaseline = 'alphabetic'; },
+      /* 4.6: el MAPA GRANDE (js/70-mapa.js, como el de EnCicla): vista general hecha de a poco y guardada, detalle con presupuesto, pausa,
+         ✕ + − ◎ 🧭, tocar = destino. Antes repintaba todas las losas en cada movimiento del dedo y congelaba el juego. */
+      abrirMapa(vistas, M, puntos = [], yo = null, op = {}) { return MapaGrande.abrir(ui, capa, div, vistas, M, puntos, yo, op); },
       /* joystick visible: donde se pone el dedo aparece la base y la perilla; quieto, una guía abajo a la izquierda */
       joystick(ctl, op = {}) { const j = div('joy'), k = document.createElement('i'), t = document.createElement('small'); j.appendChild(k); j.appendChild(t); t.textContent = op.texto ?? 'Arrastra para moverte'; ui._joy = { j, k, t, ctl, usado: false, t0: Date.now() }; return j; },
       pintarJoystick() { const J = ui._joy; if (!J) return; const S = J.ctl.stick, r = J.ctl.el.getBoundingClientRect();
@@ -7812,6 +7800,131 @@ UI.indicador = function (g, W, H, sx, sy, op = {}) {
   g.restore();
 };
 MC.UI = UI;
+
+/* ---- js/70-mapa.js ---- */
+/* =====================================================================
+   MOTOR CITY · 4.6 · el MAPA GRANDE, como el de EnCicla
+   El autor: «el mapa ni se deja elegir en la brújula y cuando se abre el juego deja de funcionar; el de EnCicla acerca,
+   aleja y no se ralentiza». Antes se repintaban TODAS las losas visibles en cada movimiento del dedo (Medellín, alejado,
+   son más de mil): el juego se congelaba. Ahora, como en EnCicla (78-ciudad-viva.js · MapView):
+   - una VISTA GENERAL del mundo entero (una imagen de ~1 200 px) que se arma de a poco (unos ms por cuadro) y se guarda
+     en el mundo: la segunda vez abre al instante;
+   - de cerca, las losas de detalle llegan con presupuesto (diferidas, unas pocas por cuadro) y, mientras, se ve la general;
+   - el juego se pausa mientras el mapa está abierto (op.pausa) y se retoma al cerrarlo;
+   - botones ✕ · + · − · ◎ (volver a mí) · 🧭 (norte arriba o rumbo arriba), arrastrar, pellizcar y la rueda;
+   - tocar = poner el destino (se pega al lugar, la estación o el punto más cercano); tocarlo otra vez lo quita;
+   - nombres según el acercamiento (municipios lejos, barrios y estaciones cerca) y la línea hasta el destino.
+   Uso: ui.abrirMapa(vistas, M, puntos, yo, { pausa: v => …, alDestino: (p | null) => …, destino, ruta: () => [x,y,…] })
+   `puntos` y `yo` pueden ser funciones (se leen en cada cuadro).
+   ===================================================================== */
+const RANGO_VIA = { [VIA.SENDERO]: .5, [VIA.PEATONAL]: .8, [VIA.ESCALAS]: .8, [VIA.CICLO]: 1.5, [VIA.CALLE]: 2, [VIA.CARRERA]: 3, [VIA.AVENIDA]: 4, [VIA.AUTOPISTA]: 5 };
+const TRAZO_VIA = { [VIA.SENDERO]: ['rgba(214,200,170,.45)', .6], [VIA.PEATONAL]: ['rgba(226,218,200,.55)', .7], [VIA.ESCALAS]: ['rgba(226,218,200,.55)', .7], [VIA.CICLO]: ['#3fae5a', 1], [VIA.CALLE]: ['rgba(236,232,222,.8)', 1], [VIA.CARRERA]: ['#f4efe2', 1.4], [VIA.AVENIDA]: ['#f7e3a1', 2], [VIA.AUTOPISTA]: ['#f2c94c', 2.6] };
+const MapaGrande = {
+  /* la vista general: un píxel = M.ancho / W metros; se arma por filas y luego las vías, con presupuesto */
+  general(M) {
+    if (M._vistaGeneral) return M._vistaGeneral;
+    const alta = GPU.perfil().nivel === 'alta', lado = alta ? 1600 : 1200, k = Math.min(lado / M.ancho, lado / M.alto), W = Math.max(8, Math.round(M.ancho * k)), H = Math.max(8, Math.round(M.alto * k));
+    const cv = lienzo(W, H); if (!cv) return null; const g = cv.getContext('2d'); g.fillStyle = '#1d3b4f'; g.fillRect(0, 0, W, H);
+    const V = { cv, g, k, W, H, fila: 0, fase: 'suelo', i: 0, listo: false, vias: null, img: g.createImageData(W, 8), ver: 0 };
+    return (M._vistaGeneral = V);
+  },
+  /* trabaja unos milisegundos en la vista general; devuelve true si cambió algo */
+  trabajar(M, ms = 6) {
+    const V = MapaGrande.general(M); if (!V || V.listo) return false; const t0 = MC.ahora(), S = MC.arte.dato('suelo', PAL_SUELO), C = S.map(c => hex3(c || '#888'));
+    while (MC.ahora() - t0 < ms) {
+      if (V.fase === 'suelo') {
+        const f0 = V.fila, n = Math.min(8, V.H - f0), D = V.img.data, px = 1 / V.k, Z = V.z || (V.z = new Float32Array(V.W).fill(NaN));   /* una cota por píxel: el relieve sale de la fila de arriba y del vecino */
+        for (let j = 0; j < n; j++) { const wy = (f0 + j + .5) * px; let izq = NaN; for (let i = 0; i < V.W; i++) { const wx = (i + .5) * px, tt = M.suelo(wx, wy), c = C[tt] || C[0], h = M.cota(wx, wy), arriba = Z[i], dz = ((h - (izq === izq ? izq : h)) + (h - (arriba === arriba ? arriba : h))) / px; Z[i] = h; izq = h; const sh = clamp(1 - dz * .9, .7, 1.22), o = (j * V.W + i) * 4; D[o] = clamp(c[0] * sh * 255, 0, 255); D[o + 1] = clamp(c[1] * sh * 255, 0, 255); D[o + 2] = clamp(c[2] * sh * 255, 0, 255); D[o + 3] = 255; } }
+        V.g.putImageData(V.img, 0, f0, 0, 0, V.W, n); V.fila += n; if (V.fila >= V.H) { V.fase = 'vias'; V.img = null; V.z = null; V.vias = M.vias().slice().sort((a, b) => (RANGO_VIA[a.k] || 1) - (RANGO_VIA[b.k] || 1)); }   // lo menor primero; las autopistas, encima
+      } else if (V.fase === 'vias') {
+        const g = V.g, L = V.vias, fin = Math.min(L.length, V.i + 1500); g.save(); g.scale(V.k, V.k); g.lineCap = g.lineJoin = 'round';
+        for (; V.i < fin; V.i++) { const v = L[V.i], p = v.p, kk = v.k || 0; if (!p || p.length < 4) continue; const T = TRAZO_VIA[kk] || TRAZO_VIA[1]; g.strokeStyle = T[0]; g.lineWidth = T[1] / V.k; g.beginPath(); g.moveTo(p[0], p[1]); for (let q = 2; q < p.length; q += 2) g.lineTo(p[q], p[q + 1]); g.stroke(); }
+        g.restore(); if (V.i >= L.length) V.fase = 'lineas';
+      } else {
+        const g = V.g; g.save(); g.scale(V.k, V.k); g.lineCap = g.lineJoin = 'round';
+        try { for (const l of (M.transporte && M.transporte.lineas) || []) { const E = l.estaciones || []; if (E.length < 2) continue; g.strokeStyle = l.color || '#00a3e0'; g.lineWidth = 3 / V.k; g.beginPath(); g.moveTo(E[0][1], E[0][2]); for (const s of E) g.lineTo(s[1], s[2]); g.stroke(); } } catch (e) { /* mundo sin transporte */ }
+        g.restore(); V.listo = true; V.vias = null; break;
+      }
+    }
+    V.ver++; return true;
+  },
+  /* armar la vista general en los ratos libres mientras se juega (así el mapa abre al instante) */
+  precalentar(M) { if (!M || (M._vistaGeneral && M._vistaGeneral.listo) || M._precal) return; M._precal = true; const pedir = typeof requestIdleCallback === 'function' ? f => requestIdleCallback(f, { timeout: 400 }) : f => setTimeout(f, 60);
+    const paso = dl => { if (MapaGrande.trabajar(M, dl && dl.timeRemaining ? clamp(dl.timeRemaining() - 1, 1, 4) : 3) || !M._vistaGeneral.listo) { if (!M._vistaGeneral.listo) pedir(paso); else M._precal = false; } else M._precal = false; }; pedir(paso); },
+  abrir(ui, capa, div, vistas, M, puntos = [], yo = null, op = {}) {
+    if (ui._mapa) return ui._mapa;
+    const o = div('mapaG'), c = document.createElement('canvas'), barra = document.createElement('div'), pie = document.createElement('small'), d = Math.min(2, devicePixelRatio || 1);
+    o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', 'Mapa'); barra.className = 'mapaB';
+    const boton = (txt, et, al) => { const b = document.createElement('button'); b.textContent = txt; b.setAttribute('aria-label', et); b.title = et; b.addEventListener('pointerdown', e => e.stopPropagation()); b.onclick = e => { e.stopPropagation(); al(); }; barra.appendChild(b); return b; };
+    o.append(c, barra, pie); capa.appendChild(o);
+    const leerYo = () => (typeof yo === 'function' ? yo() : yo), leerPts = () => { const p = typeof puntos === 'function' ? puntos() : puntos; return Array.isArray(p) ? p : []; };
+    const Y0 = leerYo(); let k = clamp(Math.min(innerWidth / M.ancho, innerHeight / M.alto) * 6, .004, 4), cx = Y0 ? Y0.x : M.ancho / 2, cy = Y0 ? Y0.y : M.alto / 2, giro = 0, rumboArriba = !!MapaGrande.rumboArriba, sucio = true, abierto = true, destino = op.destino || null;
+    const Lc = vistas && vistas.losas, Ll = vistas && (vistas.losasLejos || vistas.losas), RES = [.0625, .125, .25, .5, 1, 2], kMin = Math.min(innerWidth / M.ancho, innerHeight / M.alto) * .8, kMax = 4;
+    const zoom = (f, px, py) => { const k2 = clamp(k * f, kMin, kMax); if (px != null) { const [wx, wy] = aMundo(px, py); k = k2; const [wx2, wy2] = aMundo(px, py); cx += wx - wx2; cy += wy - wy2; } else k = k2; sucio = true; };
+    const aMundo = (px, py) => { const W = innerWidth, H = innerHeight, dx = (px - W / 2) / k, dy = (py - H / 2) / k, cs = Math.cos(-giro), sn = Math.sin(-giro); return [cx + dx * cs - dy * sn, cy + dx * sn + dy * cs]; };
+    const brujula = boton('🧭', 'Brújula: norte arriba o rumbo arriba', () => { rumboArriba = MapaGrande.rumboArriba = !rumboArriba; ui.aviso(rumboArriba ? '🧭 El mapa gira con tu rumbo' : '🧭 Norte arriba', 1400, 'brujula'); sucio = true; });
+    boton('◎', 'Volver a mí', () => { const Y = leerYo(); if (Y) { cx = Y.x; cy = Y.y; } sucio = true; });
+    boton('+', 'Acercar', () => zoom(1.6)); boton('−', 'Alejar', () => zoom(1 / 1.6));
+    const cerrarB = boton('✕', 'Cerrar el mapa', () => cerrar()); cerrarB.className = 'x';
+    const fijarDestino = p => { destino = p; if (op.alDestino) op.alDestino(p); sucio = true; ui.aviso(p ? '📍 Destino: ' + (p.nombre || 'aquí') : '📍 Sin destino', 1600, 'destino'); };
+    /* tocar: el lugar o la estación más cercana en 28 px; si no, el punto */
+    const elegir = (px, py) => { const [wx, wy] = aMundo(px, py), r = 28 / k; if (destino && Math.hypot(destino.x - wx, destino.y - wy) < r) return fijarDestino(null); let mejor = null, bd = r;
+      const mirar = (x, y, nombre, tipo) => { const dd = Math.hypot(x - wx, y - wy); if (dd < bd) { bd = dd; mejor = { x, y, nombre, tipo }; } };
+      for (const p of leerPts()) mirar(p.x, p.y, p.texto || p.nombre || '', 'punto');
+      try { for (const l of M.transporte.lineas || []) for (const s of l.estaciones || []) mirar(s[1], s[2], s[0], 'estacion'); for (const s of M.transporte.encicla || []) mirar(s.x, s.y, s.nombre, 'encicla'); } catch (e) { /* sin transporte */ }
+      try { for (const L of M.lugares || []) mirar(L.x, L.y, L.nombre, 'lugar'); } catch (e) { /* sin lugares */ }
+      if (!mejor) { const b = M.barrio ? (() => { try { return M.lugarTexto(wx, wy); } catch (e) { return ''; } })() : ''; mejor = { x: wx, y: wy, nombre: b, tipo: 'punto' }; }
+      fijarDestino(mejor); };
+    const dedos = new Map(); let base = null, tocado = null;
+    c.addEventListener('pointerdown', e => { c.setPointerCapture(e.pointerId); dedos.set(e.pointerId, [e.clientX, e.clientY]); base = dedos.size === 2 ? [...dedos.values()] : null; tocado = dedos.size === 1 ? { x: e.clientX, y: e.clientY, t: performance.now(), mov: 0 } : null; });
+    c.addEventListener('pointermove', e => { const a = dedos.get(e.pointerId); if (!a) return; if (dedos.size === 1) { const dx = (e.clientX - a[0]) / k, dy = (e.clientY - a[1]) / k, cs = Math.cos(-giro), sn = Math.sin(-giro); cx -= dx * cs - dy * sn; cy -= dx * sn + dy * cs; if (tocado) tocado.mov += Math.hypot(e.clientX - a[0], e.clientY - a[1]); } dedos.set(e.pointerId, [e.clientX, e.clientY]); if (dedos.size === 2 && base) { const v = [...dedos.values()], d0 = Math.hypot(base[0][0] - base[1][0], base[0][1] - base[1][1]), d1 = Math.hypot(v[0][0] - v[1][0], v[0][1] - v[1][1]); if (d0 > 10) zoom(d1 / d0, (v[0][0] + v[1][0]) / 2, (v[0][1] + v[1][1]) / 2); base = v; tocado = null; } cx = clamp(cx, 0, M.ancho); cy = clamp(cy, 0, M.alto); sucio = true; });
+    const fin = e => { if (tocado && dedos.size === 1 && tocado.mov < 10 && performance.now() - tocado.t < 450) elegir(e.clientX, e.clientY); dedos.delete(e.pointerId); base = null; tocado = null; };
+    c.addEventListener('pointerup', fin); c.addEventListener('pointercancel', e => { dedos.delete(e.pointerId); base = null; tocado = null; });
+    c.addEventListener('wheel', e => { e.preventDefault(); zoom(Math.exp(-e.deltaY * .0015), e.clientX, e.clientY); }, { passive: false });
+    const tecla = e => { if (e.key === 'Escape' || e.key === 'm' || e.key === 'M') { e.preventDefault(); cerrar(); } else if (e.key === '+' || e.key === '=') zoom(1.6); else if (e.key === '-') zoom(1 / 1.6); }; document.addEventListener('keydown', tecla);
+    /* pintar: la general siempre; el detalle encima solo si hay pocas losas a la vista (las que falten llegan con presupuesto) */
+    let ultVer = -1, ultYo = '', faltan = 0, detalle = null;
+    const pintar = () => {
+      const W = Math.round(innerWidth * d), H = Math.round(innerHeight * d); if (c.width !== W || c.height !== H) { c.width = W; c.height = H; sucio = true; }
+      const V = MapaGrande.general(M), Y = leerYo(), cY = Y ? Math.round(Y.x) + ',' + Math.round(Y.y) + ',' + ((Y.a || 0) * 20 | 0) : '';
+      if (V && V.ver !== ultVer) { ultVer = V.ver; sucio = true; } if (cY !== ultYo) { ultYo = cY; sucio = true; }
+      const gObj = rumboArriba && Y ? -(Y.a || 0) - Math.PI / 2 : 0; if (Math.abs(angDif(giro, gObj)) > .002) { giro += angDif(giro, gObj) * .25; sucio = true; } else giro = gObj;
+      if (!sucio && !faltan) return; sucio = false;
+      const g = c.getContext('2d'), z = k * d; g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#10202c'; g.fillRect(0, 0, W, H);
+      const cs = Math.cos(giro), sn = Math.sin(giro); g.setTransform(z * cs, z * sn, -z * sn, z * cs, W / 2 - (cx * cs - cy * sn) * z, H / 2 - (cx * sn + cy * cs) * z); g.imageSmoothingEnabled = true;
+      if (V) g.drawImage(V.cv, 0, 0, V.W / V.k, V.H / V.k);
+      /* el detalle: solo cuando la general ya se ve borrosa y caben pocas losas */
+      faltan = 0; detalle = null; const hx = (Math.abs(cs) * W + Math.abs(sn) * H) / 2 / z, hy = (Math.abs(sn) * W + Math.abs(cs) * H) / 2 / z;   /* la caja que cubre la pantalla (girada o no) */
+      if (V && z > V.k * 1.4) { const rango = Ls => { const s = Ls.L; return [Math.floor(Math.max(0, cx - hx) / s), Math.floor(Math.min(M.ancho - 1, cx + hx) / s), Math.floor(Math.max(0, cy - hy) / s), Math.floor(Math.min(M.alto - 1, cy + hy) / s)]; }, cuenta = r => (r[1] - r[0] + 1) * (r[3] - r[2] + 1);
+        let Ls = null, r = null; if (Lc && z > .2) { r = rango(Lc); if (cuenta(r) <= Math.min(Lc.max - 10, 90)) Ls = Lc; } if (!Ls && Ll) { r = rango(Ll); if (cuenta(r) <= Math.min(Ll.max - 4, 30)) Ls = Ll; }
+        if (Ls) { detalle = Ls; const s = Ls.L, res = RES.find(q => q >= z * .8) || 2; for (let gy = r[2]; gy <= r[3]; gy++) for (let gx = r[0]; gx <= r[1]; gx++) { const q = Ls.losa(gx, gy, res, true, 0); if (q) g.drawImage(q, gx * s, gy * s, s + .6 / z, s + .6 / z); else faltan++; } if (Ls.pend.length > 120) Ls.pend.splice(0, Ls.pend.length - 120); } }   /* lo que falta llega con presupuesto; mientras, se ve la general */
+      /* la línea al destino: la ruta del juego si la da, si no una recta punteada */
+      if (destino && Y) { const P = op.ruta ? op.ruta() : null; g.lineWidth = 4 / z; g.strokeStyle = '#ffc23a'; g.setLineDash(P ? [] : [10 / z, 8 / z]); g.beginPath(); if (P && P.length >= 4) { g.moveTo(P[0], P[1]); for (let i = 2; i < P.length; i += 2) g.lineTo(P[i], P[i + 1]); } else { g.moveTo(Y.x, Y.y); g.lineTo(destino.x, destino.y); } g.stroke(); g.setLineDash([]); }
+      /* de aquí en adelante, en píxeles de la pantalla */
+      g.setTransform(1, 0, 0, 1, 0, 0); const P = (wx, wy) => { const dx = (wx - cx) * z, dy = (wy - cy) * z; return [W / 2 + dx * cs - dy * sn, H / 2 + dx * sn + dy * cs]; }, fuera = (x, y) => x < -40 || y < -40 || x > W + 40 || y > H + 40;
+      g.textAlign = 'center'; g.lineJoin = 'round'; const ocup = [];
+      /* 4.6: los nombres no se montan: cada uno reserva su caja y el que choque no se pinta (primero lo más importante) */
+      const nombre = (x, y, t, col = '#fff', tam = 12) => { if (!t) return false; g.font = '700 ' + Math.round(tam * d) + 'px system-ui, sans-serif'; const w = g.measureText(t).width / 2 + 3 * d, h = tam * d * .62 + 2 * d, R0 = [x - w, y - h * 1.6, x + w, y + h * .5]; if (R0[0] < 2 || R0[2] > W - 2 || R0[1] < 2 || R0[3] > H - 2) return false; for (const q of ocup) if (R0[0] < q[2] && R0[2] > q[0] && R0[1] < q[3] && R0[3] > q[1]) return false; ocup.push(R0); g.lineWidth = 3.5 * d; g.strokeStyle = '#000c'; g.strokeText(t, x, y); g.fillStyle = col; g.fillText(t, x, y); return true; };
+      const marca = (x, y, col, r) => { g.fillStyle = col; g.strokeStyle = '#000'; g.lineWidth = 2 * d; g.beginPath(); g.arc(x, y, r * d, 0, TAU); g.fill(); g.stroke(); };
+      /* el destino y los puntos del juego primero; luego las estaciones (cerca) y los lugares, hasta donde quepan */
+      let dP = null; if (destino) { dP = P(destino.x, destino.y); ocup.push([dP[0] - 12 * d, dP[1] - 28 * d, dP[0] + 12 * d, dP[1] + 2 * d]); if (destino.nombre) nombre(dP[0], dP[1] - 30 * d, destino.nombre, '#ffe9a8', 13); }
+      const Pts = leerPts().map(p => [p, P(p.x, p.y)]).filter(q => !fuera(q[1][0], q[1][1])); for (const [p, [px, py]] of Pts) { marca(px, py, p.color || '#ffc23a', 7); if (p.texto) nombre(px, py - 12 * d, p.texto, '#fff', 12); }
+      if (k > .06) try { const Es = []; for (const l of M.transporte.lineas || []) for (const s of l.estaciones || []) { const [x, y] = P(s[1], s[2]); if (!fuera(x, y)) { marca(x, y, l.color || '#00a3e0', 4.5); Es.push([x, y, s[0]]); } } if (k > .16) for (const [x, y, t] of Es) nombre(x, y - 9 * d, t, '#cfeeff', 11); } catch (e) { /* sin transporte */ }
+      try { let n = 0; for (const L of M.lugares || []) { if (n >= 60) break; const [x, y] = P(L.x, L.y); if (fuera(x, y)) continue; if (nombre(x, y, L.nombre, '#fff', k > .2 ? 13 : 11.5)) n++; } } catch (e) { /* sin lugares */ }
+      if (dP) { const [px, py] = dP; g.fillStyle = '#ffc23a'; g.strokeStyle = '#1a1a1a'; g.lineWidth = 2 * d; g.beginPath(); g.moveTo(px, py); g.arc(px, py - 16 * d, 9 * d, Math.PI * .8, Math.PI * .2); g.closePath(); g.fill(); g.stroke(); g.fillStyle = '#1a1a1a'; g.beginPath(); g.arc(px, py - 16 * d, 3.5 * d, 0, TAU); g.fill(); }
+      if (Y) { const [px, py] = P(Y.x, Y.y); g.save(); g.translate(px, py); g.rotate((Y.a || 0) + Math.PI / 2 + giro); g.fillStyle = '#2ee6a6'; g.strokeStyle = '#06261c'; g.lineWidth = 2 * d; g.beginPath(); g.moveTo(0, -12 * d); g.lineTo(9 * d, 10 * d); g.lineTo(0, 5 * d); g.lineTo(-9 * d, 10 * d); g.closePath(); g.fill(); g.stroke(); g.restore(); }
+      /* la brújula marca el norte; el pie, lo que hay en el centro y la escala */
+      brujula.style.transform = 'rotate(' + giro + 'rad)';
+      const m = 110 / k, esc = m >= 1000 ? (m / 1000).toFixed(m > 9000 ? 0 : 1) + ' km' : Math.round(m) + ' m', lugar = (() => { try { return M.lugarTexto(cx, cy); } catch (e) { return ''; } })();
+      pie.textContent = (V && !V.listo ? '⏳ Armando el mapa… · ' : '') + (lugar ? lugar + ' · ' : '') + '▬ ' + esc + (destino ? ' · 📍 ' + (Y ? (Math.hypot(destino.x - Y.x, destino.y - Y.y) / 1000).toFixed(1) + ' km' : '') : ' · toca para marcar destino');
+    };
+    let raf = 0; const ciclo = () => { if (!abierto) return; raf = requestAnimationFrame(ciclo); const V = MapaGrande.general(M); MapaGrande.trabajar(M, V && !V.listo ? 10 : 0); if (faltan && detalle) detalle.trabajar(8); pintar(); };
+    const cerrar = () => { if (!abierto) return; abierto = false; cancelAnimationFrame(raf); document.removeEventListener('keydown', tecla); o.remove(); ui._mapa = null; if (op.pausa) op.pausa(false); MC.emit('mapa', false); if (op.alCerrar) op.alCerrar(destino); };
+    if (op.pausa) op.pausa(true); MC.emit('mapa', true); ciclo();
+    return (ui._mapa = { o, pintar: () => { sucio = true; }, cerrar, destino: () => destino });
+  }
+};
+MC.MapaGrande = MapaGrande;
 
 /* ---- js/71-rostros.js ---- */
 /* =====================================================================
@@ -9110,7 +9223,7 @@ const Publico = {
 };
 MC.Publico = Publico;
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-raster-sector.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","32-rotos.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","45-pvs.js","46-vistas.js","47-clasicos.js","47-colormap.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","71-rostros.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-efectos.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-raster-sector.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","32-rotos.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","45-pvs.js","46-vistas.js","47-clasicos.js","47-colormap.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","70-mapa.js","71-rostros.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-efectos.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;
