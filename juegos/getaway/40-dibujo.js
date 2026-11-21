@@ -103,7 +103,7 @@ function hud() {
   U.pintarMinimapa(C.x, C.y, G.camara.yaw, pts); mapaPts = pts;
   /* la sirena más cercana suena con Doppler (se acerca: más aguda; se aleja: más grave) y el motor sigue las rpm */
   let pol = null, dp = 160; for (const r of B.rivales) if (r.bando === 'policia' && !r.roto && !r.retirada) { const d = Math.hypot(r.cuerpo.x - C.x, r.cuerpo.y - C.y); if (d < dp) { dp = d; pol = r; } }
-  Snd.sirenaVol(pol ? clamp(1.1 - dp / 160, .15, 1) : 0); if (pol) { const vr = G._dpol != null && G._polId === pol.id ? (dp - G._dpol) / .25 : 0; Snd.doppler(vr); G._dpol = dp; G._polId = pol.id; } else G._dpol = null;
+  if (pol) { const vr = G._dpol != null && G._polId === pol.id ? (dp - G._dpol) / .25 : 0; if (G._ocPolId !== pol.id || G.t - (G._ocT ?? -1e8) > .25) { G._ocluido = MC.PersecucionAudio.ocluido(G.M, C, pol.cuerpo); G._ocT = G.t; G._ocPolId = pol.id; } const p = MC.PersecucionAudio.plan({ distancia: dp, velocidadRadial: vr, ocluido: G._ocluido, interior: !!G.enInterior }); Snd.sirenaVol(p.volumen, p.corte); Snd.doppler(vr); G._dpol = dp; G._polId = pol.id; } else { Snd.sirenaVol(0); G._dpol = null; G._ocPolId = null; }
   Snd.motor(C.v, enCarro && G.carro > 0, G.ctl.botones.has('freno') ? -1 : 1);
   /* la música sigue la tensión (MC.Musica, compuesta en el momento) */
   if ((musT -= .25) <= 0 && Snd.on && Snd.ac) { musT = 20; const tension = clamp(B.nivel / 5 + (banda ? .4 : 0), 0, 1), A = MC.Musica.adaptar({ velocidad: Math.abs(C.v), hora: G.reloj.hora, clima: G.clima, tension }); if (!tocando || A.estilo !== G._estiloMus) { G._estiloMus = A.estilo; tocando = MC.Musica.tocar({ estilo: A.estilo, energia: A.energia, compases: 16 }); MC.Musica.volumen(.32); } }

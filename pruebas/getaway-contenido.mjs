@@ -28,3 +28,19 @@ for(const s of ['¡Quítense, hijueputas!','Hoy no, malparidos.','¡Párese, gon
 const fuerte=vm.runInNewContext(mat[0]+'\n suave',{leerG:()=>({suave:false})});
 assert.equal(fuerte('¡Párese, gonorrea!'),'¡Párese, gonorrea!');
 console.log('G-H21/22/23: 19 lugares inventariados, 28 paradas, lenguaje suave y fuerte OK');
+
+
+/* C-M36: el audio espacial es una función pura y sus límites se prueban sin navegador. */
+const auCtx={MC:{},clamp:(v,a,b)=>Math.max(a,Math.min(b,v))};
+vm.runInNewContext(f('js/61-sonido.js'),auCtx);
+const audio=auCtx.MC.PersecucionAudio;
+assert(audio && typeof audio.plan==='function');
+const cerca=audio.plan({distancia:10,velocidadRadial:-25}),lejos=audio.plan({distancia:130,velocidadRadial:25,ocluido:true});
+assert(cerca.volumen>lejos.volumen && cerca.doppler>1 && lejos.doppler<1);
+assert(audio.plan({distancia:20,ocluido:true}).corte < audio.plan({distancia:20}).corte);
+assert(audio.motor({velocidad:22,aceleracion:1,activo:true}).volumen>0);
+assert.equal(audio.motor({velocidad:22,aceleracion:1,activo:false}).volumen,0);
+const muro={edificioEn:(x,y)=>x>=4&&x<=6&&Math.abs(y)<1};
+assert.equal(audio.ocluido(muro,{x:0,y:0},{x:10,y:0}),true);
+assert.equal(audio.ocluido(muro,{x:0,y:3},{x:10,y:3}),false);
+console.log('C-M36: atenuación, Doppler, filtro y oclusión OK');
