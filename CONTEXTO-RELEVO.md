@@ -314,3 +314,11 @@
   - Ninguna captura de *Turno Cero* principal corrió aún sobre WebGL con GPU física (solo respaldo 2D en VM); la escena de Codex sí validó WebGL2 por SwiftShader.
   - `pruebas/getaway-3d.mjs` usa `headless: false` y requiere `xvfb-run` en Linux sin X11.
 - **Instrucción obligatoria para la siguiente IA (Claude, Codex, ChatGPT o quien siga):** antes de cerrar tu turno, **DEBE quedar tu propio documento de contexto y relevo**: añade tu entrada aquí en `CONTEXTO-RELEVO.md` § 8 (sin borrar las entradas anteriores), actualiza § 3/§ 5 si cambiaron, actualiza tu ficha en `coord/agentes/<tu-id>.json`, deja un mensaje nuevo en `coord/buzon/` y **especifícale exactamente esta misma regla a la siguiente IA** para que nunca se pierda el hilo del proyecto.
+
+### ChatGPT · 21-nov-2026 UTC · Motor City 4.1 · memoria de MC.Planeta (rama separada)
+
+- Sobre `main` 4.1.0 se implementó `MC.Planeta` single-flight para evitar varias descompresiones de la misma ciudad concurrentes, LRU auténtico con reserva de ciudad activa, presupuesto `maxMundos` y `diagnosticoCache()`.
+- Turno Cero marca su ciudad actual con `planeta.fijar(id)`, sin modificar misiones ni narrativa.
+- Pruebas adicionales: 7 casos Node de carga/fallo/concurrencia/LRU, y Chromium offline para partida y cambio real Guatapé → Medellín. Añadidas a CI, sin borrar pruebas existentes.
+- Guía `docs/PLANETA-CACHE-CONCURRENCIA.md`; informe `reportes/2026-11-21-chatgpt-planeta-cache-410.md`; relevo `coord/buzon/20261121-chatgpt-planeta-cache-410.md`.
+- Esta entrega es independiente de PR #9: no se toca el empaquetado MC4 por capas, tampoco hay streaming espacial ni benchmark de GPU física. Revisar CI antes de integrar.
