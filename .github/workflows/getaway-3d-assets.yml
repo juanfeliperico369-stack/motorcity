@@ -29,16 +29,23 @@ jobs:
         run: python3 juegos/getaway/arte3d/generar_actores_rig.py
       - name: Verificar glTF skin y animaciones
         run: python3 juegos/getaway/arte3d/validar_actores_rig.py
+      - name: Generar UV + dos mapas PBR de 1024 (4 vehículos, 2 personajes)
+        run: python3 juegos/getaway/arte3d/texturizar_pbr.py
+      - name: Validar seis GLB con PBR, PNG embebidos y rigs intactos
+        run: python3 juegos/getaway/arte3d/validar_pbr.py
       - name: Comprobar el total de 51 modelos
         run: |
           test "$(find juegos/getaway/arte3d/modelos -name '*.glb' -type f | wc -l)" -eq 42
           test "$(find juegos/getaway/arte3d/rigged -name '*.glb' -type f | wc -l)" -eq 9
       - uses: actions/upload-artifact@v4
         with:
-          name: turno-cero-51-modelos-glb
+          name: turno-cero-51-modelos-6-pbr
           path: |
             juegos/getaway/arte3d/modelos/*.glb
             juegos/getaway/arte3d/rigged/*.glb
+            juegos/getaway/arte3d/pbr/*.glb
+            juegos/getaway/arte3d/pbr/*.png
+            juegos/getaway/arte3d/pbr/manifest-pbr.json
             juegos/getaway/arte3d/rigged/manifest-rig.json
             juegos/getaway/arte3d/manifest.json
             juegos/getaway/arte3d/README.md

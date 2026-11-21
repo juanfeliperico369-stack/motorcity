@@ -316,6 +316,13 @@
   - Ninguna captura de *Turno Cero* principal corrió aún sobre WebGL con GPU física (solo respaldo 2D en VM); la escena de Codex sí validó WebGL2 por SwiftShader.
   - `pruebas/getaway-3d.mjs` usa `headless: false` y requiere `xvfb-run` en Linux sin X11.
 - **Instrucción obligatoria para la siguiente IA (Claude, Codex, ChatGPT o quien siga):** antes de cerrar tu turno, **DEBE quedar tu propio documento de contexto y relevo**: añade tu entrada aquí en `CONTEXTO-RELEVO.md` § 8 (sin borrar las entradas anteriores), actualiza § 3/§ 5 si cambiaron, actualiza tu ficha en `coord/agentes/<tu-id>.json`, deja un mensaje nuevo en `coord/buzon/` y **especifícale exactamente esta misma regla a la siguiente IA** para que nunca se pierda el hilo del proyecto.
+### ChatGPT · 20–21 nov 2026 · integración Claude 4.0.2, Gemini PR #8 y nuevos QA
+- Merge de dos padres de `main` (Claude 4.0.2) con la rama PR #7 sin pisar las mecánicas de Run, carreras y accesibilidad.
+- Importación literal de 18 archivos artísticos de Gemini, 17 informes/capturas y 3 registros de coordinación de PR #8; los originales y la autoría permanecen inalterados.
+- G-H21/22/23: 8 correcciones geográficas, finca ficticia en punto con acceso al agua verificado por Gemini, 28 paradas originales con rutas/tipo, subtítulos y lenguaje con gramática correcta.
+- C-M32/31/34/35: persecución sin visión a través de muros, planeta responsive con etiquetas, caché de mundo anterior liberada al entrar, piezas 2D además de 3D. C-A16: seis modelos con UV/PBR 1024 generables y validables.
+- Corregido campo EDJ de geometría de paradas y controles de señuelo en móvil.
+- **Pendiente:** CI del último HEAD, GPU/RAM física, streaming MC4, PBR en shader y arte final de mallas. No fusionar PR #7 hasta verificar.
 
 # MOTOR CITY · Documento único
 
