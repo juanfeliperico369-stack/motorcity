@@ -165,3 +165,22 @@ for (const [frase, esperado] of [
 const histSrc=f('juegos/getaway/30-historia.js');
 assert(histSrc.includes('suave(c.n)') && histSrc.includes('suave(c.texto)'),'filtrar título y descripción de contratos');
 console.log('G-H23 Gemini · capitalización, singular/plural, insultos y contratos OK');
+
+
+/* C-M32 + Claude 4.0.2: persecución sólo con visión, nunca teletransporta tras pared. */
+const sensor={x:0,y:0,a:0,a0:0,vista:24,cono:1.05,origen:{x:0,y:0}};
+const presa={x:12,y:0};
+const bloqueo=pie.perseguir(sensor,presa,pared,.05);
+assert.equal(bloqueo.visible,false);
+assert.equal(sensor.x,0,'no persigue al jugador invisible');
+const okVista=pie.perseguir(sensor,presa,libre,.05);
+assert(okVista.visible&&okVista.movio&&sensor.x>0);
+const ultimaVista=sensor.ultima.x;
+presa.x=200;presa.y=100;
+const ciega=pie.perseguir(sensor,presa,libre,.05);
+assert(!ciega.movio&&!ciega.golpe&&sensor.ultima.x===ultimaVista);
+const cercaGuard={x:0,y:0,a:0,vista:24,cono:1.05};
+assert(pie.perseguir(cercaGuard,{x:1,y:0},libre,.05).golpe,'sólo golpea visible y próximo');
+const bloqueada={x:0,y:0,a:0,vista:24,cono:1.05};
+assert(!pie.perseguir(bloqueada,{x:5,y:0},pared,.05).golpe,'no golpea tras un muro');
+console.log('C-M32 · persecución tras alarma respeta línea de visión, obstáculos y último avistamiento');
