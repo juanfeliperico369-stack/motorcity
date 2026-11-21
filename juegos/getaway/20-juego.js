@@ -40,8 +40,20 @@ const Snd = {
 
 /* ---------- el planeta y sus mundos (cada MC4 viene en un <script type="text/plain">) ---------- */
 async function cargarCiudad(id) {
-  const el = document.getElementById('mc4-' + id); if (!el) throw new Error('Este juego no trae el mundo ' + id);
   const C = MC_CIUDADES[id], cfg = Object.assign({}, C, { zonas: Object.assign({}, MC.ZONAS_BASE, C.zonas || {}) });
+  /* C-M34: preferir las capas comprimidas embebidas, sin decodificar el MC4
+     entero; el paquete monolítico anterior sigue admitido para guardados
+     y HTML de versiones previas. Nunca requiere conexión de red. */
+  const metaEl = document.getElementById('mc4meta-' + id);
+  if (metaEl) {
+    const meta = JSON.parse(metaEl.textContent);
+    return MC.Mundo.cargarPaquete(meta, nombre => {
+      const el = document.getElementById('mc4-' + id + '-' + nombre);
+      return el ? el.textContent : null;
+    }, cfg);
+  }
+  const el = document.getElementById('mc4-' + id);
+  if (!el) throw new Error('Este juego no trae el mundo ' + id);
   return MC.Mundo.cargar(el.textContent, cfg);
 }
 const planeta = new MC.Planeta({ cargar: cargarCiudad, radioVisual: R_PLANETA });
