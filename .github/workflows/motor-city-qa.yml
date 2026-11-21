@@ -28,6 +28,8 @@ jobs:
           node-version: "22"
       - name: Construir HTML y el motor
         run: node motor.mjs construir
+      - name: C-M34 · carga única y presupuesto LRU de MC.Planeta
+        run: node pruebas/planeta-cache-cm34.mjs
       - name: Pruebas Node
         run: node motor.mjs prueba
       - name: G-H21/22/23 · lugares, paradas y lenguaje
