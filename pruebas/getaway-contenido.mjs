@@ -116,3 +116,20 @@ piezCtx.MC.Piezas.motorDano(mock,[0,0,0],0,{f:.95},1);
 assert(mock.n>1,'humo/fuego son primitivas 3D');
 piezas.limpiar();assert.equal(piezas.lista.length,0);
 console.log('C-M35 · capó, puertas y llanta: gravedad, rebote, geometría 3D y limpieza OK');
+
+
+/* C-M31: el módulo WebGL2 no inicia WebGL si no hay GPU; deja el mundo 2D operativo. */
+const glSrc=f('js/13-globo-gpu.js');
+assert(glSrc.includes('#version 300 es'),'shader WebGL2');
+assert(glSrc.includes('uniform float uStops[11]'),'11 bandas de biomas');
+assert(glSrc.includes('uJugador'),'indicador del jugador');
+assert(glSrc.includes('MC.GloboGPU=GloboGPU'),'la API es pública');
+const glCtx={MC:{},Math};
+vm.runInNewContext(glSrc,glCtx);
+const falso=new glCtx.MC.GloboGPU({getContext:()=>null},[]);
+assert.equal(falso.ok,false);
+assert.equal(falso.dibujar(360,740,{}),false);
+const pantalla=f('juegos/getaway/index.html');
+assert(pantalla.includes('id="ggl"')&&pantalla.includes('id="gcv"'),'2 lienzos: GPU y 2D, conservan fallback');
+assert(f('juegos/getaway/40-dibujo.js').includes('planeta.globo(c.getContext'),'fallback 2D intacto');
+console.log('C-M31: shader WebGL2 y fallback 2D disponibles');

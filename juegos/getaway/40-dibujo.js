@@ -112,9 +112,20 @@ function hud() {
 /* ---------- el planeta entero (MC.Planeta.globo): se arrastra para girarlo ---------- */
 const Globo = {
   lon0: null, inc: .32,
-  abrir(desdeZoom) { const P = planeta.enGlobo(G.id, G.cuerpo.x, G.cuerpo.y); this.lon0 = P.lon; G.globo = true; G.pausa = true; $('#globo').hidden = false; const cv0 = $('#gcv'); cv0.classList.remove('llega'); void cv0.offsetWidth; cv0.classList.add('llega'); if (desdeZoom) G.ui.aviso('🌍 Te alejaste hasta ver el planeta entero', 2200, 'globo'); const c = $('#gcv'); let x0 = null; c.onpointerdown = e => { x0 = e.clientX; c.setPointerCapture(e.pointerId); }; c.onpointermove = e => { if (x0 == null) return; this.lon0 -= (e.clientX - x0) * .35; x0 = e.clientX; }; c.onpointerup = () => { x0 = null; };
+  abrir(desdeZoom) { const P = planeta.enGlobo(G.id, G.cuerpo.x, G.cuerpo.y); this.lon0 = P.lon; G.globo = true; G.pausa = true; $('#globo').hidden = false; const cv0 = $('#gcv'), cvGPU = $('#ggl'); cv0.classList.remove('llega'); cvGPU.classList.remove('llega'); void cv0.offsetWidth; cv0.classList.add('llega'); cvGPU.classList.add('llega'); if (desdeZoom) G.ui.aviso('🌍 Te alejaste hasta ver el planeta entero', 2200, 'globo'); const c = $('#gcv'); let x0 = null; c.onpointerdown = e => { x0 = e.clientX; c.setPointerCapture(e.pointerId); }; c.onpointermove = e => { if (x0 == null) return; this.lon0 -= (e.clientX - x0) * .35; x0 = e.clientX; }; c.onpointerup = () => { x0 = null; };
     const d = planeta.def(G.id), C = G.cuerpo, txt = d.tipo === 'tramo' ? 'Vas por la <b>' + d.nombre + '</b>, km ' + (C.y / 1000).toFixed(1) + ' de ' + (d.largo / 1000).toFixed(0) + ' · Sigue: <b>' + planeta.vecino(G.id, 1).nombre + '</b>' : 'Estás en <b>' + d.nombre + '</b> · Siguiente parada: <b>' + planeta.vecino(G.id, 1).nombre + '</b> · Anterior: ' + planeta.vecino(G.id, -1).nombre;
     $('#gInfo').innerHTML = txt + '<br><small>Un planeta: tres ciudades reales y kilómetros de nada entre ellas. Arrastra para girarlo.</small>'; },
   cerrar() { G.globo = false; G.pausa = false; $('#globo').hidden = true; }
 };
-function pintarGlobo(dt) { const c = $('#gcv'), dp = Math.min(2, devicePixelRatio || 1), W = c.width = Math.round(innerWidth * dp), H = c.height = Math.round(innerHeight * dp), g = c.getContext('2d'); G.t += dt * .2; Globo.lon0 += dt * 2; planeta.globo(g, W, H, { lon0: Globo.lon0, inclinacion: Globo.inc, t: G.t, yo: { id: G.id, x: G.cuerpo.x, y: G.cuerpo.y } }); }
+function pintarGlobo(dt) {
+  const c = $('#gcv'), d = Math.min(1.5, devicePixelRatio || 1), W = Math.round(innerWidth * d), H = Math.round(innerHeight * d);
+  G.t += dt * .2; Globo.lon0 += dt * 2;
+  if (!Globo.gpu) Globo.gpu = new MC.GloboGPU($('#ggl'), planeta.anillo);
+  const jugador = planeta.enGlobo(G.id, G.cuerpo.x, G.cuerpo.y);
+  const webgl = Globo.gpu.dibujar(W, H, { lon0: Globo.lon0, inc: Globo.inc, t: G.t, jugador });
+  c.style.opacity = webgl ? '0' : '1';
+  if (!webgl) {
+    c.width = W; c.height = H;
+    planeta.globo(c.getContext('2d'), W, H, { lon0: Globo.lon0, inclinacion: Globo.inc, t: G.t, yo: { id: G.id, x: G.cuerpo.x, y: G.cuerpo.y } });
+  }
+}
