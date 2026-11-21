@@ -1,22 +1,27 @@
 {
   "agente": "antigravity",
-  "rol": "QA móvil, revisión multi-IA, arte conceptual/PBR aditivo, datos de mundo y pruebas (Gemini · Antigravity)",
+  "rol": "QA móvil, revisión multi-IA, arte conceptual/PBR aditivo, ingeniería inversa limpia de motores clásicos sobre MC4 real y pruebas",
   "rama": "ia/antigravity/motorcity-4.0",
-  "base": "288a258",
-  "version_motor": "4.0.2",
-  "actualizado": "2026-11-21T04:00:00Z",
+  "base": "ae098eb",
+  "version_motor": "4.0.3",
+  "actualizado": "2026-11-21T04:45:00Z",
   "estado": "entregado",
   "zonas_exclusivas": [
-    "contenido/paradas-carretera.json",
     "arte/gemini/turno-cero/",
+    "docs/MOTORES-CLASICOS-INGENIERIA.md",
+    "experimentos/tecnicas-clasicas/",
     "reportes/2026-11-21-gemini-herramientas-4.0.md",
     "reportes/2026-11-21-gemini-turno-cero.md",
     "reportes/2026-11-21-gemini-revision-pr7.md",
+    "reportes/2026-11-21-gemini-verificacion-4.0.3-y-pr9.md",
     "reportes/img/turno-cero-4.0/",
     "reportes/img/pr7-revision/",
+    "reportes/img/verificacion-4.0.3/",
     "coord/agentes/antigravity.json",
     "coord/buzon/20261121-0320-antigravity-relevo-4.0.md",
-    "coord/buzon/20261121-0400-antigravity-revision-pr7-y-arte.md"
+    "coord/buzon/20261121-0400-antigravity-revision-pr7-y-arte.md",
+    "coord/buzon/20261121-0420-antigravity-motores-clasicos.md",
+    "coord/buzon/20261121-0445-antigravity-mc4-real-y-pr9.md"
   ],
   "zonas_no_tocadas": [
     "js/",
@@ -28,23 +33,22 @@
     "juegos/getaway/turno-cero-accion-3d.html"
   ],
   "tareas_completadas": [
-    "Sincronizacion limpia con Motor City 4.0.2 (288a258) sin conflictos ni cambios en JS/MJS",
-    "G-H22: contenido/paradas-carretera.json (28 paradas originales, 4 por bioma x 7 biomas)",
-    "G-H12/13/6: 4 skills externas + publico simulado + legacy-scan (6/6 dropWhen) + 151/151 navegador + 4/4 portada",
-    "G-H20/21/23/24: 12 capturas Turno Cero + 19 lugares verificados + filtro lenguaje + carga/JS Heap",
-    "Revision completa PR #7 (ia/chatgpt/4-0-2-gemini-auditoria): 151/151 navegador local + 3/3 GitHub Actions + benchmark memoria multi-ciudad (201.3 -> 258.9 MB) + capturas GloboGPU/Piezas + verificacion gu_finca (6.2301,-75.1648 agua40m:true)",
-    "Arte pintado aditivo C-A17/C-A16 en arte/gemini/turno-cero/: portada 1080x1920 + 5 laminas de acto 1280x720 + atlas PBR 3x3 1024x1024 + 9 losetas 256x256 + catalogo.json + galeria.html interactiva offline"
+    "Fase 1 (integrada en 4.0.3): G-H20..24, G-H12/13/6, 12 capturas, 19 lugares, lenguaje, paradas y pruebas",
+    "Fase 2: revision tecnica/visual/memoria PR #7 + paquete de arte pintado C-A17/C-A16 (arte/gemini/turno-cero/ + galeria.html)",
+    "Fase 3: guia clean-room de 10 motores clasicos (docs/MOTORES-CLASICOS-INGENIERIA.md) + mc-clasico.js + prueba-clasico.mjs + laboratorio.html",
+    "Fase 4: conexion de algoritmos clasicos a datos/{guatape,medellin,nueva_york}/mundo.mc4 reales (extraer-mc4-demo.mjs, 93.5-95.0% descarte en Chelsea/Midtown/Poblado/Centro, Guatape SRTM Voxel Space 0.99 ms CPU, datos-reales-mc4.js 101.7 KB) + verificacion visual 4.0.3 (regresion ALTA menu pausa cortado arriba) + auditoria completa PR #9 C-M34 (HTML -60% arranque, NY -12.5 MB, fuga multi-ciudad 270.7 vs 279.6 MB)"
   ],
   "pendientes_siguiente_ia": [
-    "Claude / Codex: rebasar PR #7 sobre 4.0.2; evacuar cache de ciudad previa en MC.Planeta (-190 MB al viajar NY->Medellin); corregir encuadre/etiquetas en MC.GloboGPU; agregar respaldo 2D a MC.Piezas; aplicar 4 calles + 'coro'->'camara' + LENGUAJE_SUAVE + portada sobre el pliegue",
-    "Claude / ChatGPT: integrar arte/gemini/turno-cero/ (portada + 5 laminas + atlas PBR) o combinar con arte/chatgpt/turno-cero/",
-    "Autor / QA fisico: medir Turno Cero en celular Android/iOS real con GPU (tabla 1.3 de reportes/2026-11-21-gemini-turno-cero.md)",
+    "Claude (URGENTE 4.0.4): corregir recorte superior del menu de pausa en 412x860 (reportes/img/verificacion-4.0.3/02-menu-pausa-403.webp corta 'Seguir' y 4 botones arriba)",
+    "Claude / Codex (ALTA): evacuar mundo anterior en MC.Planeta al cambiar de ciudad (ahorra ~190-210 MB en 4.0.3 y PR #9)",
+    "Claude / Codex: integrar CulleoUrbano (93.5-95% descarte real MC4), hornearAOUrbano, FisicaDriver, PoolParticulas y EscaladorDinamico de mc-clasico.js + adoptar arte/gemini/turno-cero/ + arreglar encuadre/etiquetas MC.GloboGPU",
+    "Autor / QA fisico: medir Turno Cero en celular real con GPU (tabla 1.3 de reportes/2026-11-21-gemini-turno-cero.md)",
     "OBLIGATORIO para la siguiente IA: dejar entrada en CONTEXTO-RELEVO.md seccion 8, ficha en coord/agentes/ y mensaje en coord/buzon/"
   ],
   "pruebas": {
-    "pr7_navegador_local": "151/151 verde (90.6 s, CPU 4x)",
-    "pr7_github_actions": "3/3 pass (nucleo/atlas, gltf, chromium movil)",
-    "pr7_heap_ny": "201.3 MB usados / 266.4 MB reservados (NY->Medellin sube a 258.9 MB / 316 MB)",
-    "arte_galeria_html": "verificada en Chromium 412x860 y 1280x800 (0 errores, 0 imagenes rotas, 0 desborde)"
+    "clasico_unitarias_y_mc4_real": "6/6 verde incluyendo VoxelTerreno.cargarDesdeSnapshot sobre Guatape SRTM real",
+    "pr9_ci_local": "construir OK + sectores-cm34 5/5 + paquete-capas-cm34 OK + paquete-capas-browser 412x860 OK (0 errores)",
+    "verificacion_403_visual": "4 capturas 412x860: portada OK, G CEBO OK, regresion ALTA menu pausa cortado arriba, globo GPU pendiente",
+    "laboratorio_mc4_real": "verificado en Chromium con datos reales Chelsea/Poblado y SRTM real Guatape/Medellin"
   }
 }
