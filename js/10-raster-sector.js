@@ -52,9 +52,8 @@ class RasterMC4 {
       if (!(typeof comprimidos === 'string' || (comprimidos && typeof comprimidos.subarray === 'function'))) {
         throw new Error('Sector raster MC4 ausente: ' + id);
       }
-      const raw = inflarSync(typeof comprimidos === 'string' ? deB64(comprimidos) : comprimidos,
-        this._dim(ix, iy).w * this._dim(ix, iy).h);
       const { w, h } = this._dim(ix, iy);
+      const raw = inflarSync(typeof comprimidos === 'string' ? deB64(comprimidos) : comprimidos, w * h);
       if (raw.byteLength !== w * h) throw new Error('Sector raster MC4 corrupto: ' + id);
       datos = this.spec.tipo === 'i8'
         ? new Int8Array(raw.buffer, raw.byteOffset, raw.byteLength) : raw;
@@ -71,7 +70,8 @@ class RasterMC4 {
     if (!Number.isSafeInteger(tx) || !Number.isSafeInteger(ty) ||
       tx < 0 || ty < 0 || tx >= this.spec.w || ty >= this.spec.h) return undefined;
     const lado = this.spec.lado, ix = Math.floor(tx / lado), iy = Math.floor(ty / lado);
-    const { w } = this._dim(ix, iy);
+    /* Ruta caliente sin objetos temporales por píxel. */
+    const w = Math.min(lado, this.spec.w - ix * lado);
     const sector = this._pedir(ix, iy);
     return sector[(ty - iy * lado) * w + tx - ix * lado];
   }
