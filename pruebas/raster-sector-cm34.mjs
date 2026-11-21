@@ -52,7 +52,7 @@ assert(diag.expulsiones > 0 && diag.descompresiones >= 16, 'LRU no alcanzó pres
 assert(diag.residentes <= 4 && diag.bytesResidentes <= 4 * lado * lado,
   'se superó presupuesto de memoria raster');
 const completo = raster.completa();
-assert(completo instanceof Object && completo.length === raw.length);
+assert(ArrayBuffer.isView(completo) && completo.length === raw.length);
 assert.equal(crypto.createHash('sha256').update(Buffer.from(completo.buffer, completo.byteOffset, completo.byteLength)).digest('hex'),
   crypto.createHash('sha256').update(raw).digest('hex'));
 assert.equal(raster.diagnostico().residentes, 0, 'la materialización debe liberar sectores de la caché');
