@@ -66,3 +66,25 @@ El primer run de PR #9 (https://github.com/juanfeliperico369-stack/motorcity/act
 **Arreglo aplicado a la rama:** validar el contrato necesario del caché (métodos keys y delete) en vez de instanceof Map. El test independiente se cambió para correr la clase en otro contexto JavaScript sin inyectar la clase Map del host; los 5 grupos volvieron a pasar localmente. Queda la repetición CI del commit corregido para cerrar esta incidencia.
 
 Esta incidencia muestra por qué pasar sólo pruebas aisladas nunca sustituye comprobar el consumidor real ni la CI completa.
+
+## 7. Continuación C-M34 · carga offline por capas comprimidas
+
+**Pedido del autor:** continuar desarrollando y mejorando el motor. La parte inicial de esta rama únicamente corrigió la caché ED1; esta ampliación crea un cargador real de **capas** comprimidas de MC4 sin necesidad de deserializar primero el contenedor binario completo.
+
+Cambios adicionales en esta misma rama:
+
+- `js/10-mundo.js`: `MC.Mundo.desdePaquete(meta, obtener, cfg)` y `MC.Mundo.cargarPaquete(meta, obtener, cfg)`. `_bytes(c, nombre)` acepta un proveedor sincrónico Base64/bytes y verifica longitud. El lector original sigue intacto.
+- `herramientas/construir.mjs`: con `mundos_capas:true` en `juego.json`, separa la cabecera MC4 y sus entradas deflate sin recomprimir; verifica límite del archivo, nombre de capa seguro y escapa metadatos para HTML.
+- `juegos/getaway/juego.json`: opt-in en el juego de tres ciudades.
+- `juegos/getaway/20-juego.js`: lector dual (capas primero, MC4 monolítico anterior como compatibilidad), sin cambios de historia o mecánicas.
+- `pruebas/paquete-capas-cm34.mjs`: prueba real de los tres mundos contra los bytes comprimidos de las fuentes MC4, equivalencia de capas y validación de errores.
+- `pruebas/paquete-capas-browser.mjs`: inicia una partida de Guatapé desde la portada en Chromium 412×860, carga Medellín y Manhattan y verifica que no hubo llamadas a red.
+- Workflow: ambas pruebas integradas. API, límites y comandos en `docs/MC4-CAPAS-OFFLINE.md`.
+
+**Lo que este cambio no hace:** no divide el suelo, relieve o edificios en sectores de 1 km; no reduce el peso descargado del HTML; no demuestra una tasa de FPS ni una cantidad de memoria ahorrada. Es una mejora de decodificación e infraestructura previa al streaming territorial.
+
+**Estado de validación:** la compilación, regresión C-M34 anterior y suite general Node ya habían pasado CI de GitHub en la etapa precedente de la PR. La ampliación de empaquetado necesita aprobación de la nueva CI, pruebas de partida en Chromium y un perfil físico de memoria. No confundir pasos verdes de un commit anterior con el veredicto del nuevo commit.
+
+**Referencia técnica de APIs:** https://developer.mozilla.org/en-US/docs/Web/API/DecompressionStream/DecompressionStream y https://docs.godotengine.org/en/stable/tutorials/3d/visibility_ranges.html. `DecompressionStream` usa el respaldo JS existente cuando no está disponible; no se añadió dependencia.
+
+**Siguiente hito prioritario:** índice y formato de chunks espaciales de suelo/relieve/ED1 con precarga por velocidad, preservando colisiones y guardados, antes de declarar C-M34 completado.
