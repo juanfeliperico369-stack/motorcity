@@ -18,7 +18,7 @@ class RasterMC4 {
       throw new Error('Manifiesto de raster MC4 inválido');
     }
     for (let i = 1; i < spec.indices.length; i++) {
-      if (!Number.isSafeInteger(spec.indices[i]) || spec.indices[i] <= spec.indices[i - 1])) {
+      if (!Number.isSafeInteger(spec.indices[i]) || spec.indices[i] <= spec.indices[i - 1]) {
         throw new Error('Índices de raster MC4 inválidos');
       }
     }
