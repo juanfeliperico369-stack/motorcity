@@ -32,9 +32,11 @@
     "TC-P0-04 falta paridad espacial entre selector y mundo abierto",
     "TC-P1-05 validacion nula EnCicla",
     "TC-P1-06 balance rail lento",
-    "TC-P1-12 tren ignora ent.acel teclado negativo",
     "TC-P1-13 posible mutacion de cuerpo antes de WebGL"
   ],
-  "verificacion": "lectura de codigo GitHub y fuentes oficiales; tests independientes publicados pero todavia sin ejecucion de pipeline en esta entrega",
-  "relevo": "Revisar este documento, ramas y buzones; ejecutar y reparar tests en dispositivos; marcar cambios aplicados con commit. Cada IA debe dejar su propio documento y su propio buzon sin borrar aportes previos."
+  "verificacion": "lectura de código + Chromium E2E diagnóstico propio ejecutado en GitHub Actions run 45034216286; falta experiencia de juego completa y Android/iOS físico",
+  "relevo": "Revisar este documento, ramas y buzones; ejecutar y reparar tests en dispositivos; marcar cambios aplicados con commit. Cada IA debe dejar su propio documento y su propio buzon sin borrar aportes previos.",
+  "controles_confirmados": [
+    "TC-OK-04 Metro teclado: Controles.leer mapea ArrowDown/S a ent.stick.y; confirmado en GitHub Actions"
+  ]
 }
