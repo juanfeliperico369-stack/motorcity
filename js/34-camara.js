@@ -31,9 +31,10 @@ class Camara {
     if (g.tipo === 'zoom') { const z0 = this.zoom * g.k; this.zoom = clamp(z0, ...this.limites.zoom); if (z0 < this.limites.zoom[0] * .98) MC.emit('zoomTope', 'lejos'); else if (z0 > this.limites.zoom[1] * 1.02) MC.emit('zoomTope', 'cerca'); if (this.perfil === 'tercera' && g.k < 1 && this.d.dist / g.k > 15) MC.emit('zoomTope', 'lejos3p'); this.d.dist = clamp(this.d.dist / g.k, this.perfil === 'primera' ? 0 : 2.5, 2500); }
     else if (g.tipo === 'girar') { this.yawObj = null; this.yaw -= g.da; this.mira -= g.da; }
     else if (g.tipo === 'inclinar') { this.pitchObj = null; this.pitch = clamp(this.pitch + g.dy * .006, ...this.limites.pitch); this.d.pitch = clamp(this.d.pitch + g.dy * .004, -.4, 1.4); }
-    else if (g.tipo === 'mirar') { if (this.modo === 'libre') { const c = Math.cos(this.yaw), s = Math.sin(this.yaw); this.x -= (g.dx * c + g.dy * s) / this.zoom; this.y -= (-g.dx * s + g.dy * c) / this.zoom; } else { this.mira += g.dx * .006; this.d.pitch = clamp(this.d.pitch + g.dy * .004, -.4, 1.4); } }
+    else if (g.tipo === 'mirar') { if (this.modo === 'libre') { const c = Math.cos(this.yaw), s = Math.sin(this.yaw); this.x -= (g.dx * c + g.dy * s) / this.zoom; this.y -= (-g.dx * s + g.dy * c) / this.zoom; } else { this.mira += g.dx * .006; this.d.pitch = clamp(this.d.pitch + g.dy * .004, -.4, 1.4); if (g.fijo) this._fija = true; } }
+    else if (g.tipo === 'recentrar') { this.mira = 0; this._fija = false; this.d = Object.assign({}, CAM_PERFIL[this.perfil] || this.d); }   /* 4.8: doble toque arriba endereza la cámara */
   }
-  usarPerfil(p) { if (!CAM_PERFIL[p]) return; this.perfil = p; this.d = Object.assign({}, CAM_PERFIL[p]); this.mira = 0; }
+  usarPerfil(p) { if (!CAM_PERFIL[p]) return; this.perfil = p; this.d = Object.assign({}, CAM_PERFIL[p]); this.mira = 0; this._fija = false; }
   /* giro y inclinación animados (la vista lateral gira de a 90°, como el mundo de FEZ) */
   girar90(dir = 1) { const base = this.yawObj ?? this.yaw; this.yawObj = Math.round(base / (Math.PI / 2)) * (Math.PI / 2) + dir * Math.PI / 2; return this; }
   girarA(yaw) { this.yawObj = yaw; return this; }
@@ -59,7 +60,7 @@ class Camara {
     if (o && this.d.fijo) this._aereo(dt, o);
     else if (o) {
       const P = this.d, M = o.mundo || this.mundo; this.orbita += dt * (this.perfil === 'cine' ? .12 : 0);
-      if (this.perfil !== 'primera' && Math.abs(this.mira) > .001 && !(this._mirando > 0)) this.mira *= Math.pow(.25, dt);
+      if (this.perfil !== 'primera' && Math.abs(this.mira) > .001 && !(this._mirando > 0) && !this._fija) this.mira *= Math.pow(.25, dt);
       const ang = (o.a || 0) + this.mira + this.orbita + (this.perfil === 'cine' ? .8 : 0), z0 = o.z || 0, prim = this.perfil === 'primera';
       /* brazo con choque: si un edificio o el cerro quedan entre el jugador y la cámara, la cámara se acerca rápido
          y vuelve despacio (el «spring arm» de los motores grandes); bajo un puente, la cámara no se mete en el tablero */

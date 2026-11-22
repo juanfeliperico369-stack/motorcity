@@ -4619,19 +4619,33 @@ class Controles {
   _abajo(e) {
     const r = this.el.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; this.dedos.set(e.pointerId, { x, y, x0: x, y0: y });
     try { this.el.setPointerCapture(e.pointerId); } catch (er) { /* sin captura */ }
+    /* 4.8 · PANTALLA EN MITADES (pedido del autor): la mitad de arriba es siempre de la cámara (arrastrar gira e inclina, pellizcar
+       acerca o aleja, doble toque endereza) y abajo se maneja (joystick a un lado, botones al otro). El dedo del joystick no se suelta
+       aunque otro dedo mueva la cámara. */
+    if (this.mitades()) {
+      const cam = [...this.dedos.keys()].filter(id => id !== this.stick.id);
+      if (cam.length >= 2) { this._gesto0(); return; }
+      const lado = MC.opciones.zurdo ? x > r.width * .5 : x < r.width * .5;
+      if (y >= r.height * .5 && lado && this.stick.id === null && !this.op.sinStick) { Object.assign(this.stick, { id: e.pointerId, ox: x, oy: y, px: x, py: y, activo: true }); return; }
+      const ahora = (typeof performance !== 'undefined' ? performance.now() : Date.now()), doble = this._ultToque && ahora - this._ultToque.t < 320 && Math.hypot(x - this._ultToque.x, y - this._ultToque.y) < 40;
+      this.gesto = { tipo: 'mirar', x, y, id: e.pointerId, fijo: true, doble }; return;
+    }
     if (this.dedos.size === 2) { this._gesto0(); if (this.stick.id !== null) this._soltarStick(); return; }
     if ((MC.opciones.zurdo ? x > r.width * .45 : x < r.width * .55) && this.stick.id === null && !this.op.sinStick)   /* 4.8 · ✋ zurdo: el joystick en la mitad derecha */ Object.assign(this.stick, { id: e.pointerId, ox: x, oy: y, px: x, py: y, activo: true });
     else this.gesto = { tipo: 'mirar', x, y };
   }
   _mueve(e) {
     const d = this.dedos.get(e.pointerId); if (!d) return; const r = this.el.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, ddx = x - d.x, ddy = y - d.y; d.x = x; d.y = y;
-    if (this.dedos.size >= 2 && this.gesto && this.gesto.tipo === 'dos') { this._gesto(); return; }
+    if (this.dedos.size >= 2 && this.gesto && this.gesto.tipo === 'dos' && e.pointerId !== this.stick.id) { this._gesto(); return; }
     if (e.pointerId === this.stick.id) { const R = 52, dx = x - this.stick.ox, dy = y - this.stick.oy, L = Math.hypot(dx, dy); if (L > R) { this.stick.ox += dx * (1 - R / L); this.stick.oy += dy * (1 - R / L); } this.stick.px = x; this.stick.py = y; const ex = (x - this.stick.ox) / R, ey = (y - this.stick.oy) / R; this.stick.x = ex; this.stick.y = ey; this.stick.m = Math.min(1, Math.hypot(ex, ey)); return; }
-    if (this.gesto && this.gesto.tipo === 'mirar') this.alGesto({ tipo: 'mirar', dx: ddx, dy: ddy });
+    if (this.gesto && this.gesto.tipo === 'mirar' && (this.gesto.id == null || this.gesto.id === e.pointerId)) this.alGesto({ tipo: 'mirar', dx: ddx, dy: ddy, fijo: !!this.gesto.fijo });
   }
-  _arriba(e) { if (!this.dedos.has(e.pointerId)) return; const d = this.dedos.get(e.pointerId); this.dedos.delete(e.pointerId); if (e.pointerId === this.stick.id) this._soltarStick(); if (this.dedos.size < 2 && this.gesto && this.gesto.tipo === 'dos') this.gesto = null; if (!this.dedos.size) { if (this.gesto && this.gesto.tipo === 'mirar' && Math.hypot(d.x - d.x0, d.y - d.y0) < 8) this.alGesto({ tipo: 'toque', x: d.x, y: d.y }); this.gesto = null; } }
+  /* ¿pantalla en mitades? (el juego la pide con op.mitades; ⚙️ Flexibilidad puede volver a la clásica) */
+  mitades() { return !!this.op.mitades && MC.opciones.pantalla !== 'clasica'; }
+  _arriba(e) { if (!this.dedos.has(e.pointerId)) return; const d = this.dedos.get(e.pointerId); this.dedos.delete(e.pointerId); if (e.pointerId === this.stick.id) this._soltarStick(); if ([...this.dedos.keys()].filter(id => id !== this.stick.id).length < 2 && this.gesto && this.gesto.tipo === 'dos') this.gesto = null;
+    if (this.gesto && this.gesto.id === e.pointerId) { const quieto = Math.hypot(d.x - d.x0, d.y - d.y0) < 8; if (quieto) { if (this.gesto.doble) { this.alGesto({ tipo: 'recentrar' }); this._ultToque = null; } else { this._ultToque = { x: d.x, y: d.y, t: typeof performance !== 'undefined' ? performance.now() : Date.now() }; this.alGesto({ tipo: 'toque', x: d.x, y: d.y }); } } this.gesto = null; return; } if (!this.dedos.size) { if (this.gesto && this.gesto.tipo === 'mirar' && Math.hypot(d.x - d.x0, d.y - d.y0) < 8) this.alGesto({ tipo: 'toque', x: d.x, y: d.y }); this.gesto = null; } }
   _soltarStick() { Object.assign(this.stick, { id: null, activo: false, x: 0, y: 0, m: 0 }); }
-  _par() { const [a, b] = [...this.dedos.values()]; return { cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, d: Math.hypot(b.x - a.x, b.y - a.y), ang: Math.atan2(b.y - a.y, b.x - a.x) }; }
+  _par() { const [a, b] = [...this.dedos].filter(([id]) => id !== this.stick.id).map(q => q[1]); return { cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, d: Math.hypot(b.x - a.x, b.y - a.y), ang: Math.atan2(b.y - a.y, b.x - a.x) }; }
   _gesto0() { this.gesto = Object.assign({ tipo: 'dos' }, this._par()); }
   _gesto() { const p = this._par(), g = this.gesto; this.alGesto({ tipo: 'zoom', k: p.d / (g.d || p.d) }); this.alGesto({ tipo: 'girar', da: angDif(g.ang, p.ang) }); this.alGesto({ tipo: 'inclinar', dy: p.cy - g.cy }); Object.assign(g, p); }
   boton(id, on) { if (on) { this.botones.add(id); this.pulsos.add('btn:' + id); } else this.botones.delete(id); }
@@ -4689,9 +4703,10 @@ class Camara {
     if (g.tipo === 'zoom') { const z0 = this.zoom * g.k; this.zoom = clamp(z0, ...this.limites.zoom); if (z0 < this.limites.zoom[0] * .98) MC.emit('zoomTope', 'lejos'); else if (z0 > this.limites.zoom[1] * 1.02) MC.emit('zoomTope', 'cerca'); if (this.perfil === 'tercera' && g.k < 1 && this.d.dist / g.k > 15) MC.emit('zoomTope', 'lejos3p'); this.d.dist = clamp(this.d.dist / g.k, this.perfil === 'primera' ? 0 : 2.5, 2500); }
     else if (g.tipo === 'girar') { this.yawObj = null; this.yaw -= g.da; this.mira -= g.da; }
     else if (g.tipo === 'inclinar') { this.pitchObj = null; this.pitch = clamp(this.pitch + g.dy * .006, ...this.limites.pitch); this.d.pitch = clamp(this.d.pitch + g.dy * .004, -.4, 1.4); }
-    else if (g.tipo === 'mirar') { if (this.modo === 'libre') { const c = Math.cos(this.yaw), s = Math.sin(this.yaw); this.x -= (g.dx * c + g.dy * s) / this.zoom; this.y -= (-g.dx * s + g.dy * c) / this.zoom; } else { this.mira += g.dx * .006; this.d.pitch = clamp(this.d.pitch + g.dy * .004, -.4, 1.4); } }
+    else if (g.tipo === 'mirar') { if (this.modo === 'libre') { const c = Math.cos(this.yaw), s = Math.sin(this.yaw); this.x -= (g.dx * c + g.dy * s) / this.zoom; this.y -= (-g.dx * s + g.dy * c) / this.zoom; } else { this.mira += g.dx * .006; this.d.pitch = clamp(this.d.pitch + g.dy * .004, -.4, 1.4); if (g.fijo) this._fija = true; } }
+    else if (g.tipo === 'recentrar') { this.mira = 0; this._fija = false; this.d = Object.assign({}, CAM_PERFIL[this.perfil] || this.d); }   /* 4.8: doble toque arriba endereza la cámara */
   }
-  usarPerfil(p) { if (!CAM_PERFIL[p]) return; this.perfil = p; this.d = Object.assign({}, CAM_PERFIL[p]); this.mira = 0; }
+  usarPerfil(p) { if (!CAM_PERFIL[p]) return; this.perfil = p; this.d = Object.assign({}, CAM_PERFIL[p]); this.mira = 0; this._fija = false; }
   /* giro y inclinación animados (la vista lateral gira de a 90°, como el mundo de FEZ) */
   girar90(dir = 1) { const base = this.yawObj ?? this.yaw; this.yawObj = Math.round(base / (Math.PI / 2)) * (Math.PI / 2) + dir * Math.PI / 2; return this; }
   girarA(yaw) { this.yawObj = yaw; return this; }
@@ -4717,7 +4732,7 @@ class Camara {
     if (o && this.d.fijo) this._aereo(dt, o);
     else if (o) {
       const P = this.d, M = o.mundo || this.mundo; this.orbita += dt * (this.perfil === 'cine' ? .12 : 0);
-      if (this.perfil !== 'primera' && Math.abs(this.mira) > .001 && !(this._mirando > 0)) this.mira *= Math.pow(.25, dt);
+      if (this.perfil !== 'primera' && Math.abs(this.mira) > .001 && !(this._mirando > 0) && !this._fija) this.mira *= Math.pow(.25, dt);
       const ang = (o.a || 0) + this.mira + this.orbita + (this.perfil === 'cine' ? .8 : 0), z0 = o.z || 0, prim = this.perfil === 'primera';
       /* brazo con choque: si un edificio o el cerro quedan entre el jugador y la cámara, la cámara se acerca rápido
          y vuelve despacio (el «spring arm» de los motores grandes); bajo un puente, la cámara no se mete en el tablero */
@@ -5019,7 +5034,8 @@ const Flex = {
     ['mano', '✋ Mano', [['diestra', 'diestra'], ['zurda', 'zurda (joystick a la derecha)']]],
     ['ui', '🔠 Tamaño de la interfaz', [[1, '100 %'], [1.15, '115 %'], [1.3, '130 %'], [.9, '90 %']]],
     ['calidad', '🎨 Calidad', [['auto', 'automática'], [.45, 'baja'], [.7, 'media'], [1, 'alta']]],
-    ['vibrar', '📳 Vibración en choques', [[true, 'sí'], [false, 'no']]]
+    ['vibrar', '📳 Vibración en choques', [[true, 'sí'], [false, 'no']]],
+    ['pantalla', '✂️ Pantalla', [['mitades', 'en mitades: arriba la cámara, abajo manejar'], ['clasica', 'clásica: joystick en toda la izquierda']]]
   ],
   actual: null,
   /* lo guardado, limpio: cada clave con un valor que existe (lo desconocido vuelve a fábrica) */
@@ -5028,7 +5044,7 @@ const Flex = {
   siguiente(f, k) { const ops = this.DEF.find(d => d[0] === k)[2], i = ops.findIndex(p => p[0] === f[k]); return Object.assign({}, f, { [k]: ops[(i + 1) % ops.length][0] }); },
   aplicar(f, op = {}) {
     f = this.valores(f); const O = MC.opciones;
-    O.giro = f.giro; O.camDist = f.camara; O.ui = f.ui; O.vibrar = f.vibrar; O.zurdo = f.mano === 'zurda'; O.control = f.control;
+    O.giro = f.giro; O.camDist = f.camara; O.ui = f.ui; O.pantalla = f.pantalla; O.vibrar = f.vibrar; O.zurdo = f.mano === 'zurda'; O.control = f.control;
     if (MC.Vehiculos) MC.Vehiculos.escala = f.velocidad;
     if (typeof document !== 'undefined') { document.documentElement.style.setProperty('--mc-ui', String(f.ui)); if (document.body) document.body.classList.toggle('mc-zurdo', O.zurdo); }
     const V = op.vistas; if (V) { if (f.calidad === 'auto') V.auto = true; else { V.auto = false; V.calidad = f.calidad; } }
@@ -8053,7 +8069,7 @@ const UI = {
 #${id} .mision{max-width:min(320px,70vw);padding:8px 12px;border-radius:var(--r);background:var(--f);border-left:4px solid var(--a)}
 #${id} .dialogo{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);width:min(520px,92vw);padding:14px;border-radius:var(--r);background:var(--f);border:1px solid var(--b)}#${id} .dialogo .opts{display:grid;gap:6px;margin-top:10px}#${id} .dialogo button{font-size:15px;text-align:left;padding:10px}
 #${id} .menu{position:absolute;right:66px;top:max(10px,env(safe-area-inset-top));max-height:78vh;overflow:auto;width:min(300px,72vw);padding:8px;border-radius:var(--r);background:var(--f);border:1px solid var(--b);display:grid;gap:4px}#${id} .menu button{text-align:left;font-size:14px;padding:8px 10px}
-#${id} .mapaG{position:fixed;inset:0;z-index:60;background:#0b0f14;touch-action:none;pointer-events:auto}#${id} .mapaG canvas{width:100%;height:100%;display:block}#${id} .mapaB{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));display:flex;flex-direction:column;gap:8px}#${id} .mapaB button{width:48px;height:48px;border-radius:50%;border:2px solid #0006;background:#fffffff0;color:#111;font:800 22px/1 system-ui;box-shadow:0 2px 8px #0008;cursor:pointer}#${id} .mapaB button.x{order:-1;background:#111;color:#fff;border-color:#fff8}@media (max-height:420px){#${id} .mapaB{gap:6px}#${id} .mapaB button{width:44px;height:44px;font-size:20px}}#${id} .mapaG small{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 14px);text-align:center;color:#fff;font:600 13px system-ui;text-shadow:0 1px 3px #000}
+#${id} .mapaG{position:fixed;inset:0;z-index:60;background:#0b0f14;touch-action:none;pointer-events:auto}#${id} .mapaG canvas{width:100%;height:100%;display:block}#${id} .mapaB{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));display:flex;flex-direction:column;gap:8px}#${id} .mapaB button{width:48px;height:48px;border-radius:50%;border:2px solid #0006;background:#fffffff0;color:#111;font:800 22px/1 system-ui;box-shadow:0 2px 8px #0008;cursor:pointer}#${id} .mapaB button.ir{width:auto;min-width:76px;border-radius:24px;padding:0 12px;background:#ffc23a;font-size:18px}#${id} .mapaB button.ir[hidden]{display:none}#${id} .mapaB button.x{order:-1;background:#111;color:#fff;border-color:#fff8}@media (max-height:420px){#${id} .mapaB{gap:6px}#${id} .mapaB button{width:44px;height:44px;font-size:20px}}#${id} .mapaG small{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 14px);text-align:center;color:#fff;font:600 13px system-ui;text-shadow:0 1px 3px #000}
 #${id} canvas.mini{position:absolute;right:10px;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 96px);width:120px;height:120px;border-radius:50%;border:2px solid var(--b);background:#0006}
 #${id} .fichas>*,#${id} .botones>*,#${id} .mision,#${id} .vel,#${id} .barras{transition:opacity .6s}#${id} .dim{opacity:.75}#${id}.foco .fichas,#${id}.foco .botones,#${id}.foco .mision,#${id}.foco .barras{opacity:.18}#${id} .izq .aviso{pointer-events:none}#${id}.cine>*{opacity:0!important;pointer-events:none!important}
 @media (orientation:landscape){#${id} .izq{right:auto;max-width:24vw}#${id} .fichas{max-height:66px}#${id} .ficha{max-width:23vw}#${id} .mision .d{-webkit-line-clamp:1}}@media (orientation:landscape) and (max-height:500px){#${id} .ficha{padding:4px 8px;font-size:12px}#${id} .mision,#${id} .aviso{font-size:12px}}
@@ -8179,7 +8195,9 @@ MC.UI = UI;
    - botones ✕ · + · − · ◎ (volver a mí) · 🧭 (norte arriba o rumbo arriba), arrastrar, pellizcar y la rueda;
    - tocar = poner el destino (se pega al lugar, la estación o el punto más cercano); tocarlo otra vez lo quita;
    - nombres según el acercamiento (municipios lejos, barrios y estaciones cerca) y la línea hasta el destino.
-   Uso: ui.abrirMapa(vistas, M, puntos, yo, { pausa: v => …, alDestino: (p | null) => …, destino, ruta: () => [x,y,…] })
+   - 4.8 · con op.alIr, poner un punto muestra «🚀 Ir» (el juego te lleva allá); con op.planeta, 🌍 y alejar más allá de la
+     ciudad pasan al planeta: un solo mapa de la calle al mundo.
+   Uso: ui.abrirMapa(vistas, M, puntos, yo, { pausa: v => …, alDestino: (p | null) => …, destino, ruta: () => [x,y,…], alIr: p => bool, planeta: () => … })
    `puntos` y `yo` pueden ser funciones (se leen en cada cuadro).
    ===================================================================== */
 const RANGO_VIA = { [VIA.SENDERO]: .5, [VIA.PEATONAL]: .8, [VIA.ESCALAS]: .8, [VIA.CICLO]: 1.5, [VIA.CALLE]: 2, [VIA.CARRERA]: 3, [VIA.AVENIDA]: 4, [VIA.AUTOPISTA]: 5 };
@@ -8225,13 +8243,16 @@ const MapaGrande = {
     const leerYo = () => (typeof yo === 'function' ? yo() : yo), leerPts = () => { const p = typeof puntos === 'function' ? puntos() : puntos; return Array.isArray(p) ? p : []; };
     const Y0 = leerYo(); let k = clamp(Math.min(innerWidth / M.ancho, innerHeight / M.alto) * 6, .004, 4), cx = Y0 ? Y0.x : M.ancho / 2, cy = Y0 ? Y0.y : M.alto / 2, giro = 0, rumboArriba = !!MapaGrande.rumboArriba, sucio = true, abierto = true, destino = op.destino || null;
     const Lc = vistas && vistas.losas, Ll = vistas && (vistas.losasLejos || vistas.losas), RES = [.0625, .125, .25, .5, 1, 2], kMin = Math.min(innerWidth / M.ancho, innerHeight / M.alto) * .8, kMax = 4;
-    const zoom = (f, px, py) => { const k2 = clamp(k * f, kMin, kMax); if (px != null) { const [wx, wy] = aMundo(px, py); k = k2; const [wx2, wy2] = aMundo(px, py); cx += wx - wx2; cy += wy - wy2; } else k = k2; sucio = true; };
+    const zoom = (f, px, py) => { if (f < 1 && op.planeta && k <= kMin * 1.01) { if ((MapaGrande._tope = (MapaGrande._tope || 0) + 1) >= 3) { MapaGrande._tope = 0; cerrar(); op.planeta(); return; } } else MapaGrande._tope = 0;   /* 4.8: alejar más allá de la ciudad lleva al planeta */
+      const k2 = clamp(k * f, kMin, kMax); if (px != null) { const [wx, wy] = aMundo(px, py); k = k2; const [wx2, wy2] = aMundo(px, py); cx += wx - wx2; cy += wy - wy2; } else k = k2; sucio = true; };
     const aMundo = (px, py) => { const W = innerWidth, H = innerHeight, dx = (px - W / 2) / k, dy = (py - H / 2) / k, cs = Math.cos(-giro), sn = Math.sin(-giro); return [cx + dx * cs - dy * sn, cy + dx * sn + dy * cs]; };
     const brujula = boton('🧭', 'Brújula: norte arriba o rumbo arriba', () => { rumboArriba = MapaGrande.rumboArriba = !rumboArriba; ui.aviso(rumboArriba ? '🧭 El mapa gira con tu rumbo' : '🧭 Norte arriba', 1400, 'brujula'); sucio = true; });
     boton('◎', 'Volver a mí', () => { const Y = leerYo(); if (Y) { cx = Y.x; cy = Y.y; } sucio = true; });
     boton('+', 'Acercar', () => zoom(1.6)); boton('−', 'Alejar', () => zoom(1 / 1.6));
     const cerrarB = boton('✕', 'Cerrar el mapa', () => cerrar()); cerrarB.className = 'x';
-    const fijarDestino = p => { destino = p; if (op.alDestino) op.alDestino(p); sucio = true; ui.aviso(p ? '📍 Destino: ' + (p.nombre || 'aquí') : '📍 Sin destino', 1600, 'destino'); };
+    if (op.planeta) boton('🌍', 'Ver el planeta', () => { cerrar(); op.planeta(); });
+    const irB = boton('🚀 Ir', 'Ir al punto marcado', () => { if (destino && op.alIr && op.alIr(destino) !== false) cerrar(); }); irB.className = 'ir'; irB.hidden = !(destino && op.alIr);   /* 4.8 */
+    const fijarDestino = p => { destino = p; irB.hidden = !(p && op.alIr); if (op.alDestino) op.alDestino(p); sucio = true; ui.aviso(p ? '📍 Destino: ' + (p.nombre || 'aquí') : '📍 Sin destino', 1600, 'destino'); };
     /* tocar: el lugar o la estación más cercana en 28 px; si no, el punto */
     const elegir = (px, py) => { const [wx, wy] = aMundo(px, py), r = 28 / k; if (destino && Math.hypot(destino.x - wx, destino.y - wy) < r) return fijarDestino(null); let mejor = null, bd = r;
       const mirar = (x, y, nombre, tipo) => { const dd = Math.hypot(x - wx, y - wy); if (dd < bd) { bd = dd; mejor = { x, y, nombre, tipo }; } };
@@ -13898,6 +13919,97 @@ G.Actividades = Actividades;
 EXTRAS.hud.push(() => { if (typeof camaraCoherente === 'function') camaraCoherente(); });   /* 4.7: Arcade y Vuelo solo donde tienen sentido */
 
 /* =====================================================================
+   TURNO CERO · 4.8 · RESCATE, «🚀 IR» EN EL MAPA, UN SOLO MAPA Y PANTALLA EN MITADES
+   Pedidos del autor:
+   - «Añade a Turno Cero los servicios de rescate» (los del 🆘 de El Metro) «y la capacidad de teletransportarse en el mapa con
+     la opción Ir al poner el punto»;
+   - «divide la pantalla en horizontal y vertical a la mitad, para que la parte de arriba de los botones siempre permita mover y
+     acercar o alejar la cámara y cuadrar a gusto la vista»;
+   - «unifica los mapas».
+   Qué hace:
+   - 🆘 Rescate: salir a la calle más cercana, 🔧 grúa y mecánico (el carro queda reparado en la vía), 🚕 taxi, 🚇 la estación
+     más cercana, 🚑 ambulancia (vida llena) y 🏠 volver a donde empezaste en esta ciudad. Un vigía lo ofrece si llevas 3,5 s
+     empujando sin moverte o si vas en carro lejos de toda calle.
+   - 🗺️ Un solo mapa: el minimapa, 🗺️ y la tecla M abren el mismo; al poner un punto aparece «🚀 Ir» (te deja en la calle más
+     cercana a ese punto, con tu vehículo); 🌍 y alejar más allá de la ciudad pasan al planeta (el botón suelto del planeta se va).
+   - Con la policía encima no hay saltos ni rescate que llegue: primero piérdela. En un capítulo de la historia, tampoco.
+   - La pantalla en mitades vive en el motor (MC.Controles con { mitades: true }); aquí solo se avisa una vez cómo se usa.
+   ===================================================================== */
+const Rescate = {
+  inicio: null, _at: null, _tv: 0, _lejos: 0, _av: -99,
+  /* ¿se puede saltar ahora? (null = sí; si no, la razón) */
+  puede() {
+    if (!G.M || !G.cuerpo || G.viaje || G.dron || G.enRun || G.globo || G.transicion) return '🆘 Ahora no: termina lo que estás haciendo';
+    if (G.busq && G.busq.nivel > 0) return '🚔 Con la policía encima no llega nadie ni hay atajos: piérdela primero';
+    if (G.hist) return '📖 En la historia no hay atajos: sigue el capítulo o sal al 🌎 mundo abierto (⏸ Menú)';
+    return null;
+  },
+  /* dejar al jugador en la calle más cercana a (x, y), con su vehículo */
+  saltar(x, y, op = {}) {
+    const no = this.puede(); if (no) { G.ui.aviso(no, 2800, 'rescate'); return false; }
+    if (G.Modos && G.Modos.m) G.Modos.terminar('🎮 Saliste del modo');
+    const C = G.cuerpo, M = G.M, pie = C.veh.clase === 'pie';
+    /* la calle más cercana al punto; si no hay calle a 400 m pero el punto es transitable (un parque, una loma), el punto mismo */
+    const q = M.viaCercana(x, y, 400, pie ? null : deCarro) || M.viaCercana(x, y, 400) || (op.calle ? null : this.sitioCerca(x, y, 400)) || M.viaCercana(x, y, 2500) || { x, y, ang: C.a };
+    C.x = q.x; C.y = q.y; C.a = q.ang ?? C.a; C.v = 0; C.z = 0; C.rumboRodado = C.a; C.choque = 0; if (C.eventos) C.eventos.length = 0;
+    if (G.camara) { G.camara.x = C.x; G.camara.y = C.y; }
+    this._at = null; MC.emit('rescate', { tipo: op.tipo || 'ir', x: C.x, y: C.y }); return true;
+  },
+  /* ¿se puede estar ahí? (puede() mide la pendiente desde donde está el cuerpo: se prueba con el cuerpo puesto en el punto) */
+  transitable(x, y) { const C = G.cuerpo, x0 = C.x, y0 = C.y; C.x = x; C.y = y; let ok = false; try { ok = C.puede(x, y, true); } catch (e) { ok = false; } C.x = x0; C.y = y0; return ok; },
+  /* el sitio transitable más cercano al punto, en anillos de 10 m (para el 🚀 Ir del mapa: un parque, una loma, un potrero) */
+  sitioCerca(x, y, r) { const M = G.M, C = G.cuerpo; if (M.dentro(x, y) && this.transitable(x, y)) return { x, y, ang: C.a }; for (let d = 10; d <= r; d += 10) { const n = Math.max(8, Math.round(d / 6)); for (let k = 0; k < n; k++) { const a = k / n * TAU, px = x + Math.cos(a) * d, py = y + Math.sin(a) * d; if (M.dentro(px, py) && this.transitable(px, py)) return { x: px, y: py, ang: C.a }; } } return null; },
+  estacion() {
+    const C = G.cuerpo; let best = null, bd = 1e9;
+    try { for (const L of (G.transporte && G.transporte.lineas) || []) { if (L.clase === 'cable') continue; for (const e of L.est) { const q = L.T.at(e.s), d = Math.hypot(q.x - C.x, q.y - C.y); if (d < bd) { bd = d; best = { nombre: e.nombre, x: q.x, y: q.y, d }; } } } } catch (e) { /* sin líneas */ }
+    return best;
+  },
+  menu() {
+    const no = this.puede(); if (no) return G.ui.aviso(no, 2800, 'rescate');
+    const C = G.cuerpo, km = d => d < 1000 ? Math.round(d) + ' m' : (d / 1000).toFixed(1).replace('.', ',') + ' km', carro = C.veh.clase === 'auto' || C.veh.clase === 'pesado' || C.veh.clase === 'moto';
+    const it = [{ id: 'calle', texto: '🛣 Salir a la calle más cercana<br><small>' + (C.veh.clase === 'pie' ? 'a pie' : 'con tu vehículo') + '</small>' }];
+    if (carro) it.push({ id: 'grua', texto: '🔧 Grúa y mecánico<br><small>te dejan en la vía con el carro reparado</small>' });
+    it.push({ id: 'taxi', texto: '🚕 Pedir un taxi<br><small>llega a la calle más cercana y te subes</small>' });
+    const E = this.estacion(); if (E) it.push({ id: 'est', texto: '🚇 Ir a la estación más cercana<br><small>' + E.nombre + ' · a ' + km(E.d) + '</small>' });
+    if (G.vida < .99) it.push({ id: 'amb', texto: '🚑 Ambulancia<br><small>te atienden: vida llena</small>' });
+    const I = this.inicio; if (I && I.id === G.id) it.push({ id: 'ini', texto: '🏠 Volver a donde empezaste<br><small>a ' + km(Math.hypot(I.x - C.x, I.y - C.y)) + '</small>' });
+    it.push({ id: 'mapa', texto: '🗺️ Elegir un punto en el mapa<br><small>pon el punto y toca 🚀 Ir</small>' }, { id: 'x', texto: '✕ Cerrar' });
+    G.ui.menu('🆘 Rescate · ¿qué necesitas?', it, k => this.servicio(k));
+  },
+  servicio(k) {
+    const C = G.cuerpo;
+    if (k === 'calle') { if (this.saltar(C.x, C.y, { tipo: 'calle', calle: true })) G.ui.aviso('🛣 Listo: en la calle', 1600, 'rescate'); }
+    else if (k === 'grua') { if (this.saltar(C.x, C.y, { tipo: 'grua', calle: true })) { G.carro = 1; if (G.busq) G.busq.pinchado = false; try { reparaZonas(); } catch (e) { /* sin piezas */ } G.ui.aviso('🔧 La grúa te dejó en la vía y el mecánico arregló el carro', 2600, 'rescate'); } }
+    else if (k === 'taxi') { if (this.saltar(C.x, C.y, { tipo: 'taxi', calle: true })) { G.veh = 'tc_mercury'; C.setVeh('tc_mercury'); C.estacionado = null; G.carro = 1; G.ui.aviso('🚕 Llegó el taxi: es tuyo mientras quieras', 2400, 'rescate'); } }
+    else if (k === 'est') { const E = this.estacion(); if (E && this.saltar(E.x, E.y, { tipo: 'estacion', calle: true })) G.ui.aviso('🚇 ' + E.nombre + ' · toca 🚇 para viajar', 2600, 'rescate'); }
+    else if (k === 'amb') { G.vida = 1; G.ui.aviso('🚑 Te atendieron: vida llena', 2200, 'rescate'); MC.emit('rescate', { tipo: 'ambulancia' }); }
+    else if (k === 'ini') { const I = this.inicio; if (I && this.saltar(I.x, I.y, { tipo: 'inicio' })) G.ui.aviso('🏠 Volviste a donde empezaste', 1800, 'rescate'); }
+    else if (k === 'mapa') abrirMapaTC();
+  },
+  /* 🚀 Ir: desde el mapa (devuelve false si no se pudo, y el mapa sigue abierto) */
+  ir(p) { if (!this.saltar(p.x, p.y, { tipo: 'mapa' })) return false; G.destinoLibre = null; G.ui.aviso('🚀 ' + (p.nombre || 'Llegaste al punto'), 2000, 'rescate'); return true; },
+  /* el vigía: atascado empujando, o en carro lejos de toda calle */
+  vigia(dt) {
+    const C = G.cuerpo; if (!C || !G.M) return;
+    if (!this.inicio || this.inicio.id !== G.id) this.inicio = { id: G.id, x: C.x, y: C.y };
+    if (G.pausa || G.viaje || G.controlExterno || G.hist || (G.busq && G.busq.nivel > 0) || (G.Modos && G.Modos.m)) { this._at = null; return; }
+    const st = G.ctl && G.ctl.stick, empuja = C.veh.clase !== 'pie' && ((st && st.m > .5) || G.acelFijo);
+    if (empuja) { const a = this._at; if (!a) this._at = { x: C.x, y: C.y, t: 0 }; else { a.t += dt; if (Math.hypot(C.x - a.x, C.y - a.y) > 1.2) this._at = null; else if (a.t > 3.5) { this._at = null; this.ofrecer('¿Atascado? Toca 🆘 Rescate: te saca a la calle'); } } } else this._at = null;
+    if ((this._tv += dt) > 3) { this._tv = 0; if (C.veh.clase === 'auto' || C.veh.clase === 'pesado') { const q = G.M.viaCercana(C.x, C.y, 90); this._lejos = q ? 0 : this._lejos + 1; if (this._lejos >= 4) { this._lejos = -10; this.ofrecer('¿Perdido? Estás lejos de las calles: 🆘 Rescate te deja en una'); } } }
+  },
+  ofrecer(t) { if (G.t - this._av < 25) return; this._av = G.t; G.ui.aviso(t, 3400, 'rescate'); const b = BOT.rescate; if (b) { b.classList.add('on'); setTimeout(() => b.classList.remove('on'), 6000); } }
+};
+G.Rescate = Rescate;
+EXTRAS.paso.push(dt => Rescate.vigia(dt));
+EXTRAS.ui.push(b => {
+  b('rescate', '🆘', 'Rescate', () => Rescate.menu());
+  if (BOT.globo) BOT.globo.hidden = true;   /* un solo mapa: el planeta se abre desde 🗺️ (🌍 o alejando) y con la tecla G */
+  { const gb = document.getElementById('globo'); if (gb && !document.getElementById('gMapa')) { const m = document.createElement('button'); m.id = 'gMapa'; m.textContent = '🗺️'; m.setAttribute('aria-label', 'Volver al mapa de la ciudad'); m.title = 'Volver al mapa de la ciudad'; m.style.cssText = 'position:absolute;top:max(12px,env(safe-area-inset-top));left:12px;width:52px;height:52px;border-radius:50%;font-size:24px;z-index:3'; m.onclick = () => { Globo.cerrar(); abrirMapaTC(); }; gb.appendChild(m); } }
+  /* la pantalla en mitades: se explica una vez */
+  if (!leerG().mitadesVisto) setTimeout(() => { if (!G.ui) return; G.ui.aviso('☝️ Mitad de arriba: arrastra para girar e inclinar la cámara y pellizca para acercar o alejar · doble toque la endereza · abajo se maneja', 6000, 'mitades'); escribirG({ mitadesVisto: true }); }, 9000);
+});
+
+/* =====================================================================
    TURNO CERO · arranque: portada, controles, botones, menú y teclado
    ===================================================================== */
 if (typeof MC_MODELOS !== 'undefined') MC.Modelos.paquete(MC_MODELOS);   /* los 42 GLB de Codex, dentro del HTML */
@@ -13907,7 +14019,7 @@ G.aspecto = Object.assign(MC.Personaje.azar(34), { cPelo: '#141414', cCamisa: '#
 function iniciarInterfaz() {
   if (G.ui) return; G.cv = $('#cv'); G.g = G.cv.getContext('2d', { alpha: false });
   const ui = G.ui = MC.UI.crear(document.body, { tema: 'noche' });
-  G.ctl = new MC.Controles(G.cv, { alGesto: q => { if (q.tipo !== 'toque' && G.camara) G.camara.gesto(q); }, alTecla: tecla });
+  G.ctl = new MC.Controles(G.cv, { mitades: true, alGesto: q => { if (q.tipo !== 'toque' && G.camara) G.camara.gesto(q); }, alTecla: tecla });
   ui.joystick(G.ctl, { texto: 'Arrastra para manejar' });
   { const izq = ui.capa.querySelector('.izq'), vj = $('#viaje'); if (izq && vj) izq.insertBefore(vj, izq.querySelector('.aviso')); }   /* el letrero de la vía va en la columna de la izquierda, nunca sobre la calle */
   /* 4.6.1 · ⏫ acelerador fijo: un toque y el carro acelera solo (el joystick solo da la dirección); otro toque y frena hasta parar */
@@ -13940,11 +14052,12 @@ function camarasAqui() { const C = G.cuerpo, L = ['cenital', 'ciudad3d', 'tercer
 function siguienteCamara() { const L = camarasAqui(), i = L.indexOf(G.vistaId); G.vistaId = L[(i + 1) % L.length]; const v = G.vistas.usar(G.vistaId, G.E); G.ui.aviso(v.icon + ' ' + v.n, 1400, 'vista'); escribirG({ vista: G.vistaId }); }
 function camaraCoherente() { if (!G.vistas || G._sigCam) return; const L = camarasAqui(); if ((G.vistaId === 'arcade' || G.vistaId === 'vuelo') && !L.includes(G.vistaId)) { const ant = G.vistaId; G.vistaId = 'cenital'; G.vistas.usar('cenital', G.E); G.ui.aviso('🗺️ Vuelve la cenital 3D (' + (ant === 'vuelo' ? 'el vuelo es para el jetpack' : 'la cámara Arcade es para la carretera y las carreras') + ')', 1800, 'vista'); } }
 function menu() {
-  const S = leerG(), it = [{ id: 'seguir', texto: '▶ Seguir' }, { id: 'modos', texto: '🎮 Modos de juego (carreras, extremo, mandados, EnCicla, metro)' }, { id: 'cam', texto: '🎥 Cámara: ' + G.vistas.actual.n }, { id: 'cine', texto: '🎬 Modo cine: ' + (G.cine ? 'sí (guían las direccionales)' : 'no') }, { id: 'retro', texto: '🕹️ Retro 1993: ' + (G.retro ? 'sí (pixel con la luz de Doom)' : 'no') }, { id: 'asis', texto: '🛞 Asistencia de manejo: ' + (G.asistencia ? 'sí (esquiva paredes)' : 'no') }, { id: 'sigcam', texto: '🔦 Sigilo desde arriba: ' + (S.sigiloCenital !== false ? 'sí' : 'no') }, { id: 'sonido', texto: Snd.on ? '🔊 Sonido: sí' : '🔇 Sonido: no' }, { id: 'suave', texto: S.suave ? '🗣️ Lenguaje: suave' : '🗣️ Lenguaje: fuerte' }, { id: 'flex', texto: '⚙️ Flexibilidad (control, giro, velocidad, cámara, mano, tamaño, calidad)' }, { id: 'acces', texto: '♿ Accesibilidad' }, { id: 'quien', texto: '👥 Personajes' }, { id: 'artef', texto: '🧰 Artefactos' }];
+  const S = leerG(), it = [{ id: 'seguir', texto: '▶ Seguir' }, { id: 'modos', texto: '🎮 Modos de juego (carreras, extremo, mandados, EnCicla, metro)' }, { id: 'rescate', texto: '🆘 Rescate (calle, grúa, taxi, estación, ambulancia, volver)' }, { id: 'cam', texto: '🎥 Cámara: ' + G.vistas.actual.n }, { id: 'cine', texto: '🎬 Modo cine: ' + (G.cine ? 'sí (guían las direccionales)' : 'no') }, { id: 'retro', texto: '🕹️ Retro 1993: ' + (G.retro ? 'sí (pixel con la luz de Doom)' : 'no') }, { id: 'asis', texto: '🛞 Asistencia de manejo: ' + (G.asistencia ? 'sí (esquiva paredes)' : 'no') }, { id: 'sigcam', texto: '🔦 Sigilo desde arriba: ' + (S.sigiloCenital !== false ? 'sí' : 'no') }, { id: 'sonido', texto: Snd.on ? '🔊 Sonido: sí' : '🔇 Sonido: no' }, { id: 'suave', texto: S.suave ? '🗣️ Lenguaje: suave' : '🗣️ Lenguaje: fuerte' }, { id: 'flex', texto: '⚙️ Flexibilidad (control, giro, velocidad, cámara, mano, tamaño, calidad)' }, { id: 'acces', texto: '♿ Accesibilidad' }, { id: 'quien', texto: '👥 Personajes' }, { id: 'artef', texto: '🧰 Artefactos' }];
   if (G.hist) it.push({ id: 'reintentar', texto: '↩ Volver al último punto' }); it.push({ id: 'historia', texto: '📖 Historia (opcional)' }, { id: 'libre', texto: '🌎 Mundo abierto aquí' }, { id: 'portada', texto: '🏠 Portada' });
   G.ui.menu('Turno Cero · ' + planeta.def(G.id).nombre, it, async k => {
     if (k === 'asis') { G.asistencia = !G.asistencia; escribirG({ asistencia: G.asistencia }); G.ui.aviso(G.asistencia ? '🛞 Asistencia: el carro esquiva las paredes que vienen' : '🛞 Sin asistencia: todo depende de ti', 2200, 'asis'); return menu(); }
     if (k === 'modos') return Modos.menu();
+    if (k === 'rescate') return Rescate.menu();
     if (k === 'sigcam') { G.sigiloCenital(leerG().sigiloCenital === false); return menu(); }
     if (k === 'cam') siguienteCamara(); else if (k === 'retro') { G.retro = !G.retro; escribirG({ retro: G.retro }); G.vistas.pixel = G.retro; G.vistas.colormap = G.retro; G.ui.aviso(G.retro ? '🕹️ Retro 1993: pocos píxeles, 256 colores y la luz que se apaga con la distancia' : '🕹️ Retro apagado', 2600, 'retro'); } else if (k === 'cine') { G.cine = !G.cine; escribirG({ cine: G.cine }); document.body.classList.toggle('cine', G.cine); G.ui.aviso(G.cine ? '🎬 Modo cine: sin flecha ni minimapa; las direccionales del carro marcan la próxima esquina' : '🎬 Modo cine apagado', 3000, 'cine'); } else if (k === 'sonido') { if (Snd.on) Snd.apagar(); else Snd.prender(); escribirG({ sonido: Snd.on }); } else if (k === 'suave') escribirG({ suave: !S.suave });
     else if (k === 'acces') Extras.opcionesMenu();
@@ -13969,7 +14082,7 @@ function menuHistoria() {
 }
 /* 4.6 · el mapa grande del motor (js/70-mapa.js, como el de EnCicla): pausa el juego, acerca y aleja sin congelar, 🧭 brújula, tocar = destino */
 function abrirMapaTC() { const ui = G.ui; if (!ui || !G.M) return; if (ui._mapa) return ui._mapa.cerrar(); let antes = false;
-  ui.abrirMapa(G.vistas, G.M, () => mapaPts, () => (G.cuerpo ? { x: G.cuerpo.x, y: G.cuerpo.y, a: G.cuerpo.a } : null), { destino: G.destinoLibre, pausa: v => { if (v) { antes = G.pausa; G.pausa = true; } else G.pausa = antes; }, alDestino: p => { G.destinoLibre = p; } }); }
+  ui.abrirMapa(G.vistas, G.M, () => mapaPts, () => (G.cuerpo ? { x: G.cuerpo.x, y: G.cuerpo.y, a: G.cuerpo.a } : null), { alIr: p => Rescate.ir(p), planeta: () => Globo.abrir(true), destino: G.destinoLibre, pausa: v => { if (v) { antes = G.pausa; G.pausa = true; } else G.pausa = antes; }, alDestino: p => { G.destinoLibre = p; } }); }
 function ponerAcelerador(v, callado) { G.acelFijo = !!v; if (G.botAcel && G.botAcel.activo !== G.acelFijo) G.botAcel.poner(G.acelFijo, true); if (callado) return; if (G.ui) G.ui.aviso(G.acelFijo ? '⏫ Acelerando solo: el joystick solo da la dirección · 🛑 frena · toca ⏫ otra vez para parar' : '⏹ Acelerador apagado: frenando hasta parar', 2200, 'acel'); escribirG({ acelFijoVisto: true }); }
 function tecla(k) {
   if (!G.M || G.pausa) return; const A = Artefactos;

@@ -28,7 +28,8 @@ const Flex = {
     ['mano', '✋ Mano', [['diestra', 'diestra'], ['zurda', 'zurda (joystick a la derecha)']]],
     ['ui', '🔠 Tamaño de la interfaz', [[1, '100 %'], [1.15, '115 %'], [1.3, '130 %'], [.9, '90 %']]],
     ['calidad', '🎨 Calidad', [['auto', 'automática'], [.45, 'baja'], [.7, 'media'], [1, 'alta']]],
-    ['vibrar', '📳 Vibración en choques', [[true, 'sí'], [false, 'no']]]
+    ['vibrar', '📳 Vibración en choques', [[true, 'sí'], [false, 'no']]],
+    ['pantalla', '✂️ Pantalla', [['mitades', 'en mitades: arriba la cámara, abajo manejar'], ['clasica', 'clásica: joystick en toda la izquierda']]]
   ],
   actual: null,
   /* lo guardado, limpio: cada clave con un valor que existe (lo desconocido vuelve a fábrica) */
@@ -37,7 +38,7 @@ const Flex = {
   siguiente(f, k) { const ops = this.DEF.find(d => d[0] === k)[2], i = ops.findIndex(p => p[0] === f[k]); return Object.assign({}, f, { [k]: ops[(i + 1) % ops.length][0] }); },
   aplicar(f, op = {}) {
     f = this.valores(f); const O = MC.opciones;
-    O.giro = f.giro; O.camDist = f.camara; O.ui = f.ui; O.vibrar = f.vibrar; O.zurdo = f.mano === 'zurda'; O.control = f.control;
+    O.giro = f.giro; O.camDist = f.camara; O.ui = f.ui; O.pantalla = f.pantalla; O.vibrar = f.vibrar; O.zurdo = f.mano === 'zurda'; O.control = f.control;
     if (MC.Vehiculos) MC.Vehiculos.escala = f.velocidad;
     if (typeof document !== 'undefined') { document.documentElement.style.setProperty('--mc-ui', String(f.ui)); if (document.body) document.body.classList.toggle('mc-zurdo', O.zurdo); }
     const V = op.vistas; if (V) { if (f.calidad === 'auto') V.auto = true; else { V.auto = false; V.calidad = f.calidad; } }

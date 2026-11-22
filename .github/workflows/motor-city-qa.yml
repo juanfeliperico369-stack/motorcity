@@ -83,6 +83,10 @@ jobs:
         run: node pruebas/actividades.mjs
       - name: 4.7 · Pruebas humanas (solo entradas, sin teletransportar)
         run: node pruebas/humano.mjs
+      - name: 4.8 · ⚙️ Flexibilidad (panel, se aplica, se guarda, vuelve a fábrica)
+        run: node pruebas/flexibilidad.mjs
+      - name: 4.8 · Pantalla en mitades, un solo mapa con 🚀 Ir y 🆘 Rescate
+        run: node pruebas/rescate-mapa.mjs
       - name: C-M34 · tres mundos offline con rasters de 1 km
         run: node pruebas/paquete-capas-browser.mjs
       - name: C-M34 · deduplicación y viaje real entre ciudades (Chromium offline)

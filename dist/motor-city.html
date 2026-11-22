@@ -4461,19 +4461,33 @@ class Controles {
   _abajo(e) {
     const r = this.el.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; this.dedos.set(e.pointerId, { x, y, x0: x, y0: y });
     try { this.el.setPointerCapture(e.pointerId); } catch (er) { /* sin captura */ }
+    /* 4.8 · PANTALLA EN MITADES (pedido del autor): la mitad de arriba es siempre de la cámara (arrastrar gira e inclina, pellizcar
+       acerca o aleja, doble toque endereza) y abajo se maneja (joystick a un lado, botones al otro). El dedo del joystick no se suelta
+       aunque otro dedo mueva la cámara. */
+    if (this.mitades()) {
+      const cam = [...this.dedos.keys()].filter(id => id !== this.stick.id);
+      if (cam.length >= 2) { this._gesto0(); return; }
+      const lado = MC.opciones.zurdo ? x > r.width * .5 : x < r.width * .5;
+      if (y >= r.height * .5 && lado && this.stick.id === null && !this.op.sinStick) { Object.assign(this.stick, { id: e.pointerId, ox: x, oy: y, px: x, py: y, activo: true }); return; }
+      const ahora = (typeof performance !== 'undefined' ? performance.now() : Date.now()), doble = this._ultToque && ahora - this._ultToque.t < 320 && Math.hypot(x - this._ultToque.x, y - this._ultToque.y) < 40;
+      this.gesto = { tipo: 'mirar', x, y, id: e.pointerId, fijo: true, doble }; return;
+    }
     if (this.dedos.size === 2) { this._gesto0(); if (this.stick.id !== null) this._soltarStick(); return; }
     if ((MC.opciones.zurdo ? x > r.width * .45 : x < r.width * .55) && this.stick.id === null && !this.op.sinStick)   /* 4.8 · ✋ zurdo: el joystick en la mitad derecha */ Object.assign(this.stick, { id: e.pointerId, ox: x, oy: y, px: x, py: y, activo: true });
     else this.gesto = { tipo: 'mirar', x, y };
   }
   _mueve(e) {
     const d = this.dedos.get(e.pointerId); if (!d) return; const r = this.el.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, ddx = x - d.x, ddy = y - d.y; d.x = x; d.y = y;
-    if (this.dedos.size >= 2 && this.gesto && this.gesto.tipo === 'dos') { this._gesto(); return; }
+    if (this.dedos.size >= 2 && this.gesto && this.gesto.tipo === 'dos' && e.pointerId !== this.stick.id) { this._gesto(); return; }
     if (e.pointerId === this.stick.id) { const R = 52, dx = x - this.stick.ox, dy = y - this.stick.oy, L = Math.hypot(dx, dy); if (L > R) { this.stick.ox += dx * (1 - R / L); this.stick.oy += dy * (1 - R / L); } this.stick.px = x; this.stick.py = y; const ex = (x - this.stick.ox) / R, ey = (y - this.stick.oy) / R; this.stick.x = ex; this.stick.y = ey; this.stick.m = Math.min(1, Math.hypot(ex, ey)); return; }
-    if (this.gesto && this.gesto.tipo === 'mirar') this.alGesto({ tipo: 'mirar', dx: ddx, dy: ddy });
+    if (this.gesto && this.gesto.tipo === 'mirar' && (this.gesto.id == null || this.gesto.id === e.pointerId)) this.alGesto({ tipo: 'mirar', dx: ddx, dy: ddy, fijo: !!this.gesto.fijo });
   }
-  _arriba(e) { if (!this.dedos.has(e.pointerId)) return; const d = this.dedos.get(e.pointerId); this.dedos.delete(e.pointerId); if (e.pointerId === this.stick.id) this._soltarStick(); if (this.dedos.size < 2 && this.gesto && this.gesto.tipo === 'dos') this.gesto = null; if (!this.dedos.size) { if (this.gesto && this.gesto.tipo === 'mirar' && Math.hypot(d.x - d.x0, d.y - d.y0) < 8) this.alGesto({ tipo: 'toque', x: d.x, y: d.y }); this.gesto = null; } }
+  /* ¿pantalla en mitades? (el juego la pide con op.mitades; ⚙️ Flexibilidad puede volver a la clásica) */
+  mitades() { return !!this.op.mitades && MC.opciones.pantalla !== 'clasica'; }
+  _arriba(e) { if (!this.dedos.has(e.pointerId)) return; const d = this.dedos.get(e.pointerId); this.dedos.delete(e.pointerId); if (e.pointerId === this.stick.id) this._soltarStick(); if ([...this.dedos.keys()].filter(id => id !== this.stick.id).length < 2 && this.gesto && this.gesto.tipo === 'dos') this.gesto = null;
+    if (this.gesto && this.gesto.id === e.pointerId) { const quieto = Math.hypot(d.x - d.x0, d.y - d.y0) < 8; if (quieto) { if (this.gesto.doble) { this.alGesto({ tipo: 'recentrar' }); this._ultToque = null; } else { this._ultToque = { x: d.x, y: d.y, t: typeof performance !== 'undefined' ? performance.now() : Date.now() }; this.alGesto({ tipo: 'toque', x: d.x, y: d.y }); } } this.gesto = null; return; } if (!this.dedos.size) { if (this.gesto && this.gesto.tipo === 'mirar' && Math.hypot(d.x - d.x0, d.y - d.y0) < 8) this.alGesto({ tipo: 'toque', x: d.x, y: d.y }); this.gesto = null; } }
   _soltarStick() { Object.assign(this.stick, { id: null, activo: false, x: 0, y: 0, m: 0 }); }
-  _par() { const [a, b] = [...this.dedos.values()]; return { cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, d: Math.hypot(b.x - a.x, b.y - a.y), ang: Math.atan2(b.y - a.y, b.x - a.x) }; }
+  _par() { const [a, b] = [...this.dedos].filter(([id]) => id !== this.stick.id).map(q => q[1]); return { cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, d: Math.hypot(b.x - a.x, b.y - a.y), ang: Math.atan2(b.y - a.y, b.x - a.x) }; }
   _gesto0() { this.gesto = Object.assign({ tipo: 'dos' }, this._par()); }
   _gesto() { const p = this._par(), g = this.gesto; this.alGesto({ tipo: 'zoom', k: p.d / (g.d || p.d) }); this.alGesto({ tipo: 'girar', da: angDif(g.ang, p.ang) }); this.alGesto({ tipo: 'inclinar', dy: p.cy - g.cy }); Object.assign(g, p); }
   boton(id, on) { if (on) { this.botones.add(id); this.pulsos.add('btn:' + id); } else this.botones.delete(id); }
@@ -4531,9 +4545,10 @@ class Camara {
     if (g.tipo === 'zoom') { const z0 = this.zoom * g.k; this.zoom = clamp(z0, ...this.limites.zoom); if (z0 < this.limites.zoom[0] * .98) MC.emit('zoomTope', 'lejos'); else if (z0 > this.limites.zoom[1] * 1.02) MC.emit('zoomTope', 'cerca'); if (this.perfil === 'tercera' && g.k < 1 && this.d.dist / g.k > 15) MC.emit('zoomTope', 'lejos3p'); this.d.dist = clamp(this.d.dist / g.k, this.perfil === 'primera' ? 0 : 2.5, 2500); }
     else if (g.tipo === 'girar') { this.yawObj = null; this.yaw -= g.da; this.mira -= g.da; }
     else if (g.tipo === 'inclinar') { this.pitchObj = null; this.pitch = clamp(this.pitch + g.dy * .006, ...this.limites.pitch); this.d.pitch = clamp(this.d.pitch + g.dy * .004, -.4, 1.4); }
-    else if (g.tipo === 'mirar') { if (this.modo === 'libre') { const c = Math.cos(this.yaw), s = Math.sin(this.yaw); this.x -= (g.dx * c + g.dy * s) / this.zoom; this.y -= (-g.dx * s + g.dy * c) / this.zoom; } else { this.mira += g.dx * .006; this.d.pitch = clamp(this.d.pitch + g.dy * .004, -.4, 1.4); } }
+    else if (g.tipo === 'mirar') { if (this.modo === 'libre') { const c = Math.cos(this.yaw), s = Math.sin(this.yaw); this.x -= (g.dx * c + g.dy * s) / this.zoom; this.y -= (-g.dx * s + g.dy * c) / this.zoom; } else { this.mira += g.dx * .006; this.d.pitch = clamp(this.d.pitch + g.dy * .004, -.4, 1.4); if (g.fijo) this._fija = true; } }
+    else if (g.tipo === 'recentrar') { this.mira = 0; this._fija = false; this.d = Object.assign({}, CAM_PERFIL[this.perfil] || this.d); }   /* 4.8: doble toque arriba endereza la cámara */
   }
-  usarPerfil(p) { if (!CAM_PERFIL[p]) return; this.perfil = p; this.d = Object.assign({}, CAM_PERFIL[p]); this.mira = 0; }
+  usarPerfil(p) { if (!CAM_PERFIL[p]) return; this.perfil = p; this.d = Object.assign({}, CAM_PERFIL[p]); this.mira = 0; this._fija = false; }
   /* giro y inclinación animados (la vista lateral gira de a 90°, como el mundo de FEZ) */
   girar90(dir = 1) { const base = this.yawObj ?? this.yaw; this.yawObj = Math.round(base / (Math.PI / 2)) * (Math.PI / 2) + dir * Math.PI / 2; return this; }
   girarA(yaw) { this.yawObj = yaw; return this; }
@@ -4559,7 +4574,7 @@ class Camara {
     if (o && this.d.fijo) this._aereo(dt, o);
     else if (o) {
       const P = this.d, M = o.mundo || this.mundo; this.orbita += dt * (this.perfil === 'cine' ? .12 : 0);
-      if (this.perfil !== 'primera' && Math.abs(this.mira) > .001 && !(this._mirando > 0)) this.mira *= Math.pow(.25, dt);
+      if (this.perfil !== 'primera' && Math.abs(this.mira) > .001 && !(this._mirando > 0) && !this._fija) this.mira *= Math.pow(.25, dt);
       const ang = (o.a || 0) + this.mira + this.orbita + (this.perfil === 'cine' ? .8 : 0), z0 = o.z || 0, prim = this.perfil === 'primera';
       /* brazo con choque: si un edificio o el cerro quedan entre el jugador y la cámara, la cámara se acerca rápido
          y vuelve despacio (el «spring arm» de los motores grandes); bajo un puente, la cámara no se mete en el tablero */
@@ -4861,7 +4876,8 @@ const Flex = {
     ['mano', '✋ Mano', [['diestra', 'diestra'], ['zurda', 'zurda (joystick a la derecha)']]],
     ['ui', '🔠 Tamaño de la interfaz', [[1, '100 %'], [1.15, '115 %'], [1.3, '130 %'], [.9, '90 %']]],
     ['calidad', '🎨 Calidad', [['auto', 'automática'], [.45, 'baja'], [.7, 'media'], [1, 'alta']]],
-    ['vibrar', '📳 Vibración en choques', [[true, 'sí'], [false, 'no']]]
+    ['vibrar', '📳 Vibración en choques', [[true, 'sí'], [false, 'no']]],
+    ['pantalla', '✂️ Pantalla', [['mitades', 'en mitades: arriba la cámara, abajo manejar'], ['clasica', 'clásica: joystick en toda la izquierda']]]
   ],
   actual: null,
   /* lo guardado, limpio: cada clave con un valor que existe (lo desconocido vuelve a fábrica) */
@@ -4870,7 +4886,7 @@ const Flex = {
   siguiente(f, k) { const ops = this.DEF.find(d => d[0] === k)[2], i = ops.findIndex(p => p[0] === f[k]); return Object.assign({}, f, { [k]: ops[(i + 1) % ops.length][0] }); },
   aplicar(f, op = {}) {
     f = this.valores(f); const O = MC.opciones;
-    O.giro = f.giro; O.camDist = f.camara; O.ui = f.ui; O.vibrar = f.vibrar; O.zurdo = f.mano === 'zurda'; O.control = f.control;
+    O.giro = f.giro; O.camDist = f.camara; O.ui = f.ui; O.pantalla = f.pantalla; O.vibrar = f.vibrar; O.zurdo = f.mano === 'zurda'; O.control = f.control;
     if (MC.Vehiculos) MC.Vehiculos.escala = f.velocidad;
     if (typeof document !== 'undefined') { document.documentElement.style.setProperty('--mc-ui', String(f.ui)); if (document.body) document.body.classList.toggle('mc-zurdo', O.zurdo); }
     const V = op.vistas; if (V) { if (f.calidad === 'auto') V.auto = true; else { V.auto = false; V.calidad = f.calidad; } }
@@ -7895,7 +7911,7 @@ const UI = {
 #${id} .mision{max-width:min(320px,70vw);padding:8px 12px;border-radius:var(--r);background:var(--f);border-left:4px solid var(--a)}
 #${id} .dialogo{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);width:min(520px,92vw);padding:14px;border-radius:var(--r);background:var(--f);border:1px solid var(--b)}#${id} .dialogo .opts{display:grid;gap:6px;margin-top:10px}#${id} .dialogo button{font-size:15px;text-align:left;padding:10px}
 #${id} .menu{position:absolute;right:66px;top:max(10px,env(safe-area-inset-top));max-height:78vh;overflow:auto;width:min(300px,72vw);padding:8px;border-radius:var(--r);background:var(--f);border:1px solid var(--b);display:grid;gap:4px}#${id} .menu button{text-align:left;font-size:14px;padding:8px 10px}
-#${id} .mapaG{position:fixed;inset:0;z-index:60;background:#0b0f14;touch-action:none;pointer-events:auto}#${id} .mapaG canvas{width:100%;height:100%;display:block}#${id} .mapaB{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));display:flex;flex-direction:column;gap:8px}#${id} .mapaB button{width:48px;height:48px;border-radius:50%;border:2px solid #0006;background:#fffffff0;color:#111;font:800 22px/1 system-ui;box-shadow:0 2px 8px #0008;cursor:pointer}#${id} .mapaB button.x{order:-1;background:#111;color:#fff;border-color:#fff8}@media (max-height:420px){#${id} .mapaB{gap:6px}#${id} .mapaB button{width:44px;height:44px;font-size:20px}}#${id} .mapaG small{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 14px);text-align:center;color:#fff;font:600 13px system-ui;text-shadow:0 1px 3px #000}
+#${id} .mapaG{position:fixed;inset:0;z-index:60;background:#0b0f14;touch-action:none;pointer-events:auto}#${id} .mapaG canvas{width:100%;height:100%;display:block}#${id} .mapaB{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));display:flex;flex-direction:column;gap:8px}#${id} .mapaB button{width:48px;height:48px;border-radius:50%;border:2px solid #0006;background:#fffffff0;color:#111;font:800 22px/1 system-ui;box-shadow:0 2px 8px #0008;cursor:pointer}#${id} .mapaB button.ir{width:auto;min-width:76px;border-radius:24px;padding:0 12px;background:#ffc23a;font-size:18px}#${id} .mapaB button.ir[hidden]{display:none}#${id} .mapaB button.x{order:-1;background:#111;color:#fff;border-color:#fff8}@media (max-height:420px){#${id} .mapaB{gap:6px}#${id} .mapaB button{width:44px;height:44px;font-size:20px}}#${id} .mapaG small{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 14px);text-align:center;color:#fff;font:600 13px system-ui;text-shadow:0 1px 3px #000}
 #${id} canvas.mini{position:absolute;right:10px;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 96px);width:120px;height:120px;border-radius:50%;border:2px solid var(--b);background:#0006}
 #${id} .fichas>*,#${id} .botones>*,#${id} .mision,#${id} .vel,#${id} .barras{transition:opacity .6s}#${id} .dim{opacity:.75}#${id}.foco .fichas,#${id}.foco .botones,#${id}.foco .mision,#${id}.foco .barras{opacity:.18}#${id} .izq .aviso{pointer-events:none}#${id}.cine>*{opacity:0!important;pointer-events:none!important}
 @media (orientation:landscape){#${id} .izq{right:auto;max-width:24vw}#${id} .fichas{max-height:66px}#${id} .ficha{max-width:23vw}#${id} .mision .d{-webkit-line-clamp:1}}@media (orientation:landscape) and (max-height:500px){#${id} .ficha{padding:4px 8px;font-size:12px}#${id} .mision,#${id} .aviso{font-size:12px}}
@@ -8021,7 +8037,9 @@ MC.UI = UI;
    - botones ✕ · + · − · ◎ (volver a mí) · 🧭 (norte arriba o rumbo arriba), arrastrar, pellizcar y la rueda;
    - tocar = poner el destino (se pega al lugar, la estación o el punto más cercano); tocarlo otra vez lo quita;
    - nombres según el acercamiento (municipios lejos, barrios y estaciones cerca) y la línea hasta el destino.
-   Uso: ui.abrirMapa(vistas, M, puntos, yo, { pausa: v => …, alDestino: (p | null) => …, destino, ruta: () => [x,y,…] })
+   - 4.8 · con op.alIr, poner un punto muestra «🚀 Ir» (el juego te lleva allá); con op.planeta, 🌍 y alejar más allá de la
+     ciudad pasan al planeta: un solo mapa de la calle al mundo.
+   Uso: ui.abrirMapa(vistas, M, puntos, yo, { pausa: v => …, alDestino: (p | null) => …, destino, ruta: () => [x,y,…], alIr: p => bool, planeta: () => … })
    `puntos` y `yo` pueden ser funciones (se leen en cada cuadro).
    ===================================================================== */
 const RANGO_VIA = { [VIA.SENDERO]: .5, [VIA.PEATONAL]: .8, [VIA.ESCALAS]: .8, [VIA.CICLO]: 1.5, [VIA.CALLE]: 2, [VIA.CARRERA]: 3, [VIA.AVENIDA]: 4, [VIA.AUTOPISTA]: 5 };
@@ -8067,13 +8085,16 @@ const MapaGrande = {
     const leerYo = () => (typeof yo === 'function' ? yo() : yo), leerPts = () => { const p = typeof puntos === 'function' ? puntos() : puntos; return Array.isArray(p) ? p : []; };
     const Y0 = leerYo(); let k = clamp(Math.min(innerWidth / M.ancho, innerHeight / M.alto) * 6, .004, 4), cx = Y0 ? Y0.x : M.ancho / 2, cy = Y0 ? Y0.y : M.alto / 2, giro = 0, rumboArriba = !!MapaGrande.rumboArriba, sucio = true, abierto = true, destino = op.destino || null;
     const Lc = vistas && vistas.losas, Ll = vistas && (vistas.losasLejos || vistas.losas), RES = [.0625, .125, .25, .5, 1, 2], kMin = Math.min(innerWidth / M.ancho, innerHeight / M.alto) * .8, kMax = 4;
-    const zoom = (f, px, py) => { const k2 = clamp(k * f, kMin, kMax); if (px != null) { const [wx, wy] = aMundo(px, py); k = k2; const [wx2, wy2] = aMundo(px, py); cx += wx - wx2; cy += wy - wy2; } else k = k2; sucio = true; };
+    const zoom = (f, px, py) => { if (f < 1 && op.planeta && k <= kMin * 1.01) { if ((MapaGrande._tope = (MapaGrande._tope || 0) + 1) >= 3) { MapaGrande._tope = 0; cerrar(); op.planeta(); return; } } else MapaGrande._tope = 0;   /* 4.8: alejar más allá de la ciudad lleva al planeta */
+      const k2 = clamp(k * f, kMin, kMax); if (px != null) { const [wx, wy] = aMundo(px, py); k = k2; const [wx2, wy2] = aMundo(px, py); cx += wx - wx2; cy += wy - wy2; } else k = k2; sucio = true; };
     const aMundo = (px, py) => { const W = innerWidth, H = innerHeight, dx = (px - W / 2) / k, dy = (py - H / 2) / k, cs = Math.cos(-giro), sn = Math.sin(-giro); return [cx + dx * cs - dy * sn, cy + dx * sn + dy * cs]; };
     const brujula = boton('🧭', 'Brújula: norte arriba o rumbo arriba', () => { rumboArriba = MapaGrande.rumboArriba = !rumboArriba; ui.aviso(rumboArriba ? '🧭 El mapa gira con tu rumbo' : '🧭 Norte arriba', 1400, 'brujula'); sucio = true; });
     boton('◎', 'Volver a mí', () => { const Y = leerYo(); if (Y) { cx = Y.x; cy = Y.y; } sucio = true; });
     boton('+', 'Acercar', () => zoom(1.6)); boton('−', 'Alejar', () => zoom(1 / 1.6));
     const cerrarB = boton('✕', 'Cerrar el mapa', () => cerrar()); cerrarB.className = 'x';
-    const fijarDestino = p => { destino = p; if (op.alDestino) op.alDestino(p); sucio = true; ui.aviso(p ? '📍 Destino: ' + (p.nombre || 'aquí') : '📍 Sin destino', 1600, 'destino'); };
+    if (op.planeta) boton('🌍', 'Ver el planeta', () => { cerrar(); op.planeta(); });
+    const irB = boton('🚀 Ir', 'Ir al punto marcado', () => { if (destino && op.alIr && op.alIr(destino) !== false) cerrar(); }); irB.className = 'ir'; irB.hidden = !(destino && op.alIr);   /* 4.8 */
+    const fijarDestino = p => { destino = p; irB.hidden = !(p && op.alIr); if (op.alDestino) op.alDestino(p); sucio = true; ui.aviso(p ? '📍 Destino: ' + (p.nombre || 'aquí') : '📍 Sin destino', 1600, 'destino'); };
     /* tocar: el lugar o la estación más cercana en 28 px; si no, el punto */
     const elegir = (px, py) => { const [wx, wy] = aMundo(px, py), r = 28 / k; if (destino && Math.hypot(destino.x - wx, destino.y - wy) < r) return fijarDestino(null); let mejor = null, bd = r;
       const mirar = (x, y, nombre, tipo) => { const dd = Math.hypot(x - wx, y - wy); if (dd < bd) { bd = dd; mejor = { x, y, nombre, tipo }; } };
