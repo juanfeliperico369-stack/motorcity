@@ -21,7 +21,7 @@ class Controles {
     const r = this.el.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; this.dedos.set(e.pointerId, { x, y, x0: x, y0: y });
     try { this.el.setPointerCapture(e.pointerId); } catch (er) { /* sin captura */ }
     if (this.dedos.size === 2) { this._gesto0(); if (this.stick.id !== null) this._soltarStick(); return; }
-    if (x < r.width * .55 && this.stick.id === null && !this.op.sinStick) Object.assign(this.stick, { id: e.pointerId, ox: x, oy: y, px: x, py: y, activo: true });
+    if ((MC.opciones.zurdo ? x > r.width * .45 : x < r.width * .55) && this.stick.id === null && !this.op.sinStick)   /* 4.8 · ✋ zurdo: el joystick en la mitad derecha */ Object.assign(this.stick, { id: e.pointerId, ox: x, oy: y, px: x, py: y, activo: true });
     else this.gesto = { tipo: 'mirar', x, y };
   }
   _mueve(e) {

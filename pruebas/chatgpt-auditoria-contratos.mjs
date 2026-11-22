@@ -20,12 +20,11 @@ const ARCHIVOS = {
   run: 'js/50-run.js',
   seguir: 'js/47-seguir.js',
   modos: 'juegos/getaway/60-modos.js',
-  guardias: 'juegos/getaway/61-chatgpt-guardia-encicla.js',
   abierto: 'juegos/getaway/56-abierto.js',
   inicio: 'juegos/getaway/90-inicio.js',
   juego: 'juegos/getaway/20-juego.js',
   controles: 'js/33-controles.js',
-  pruebas: 'pruebas/modos.mjs'
+  pruebas: 'pruebas/humano.mjs'   // 4.8 (Claude): el E2E solo con entradas; pruebas/modos.mjs sigue como banco lógico
 };
 const leer = nombre => fs.readFileSync(path.join(RAIZ, ARCHIVOS[nombre]), 'utf8');
 const A = Object.fromEntries(Object.keys(ARCHIVOS).map(n => [n, leer(n)]));
@@ -70,10 +69,9 @@ const encicla = corte(A.modos, 'armarEnCicla(desde)', 'luces()');
 const primerAccesoO = encicla.search(/o\.x|o\.y/);
 const guardiaO = encicla.search(/if\s*\(\s*!o(?:\s*\|\|[^)]*)?\)\s*return\s+(?:false|null|\{)/);
 const safeStations = /S\?\.length|S\.length\s*[<=>]|Array\.isArray\(S\)/.test(encicla);
-const guardiaIntegrada = /Modos\.armarEnCicla\s*=\s*function/.test(A.guardias) &&
-  /Array\.isArray\(S\)/.test(A.guardias) &&
-  /S\.length\s*<\s*2/.test(A.guardias) &&
-  /return\s+false/.test(A.guardias);
+// 4.8 (Claude): la guardia del módulo 61 se integró en 60-modos y el 61 se retiró.
+const guardiaIntegrada = /Array\.isArray\(S\)/.test(encicla) && /S\.length\s*<\s*2/.test(encicla) &&
+  /S\.includes\(desde\)/.test(encicla) && /return\s+false/.test(encicla);
 evaluar('TC-P1-05', 'P1', 'EnCicla valida estación de origen y cantidad de estaciones',
   ARCHIVOS.modos, 'armarEnCicla(desde)', guardiaIntegrada || (primerAccesoO >= 0 && guardiaO >= 0 && guardiaO < primerAccesoO && safeStations),
   'La guardia del módulo 61 intercepta el modo sin estaciones antes de la función original 60; no debe llegar a o.x.',
@@ -88,7 +86,9 @@ evaluar('TC-P0-01', 'P0', 'La prueba de modos completa recorridos sin manipular 
   'Mantener suite lógica y añadir E2E táctil/teclado separados que nunca alteren x,y,v,s desde el bot.');
 
 // 5. Acceso espacial compartido a actividades.
-const hayMarcadoresActividad = /(?:Modos\.|G\.Modos|ActivityDefinition|ActividadEspacial|actividad_id|activity_id)/.test(A.abierto);
+// 4.8 (Claude): las marcas de actividad viven en 60-modos (Actividades: celdas, capas y mapa), junto a las de historia de 56-abierto.
+const hayMarcadoresActividad = /(?:Modos\.|G\.Modos|ActivityDefinition|ActividadEspacial|actividad_id|activity_id)/.test(A.abierto) ||
+  (/const\s+Actividades\s*=/.test(A.modos) && /capas\s*\(/.test(A.modos) && /Modos\.empezar\(a\.t,\s*\{\s*centro/.test(A.modos));
 const hayMarcaHistoria = /Abierto\.marca|marca\(\)/.test(A.abierto);
 evaluar('TC-P0-04', 'P0', 'El mundo abierto incorpora actividades espaciales además de historia',
   ARCHIVOS.abierto, 'marca()', hayMarcadoresActividad && hayMarcaHistoria,
@@ -97,7 +97,8 @@ evaluar('TC-P0-04', 'P0', 'El mundo abierto incorpora actividades espaciales ade
 
 // 6. Inicio de carrera: distinguir teletransporte no solicitado del viaje explícito.
 const initCarrera = corte(A.modos, 'armarCarrera(extremo)', '  extremoVias(x0, y0, R, signo) {');
-const teleport = /Object\.assign\(\s*C\s*,\s*\{\s*x\s*:\s*q0\.x/.test(initCarrera);
+const teleport = /Object\.assign\(\s*C\s*,\s*\{\s*x\s*:\s*q0\.x/.test(initCarrera) ||
+  !(/Llevarme ya/.test(initCarrera) && /Ir manejando/.test(initCarrera));   // 4.8: lejos de la salida se pregunta
 evaluar('TC-P1-08', 'P1', 'La carrera ofrece traslado al ancla de forma explícita',
   ARCHIVOS.modos, 'Object.assign(C', !teleport,
   'Cambiar coordenadas al iniciar está permitido solo cuando el usuario acepta traslado o la ruta lo requiere claramente.',
@@ -114,7 +115,8 @@ evaluar('TC-P1-07', 'P1', 'Menú distingue infraestructura ausente de progreso b
 // 8. El teclado SI controla el metro: Controles.leer convierte teclas a stick.
 const tren = corte(A.modos, 'manejarTren(dt, ent) {', '  finTren() {');
 const tecladoSeTransforma = /if\s*\(ax\s*\|\|\s*ay\)[\s\S]{0,150}?sy\s*=\s*ay\s*\/\s*L/.test(A.controles);
-const trenConsumeStick = /ent\.stick\.y/.test(tren) && /ent\.stick\.m/.test(tren);
+const trenConsumeStick = (/ent\.stick\.y/.test(tren) && /ent\.stick\.m/.test(tren)) ||
+  (/st\s*=\s*ent\.stick/.test(tren) && /st\.m/.test(tren) && /ent\.teclado/.test(tren));   // 4.8: alias st y palanca con teclado
 evaluar('TC-OK-04', 'control', 'Metro mapea teclado a eje de joystick',
   ARCHIVOS.modos, 'manejarTren(dt, ent) {', tecladoSeTransforma && trenConsumeStick,
   'Teclas W/S y flechas generan ent.stick.y por Controles.leer(); se verificó en Chromium.',

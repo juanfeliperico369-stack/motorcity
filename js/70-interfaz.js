@@ -47,6 +47,10 @@ const UI = {
 #${id} .acciones{position:absolute;right:12px;bottom:max(14px,env(safe-area-inset-bottom));display:flex;gap:10px;align-items:flex-end}
 #${id} .acciones button{width:66px;height:66px;border-radius:50%;font-size:26px;background:var(--f);border:2px solid var(--b)}#${id} .acciones button.on{background:var(--a);color:#000}#${id} .acciones button.alt{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1}#${id} .acciones button.alt small{font:800 9px/1 system-ui;letter-spacing:.02em;margin-top:2px;opacity:.85}@media (max-width:560px){#${id}.con-alt .vel{bottom:calc(max(14px,env(safe-area-inset-bottom)) + 82px)}}#${id} .acciones button.prendido{background:#2ee6a6;color:#05261b;border-color:#fff;box-shadow:0 0 0 3px #2ee6a655,0 0 18px #2ee6a6aa}
 #${id} canvas.mini{bottom:calc(max(16px,env(safe-area-inset-bottom)) + 86px)}
+/* 4.8 · ⚙️ Flexibilidad: tamaño (--mc-ui) y mano zurda */
+#${id} .acciones{transform:scale(var(--mc-ui,1));transform-origin:100% 100%}#${id} canvas.mini{margin-bottom:calc((var(--mc-ui,1) - 1) * 80px)}#${id} .izq{transform:scale(var(--mc-ui,1));transform-origin:0 0}
+.mc-zurdo #${id} .acciones{right:auto;left:12px;flex-direction:row-reverse;transform-origin:0 100%}.mc-zurdo #${id} canvas.mini{bottom:max(12px,env(safe-area-inset-bottom));margin-bottom:0}
+@media (orientation:landscape) and (max-height:560px){#${id} canvas.mini,.mc-zurdo #${id} canvas.mini{top:max(10px,env(safe-area-inset-top));bottom:auto;margin-bottom:0;right:calc(clamp(48px,calc(20vw - 10px),66px) * 2 + 30px);width:104px;height:104px}}   /* 4.8: en horizontal el minimapa va arriba, junto a los botones (antes tapaba la última fila) */
 @media (prefers-reduced-motion:reduce){#${id} *{transition:none!important}}`;
     document.head.appendChild(css);
     const div = (cls, padre = capa) => { const d = document.createElement('div'); d.className = cls; padre.appendChild(d); return d; };
@@ -104,8 +108,9 @@ const UI = {
       /* joystick visible: donde se pone el dedo aparece la base y la perilla; quieto, una guía abajo a la izquierda */
       joystick(ctl, op = {}) { const j = div('joy'), k = document.createElement('i'), t = document.createElement('small'); j.appendChild(k); j.appendChild(t); t.textContent = op.texto ?? 'Arrastra para moverte'; ui._joy = { j, k, t, ctl, usado: false, t0: Date.now() }; return j; },
       pintarJoystick() { const J = ui._joy; if (!J) return; const S = J.ctl.stick, r = J.ctl.el.getBoundingClientRect();
-        if (S.activo) { J.usado = true; J.j.style.opacity = 1; J.j.style.transform = 'translate(' + (r.left + S.ox) + 'px,' + (r.top + S.oy) + 'px)'; const dx = clamp(S.px - S.ox, -52, 52), dy = clamp(S.py - S.oy, -52, 52); J.k.style.transform = 'translate(' + dx + 'px,' + dy + 'px)'; J.t.hidden = true; }
-        else { const x = r.left + Math.min(110, r.width * .2), y = r.top + r.height - Math.max(150, r.height * .2); J.j.style.transform = 'translate(' + x + 'px,' + y + 'px)'; J.k.style.transform = 'translate(0,0)'; J.j.style.opacity = J.usado ? .22 : .7; J.t.hidden = J.usado; } },
+        const ku = ' scale(' + (MC.opciones.ui || 1) + ')';   /* 4.8 · 🔠 tamaño de la interfaz */
+        if (S.activo) { J.usado = true; J.j.style.opacity = 1; J.j.style.transform = 'translate(' + (r.left + S.ox) + 'px,' + (r.top + S.oy) + 'px)' + ku; const dx = clamp(S.px - S.ox, -52, 52), dy = clamp(S.py - S.oy, -52, 52); J.k.style.transform = 'translate(' + dx + 'px,' + dy + 'px)'; J.t.hidden = true; }
+        else { const x = MC.opciones.zurdo ? r.left + r.width - Math.min(110, r.width * .2) - 170 * (MC.opciones.ui || 1) : r.left + Math.min(110, r.width * .2), y = r.top + r.height - Math.max(150, r.height * .2); J.j.style.transform = 'translate(' + x + 'px,' + y + 'px)' + ku; J.k.style.transform = 'translate(0,0)'; J.j.style.opacity = J.usado ? .22 : .7; J.t.hidden = J.usado; } },
       /* botones de acción grandes abajo a la derecha (donde llega el pulgar); mantener = mientras está oprimido */
       accion({ id: aid, icono = '', texto = '', mantener = false, ctl, al }) {
         if (!ui._acc) ui._acc = div('acciones p'); const b = document.createElement('button'); b.innerHTML = icono; b.setAttribute('aria-label', texto || aid); b.title = texto; ui._acc.appendChild(b);

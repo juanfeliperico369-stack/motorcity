@@ -69,8 +69,8 @@ class Camara {
         const hz = z0 + 1.6; for (let i = 1; i <= 8; i++) { const t = i / 8, px = o.x - Math.cos(ang) * P.dist * t, py = o.y - Math.sin(ang) * P.dist * t, pz = hz + (P.alto - 1.6) * t, cz = M.cota(px, py); const e = M.edificioEn ? M.edificioEn(px, py, .6) : null; if (pz < cz + .6 || (e && pz < cz + (e.h || 6) + .5)) { brazo = Math.max(.15, (i - 1) / 8); break; } }
       }
       this.brazo = brazo < this.brazo ? lerp(this.brazo, brazo, Math.min(1, dt * 20)) : resorte(this.brazo, brazo, this._vb, .5, dt);
-      const dist = prim ? 0 : P.dist * this.brazo, adel = prim ? .28 : 0;
-      let ex = o.x - Math.cos(ang) * (dist - adel), ey = o.y - Math.sin(ang) * (dist - adel), ez = prim ? z0 + P.alto + (o.zCuerpo || 0) : z0 + 1.6 + (P.alto - 1.6) * this.brazo;
+      const dist = prim ? 0 : P.dist * this.brazo * (MC.opciones.camDist || 1), adel = prim ? .28 : 0;   /* 4.8 · ⚙️ distancia de la cámara */
+      let ex = o.x - Math.cos(ang) * (dist - adel), ey = o.y - Math.sin(ang) * (dist - adel), ez = prim ? z0 + (o.ojo ?? P.alto) + (o.zCuerpo || 0) : z0 + 1.6 + (P.alto - 1.6) * this.brazo;
       if (M && aereo) { const e = M.edificioEn ? M.edificioEn(ex, ey, 2) : null; if (e) ez = Math.max(ez, M.cota(ex, ey) + (e.h || 6) + 4); }   // el dron pasa por encima de las torres
       if (M && !prim) { ez = Math.max(ez, M.cota(ex, ey) + .8); const nv = M.nivel ? M.nivel(ex, ey) : 0; if (nv > 0 && (o.zPaso || 0) < 1) { const techo = M.cota(ex, ey) + nv * NIVEL_M - 1; if (ez > techo - 1.5 && ez < techo + 3) ez = Math.max(z0 + 1.1, techo - 1.5); } }
       const look = prim ? 30 : Math.max(4, dist), lx = o.x + Math.cos(ang) * (prim ? look : 4), ly = o.y + Math.sin(ang) * (prim ? look : 4);
@@ -97,7 +97,7 @@ class Camara {
     const t = clamp(Math.log(this.zoom / Zl[0]) / Math.log(Zl[1] / Zl[0]), 0, 1), vel = clamp((Math.abs(o.v || 0) - 6) / 24, 0, 1), per = clamp(this.persecucion || 0, 0, 1);
     this._vel = lerp(this._vel || 0, vel, Math.min(1, dt * 1.2)); this._per = lerp(this._per || 0, per, Math.min(1, dt * 1.5));
     const pitch = lerp(P.pitch, P.pitchCerca ?? P.pitch, t) - this._vel * .07 - this._per * .05;
-    const D = Hp / 2 / Math.max(.05, this.zoom) / Math.tan(P.fov / 2) * (1 + this._vel * (P.alejaVel ?? .2) + this._per * .22);   /* 4.7: la cenital se aleja con la velocidad como GTA 2 (hasta +75 % a 30 m/s): se ve venir la calle */
+    const D = Hp / 2 / Math.max(.05, this.zoom) / Math.tan(P.fov / 2) * (1 + this._vel * (P.alejaVel ?? .2) + this._per * .22) * (MC.opciones.camDist || 1);   /* 4.7: la cenital se aleja con la velocidad como GTA 2 (hasta +75 % a 30 m/s): se ve venir la calle */
     const yaw = P.yaw45 ? Math.PI / 4 + Math.round((this.yaw - Math.PI / 4) / (Math.PI / 2)) * Math.PI / 2 : this.yaw, ux = -Math.sin(yaw), uy = -Math.cos(yaw);
     const zt = (M ? M.cota(this.x, this.y) : 0) + Math.min(6, (o.z || 0) + (o.zPaso || 0)) * .6 + .8;
     let ex = this.x - ux * D * Math.cos(pitch), ey = this.y - uy * D * Math.cos(pitch); const ez = zt + D * Math.sin(pitch);
