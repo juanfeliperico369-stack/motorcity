@@ -43,7 +43,7 @@ await p.evaluate(() => { const G = TURNO, M = G.M, C = G.cuerpo, v = M.vias().fi
 await p.waitForTimeout(600); const bAcel = await p.$('.mcui .acciones button.alt'); const visible = !!bAcel && await bAcel.isVisible();
 if (bAcel) await bAcel.tap(); await p.waitForTimeout(3500); const acel = await p.evaluate(() => ({ fijo: !!TURNO.acelFijo, v: +TURNO.cuerpo.v.toFixed(1), prendido: document.querySelector('.mcui .acciones button.alt').getAttribute('aria-pressed') }));
 if (bAcel) await bAcel.tap(); await p.waitForTimeout(4500); const para = await p.evaluate(() => ({ fijo: !!TURNO.acelFijo, v: +Math.abs(TURNO.cuerpo.v).toFixed(2) }));
-R.acelerador = { visible, ...acel, vDespues: para.v, apagado: !para.fijo };
+R.acelerador = { visible, ...acel, vDespues: para.v, apagado: !para.fijo, vehTras: await p.evaluate(() => window._vehTrasModos) };
 /* el mapa grande con el juego corriendo: abre, pausa, acerca, cierra y el juego sigue */
 R.mapa = await p.evaluate(async () => { const G = TURNO, espera = ms => new Promise(q => setTimeout(q, ms)); G.abrirMapaTC(); await espera(400); const abierto = !!G.ui._mapa && G.pausa; for (let i = 0; i < 4; i++) document.querySelector('.mapaB button[aria-label="Acercar"]').click(); await espera(800); G.ui._mapa.cerrar(); await espera(300); return { abierto, cerrado: !G.ui._mapa && !G.pausa }; });
 const res = await p.evaluate(() => window._res.map(r => r.id)); errs.push(...await p.evaluate(() => MC.errores.map(e => String(e.msg || e))));

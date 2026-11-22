@@ -37,7 +37,7 @@ const CAMARAS = ['cenital', 'ciudad3d', 'tercera', 'primera', 'maqueta', 'arcade
 /* 4.7 · cada cámara donde tiene sentido (el autor: «las vistas no tienen coherencia con cómo se adaptaron»): las cinco del mundo 3D
    siempre; 🏁 Arcade (la carretera pseudo-3D de OutRun) solo en las carreteras entre ciudades y en las carreras; ⛰️ Vuelo (Voxel
    Space) solo volando (jetpack). Si cambia el contexto, la cámara vuelve sola a la cenital 3D. */
-function camarasAqui() { const C = G.cuerpo, L = ['cenital', 'ciudad3d', 'tercera', 'primera', 'maqueta']; if ((G.M && !G.M.esCiudad) || (G.Modos && G.Modos.m && G.Modos.m.id === 'carrera')) L.push('arcade'); if (C && C.veh.clase === 'aire') L.push('vuelo'); return L; }
+function camarasAqui() { const C = G.cuerpo, L = ['cenital', 'ciudad3d', 'tercera', 'primera', 'dron', 'maqueta']; if ((G.M && !G.M.esCiudad) || (G.Modos && G.Modos.m && G.Modos.m.id === 'carrera')) L.push('arcade'); if (C && C.veh.clase === 'aire') L.push('vuelo'); return L; }
 function siguienteCamara() { const L = camarasAqui(), i = L.indexOf(G.vistaId); G.vistaId = L[(i + 1) % L.length]; const v = G.vistas.usar(G.vistaId, G.E); G.ui.aviso(v.icon + ' ' + v.n, 1400, 'vista'); escribirG({ vista: G.vistaId }); }
 function camaraCoherente() { if (!G.vistas || G._sigCam) return; const L = camarasAqui(); if ((G.vistaId === 'arcade' || G.vistaId === 'vuelo') && !L.includes(G.vistaId)) { const ant = G.vistaId; G.vistaId = 'cenital'; G.vistas.usar('cenital', G.E); G.ui.aviso('🗺️ Vuelve la cenital 3D (' + (ant === 'vuelo' ? 'el vuelo es para el jetpack' : 'la cámara Arcade es para la carretera y las carreras') + ')', 1800, 'vista'); } }
 function menu() {

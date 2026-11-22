@@ -4669,7 +4669,7 @@ const CAM_PERFIL = {
   aerea: { dist: 900, alto: 650, pitch: .78, fov: .85 },
   /* 3.0: cámaras aéreas sobre el MISMO mundo 3D (fijo: no van detrás del rumbo; siguen el punto con mirada adelante).
      pitch: inclinación de lejos; pitchCerca: de cerca (se ven las fachadas); fov estrecho en la maqueta = casi ortográfica */
-  cenital: { fijo: true, pitch: 1.08, pitchCerca: .74, fov: .62, dist: 0, alto: 0 },
+  cenital: { fijo: true, pitch: 1.38, pitchCerca: 1.16, fov: .62, dist: 0, alto: 0 },   /* 4.7: 79° de lejos y 66° de cerca (GTA 1 y 2: desde arriba, con las fachadas apenas asomando); antes 62° y 42°, casi oblicua */
   oblicua: { fijo: true, pitch: .86, pitchCerca: .62, fov: .7, dist: 0, alto: 0 },
   maqueta: { fijo: true, pitch: .66, pitchCerca: .58, fov: .3, yaw45: true, dist: 0, alto: 0 }
 };
@@ -5033,7 +5033,10 @@ const Manejo = {
     } else {
       let giro = esq === 'inclinacion' ? Manejo.inclinacion() : (sx || ent.giro || 0);
       out.giro = Manejo.giroPorVelocidad(clamp(giro, -1, 1), C.v, vmax, P);
-      out.acel = -sy || ent.acel || 0; if (esq === 'un_pulgar' || esq === 'inclinacion' || A.autoAcelerar) out.acel = ent.freno || (ent.acel < 0) ? -1 : Math.max(out.acel, .85);
+      out.acel = -sy || ent.acel || 0;
+      /* 4.7: como en los juegos de carreras para celular, el joystick sostenido hacia un lado también avanza (solo hacia atrás frena) */
+      if (m > .3 && sy < .3 && out.acel < m * .8 && V.clase !== 'pie') out.acel = Math.max(out.acel, m * .8);
+      if (esq === 'un_pulgar' || esq === 'inclinacion' || A.autoAcelerar) out.acel = ent.freno || (ent.acel < 0) ? -1 : Math.max(out.acel, .85);
     }
     /* 4.6.1 · ACELERADOR FIJO (pedido del autor: «el problema es el arranque: si se suelta el joystick se deja de acelerar; pon un
        botón que, prendido, acelere siempre, y para detenerse simplemente se apaga»). Prendido: acelera a fondo y el joystick solo da la
@@ -6881,7 +6884,8 @@ class Vistas {
   gl3d() { return this.motor3d !== '2d' && this.motor3d !== 'raster' && this.hayGL() && !this.usaRaster(); }
   efectiva() { const v = this.actual; return v.respaldo && !this.gl3d() ? (v._r2d ||= Object.assign({}, v, { tipo: '2d', modo: v.respaldo })) : v; }
   /* metros → pantalla con la vista que esté (2D, pixel o 3D): para la flecha al objetivo, globos y etiquetas */
-  aPantalla(E, x, y, z = 0) { const v = this._ef || this.actual; if (v.tipo === 'gl' && this.gl && this.gl.mvp) return this.gl.aPantalla(x, y, z, this._W || 1, this._H || 1); if (v.tipo === '2d' && E._pr) { const r = E._pr(x, y, z); return this.pixel ? [r[0] * this.escalaPixel, r[1] * this.escalaPixel] : r; } return null; }
+  aPantalla(E, x, y, z = 0) { const v = this._ef || this.actual; if (v.tipo === 'gl' && this.usaRaster() && this.raster && typeof this.raster.aPantalla === 'function') return this.raster.aPantalla(x, y, z, this._W || 1, this._H || 1);   /* 4.7: con el respaldo por software (Gemini, js/44-raster.js) */
+    if (v.tipo === 'gl' && this.gl && this.gl.mvp) return this.gl.aPantalla(x, y, z, this._W || 1, this._H || 1); if (v.tipo === '2d' && E._pr) { const r = E._pr(x, y, z); return this.pixel ? [r[0] * this.escalaPixel, r[1] * this.escalaPixel] : r; } return null; }
   dibujar(g, W, H, E, dt = 1 / 60) {
     const t0 = MC.ahora(), v = this._ef = this.efectiva(), px = this.pixel; this._W = W; this._H = H; if (E.camara) { E.camara.pantalla = [W, H]; if (this.actual.perfil && E.camara.perfil !== this.actual.perfil) E.camara.usarPerfil(this.actual.perfil); } E.losas = this.losas; E.losasLejos = this.losasLejos; E.calidad = this.calidad;
     let dst = g, w = W, h = H;
@@ -13503,6 +13507,7 @@ const Modos = {
     mandados: { ico: '📦', n: 'Mandados', d: 'recoge y entrega a tiempo; cuida el paquete' },
     encicla: { ico: '🚲', n: 'EnCicla', d: 'lleva la cicla a la estación que la necesita; ciclorruta = racha, semáforo en rojo = multa', puede: () => ((G.M.transporte && G.M.transporte.encicla) || []).length >= 2, falta: 'solo donde hay estaciones EnCicla (Medellín y el Valle)' },
     tren: { ico: '🚇', n: 'Metro, tranvía y Metroplús', d: 'maneja el tren por su línea real y para en cada andén', puede: () => !!(G.transporte && G.transporte.lineas.some(L => L.clase !== 'cable' && L.est.length >= 3)), falta: 'solo donde hay líneas (Medellín y el Valle)' },
+    run: { ico: '🛴', n: 'Run en la ciclovía', d: 'el corredor infinito por la ciclorruta real (a pie, bici, patinete, skate o patines)' },
     trucos: { ico: '🛹', n: 'Zona de trucos y parkour', d: 'skate, BMX, patines o a pie: salta (🦘), gira en el aire y encadena combos en 75 s' },
     lab: { ico: '🧪', n: 'Laboratorio del motor', d: 'estilo gráfico, hora, clima y cualquier vehículo' }
   },
@@ -13517,7 +13522,7 @@ const Modos = {
   },
   empezar(id, op) {
     if (this.m) this.terminar(null); const C = G.cuerpo; G.busq.limpiar(); G.destinoLibre = null; G.objetivo = null;
-    const r = id === 'carrera' ? this.armarCarrera(false) : id === 'extremo' ? this.armarCarrera(true) : id === 'mandados' ? this.armarMandado(0) : id === 'encicla' ? this.armarEnCicla() : id === 'tren' ? this.elegirLinea() : id === 'trucos' ? this.armarTrucos(op && op.centro) : id === 'lab' ? this.laboratorio() : null;
+    const r = id === 'carrera' ? this.armarCarrera(false) : id === 'extremo' ? this.armarCarrera(true) : id === 'mandados' ? this.armarMandado(0) : id === 'encicla' ? this.armarEnCicla() : id === 'tren' ? this.elegirLinea() : id === 'run' ? this.irARun() : id === 'trucos' ? this.armarTrucos(op && op.centro) : id === 'lab' ? this.laboratorio() : null;
     if (r === false) G.ui.aviso('🚧 No encontré calles para ' + this.DEF[id].n + ' aquí: muévete un poco y prueba otra vez', 2800, 'modos');
     MC.emit('modo:inicio', { id, ok: r !== false }); return r; },
   terminar(texto) { const m = this.m; if (!m) return; this.m = null; const C = G.cuerpo; G.objetivo = null; G.controlExterno = null; G.E._sinJugador = false; for (const k of ['m1', 'm2', 'm3']) { const f = G.ui.ficha(k, ''); f.hidden = true; } if (BOT.saltar) BOT.saltar.hidden = true;
@@ -13623,11 +13628,14 @@ const Modos = {
     const C = G.cuerpo; let i0 = 0, md = 1e9; L.est.forEach((e, i) => { const q = L.T.at(e.s), d = Math.hypot(q.x - C.x, q.y - C.y); if (d < md) { md = d; i0 = i; } });
     const dir = i0 > (L.est.length - 1) / 2 ? -1 : 1, e = L.est[i0];
     this.m = { id: 'tren', tren: true, L, dir, s: e.s, v: 0, sig: i0 + dir, puertas: 4, pasajeros: 40 + ((Math.random() * 60) | 0), t: 0, puntos: 0, paradas: 0, errores: [], vmax: clamp((L.C.vel_ms || 12) * 1.9, 16, 28), antes: null };
+    this.m.puertas = .6;   /* 4.7 (hallazgo de Gemini): antes esperaba 4 s con las puertas abiertas y parecía que el tren no andaba */
     G.controlExterno = (dt, ent) => this.manejarTren(dt, ent); G.E._sinJugador = true; this.manejarTren(0, { stick: { x: 0, y: 0, m: 0 } });
     G.ui.aviso((L.clase === 'metro' ? '🚇 ' : L.clase === 'tranvia' ? '🚋 ' : '🚌 ') + L.nombre + ' hacia ' + L.est[dir > 0 ? L.est.length - 1 : 0].nombre + ' · ⚡ acelera, 🛑 frena, para dentro del andén', 3600, 'modos');
   },
   manejarTren(dt, ent) {
-    const m = this.m, L = m.L, C = G.cuerpo, B = G.ctl.botones; let thr = clamp(-(ent.stick.y || 0) * (ent.stick.m || 0), -1, 1); if (B.has('turbo') || ent.turbo) thr = 1;
+    const m = this.m, L = m.L, C = G.cuerpo, B = G.ctl.botones, st = ent.stick || { x: 0, y: 0, m: 0 };
+    /* 4.7 (hallazgo de Gemini): el joystick empuja hacia donde va el tren en la pantalla (antes solo leía arriba/abajo: en líneas horizontales no arrancaba) */
+    let thr = 0; if (st.m > .15) { const yaw = (G.camara && G.camara.yaw) || 0, c = Math.cos(yaw), sn = Math.sin(yaw), wx = st.x * c + st.y * sn, wy = -st.x * sn + st.y * c, ad = C.a; thr = clamp((wx * Math.cos(ad) + wy * Math.sin(ad)) / Math.max(.2, Math.hypot(wx, wy)) * st.m * 1.4, -1, 1); if (G.vistas && G.vistas.actual.control === 'volante') thr = clamp(-st.y * 1.4, -1, 1); } if (B.has('turbo') || ent.turbo) thr = 1;
     /* 4.6.1 · ⏫ acelerador fijo también en el tren: prendido acelera solo; al apagarlo frena suave hasta parar (para llegar al andén) */
     if (G.acelFijo) { m._parar = false; thr = 1; } else if (m._fijo) m._parar = true; m._fijo = !!G.acelFijo; if (m._parar) { if (thr > .05 || m.v < .3) m._parar = false; else thr = -.6; }
     if (B.has('freno') || (ent.pulsos && ent.pulsos.has('Space'))) thr = -1;
@@ -13674,6 +13682,11 @@ const Modos = {
     if (m.t <= 0) this.finTrucos();
   },
   finTrucos() { const m = this.m, rec = this.record('trucos:' + G.id, m.puntos, false), pago = Math.round(m.puntos * .15); G.dinero += pago; this.terminar(null); MC.emit('modo:resultado', { id: 'trucos', puntos: m.puntos }); G.ui.dialogo('🛹 Sesión terminada', '<b>' + Math.round(m.puntos) + ' puntos</b>' + (pago ? ' · 💵 ' + plata(pago) : '') + (rec.mejor ? '<br>⭐ ¡Récord en esta ciudad!' : ''), ['Listo']); },
+
+  /* 🛴 Run (4.7): si ya estás en una ciclorruta y en algo que corre Run, entra; si no, marca la ciclorruta más cercana como destino */
+  irARun() { const C = G.cuerpo; if (G.Extras && G.Extras.puedeRun && G.Extras.puedeRun()) { G.Extras.entrarRun(); return true; }
+    const q = G.M.viaCercana(C.x, C.y, 2500, v => v.k === MC.VIA.CICLO); if (!q) return false; G.destinoLibre = { x: q.x, y: q.y, nombre: 'Ciclorruta · Run' };
+    G.ui.aviso('🛴 La ciclorruta más cercana está a ' + Math.round(Math.hypot(q.x - C.x, q.y - C.y)) + ' m: síguela (📍). Allá, a pie o en bici, toca 🛴 Run', 3200, 'modos'); return true; },
 
   /* ---------------- 🧪 laboratorio ---------------- */
   laboratorio() {
@@ -13767,6 +13780,7 @@ const Actividades = {
 EXTRAS.hud.push(() => Actividades.hud()); EXTRAS.capas.push((g, pr, d) => Actividades.capas(g, pr, d)); EXTRAS.mapa.push(pts => Actividades.mapa(pts));
 EXTRAS.ui.push(b => { b('jugarAqui', '▶', 'Jugar aquí', () => Actividades.jugar()); BOT.jugarAqui.hidden = true; });
 G.Actividades = Actividades;
+EXTRAS.hud.push(() => { if (typeof camaraCoherente === 'function') camaraCoherente(); });   /* 4.7: Arcade y Vuelo solo donde tienen sentido */
 
 /* =====================================================================
    TURNO CERO · arranque: portada, controles, botones, menú y teclado
@@ -13803,8 +13817,13 @@ function iniciarInterfaz() {
   $('#fPortada').onclick = () => location.reload();
   t0 = performance.now(); requestAnimationFrame(cuadro);
 }
-const CAMARAS = ['cenital', 'ciudad3d', 'tercera', 'maqueta', 'arcade', 'vuelo'];   /* 4.1: 🏁 arcade (OutRun) y ⛰️ vuelo (Voxel Space de Comanche) */
-function siguienteCamara() { const i = CAMARAS.indexOf(G.vistaId); G.vistaId = CAMARAS[(i + 1) % CAMARAS.length]; const v = G.vistas.usar(G.vistaId, G.E); G.ui.aviso(v.icon + ' ' + v.n, 1400, 'vista'); escribirG({ vista: G.vistaId }); }
+const CAMARAS = ['cenital', 'ciudad3d', 'tercera', 'primera', 'maqueta', 'arcade', 'vuelo'];   /* 4.1: 🏁 arcade (OutRun) y ⛰️ vuelo (Voxel Space de Comanche) */
+/* 4.7 · cada cámara donde tiene sentido (el autor: «las vistas no tienen coherencia con cómo se adaptaron»): las cinco del mundo 3D
+   siempre; 🏁 Arcade (la carretera pseudo-3D de OutRun) solo en las carreteras entre ciudades y en las carreras; ⛰️ Vuelo (Voxel
+   Space) solo volando (jetpack). Si cambia el contexto, la cámara vuelve sola a la cenital 3D. */
+function camarasAqui() { const C = G.cuerpo, L = ['cenital', 'ciudad3d', 'tercera', 'primera', 'dron', 'maqueta']; if ((G.M && !G.M.esCiudad) || (G.Modos && G.Modos.m && G.Modos.m.id === 'carrera')) L.push('arcade'); if (C && C.veh.clase === 'aire') L.push('vuelo'); return L; }
+function siguienteCamara() { const L = camarasAqui(), i = L.indexOf(G.vistaId); G.vistaId = L[(i + 1) % L.length]; const v = G.vistas.usar(G.vistaId, G.E); G.ui.aviso(v.icon + ' ' + v.n, 1400, 'vista'); escribirG({ vista: G.vistaId }); }
+function camaraCoherente() { if (!G.vistas || G._sigCam) return; const L = camarasAqui(); if ((G.vistaId === 'arcade' || G.vistaId === 'vuelo') && !L.includes(G.vistaId)) { const ant = G.vistaId; G.vistaId = 'cenital'; G.vistas.usar('cenital', G.E); G.ui.aviso('🗺️ Vuelve la cenital 3D (' + (ant === 'vuelo' ? 'el vuelo es para el jetpack' : 'la cámara Arcade es para la carretera y las carreras') + ')', 1800, 'vista'); } }
 function menu() {
   const S = leerG(), it = [{ id: 'seguir', texto: '▶ Seguir' }, { id: 'modos', texto: '🎮 Modos de juego (carreras, extremo, mandados, EnCicla, metro)' }, { id: 'cam', texto: '🎥 Cámara: ' + G.vistas.actual.n }, { id: 'cine', texto: '🎬 Modo cine: ' + (G.cine ? 'sí (guían las direccionales)' : 'no') }, { id: 'retro', texto: '🕹️ Retro 1993: ' + (G.retro ? 'sí (pixel con la luz de Doom)' : 'no') }, { id: 'asis', texto: '🛞 Asistencia de manejo: ' + (G.asistencia ? 'sí (esquiva paredes)' : 'no') }, { id: 'sigcam', texto: '🔦 Sigilo desde arriba: ' + (S.sigiloCenital !== false ? 'sí' : 'no') }, { id: 'sonido', texto: Snd.on ? '🔊 Sonido: sí' : '🔇 Sonido: no' }, { id: 'suave', texto: S.suave ? '🗣️ Lenguaje: suave' : '🗣️ Lenguaje: fuerte' }, { id: 'acces', texto: '♿ Accesibilidad' }, { id: 'quien', texto: '👥 Personajes' }, { id: 'artef', texto: '🧰 Artefactos' }];
   if (G.hist) it.push({ id: 'reintentar', texto: '↩ Volver al último punto' }); it.push({ id: 'historia', texto: '📖 Historia (opcional)' }, { id: 'libre', texto: '🌎 Mundo abierto aquí' }, { id: 'portada', texto: '🏠 Portada' });

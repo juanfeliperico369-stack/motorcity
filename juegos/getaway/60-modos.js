@@ -33,6 +33,7 @@ const Modos = {
     mandados: { ico: '📦', n: 'Mandados', d: 'recoge y entrega a tiempo; cuida el paquete' },
     encicla: { ico: '🚲', n: 'EnCicla', d: 'lleva la cicla a la estación que la necesita; ciclorruta = racha, semáforo en rojo = multa', puede: () => ((G.M.transporte && G.M.transporte.encicla) || []).length >= 2, falta: 'solo donde hay estaciones EnCicla (Medellín y el Valle)' },
     tren: { ico: '🚇', n: 'Metro, tranvía y Metroplús', d: 'maneja el tren por su línea real y para en cada andén', puede: () => !!(G.transporte && G.transporte.lineas.some(L => L.clase !== 'cable' && L.est.length >= 3)), falta: 'solo donde hay líneas (Medellín y el Valle)' },
+    run: { ico: '🛴', n: 'Run en la ciclovía', d: 'el corredor infinito por la ciclorruta real (a pie, bici, patinete, skate o patines)' },
     trucos: { ico: '🛹', n: 'Zona de trucos y parkour', d: 'skate, BMX, patines o a pie: salta (🦘), gira en el aire y encadena combos en 75 s' },
     lab: { ico: '🧪', n: 'Laboratorio del motor', d: 'estilo gráfico, hora, clima y cualquier vehículo' }
   },
@@ -47,7 +48,7 @@ const Modos = {
   },
   empezar(id, op) {
     if (this.m) this.terminar(null); const C = G.cuerpo; G.busq.limpiar(); G.destinoLibre = null; G.objetivo = null;
-    const r = id === 'carrera' ? this.armarCarrera(false) : id === 'extremo' ? this.armarCarrera(true) : id === 'mandados' ? this.armarMandado(0) : id === 'encicla' ? this.armarEnCicla() : id === 'tren' ? this.elegirLinea() : id === 'trucos' ? this.armarTrucos(op && op.centro) : id === 'lab' ? this.laboratorio() : null;
+    const r = id === 'carrera' ? this.armarCarrera(false) : id === 'extremo' ? this.armarCarrera(true) : id === 'mandados' ? this.armarMandado(0) : id === 'encicla' ? this.armarEnCicla() : id === 'tren' ? this.elegirLinea() : id === 'run' ? this.irARun() : id === 'trucos' ? this.armarTrucos(op && op.centro) : id === 'lab' ? this.laboratorio() : null;
     if (r === false) G.ui.aviso('🚧 No encontré calles para ' + this.DEF[id].n + ' aquí: muévete un poco y prueba otra vez', 2800, 'modos');
     MC.emit('modo:inicio', { id, ok: r !== false }); return r; },
   terminar(texto) { const m = this.m; if (!m) return; this.m = null; const C = G.cuerpo; G.objetivo = null; G.controlExterno = null; G.E._sinJugador = false; for (const k of ['m1', 'm2', 'm3']) { const f = G.ui.ficha(k, ''); f.hidden = true; } if (BOT.saltar) BOT.saltar.hidden = true;
@@ -153,11 +154,14 @@ const Modos = {
     const C = G.cuerpo; let i0 = 0, md = 1e9; L.est.forEach((e, i) => { const q = L.T.at(e.s), d = Math.hypot(q.x - C.x, q.y - C.y); if (d < md) { md = d; i0 = i; } });
     const dir = i0 > (L.est.length - 1) / 2 ? -1 : 1, e = L.est[i0];
     this.m = { id: 'tren', tren: true, L, dir, s: e.s, v: 0, sig: i0 + dir, puertas: 4, pasajeros: 40 + ((Math.random() * 60) | 0), t: 0, puntos: 0, paradas: 0, errores: [], vmax: clamp((L.C.vel_ms || 12) * 1.9, 16, 28), antes: null };
+    this.m.puertas = .6;   /* 4.7 (hallazgo de Gemini): antes esperaba 4 s con las puertas abiertas y parecía que el tren no andaba */
     G.controlExterno = (dt, ent) => this.manejarTren(dt, ent); G.E._sinJugador = true; this.manejarTren(0, { stick: { x: 0, y: 0, m: 0 } });
     G.ui.aviso((L.clase === 'metro' ? '🚇 ' : L.clase === 'tranvia' ? '🚋 ' : '🚌 ') + L.nombre + ' hacia ' + L.est[dir > 0 ? L.est.length - 1 : 0].nombre + ' · ⚡ acelera, 🛑 frena, para dentro del andén', 3600, 'modos');
   },
   manejarTren(dt, ent) {
-    const m = this.m, L = m.L, C = G.cuerpo, B = G.ctl.botones; let thr = clamp(-(ent.stick.y || 0) * (ent.stick.m || 0), -1, 1); if (B.has('turbo') || ent.turbo) thr = 1;
+    const m = this.m, L = m.L, C = G.cuerpo, B = G.ctl.botones, st = ent.stick || { x: 0, y: 0, m: 0 };
+    /* 4.7 (hallazgo de Gemini): el joystick empuja hacia donde va el tren en la pantalla (antes solo leía arriba/abajo: en líneas horizontales no arrancaba) */
+    let thr = 0; if (st.m > .15) { const yaw = (G.camara && G.camara.yaw) || 0, c = Math.cos(yaw), sn = Math.sin(yaw), wx = st.x * c + st.y * sn, wy = -st.x * sn + st.y * c, ad = C.a; thr = clamp((wx * Math.cos(ad) + wy * Math.sin(ad)) / Math.max(.2, Math.hypot(wx, wy)) * st.m * 1.4, -1, 1); if (G.vistas && G.vistas.actual.control === 'volante') thr = clamp(-st.y * 1.4, -1, 1); } if (B.has('turbo') || ent.turbo) thr = 1;
     /* 4.6.1 · ⏫ acelerador fijo también en el tren: prendido acelera solo; al apagarlo frena suave hasta parar (para llegar al andén) */
     if (G.acelFijo) { m._parar = false; thr = 1; } else if (m._fijo) m._parar = true; m._fijo = !!G.acelFijo; if (m._parar) { if (thr > .05 || m.v < .3) m._parar = false; else thr = -.6; }
     if (B.has('freno') || (ent.pulsos && ent.pulsos.has('Space'))) thr = -1;
@@ -204,6 +208,11 @@ const Modos = {
     if (m.t <= 0) this.finTrucos();
   },
   finTrucos() { const m = this.m, rec = this.record('trucos:' + G.id, m.puntos, false), pago = Math.round(m.puntos * .15); G.dinero += pago; this.terminar(null); MC.emit('modo:resultado', { id: 'trucos', puntos: m.puntos }); G.ui.dialogo('🛹 Sesión terminada', '<b>' + Math.round(m.puntos) + ' puntos</b>' + (pago ? ' · 💵 ' + plata(pago) : '') + (rec.mejor ? '<br>⭐ ¡Récord en esta ciudad!' : ''), ['Listo']); },
+
+  /* 🛴 Run (4.7): si ya estás en una ciclorruta y en algo que corre Run, entra; si no, marca la ciclorruta más cercana como destino */
+  irARun() { const C = G.cuerpo; if (G.Extras && G.Extras.puedeRun && G.Extras.puedeRun()) { G.Extras.entrarRun(); return true; }
+    const q = G.M.viaCercana(C.x, C.y, 2500, v => v.k === MC.VIA.CICLO); if (!q) return false; G.destinoLibre = { x: q.x, y: q.y, nombre: 'Ciclorruta · Run' };
+    G.ui.aviso('🛴 La ciclorruta más cercana está a ' + Math.round(Math.hypot(q.x - C.x, q.y - C.y)) + ' m: síguela (📍). Allá, a pie o en bici, toca 🛴 Run', 3200, 'modos'); return true; },
 
   /* ---------------- 🧪 laboratorio ---------------- */
   laboratorio() {
