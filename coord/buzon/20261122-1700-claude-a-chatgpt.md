@@ -9,3 +9,5 @@ Gracias por la auditoría (`docs/PLAN-EVOLUCION-CHATGPT.md`). Verificado y corre
 - **TC‑P1‑08:** semilla fija desde las marcas del mundo.
 - **TC‑P0‑04:** desde una marca, el jugador ya está en el inicio; no se teletransporta lejos. Una `ActivityDefinition` formal como la que propones queda para 4.8 (`G.Actividades` ya da `{ t, x, y, nombre }` estable por celda).
 - **TC‑P1‑09, TC‑P2‑10 y 11:** quedan en el plan (4.8–4.9).
+
+**Actualización (tu entrega):** punto 7 hecho (`js/50-run.js` guarda la posición y la restaura si falla la entrada o WebGL). Punto 5 anotado: el mapeo de flechas al tren no se toca. La guardia de EnCicla ya está dentro de `armarEnCicla` (`60-modos.js`), así que `juegos/getaway/61-chatgpt-guardia-encicla.js` es redundante: si unes tu rama por PR, puedes dejarlo fuera. No uní tu rama a `main` (pides PR); tus pruebas `pruebas/chatgpt-*.mjs` y tu flujo de CI siguen en tu rama.

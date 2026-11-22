@@ -7421,12 +7421,13 @@ const Run = {
   entrar(op) {
     const RS = MC.RunScooter, M = op.mundo, C = op.cuerpo, P0 = Run.puede(M, C); if (!P0.ok) throw new Error(P0.razon);
     const red = M.red('rueda'), cic = red.cercana(C.x, C.y, 12, e => e.k === VIA.CICLO);
+    const antes = { x: C.x, y: C.y, a: C.a }, deshacer = () => Object.assign(C, antes);   /* 4.7 (ChatGPT, entrega punto 7): si algo falla al entrar, el personaje vuelve a donde estaba */
     if (cic) { const a = cic.arista.t.rumbo(cic.s); C.x = cic.x; C.y = cic.y; C.a = Math.cos(angDif(C.a, a)) >= 0 ? a : a + Math.PI; }
     /* 4.7 (auditoría de ChatGPT TC-P0-02/03 y el autor: «Run solo aplica en ciclovías»): el camino y las salidas de cada cruce se filtran a VIA.CICLO */
-    const esCiclo = e => !!e && e.k === VIA.CICLO; let seguir0; try { seguir0 = new SeguirRuta(M, C, { red: 'rueda', atras: 120, adelante: 700, filtro: esCiclo }); } catch (e) { throw new Error('Aquí la ciclorruta no sigue: busca otra 🛴'); }
+    const esCiclo = e => !!e && e.k === VIA.CICLO; let seguir0; try { seguir0 = new SeguirRuta(M, C, { red: 'rueda', atras: 120, adelante: 700, filtro: esCiclo }); } catch (e) { deshacer(); throw new Error('Aquí la ciclorruta no sigue: busca otra 🛴'); }
     const seguir = seguir0, ESC = this.ESC, z0 = M.cota(C.x, C.y), cv = op.lienzo, capa = op.capa;
     capa.hidden = false; const dpr = Math.min(1.5, window.devicePixelRatio || 1); cv.width = Math.round(innerWidth * dpr); cv.height = Math.round(innerHeight * dpr);
-    if (!Run._gl) { if (!RS.R.init(cv)) throw new Error('Run necesita WebGL'); RS.RN.init(); try { RS.R.texture(RS.makeAtlas()); } catch (e) { MC.falla('Run: atlas', e); } Run._gl = true; }
+    if (!Run._gl) { if (!RS.R.init(cv)) { deshacer(); capa.hidden = true; throw new Error('Run necesita WebGL'); } RS.RN.init(); try { RS.R.texture(RS.makeAtlas()); } catch (e) { MC.falla('Run: atlas', e); } Run._gl = true; }
     RS.R.resize && RS.R.resize(1);
     const A = op.aspecto, cos = { helmet: A.cCasco || '#ffffff', he: false, shirt: A.cCamisa, pants: A.cPantalon, se: false, paint: C.veh.color || '#7ab800', pe: false, pet: 'm0', skin: A.cPiel, hair: ['corto', 'coleta', 'afro', 'corto', 'moño'][(A.peinado | 0) % 5], hc: A.cPelo };
     let vid = RUN_VEH[C.veh.id] || 'bike'; RS.RN.setPlayer(cos, vid);
