@@ -67,7 +67,7 @@ evaluar('TC-P0-03', 'P0', 'Run filtra giros a ramas ciclistas',
 // 3. API EnCicla segura cuando no hay estaciones.
 const encicla = corte(A.modos, 'armarEnCicla(desde)', 'luces()');
 const primerAccesoO = encicla.search(/o\.x|o\.y/);
-const guardiaO = encicla.search(/if\s*\(\s*!o(?:\s*\|\||\s*\))/);
+const guardiaO = encicla.search(/if\s*\(\s*!o(?:\s*\|\|[^)]*)?\)\s*return\s+(?:false|null|\{)/);
 const safeStations = /S\?\.length|S\.length\s*[<=>]|Array\.isArray\(S\)/.test(encicla);
 evaluar('TC-P1-05', 'P1', 'EnCicla valida estación de origen y cantidad de estaciones',
   ARCHIVOS.modos, 'armarEnCicla(desde)', primerAccesoO >= 0 && guardiaO >= 0 && guardiaO < primerAccesoO && safeStations,
@@ -91,7 +91,7 @@ evaluar('TC-P0-04', 'P0', 'El mundo abierto incorpora actividades espaciales ade
   'Dar ancla estable y mismo activity_id/seed a la actividad activada por menú o calle.');
 
 // 6. Inicio de carrera: distinguir teletransporte no solicitado del viaje explícito.
-const initCarrera = corte(A.modos, 'armarCarrera(extremo)', 'extremoVias(');
+const initCarrera = corte(A.modos, 'armarCarrera(extremo)', '  extremoVias(x0, y0, R, signo) {');
 const teleport = /Object\.assign\(\s*C\s*,\s*\{\s*x\s*:\s*q0\.x/.test(initCarrera);
 evaluar('TC-P1-08', 'P1', 'La carrera ofrece traslado al ancla de forma explícita',
   ARCHIVOS.modos, 'Object.assign(C', !teleport,
@@ -106,7 +106,18 @@ evaluar('TC-P1-07', 'P1', 'Menú distingue infraestructura ausente de progreso b
   'Sin estaciones reales, no se debe afirmar que la actividad está bloqueada por historia.',
   'Mostrar “Solo en Medellín / Ir allí” y reservar candado para bloqueos reales.');
 
-// 8. Control principal / historia no obligatoria: señales positivas presentes.
+// 8. Teclado del tren debe usar la misma señal acel/freno que Control.entrada.
+const tren = corte(A.modos, 'manejarTren(dt, ent) {', '  finTren() {');
+const frenaConComandoNormalizado = /ent\.acel/.test(tren) ||
+  /ent\.freno/.test(tren) ||
+  /ent\.teclado/.test(tren);
+evaluar('TC-P1-12', 'P1', 'El tren recibe acelerador/freno del teclado normalizado',
+  ARCHIVOS.modos, 'manejarTren(dt, ent) {', frenaConComandoNormalizado,
+  'El tren consulta joystick y botones pero puede ignorar ent.acel de ArrowDown, mientras Space es solo pulso.',
+  'Convertir ent.acel < 0 en freno continuo en tren; probar con teclado 4 s sin escribir m.s.');
+
+// 9. Control principal / historia no obligatoria: señales positivas presentes.
+
 evaluar('TC-OK-01', 'control', 'Aceleración fija disponible en el bucle',
   ARCHIVOS.juego, 'acelFijo:', /MC\.Manejo\.aplicar[\s\S]{0,300}acelFijo\s*:/.test(A.juego),
   'Comprobación textual de integración del acelerador persistente.',
