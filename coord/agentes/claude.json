@@ -3,9 +3,9 @@
   "agente": "claude",
   "rama": "claude/motor-city-engine-xu7p4y",
   "rol": "IA del motor e integradora: motor Motor City (js/, herramientas/, pruebas/) y el juego Turno Cero (juegos/getaway/, salvo arte3d/ y turno-cero-accion-3d.html de Codex)",
-  "fase_actual": "4.7 en curso (22-nov-2026): investigación comparativa y plan (docs/PLAN-EVOLUCION-CLAUDE.md), arreglar los modos de Turno Cero para que sean fluidos, todo liberado desde el inicio, cada modo presente en el mundo abierto, Run solo en ciclovías, luego cámaras y un solo mundo 3D",
-  "estado": "en_curso",
-  "ultima_actualizacion_utc": "2026-11-22T00:30:00Z",
+  "fase_actual": "4.7.0 entregada: plan, ritmo, todo liberado, actividades en el mundo abierto, trucos, cámaras. Siguiente: P1 del plan (§ 10).",
+  "estado": "entregado",
+  "ultima_actualizacion_utc": "2026-11-22T16:00:00Z",
   "zonas_reclamadas": [
     "js/",
     "herramientas/",
