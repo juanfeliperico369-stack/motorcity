@@ -132,3 +132,10 @@ Está en `TAREAS-IA.md` § «4.0». En resumen:
   - Con la policía encima, o dentro de un capítulo, no hay saltos.
 - **⚙️ Flexibilidad** (⏸ Menú): control, giro, velocidad de los vehículos, distancia de la cámara, acelerador fijo al subir, tren con palanca, mano, tamaño de la interfaz, calidad, vibración y pantalla (en mitades o clásica).
 - **🌄 Miradores:** en las lomas, ▶ Mirar pone la cámara de cine sobre el valle y cuenta los miradores que descubres.
+- **🖼️ Gráficos (4.9)** en ⚙️ Flexibilidad:
+  - **automáticos:** realistas si el aparato da la talla;
+  - **realistas:** three.js, con sol y sombras de verdad, luz física, cielo y ventanas encendidas de noche;
+  - **clásicos:** más livianos.
+
+  Se cambia en caliente.
+

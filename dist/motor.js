@@ -1,4 +1,4 @@
-/* Motor City 4.8.0 · 2026-11-22 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 4.9.0 · 2026-11-22 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin internet; trae three.js 0.170 (MIT, © three.js authors) para el 3D realista.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -26,7 +26,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '4.8.0',
+  version: '4.9.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -6828,7 +6828,7 @@ class VistaTres extends VistaGL {
     this.escena.fog.near = fr[0]; this.escena.fog.far = fr[1]; this._cielo(S, fog, L);
     const noche = S.noche || 0, dia = clamp(S.luzSol ?? .6, 0, 1), bajo = clamp(1 - L[1] * 1.8, 0, 1);
     this.uNoche.value = noche;
-    this.hemi.intensity = .15 + 1.35 * clamp(S.ambiente ?? .8, 0, 1.2); r.toneMappingExposure = 1.12 + .25 * noche;   /* la luz del cielo rellena las sombras (en la calle nunca son negras) */   /* de noche: luz de luna y de la ciudad, sin quedar a oscuras */ this.hemi.color.setRGB(.93 + S.top[0] * .07, .94 + S.top[1] * .06, .95 + S.top[2] * .05, T.SRGBColorSpace);   /* luz de cielo casi neutra: el azul ya lo pone el domo */ this.hemi.groundColor.setRGB(.55, .5, .43, T.SRGBColorSpace);   /* cielo poco saturado: las sombras no se vuelven azules */
+    this.hemi.intensity = .2 + 1.35 * clamp(S.ambiente ?? .8, 0, 1.2) + .35 * dia * (1 - L[1]);   /* con el sol bajo (mañana y tarde) el cielo rellena más */ r.toneMappingExposure = 1.12 + .25 * noche;   /* la luz del cielo rellena las sombras (en la calle nunca son negras) */   /* de noche: luz de luna y de la ciudad, sin quedar a oscuras */ this.hemi.color.setRGB(.93 + S.top[0] * .07, .94 + S.top[1] * .06, .95 + S.top[2] * .05, T.SRGBColorSpace);   /* luz de cielo casi neutra: el azul ya lo pone el domo */ this.hemi.groundColor.setRGB(.55, .5, .43, T.SRGBColorSpace);   /* cielo poco saturado: las sombras no se vuelven azules */
     this.sol.intensity = 2.4 * dia * (1 - lluvia * .45) * (1 - niebla * .5); this.sol.color.setRGB(1, .97 - .28 * bajo, .9 - .5 * bajo, T.SRGBColorSpace);
     /* sombras: una caja que sigue a lo que se mira, alineada a la rejilla de texeles (no tiemblan al moverse) */
     const conSombra = cal > .42 && dia > .12 && sol.alt > .03; this.sol.castShadow = conSombra;
