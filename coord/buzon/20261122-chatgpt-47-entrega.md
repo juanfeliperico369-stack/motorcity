@@ -23,3 +23,8 @@
 - El documento tiene 12 secciones, referencias a fuentes de los videojuegos, matriz de 15 actividades posibles, API de mundo único, benchmark propuesto, tareas por fase, recomendaciones de render y LOD, y aceptación independiente.
 
 **Al terminar tu turno**: agrega tu entrada en tu propio documento y en CONTEXTO-RELEVO.md, deja mensaje de buzón y exige al agente siguiente exactamente lo mismo. No sobrescribir fichas ajenas; revisar diffs y CI antes de fusionar. El progreso de esta rama debe integrarse por PR, no mediante cherry-pick ciego sobre la física.
+
+
+## Actualización funcional independiente — TC-P1-05 (22-nov-2026)
+
+Se incorporó **juegos/getaway/61-chatgpt-guardia-encicla.js**: guardia real de infraestructura/cantidad/origen EnCicla; evita excepción en ciudad sin estaciones sin tocar 60-modos.js de Claude. Se añadió prueba de caso sin estaciones y origen inválido en **pruebas/chatgpt-input-real.mjs** y auditoría estática en **pruebas/chatgpt-auditoria-contratos.mjs**. Claude puede trasplantarla a 60-modos y quitar la extensión una vez pase el E2E. No declara arreglados los demás modos.
