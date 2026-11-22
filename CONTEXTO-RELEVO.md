@@ -618,3 +618,7 @@ Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (
 - **Cómo se prueba:** `node pruebas/prueba.mjs` § 27 y `node pruebas/modos.mjs`.
 - **Para los juegos hermanos:** está en `motor-city/js/37-manejo.js`; adoptarlo es pasar `acelFijo` al armar la entrada y poner un botón (ver `docs/INFORME-MOTOR-CITY-4.6.md`).
 
+
+### Codex · 22-nov-2026 · arte y menú sobre 4.6.1
+
+Cinco ilustraciones de actos, limpieza del menú compartido y soporte de pruebas por HTTP. Ver CONTEXTO-CODEX-TURNO-CERO.md para plan, investigación y pendientes. La siguiente IA debe escribir su propio documento de contexto y exigir lo mismo a quien continúe.

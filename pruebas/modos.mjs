@@ -10,7 +10,7 @@ const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'), r
 const tc = path.join(RAIZ, 'dist/juegos/getaway.html'); if (!fs.existsSync(tc)) { console.log('· falta dist/juegos/getaway.html (node herramientas/construir.mjs)'); process.exit(0); }
 const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 860, height: 412 }, hasTouch: true }), errs = [];
 p.on('pageerror', e => errs.push('pageerror ' + e.message)); p.on('console', m => { if (m.type() === 'error') errs.push('console ' + m.text()); });
-await p.goto(pathToFileURL(tc).href + '?portada'); await p.waitForFunction(() => window.TURNO_LISTO);
+await p.goto((process.env.MC_PRUEBAS_URL ? new URL('dist/juegos/getaway.html', process.env.MC_PRUEBAS_URL).href : pathToFileURL(tc).href) + '?portada'); await p.waitForFunction(() => window.TURNO_LISTO);
 await p.click('#bModos'); await p.waitForFunction(() => TURNO.M && !TURNO.transicion && TURNO.cuerpo, null, { timeout: 120000 });
 await p.waitForSelector('.mcui .menu', { timeout: 20000 }); const menuAbre = await p.evaluate(() => document.querySelector('.mcui .menu').textContent.includes('Modos'));
 await p.evaluate(() => { for (const m of document.querySelectorAll('.mcui .menu, .mcui .dialogo')) m.remove(); window._res = []; MC.on('modo:resultado', r => window._res.push(r)); });
