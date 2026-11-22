@@ -146,6 +146,32 @@ try {
       ...tren, errores: errors });
     await page.close();
   }
+  {
+    const { page, errors } = await iniciar({ width: 860, height: 412 }, false);
+    // Caso aislado de infraestructura ausente, sin alterar el mundo guardado:
+    // se reemplaza el array SOLO durante esta llamada y se restaura en finally.
+    const guardia = await page.evaluate(() => {
+      const G = TURNO, T = G.M.transporte, original = T.encicla;
+      let sinEstaciones, origenInvalido;
+      try {
+        T.encicla = [];
+        try {
+          sinEstaciones = { retorno: G.Modos.armarEnCicla() };
+        } catch (e) { sinEstaciones = { error: String(e) }; }
+        T.encicla = original;
+        try {
+          origenInvalido = { retorno: G.Modos.armarEnCicla({ x: NaN, y: Infinity }) };
+        } catch (e) { origenInvalido = { error: String(e) }; }
+      } finally { T.encicla = original; }
+      return { previo: original.length, sinEstaciones, origenInvalido,
+        restaurado: T.encicla === original, sinModoActivo: !G.Modos.m };
+    });
+    resultados.push({ escenario: 'encicla-sin-estaciones-guardia-real',
+      ...guardia, paso: guardia.sinEstaciones?.retorno === false &&
+        guardia.origenInvalido?.retorno === false && guardia.restaurado &&
+        guardia.sinModoActivo, errores: errors });
+    await page.close();
+  }
 } catch (error) {
   resultados.push({ escenario: 'error-instrumentacion', error: String(error.stack || error) });
 } finally {
