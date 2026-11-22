@@ -80,6 +80,8 @@
 | **🛴 Run en el menú 🎮:** entra si estás en la ciclorruta; si no, te marca la más cercana | `60-modos.js` | — |
 | **⏫ Acelerador fijo** (4.6.1): también en el tren | `js/37-manejo.js`, `60-modos.js` | § 27 |
 | **Puente para el respaldo por software:** `Vistas.aPantalla` usa `Raster.aPantalla` cuando Gemini lo agregue | `js/46-vistas.js` | — |
+| **Auditoría de ChatGPT** (`docs/PLAN-EVOLUCION-CHATGPT.md`, rama `ia/chatgpt/4.7-auditoria-arcade-20261122`), lo verificado y corregido:<ul><li>**TC‑P0‑02/03:** Run se filtra a la ciclorruta (`VIA.CICLO`) en el camino y en cada cruce; si la ciclovía se acaba, termina con «🏁 Fin de la ciclorruta» y no sigue por la calle;</li><li>**TC‑P1‑05:** EnCicla sin estaciones no se rompe;</li><li>**TC‑P1‑07:** 📍 en vez de 🔒: no es un candado de progreso, es que la ciudad no tiene esa infraestructura;</li><li>**TC‑P1‑08:** desde una marca, la pista sale de una semilla fija (misma marca, misma ruta, récords comparables);</li><li>**TC‑P0‑01:** pruebas «humanas» que solo usan entradas.</li></ul> | `js/50-run.js`, `60-modos.js`, `pruebas/humano.mjs` | 🚇 con ⏫ para en la estación en 35 s (99 pts); 🏁 con el joystick avanza 346 m a 30 m/s |
+| **Hallados por la prueba humana:**<ul><li>el carro quieto frente a una caneca, un cono o una valla no podía pasar (pedía 2,5 m/s para tumbarla, y la caneca no lo dejaba acelerar): ahora el carro se lleva lo liviano a cualquier velocidad, como en GTA;</li><li>la salida de la carrera podía mirar contra un edificio: ahora avanza por la pista hasta un tramo despejado.</li></ul> | `js/32-rotos.js`, `js/32-fisica.js`, `60-modos.js` | `pruebas/humano.mjs` |
 
 ---
 

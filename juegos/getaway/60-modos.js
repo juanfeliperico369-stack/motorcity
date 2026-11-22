@@ -43,11 +43,13 @@ const Modos = {
   menu() {
     if (this.m) return G.ui.menu('🎮 ' + this.DEF[this.m.id].n, [{ id: 'seguir', texto: '▶ Seguir' }, { id: 'salir', texto: '🛑 Salir del modo' }], k => { if (k === 'salir') this.terminar('Saliste del modo'); });
     if (!this.disponible()) return G.ui.aviso('🎮 Los modos se juegan en el mundo abierto de una ciudad, sin contrato ni historia', 2600, 'modos');
-    const R = this.records(), it = Object.entries(this.DEF).map(([id, D]) => { const ok = !D.puede || D.puede(), r = id === 'carrera' ? R['carrera:' + G.id] : id === 'extremo' ? R['extremo:' + G.id] : R[id + ':' + G.id]; return { id, texto: D.ico + ' <b>' + D.n + '</b><br><small>' + (ok ? D.d : D.falta) + (r != null && id !== 'lab' ? ' · 🏆 ' + (id === 'carrera' ? fmtT(r) : Math.round(r) + ' pts') : '') + '</small>' + (ok ? '' : ' 🔒') }; });
-    G.ui.menu('🎮 Modos de juego · ' + G.M.meta.ciudad, it.concat([{ id: 'x', texto: '✕ Cerrar' }]), id => { if (id === 'x') return; const D = this.DEF[id]; if (D.puede && !D.puede()) return G.ui.aviso('🔒 ' + D.n + ': ' + D.falta, 2600, 'modos'); this.empezar(id); });
+    const R = this.records(), it = Object.entries(this.DEF).map(([id, D]) => { const ok = !D.puede || D.puede(), r = id === 'carrera' ? R['carrera:' + G.id] : id === 'extremo' ? R['extremo:' + G.id] : R[id + ':' + G.id]; return { id, texto: D.ico + ' <b>' + D.n + '</b><br><small>' + (ok ? D.d : D.falta) + (r != null && id !== 'lab' ? ' · 🏆 ' + (id === 'carrera' ? fmtT(r) : Math.round(r) + ' pts') : '') + '</small>' + (ok ? '' : ' 📍') };   /* 4.7 (ChatGPT TC-P1-07): no es un candado de progreso, es que en esta ciudad no existe */ });
+    G.ui.menu('🎮 Modos de juego · ' + G.M.meta.ciudad, it.concat([{ id: 'x', texto: '✕ Cerrar' }]), id => { if (id === 'x') return; const D = this.DEF[id]; if (D.puede && !D.puede()) return G.ui.aviso('📍 ' + D.n + ': ' + D.falta + ' (viaja por la 🌍 carretera o elige la ciudad en la portada)', 3200, 'modos'); this.empezar(id); });
   },
   empezar(id, op) {
     if (this.m) this.terminar(null); const C = G.cuerpo; G.busq.limpiar(); G.destinoLibre = null; G.objetivo = null;
+    /* 4.7 (ChatGPT TC-P1-08): desde una marca del mundo, la pista sale de una semilla fija (misma marca, misma ruta, récords comparables) */
+    this._rnd = op && op.centro ? MC.mulberry32((Math.round(op.centro.x) * 73856093 ^ Math.round(op.centro.y) * 19349663 ^ MC.hashTxt(G.id + ':' + id)) >>> 0) : Math.random;
     const r = id === 'carrera' ? this.armarCarrera(false) : id === 'extremo' ? this.armarCarrera(true) : id === 'mandados' ? this.armarMandado(0) : id === 'encicla' ? this.armarEnCicla() : id === 'tren' ? this.elegirLinea() : id === 'run' ? this.irARun() : id === 'trucos' ? this.armarTrucos(op && op.centro) : id === 'lab' ? this.laboratorio() : null;
     if (r === false) G.ui.aviso('🚧 No encontré calles para ' + this.DEF[id].n + ' aquí: muévete un poco y prueba otra vez', 2800, 'modos');
     MC.emit('modo:inicio', { id, ok: r !== false }); return r; },
@@ -58,17 +60,25 @@ const Modos = {
 
   /* ---------------- 🏁 carreras y 🚵 extremo ---------------- */
   armarCarrera(extremo) {
+    if (!this._rnd) this._rnd = Math.random;
     const M = G.M, C = G.cuerpo, x0 = C.x, y0 = C.y; let P = null, cerrada = false, tipo = '', desnivel = 0;
     const largo = Q => { let L = 0; for (let i = 2; i < Q.length; i += 2) L += Math.hypot(Q[i] - Q[i - 2], Q[i + 1] - Q[i - 1]); return L; }, bueno = Q => Q && Q.length >= 8 && largo(Q) > 400 && largo(Q) < (extremo ? 2600 : 5000);
     /* extremo: lo más alto cerca y, desde ahí, lo más bajo a menos de 1,2 km (bajadas de 1 a 4 km, no vueltas por medio valle) */
     if (extremo) { const alto = this.extremoVias(x0, y0, 1200, 1); const bajo = alto && this.extremoVias(alto.x, alto.y, 800, -1);
       if (alto && bajo && alto.z - bajo.z > 25) { const Q = rutaTC(M, [alto, bajo], false); if (bueno(Q)) { P = Q; tipo = 'Bajada'; desnivel = Math.round(alto.z - bajo.z); } } }
     for (let intento = 0; intento < 6 && !P; intento++) { cerrada = intento % 2 === 0; const pts = [], n = cerrada ? 5 : 2, R = (extremo ? 260 : 380) * Math.pow(.7, intento);
-      for (let k = 0; k < n; k++) { const a = k / n * TAU + Math.random() * .4, q = M.viaCercana(x0 + Math.cos(a) * R * (cerrada ? 1 : 3.2), y0 + Math.sin(a) * R * (cerrada ? .8 : 3.2), 220, extremo ? null : deCarro); if (q) pts.push(q); }
+      for (let k = 0; k < n; k++) { const a = k / n * TAU + this._rnd() * .4, q = M.viaCercana(x0 + Math.cos(a) * R * (cerrada ? 1 : 3.2), y0 + Math.sin(a) * R * (cerrada ? .8 : 3.2), 220, extremo ? null : deCarro); if (q) pts.push(q); }
       if (!cerrada) { const q0 = M.viaCercana(x0, y0, 120, extremo ? null : deCarro); if (q0) pts.unshift(q0); pts.length = Math.min(pts.length, 2); }
       if (pts.length >= 2) { const Q = rutaTC(M, pts, cerrada); if (bueno(Q)) { P = Q; tipo = cerrada ? 'Circuito' : 'Sprint'; } } }
     if (!P) return false;
-    const p = new PistaTC(P, cerrada); if (p.L < 300) return false; const vueltas = cerrada && p.L < 2200 ? 2 : 1, q0 = p.punto(0), antes = C.veh.id;
+    const p = new PistaTC(P, cerrada); if (p.L < 300) return false; const vueltas = cerrada && p.L < 2200 ? 2 : 1, antes = C.veh.id;
+    /* 4.7: la salida, en un tramo despejado: si los primeros 15 m de pista chocan con algo (un edificio, un poste), la salida avanza por la pista */
+    let s0 = 0; const libre = s => { for (let d = 2; d <= 15; d += 2.5) { const q = p.punto(s + d); if (G.M.edificioEn(q.x, q.y, 1.2)) return false; } return true; }; while (s0 < Math.min(150, p.L / 3) && !libre(s0)) s0 += 6;
+    if (s0 > 0) { const P2 = []; for (let s = s0; s <= p.L - (cerrada ? 0 : 1); s += 6) { const q = p.punto(s); P2.push(q.x, q.y); } if (cerrada) for (let s = 0; s < s0; s += 6) { const q = p.punto(s); P2.push(q.x, q.y); } if (P2.length >= 8) return this._pistaLista(new PistaTC(P2, cerrada), cerrada, extremo, tipo, desnivel, antes); }
+    return this._pistaLista(p, cerrada, extremo, tipo, desnivel, antes);
+  },
+  _pistaLista(p, cerrada, extremo, tipo, desnivel, antes) {
+    const C = G.cuerpo, vueltas = cerrada && p.L < 2200 ? 2 : 1, q0 = p.punto(0);
     if (extremo) { if (C.veh.id !== 'mtb') C.setVeh('mtb'); } else if (C.veh.clase === 'pie' || C.veh.clase === 'rueda') { C.setVeh(G.veh); C.estacionado = null; }
     Object.assign(C, { x: q0.x, y: q0.y, a: q0.a, v: 0 }); C.rumboRodado = q0.a; G.camara.x = q0.x; G.camara.y = q0.y;
     const nombres = extremo ? ['Lucía «la Flecha»', 'el Mono Rendón'] : ['Lucía «la Flecha»', 'el Mono Rendón', 'Kira Salazar'], R = [];
@@ -120,8 +130,8 @@ const Modos = {
   /* ---------------- 🚲 EnCicla (de Juega EnCicla) ---------------- */
   bicis(s) { const B = this._bicis || (this._bicis = new Map()); if (!B.has(s.id || s.nombre)) B.set(s.id || s.nombre, Math.floor(MC.h2(Math.round(s.x), Math.round(s.y), 7) * 13)); return B.get(s.id || s.nombre); },
   armarEnCicla(desde) {
-    const C = G.cuerpo, S = G.M.transporte.encicla; let o = desde; if (!o) { let md = 1e9; for (const s of S) { const d = Math.hypot(s.x - C.x, s.y - C.y); if (d < md) { md = d; o = s; } } }
-    const cands = S.filter(s => s !== o).map(s => ({ s, d: Math.hypot(s.x - o.x, s.y - o.y) })).filter(q => q.d > 300 && q.d < 1300).sort((a, b) => this.bicis(a.s) - this.bicis(b.s) || a.d - b.d); const dest = (cands[0] || {}).s; if (!o || !dest) return false;
+    const C = G.cuerpo, S = (G.M.transporte && G.M.transporte.encicla) || []; if (!Array.isArray(S) || S.length < 2) return false; let o = desde;   /* 4.7 (ChatGPT TC-P1-05): sin estaciones, no se rompe */ if (!o) { let md = 1e9; for (const s of S) { const d = Math.hypot(s.x - C.x, s.y - C.y); if (d < md) { md = d; o = s; } } } if (!o) return false;
+    const cands = S.filter(s => s !== o).map(s => ({ s, d: Math.hypot(s.x - o.x, s.y - o.y) })).filter(q => q.d > 300 && q.d < 1300).sort((a, b) => this.bicis(a.s) - this.bicis(b.s) || a.d - b.d); const dest = (cands[0] || {}).s; if (!dest) return false;
     const ant = this.m && this.m.id === 'encicla' ? this.m : null, dist = Math.hypot(dest.x - o.x, dest.y - o.y);
     this.m = { id: 'encicla', o, d: dest, fase: desde ? 1 : 0, t: 0, limite: Math.round(dist / 5 + 40), racha: 0, fuera: 0, puntos: ant ? ant.puntos : 0, vueltas: ant ? ant.vueltas : 0, rojos: ant ? ant.rojos : 0, pasados: new Map(), antes: ant ? ant.antes : C.veh.id, esp: 0 };
     G.objetivo = desde ? { x: dest.x, y: dest.y, texto: '🚲 ' + dest.nombre } : { x: o.x, y: o.y, texto: '🚲 ' + o.nombre };

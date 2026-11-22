@@ -3947,6 +3947,7 @@ class Cuerpo {
       const g = clamp(E.giro || 0, -1, 1), ac = clamp(E.acel || 0, -1, 1); A.w += (g * wm * (this.v < -.3 ? -1 : 1) - A.w) * kw;
       if (ac > 0) tv = max * ac; else if (ac < 0) { if (this.v > .5) frena = true; else tv = -Math.min(8, max * .32) * -ac; } else suelta = true;
     } else { A.w *= 1 - kw; suelta = true; }
+    this._vPedida = tv;   /* 4.7: lo que se pide (para empujar lo liviano aunque esté quieto contra ello) */
     /* velocidad: directo a la pedida (como EnCicla); frenar es fuerte; soltar, rueda */
     const acc = S.acc * (turbo ? 1.4 : 1) * (pie ? 1 : clamp(suelo * 1.4, .5, 1)), brk = S.brk * (lluvia ? .7 : 1);
     if (this.enAire) { /* nada */ }
@@ -4334,6 +4335,9 @@ const Rotos = {
   puede(o, C) {
     const lim = o && ROMPE_V[o.t], cl = C.veh.clase; if (lim == null || cl === 'pie' || cl === 'rueda' || cl === 'agua') return false;
     if (cl === 'moto' && !ROMPE_MOTO.has(o.t)) return false;
+    /* 4.7: el carro (o el camión) se lleva por delante lo liviano a cualquier velocidad, como en GTA; antes, parado frente a una caneca no
+       podía pasar (necesitaba 2,5 m/s y no los alcanzaba porque la caneca lo frenaba). Lo anclado (hidrante, banca, paradero, poste) sigue pidiendo velocidad. */
+    if ((cl === 'auto' || cl === 'pesado') && ROMPE_MOTO.has(o.t)) return Math.abs(C.v) >= .3 || Math.abs(C._vPedida || 0) > .3;
     return Math.abs(C.v) >= lim * (cl === 'pesado' ? .55 : 1);
   },
   romper(M, o, C) {
@@ -7399,7 +7403,7 @@ Object.assign(MC, { Direccion, Hogar });
 /* =====================================================================
    F4 · RUN EN LA CICLOVÍA · «si vas por una ciclovía y tocas Run, todo cambia al estilo Run Scooter»
    - El corredor es Run Scooter casi idéntico (run/run-scooter.js, importado de RunRunZero), sobre el
-     camino REAL desde donde vas: la ciclorruta y, en cada cruce, la que continúa (si se acaba, la calle).
+     camino REAL desde donde vas: la ciclorruta y, en cada cruce, solo las salidas que son ciclorruta (4.7: si se acaba, termina la carrera; nunca sigue por la calle).
    - Las lomas son el relieve real del camino y las curvas, su curvatura real; las esquinas salen en los
      cruces reales con calles a los dos lados: si doblas allá, doblas en el mundo abierto.
    - Puedes parar (freno), caminar o correr (a pie) y cambiar de vehículo; las metas y los retos siguen.
@@ -7418,7 +7422,9 @@ const Run = {
     const RS = MC.RunScooter, M = op.mundo, C = op.cuerpo, P0 = Run.puede(M, C); if (!P0.ok) throw new Error(P0.razon);
     const red = M.red('rueda'), cic = red.cercana(C.x, C.y, 12, e => e.k === VIA.CICLO);
     if (cic) { const a = cic.arista.t.rumbo(cic.s); C.x = cic.x; C.y = cic.y; C.a = Math.cos(angDif(C.a, a)) >= 0 ? a : a + Math.PI; }
-    const seguir = new SeguirRuta(M, C, { red: 'rueda', atras: 120, adelante: 700 }), ESC = this.ESC, z0 = M.cota(C.x, C.y), cv = op.lienzo, capa = op.capa;
+    /* 4.7 (auditoría de ChatGPT TC-P0-02/03 y el autor: «Run solo aplica en ciclovías»): el camino y las salidas de cada cruce se filtran a VIA.CICLO */
+    const esCiclo = e => !!e && e.k === VIA.CICLO; let seguir0; try { seguir0 = new SeguirRuta(M, C, { red: 'rueda', atras: 120, adelante: 700, filtro: esCiclo }); } catch (e) { throw new Error('Aquí la ciclorruta no sigue: busca otra 🛴'); }
+    const seguir = seguir0, ESC = this.ESC, z0 = M.cota(C.x, C.y), cv = op.lienzo, capa = op.capa;
     capa.hidden = false; const dpr = Math.min(1.5, window.devicePixelRatio || 1); cv.width = Math.round(innerWidth * dpr); cv.height = Math.round(innerHeight * dpr);
     if (!Run._gl) { if (!RS.R.init(cv)) throw new Error('Run necesita WebGL'); RS.RN.init(); try { RS.R.texture(RS.makeAtlas()); } catch (e) { MC.falla('Run: atlas', e); } Run._gl = true; }
     RS.R.resize && RS.R.resize(1);
@@ -7472,7 +7478,8 @@ const Run = {
     this._aviso('🛴 RUN · ' + (seguir.via && seguir.via.nombre || 'ciclorruta'), 2200);
     const cuadro = ts => {
       raf = requestAnimationFrame(cuadro); const dt = Math.min(.1, (ts - last) / 1000); last = ts; op.reloj.avanzar(dt); op.clima.actualizar(op.reloj, dt); V.lluvia = op.clima.lluvia > .15 ? clamp(op.clima.lluvia, 0, 1) : 0;
-      if (g.p.alive) { acc += dt; let n = 0; while (acc >= RS.DT && n < 14) { RS.step(g, RS.DT, cola.shift() || null); acc -= RS.DT; n++; const ds = (g.p.s - ps) * ESC; ps = g.p.s; if (ds > 0) { seguir.avanzar(ds); metros += ds; } } if (n >= 14) acc = 0; }
+      if (g.p.alive) { acc += dt; let n = 0; while (acc >= RS.DT && n < 14) { RS.step(g, RS.DT, cola.shift() || null); acc -= RS.DT; n++; const ds = (g.p.s - ps) * ESC; ps = g.p.s; if (ds > 0) { seguir.avanzar(ds); metros += ds; } } if (n >= 14) acc = 0;
+        if (seguir.alFin < 3 && g.p.alive) { g.p.alive = false; g.p.deadT = 0; g.cause = '🏁 Se acabó la ciclorruta (' + Math.round(metros) + ' m)'; this._aviso('🏁 Fin de la ciclorruta: Run termina aquí', 2200); } }   /* 4.7: al acabarse la ciclovía, termina (no sigue por la calle) */
       else { RS.step(g, dt, null); if (g.p.deadT > 1.1 && $h('rFin').hidden) { $h('rFin').hidden = false; $h('rFinT').innerHTML = '¡Uy! ' + (g.cause || 'Te caíste') + '<br><small>' + Math.round(metros) + ' m reales · ' + g.score + ' puntos</small>'; } }
       /* curvas fuertes del camino real (que no son una esquina elegida): la cámara gira como en una esquina */
       const k = seguir.trazo.curva(seguir.s + 6, 6); if (Math.abs(k) > .07 && seguir.s - ultGiro > 25) { ultGiro = seguir.s; RS.RN.events(g, { k: 'turn', a: { dir: Math.sign(k), z: 0, n: 2 } }); }

@@ -81,6 +81,8 @@ jobs:
         run: node pruebas/modos.mjs
       - name: 4.7 · Actividades en el mundo abierto (marcas reales, ▶ desde la marca, trucos y tren)
         run: node pruebas/actividades.mjs
+      - name: 4.7 · Pruebas humanas (solo entradas, sin teletransportar)
+        run: node pruebas/humano.mjs
       - name: C-M34 · tres mundos offline con rasters de 1 km
         run: node pruebas/paquete-capas-browser.mjs
       - name: C-M34 · deduplicación y viaje real entre ciudades (Chromium offline)
