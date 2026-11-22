@@ -106,16 +106,16 @@ evaluar('TC-P1-07', 'P1', 'Menú distingue infraestructura ausente de progreso b
   'Sin estaciones reales, no se debe afirmar que la actividad está bloqueada por historia.',
   'Mostrar “Solo en Medellín / Ir allí” y reservar candado para bloqueos reales.');
 
-// 8. Teclado del tren debe usar la misma señal acel/freno que Control.entrada.
+// 8. El teclado SI controla el metro: Controles.leer convierte teclas a stick.
 const tren = corte(A.modos, 'manejarTren(dt, ent) {', '  finTren() {');
-const frenaConComandoNormalizado = /ent\.acel/.test(tren) ||
-  /ent\.freno/.test(tren) ||
-  /ent\.teclado/.test(tren);
-evaluar('TC-P1-12', 'P1', 'El tren recibe acelerador/freno del teclado normalizado',
-  ARCHIVOS.modos, 'manejarTren(dt, ent) {', frenaConComandoNormalizado,
-  'El tren consulta joystick y botones pero puede ignorar ent.acel de ArrowDown, mientras Space es solo pulso.',
-  'Convertir ent.acel < 0 en freno continuo en tren; probar con teclado 4 s sin escribir m.s.');
+const tecladoSeTransforma = /if\s*\(ax\s*\|\|\s*ay\)[\s\S]{0,150}?sy\s*=\s*ay\s*\/\s*L/.test(A.controles);
+const trenConsumeStick = /ent\.stick\.y/.test(tren) && /ent\.stick\.m/.test(tren);
+evaluar('TC-OK-04', 'control', 'Metro mapea teclado a eje de joystick',
+  ARCHIVOS.modos, 'manejarTren(dt, ent) {', tecladoSeTransforma && trenConsumeStick,
+  'Teclas W/S y flechas generan ent.stick.y por Controles.leer(); se verificó en Chromium.',
+  'Mantener pruebas de freno por teclado en CI y medir su respuesta frente a no pulsar tecla.');
 
+// 9. Control principal / historia no obligatoria: señales positivas presentes.
 // 9. Control principal / historia no obligatoria: señales positivas presentes.
 
 evaluar('TC-OK-01', 'control', 'Aceleración fija disponible en el bucle',
