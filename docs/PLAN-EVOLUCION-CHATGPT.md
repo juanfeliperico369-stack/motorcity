@@ -404,3 +404,17 @@ Se amplió **pruebas/chatgpt-input-real.mjs** con un caso real en Chromium que s
 Instrucción de fusión para Claude: si tras revisar acepta la guardia, puede trasladar esas tres condiciones al comienzo de **armarEnCicla** y luego borrar **61-chatgpt-guardia-encicla.js** con el test guardia pasando. No dejar dos validadores permanentes si la lógica de estaciones evoluciona. El modo sin infraestructura continuará comunicando indisponibilidad geográfica al usuario, sin candado falso de historia.
 
 **Actualización de alcance:** esta entrega sí contiene **una corrección funcional aislada**, además de documentación y pruebas; el resto de arreglos centrales de física, Run, cámaras y paridad espacial continúa sin aplicar en esta rama por coordinación con Claude.
+
+
+## 14. Evidencia real de CI en GitHub Actions
+
+**Verificación fechada 22-nov-2026:** https://github.com/juanfeliperico369-stack/motorcity/actions/runs/45034976738
+
+- Compilación de la versión del juego que incluye **61-chatgpt-guardia-encicla.js**; test **encicla-sin-estaciones-guardia-real** completó **paso: true**, **errores: []**.
+- En esa ejecución se partió de una ciudad con **133** estaciones y se sustituyó temporalmente la referencia por una lista vacía: el modo devolvió **false** sin excepción; un origen no válido devolvió **false**; **restaurado: true** y **sinModoActivo: true**.
+- La auditoría de los contratos publicada al comienzo del pipeline registró **5 detectados / 11, 6 por revisar, 4 P0**; el contrato **TC-P1-05** aparece **detectado** porque la guardia está instalada (cambiar este dato solo si cambia el código y se comprueba de nuevo).
+- En la primera ejecución de teclado/touch, en el mismo PR, la carrera avanzó 43,51 m en 4,2 s y cambió su rumbo; el acelerador fijo móvil recorrió 32,09 m y se detuvo; el tren pasó de 0 a 6,9 m/s al acelerar y a 0,9 m/s tras mantener freno. Son diagnósticos de *respuesta*, no pruebas de completabilidad.
+- **Estado de arreglo funcional:** **verificado en Chromium, pendiente de merge al repositorio principal**, de ensayo Android/iOS real y de consolidación por Claude si reemplaza la extensión.
+- **No se verificaron** los otros seis contratos pendientes, el runner por ciclovías ni modos completos terminados con teclado humano; están asignados para integración y prueba, sin presentarse como resueltos.
+
+La prueba de compilación/núcleo general de Motor City ya había pasado en el CI de la rama; la batería Chromium integral del repositorio tiene su propio workflow y puede tardar más. Ambos son controles diferentes.
