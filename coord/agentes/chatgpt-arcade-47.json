@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "agente": "chatgpt-arcade-47",
+  "marca": "ChatGPT",
+  "rama": "ia/chatgpt/4.7-auditoria-arcade-20261122",
+  "rol": "Investigacion comparativa y auditoria independiente de jugabilidad/Run/3D; QA no intrusivo para Motor City y Turno Cero",
+  "fase_actual": "4.7 auditoria y contrato de paridad de actividades publicadas para integracion",
+  "estado": "listo_para_revision",
+  "ultima_actualizacion_utc": "2026-11-22",
+  "zonas_reclamadas": [
+    "docs/PLAN-EVOLUCION-CHATGPT.md",
+    "pruebas/chatgpt-auditoria-contratos.mjs",
+    "pruebas/chatgpt-input-real.mjs",
+    "coord/agentes/chatgpt-arcade-47.json",
+    "coord/buzon/20261122-chatgpt-47-auditoria-arcade.md",
+    "coord/buzon/20261122-chatgpt-47-entrega.md"
+  ],
+  "no_toco": [
+    "js/ del motor: trabajo 4.7 de Claude",
+    "juegos/getaway/60-modos.js y otros modulos centrales del juego: trabajo 4.7 de Claude",
+    "motor propio y src de MetroZero, BicicletasUno y RunRunZero",
+    "ramas ajenas"
+  ],
+  "entregas": {
+    "documento": "docs/PLAN-EVOLUCION-CHATGPT.md",
+    "auditoria_estatica": "pruebas/chatgpt-auditoria-contratos.mjs",
+    "e2e_sin_teletransporte": "pruebas/chatgpt-input-real.mjs"
+  },
+  "hallazgos_para_integracion": [
+    "TC-P0-01 E2E existente teletransporta y no acredita conduccion",
+    "TC-P0-02 y 03 Run solo filtra entrada, no ruta ni giros",
+    "TC-P0-04 falta paridad espacial entre selector y mundo abierto",
+    "TC-P1-05 validacion nula EnCicla",
+    "TC-P1-06 balance rail lento",
+    "TC-P1-12 tren ignora ent.acel teclado negativo",
+    "TC-P1-13 posible mutacion de cuerpo antes de WebGL"
+  ],
+  "verificacion": "lectura de codigo GitHub y fuentes oficiales; tests independientes publicados pero todavia sin ejecucion de pipeline en esta entrega",
+  "relevo": "Revisar este documento, ramas y buzones; ejecutar y reparar tests en dispositivos; marcar cambios aplicados con commit. Cada IA debe dejar su propio documento y su propio buzon sin borrar aportes previos."
+}
