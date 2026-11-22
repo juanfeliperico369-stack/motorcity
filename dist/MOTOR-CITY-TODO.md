@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 4.6.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 4.6.1 · no se edita a mano: edita los documentos de origen -->
 
 # Documento de relevo · Motor City y *Turno Cero*
 
@@ -30,13 +30,13 @@
 
 ---
 
-## 0. Entregables de la 4.6.0 (HTML, APK y enlaces)
+## 0. Entregables de la 4.6.1 (HTML, APK y enlaces)
 > **Un solo juego de prueba (decisión del autor en 4.6):** Turno Cero. Adentro, 🎮 Modos: Carreras, Extremo, Mandados, EnCicla y manejar el Metro, el tranvía y el Metroplús. Los juegos sueltos Carreras y Extremo se borraron; Mandados queda solo como banco interno de pruebas automáticas.
 
 | Juego | Enlace | HTML (un solo archivo) | APK |
 |---|---|---|---|
 | Página del motor | <https://juanfeliperico369-stack.github.io/motorcity/> | `index.html` | — |
-| **Turno Cero** (18+), el juego de prueba con todo | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.6.0/MotorCity-getaway.apk> |
+| **Turno Cero 4.6.1** (18+), el juego de prueba con todo (⏫ acelerador fijo) | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v4.6.1/MotorCity-getaway.apk> |
 | Juega EnCicla | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | <https://github.com/juanfeliperico369-stack/BicicletasUno/releases/download/v2.0.1/JuegaEnCicla-v2.0.1-debug.apk> |
 | El Metro (3.1.0 «Fluido», de la sesión de El Metro) | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://juanfeliperico369-stack.github.io/MetroZero/el-metro.apk> (código 29) |
 | Run Scooter | <https://juanfeliperico369-stack.github.io/RunRunZero/> | `RunRunZero/web/index.html` | <https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk> |
@@ -613,6 +613,12 @@ Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (
 - **Qué hice:** el modelo de manejo de EnCicla en el motor (con subpasos y prueba §26), el mapa grande de EnCicla (`js/70-mapa.js`), horizontal en Turno Cero y en los APK, 🎮 Modos en Turno Cero (`juegos/getaway/60-modos.js`: Carreras, Extremo, Mandados, EnCicla, Metro, Laboratorio), y borré `juegos/carreras/` y `juegos/extremo/`. En El Metro también hice el manejo de EnCicla, pero lo retiré: la sesión de El Metro ya lo había publicado en su 3.1.0 «Fluido» (APK 29); en MetroZero solo quedó el motor 4.6.0 y el informe. En EnCicla otra sesión tiene la 2.1.0 en su rama: no avancé su `main` para no estorbarle la unión.
 - **Cómo se prueba:** `node pruebas/prueba.mjs` (145), `node motor.mjs prueba --navegador` (157), `node pruebas/modos.mjs` (los cinco modos y el mapa); en los hermanos, sus pruebas con el motor 4.6.0 copiado (EnCicla en verde, El Metro 100 partidas y Run 100 simulaciones con 0 errores).
 - **Lo que queda:** la sensación en un celular real (autor) y el globo en la misma escena 3D (C‑M31).
+
+### Claude · 22‑nov‑2026 · 4.6.1
+- **Qué pidió el autor:** un botón que, prendido, acelere siempre (el joystick solo para la dirección) y que, al apagarlo, el carro pare.
+- **Qué hice:** `acelFijo` en `MC.Manejo.aplicar`, `frenoK` en la física, `ui.alternar` en la interfaz, y ⏫ en Turno Cero (también en el tren de 🎮 Modos), con el HUD ajustado en vertical y en horizontal.
+- **Cómo se prueba:** `node pruebas/prueba.mjs` § 27 y `node pruebas/modos.mjs`.
+- **Para los juegos hermanos:** está en `motor-city/js/37-manejo.js`; adoptarlo es pasar `acelFijo` al armar la entrada y poner un botón (ver `docs/INFORME-MOTOR-CITY-4.6.md`).
 
 
 # MOTOR CITY · Documento único
@@ -1966,6 +1972,13 @@ Esta página conserva la historia original de los pedidos, incluso estados de 2.
 | Un solo juego de prueba: los cuatro en Turno Cero | ✅ | `juegos/getaway/60-modos.js`: 🏁 Carreras, 🚵 Extremo, 📦 Mandados, 🚲 EnCicla (racha por la ciclorruta, semáforo en rojo, rebalanceo), 🚇 Metro, tranvía y Metroplús (manejar y parar en el andén), 🧪 Laboratorio. `pruebas/modos.mjs`. |
 | Lo que dije que faltaba | Parcial | Hecho: mapa, horizontal, manejo. Pendiente: el globo en la misma escena 3D (C‑M31) y la prueba en un celular real. |
 | HTML, APK y enlace de cada juego | ✅ | `CONTEXTO-RELEVO.md` § 0. |
+
+### 18. «Coloca un botón que, presionado, siempre esté acelerando sin parar; para detenerse, se desactiva» (4.6.1)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Botón de acelerador fijo | ✅ | `js/37-manejo.js` (`acelFijo`), `js/70-interfaz.js` (`ui.alternar`), Turno Cero: ⏫ junto a 🛑 y ⚡, tecla V. |
+| Que al desactivarlo se detenga | ✅ | Frena suave hasta parar (`frenoK` 0,55), salvo que se toque el joystick. |
+| Adaptarlo bien | ✅ | Vertical (la velocidad sube sobre los botones) y horizontal; también en el tren de 🎮 Modos; a pie se esconde; aviso la primera vez. Pruebas § 27 y `pruebas/modos.mjs`. |
 
 
 
@@ -4112,6 +4125,12 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 22-nov-2026 · 4.6.1 · ⏫ Acelerador fijo
+- **El autor:** «el joystick está bien, pero el problema es el arranque: si se suelta el joystick se deja de acelerar; coloca un botón que, presionado, siempre esté acelerando sin parar, y para detenerse simplemente se desactiva».
+- **Motor:** `MC.Manejo.aplicar(…, { acelFijo })` (`js/37-manejo.js`): prendido, acelera a fondo y el joystick solo da la dirección (sin joystick sigue derecho y el imán de calle lo alinea); apagado, frena suave hasta parar (`frenoK` 0,55 en `js/32-fisica.js`), salvo que se toque el joystick. El 🛑 manda mientras se oprime (y con giro, derrapa). `ui.alternar` (`js/70-interfaz.js`): botón que se prende y se apaga, verde y brillante cuando está prendido.
+- **Turno Cero:** ⏫ junto a 🛑 y ⚡ (tecla V), visible en carro, moto, bici y manejando el tren de 🎮 Modos; a pie se esconde y se apaga; un aviso la primera vez. En vertical la velocidad sube sobre la fila de botones; en horizontal la columna izquierda ya no invade la zona libre.
+- **Pruebas:** §27 (sin joystick llega a 25 m/s derecho en 4 s; con el joystick a un 35 % gira sin soltar el acelerador; apagado para en 2,1 s) y `pruebas/modos.mjs` toca el botón de verdad en Turno Cero (114 km/h en 3,5 s y luego para).
 
 ### 21-nov-2026 · 4.6.0 · El manejo de EnCicla, el mapa de EnCicla, horizontal y un solo juego de prueba con todo
 - **El autor:** «injugables: toscos como GTA IV; derrapa por nada, va lento, avanza lento, retoma lento; no hay horizontal; te basaste en El Metro: básate en EnCicla y arregla El Metro de paso; el mapa no deja elegir en la brújula y al abrirlo el juego deja de funcionar; el de EnCicla acerca, aleja y no se ralentiza». Luego: «la idea no era tener 4 juegos de prueba sino uno: entrega los cuatro en Turno Cero y rescata lo de EnCicla y El Metro».

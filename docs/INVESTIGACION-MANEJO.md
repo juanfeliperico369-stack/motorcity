@@ -32,6 +32,8 @@
 
 **Medido** (`node pruebas/prueba.mjs` § 26): carro de 0 al 90 % en 2,7 s; radio de 4,8 m a 20 m/s sin derrapar; con freno de mano derrapa y se endereza en 0,1 s al soltar; a 15 y a 60 cuadros por segundo recorre lo mismo (17,1 y 17,2 m). Una versión de prueba en El Metro (retirada para no pisar la 3.1.0 de su sesión) daba con estos números: taxi de 0 al 90 % en 2,7 s (antes más de 10) y giro de 16 m a 72 km/h.
 
+**4.6.1 · ⏫ Acelerador fijo** (pedido del autor: «si se suelta el joystick se deja de acelerar; quiero un botón que acelere sin parar y que para detenerse simplemente se desactive»): `MC.Manejo.aplicar(…, { acelFijo: true })` pone el empuje a fondo y deja al joystick solo la dirección; sin joystick, `acel = 1` y el vehículo sigue derecho. Al apagarlo, `acel = −1` con `frenoK = 0,55` (de 90 km/h para en unos 2 s) hasta que se toque el joystick o se detenga. Prueba § 27.
+
 El modelo de llantas de la 4.5 (`ManejoCarro`, `js/36-taller.js`) no se borró: queda para quien elija `MC.opciones.manejo = 'simulacion'`. Lo que sigue de este documento (§ 1 a 5) es la investigación y el trabajo de la 4.5: los choques que deslizan, desatascar, las cosas que se rompen, los efectos y el sigilo siguen igual.
 
 

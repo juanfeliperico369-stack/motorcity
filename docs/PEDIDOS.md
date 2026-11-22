@@ -242,3 +242,10 @@ Esta página conserva la historia original de los pedidos, incluso estados de 2.
 | Lo que dije que faltaba | Parcial | Hecho: mapa, horizontal, manejo. Pendiente: el globo en la misma escena 3D (C‑M31) y la prueba en un celular real. |
 | HTML, APK y enlace de cada juego | ✅ | `CONTEXTO-RELEVO.md` § 0. |
 
+## 18. «Coloca un botón que, presionado, siempre esté acelerando sin parar; para detenerse, se desactiva» (4.6.1)
+| Pedido | Estado | Dónde |
+|---|---|---|
+| Botón de acelerador fijo | ✅ | `js/37-manejo.js` (`acelFijo`), `js/70-interfaz.js` (`ui.alternar`), Turno Cero: ⏫ junto a 🛑 y ⚡, tecla V. |
+| Que al desactivarlo se detenga | ✅ | Frena suave hasta parar (`frenoK` 0,55), salvo que se toque el joystick. |
+| Adaptarlo bien | ✅ | Vertical (la velocidad sube sobre los botones) y horizontal; también en el tren de 🎮 Modos; a pie se esconde; aviso la primera vez. Pruebas § 27 y `pruebas/modos.mjs`. |
+
