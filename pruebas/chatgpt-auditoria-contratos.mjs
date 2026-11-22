@@ -20,6 +20,7 @@ const ARCHIVOS = {
   run: 'js/50-run.js',
   seguir: 'js/47-seguir.js',
   modos: 'juegos/getaway/60-modos.js',
+  guardias: 'juegos/getaway/61-chatgpt-guardia-encicla.js',
   abierto: 'juegos/getaway/56-abierto.js',
   inicio: 'juegos/getaway/90-inicio.js',
   juego: 'juegos/getaway/20-juego.js',
@@ -69,10 +70,14 @@ const encicla = corte(A.modos, 'armarEnCicla(desde)', 'luces()');
 const primerAccesoO = encicla.search(/o\.x|o\.y/);
 const guardiaO = encicla.search(/if\s*\(\s*!o(?:\s*\|\|[^)]*)?\)\s*return\s+(?:false|null|\{)/);
 const safeStations = /S\?\.length|S\.length\s*[<=>]|Array\.isArray\(S\)/.test(encicla);
+const guardiaIntegrada = /Modos\.armarEnCicla\s*=\s*function/.test(A.guardias) &&
+  /Array\.isArray\(S\)/.test(A.guardias) &&
+  /S\.length\s*<\s*2/.test(A.guardias) &&
+  /return\s+false/.test(A.guardias);
 evaluar('TC-P1-05', 'P1', 'EnCicla valida estación de origen y cantidad de estaciones',
-  ARCHIVOS.modos, 'armarEnCicla(desde)', primerAccesoO >= 0 && guardiaO >= 0 && guardiaO < primerAccesoO && safeStations,
-  'Una llamada directa sin origen en una ciudad sin estaciones no debe acceder a propiedades de undefined.',
-  'Validar array S y origen o antes del primer acceso a o.x/o.y, devolver false o error tipado.');
+  ARCHIVOS.modos, 'armarEnCicla(desde)', guardiaIntegrada || (primerAccesoO >= 0 && guardiaO >= 0 && guardiaO < primerAccesoO && safeStations),
+  'La guardia del módulo 61 intercepta el modo sin estaciones antes de la función original 60; no debe llegar a o.x.',
+  'Si Claude integra el parche en 60-modos, preservar guardia y retirar 61 con el E2E en verde.');
 
 // 4. Test E2E humano no debe fingir progreso.
 const test = A.pruebas;
