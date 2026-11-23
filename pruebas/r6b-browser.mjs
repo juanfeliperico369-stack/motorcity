@@ -51,15 +51,16 @@ try{
     if(!id)return {muestras:0,razon:'sin región precocinada'};
     const [gx,gy]=id.split(',').map(Number);
     const medir=activo=>{
-      MC.R6B.activo=activo;const medidas=[];
+      MC.R6B.activo=activo;const medidas=[];let mallas=0;
       for(let i=0;i<12;i++){
         const t=performance.now(),r=g._region(gx,gy,1);
         medidas.push(performance.now()-t);
+        if(r.r6b)mallas++;
         g._borrar(r);
       }
       medidas.sort((a,b)=>a-b);
       return {mediana:Math.round(medidas[5]*100)/100,
-        p95:Math.round(medidas[11]*100)/100};
+        p95:Math.round(medidas[11]*100)/100,mallas};
     };
     const normal=medir(false),lod=medir(true);
     MC.R6B.activo=true;
@@ -67,7 +68,8 @@ try{
   });
   await cdp.send('Emulation.setCPUThrottlingRate',{rate:1});
   assert(rendimiento.muestras===12&&Number.isFinite(rendimiento.lod.p95)&&
-    Number.isFinite(rendimiento.normal.p95),'No se midió el costo de construir regiones');
+    Number.isFinite(rendimiento.normal.p95)&&rendimiento.normal.mallas===0&&
+    rendimiento.lod.mallas===12,'La prueba no ha cargado mallas LOD2 de VistaTres');
   await page.evaluate(()=>{
     MC.R6B.activo=false;MC.R6B.forzarPrueba=false;TURNO.vistas.reiniciarGL();
     TURNO.vistaId='tercera';TURNO.vistas.usar('tercera',TURNO.E);
