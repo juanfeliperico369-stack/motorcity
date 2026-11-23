@@ -715,3 +715,13 @@ Cinco ilustraciones de actos, limpieza del menú compartido y soporte de pruebas
 - **Instrucción obligatoria para la siguiente IA (Claude, Codex, ChatGPT o quien siga):** al terminar tu turno, **deja siempre tu propio documento de contexto y relevo**: añade tu entrada aquí en `CONTEXTO-RELEVO.md` § 8 (sin borrar las anteriores), actualiza tu ficha en `coord/agentes/<tu-id>.json`, deja un mensaje en `coord/buzon/` y **especifícale exactamente esta misma obligación a la siguiente IA**.
 
 
+
+
+### ChatGPT · 22-nov-2026 Colombia / 23-nov-2026 UTC · Relevo V4 de Gemini Antigravity
+- **Origen del relevo:** PR #18 de Gemini, commit `1e8da239` de la rama `ia/antigravity/v4-paralaje-biomas`; 18 texturas originales 1024×256, seis biomas, E2E, caching y efectos ambientales. Su autoría se conserva.
+- **Fallo identificado:** CI `45101366062` falla en la comprobación obsoleta `residentes <=16` de `pruebas/paquete-capas-browser.mjs`, incompatible con la caché ampliada por presupuesto de 4 MB en Motor City 4.8. Se reemplaza por límite de residentes configurado y bytes residentes máximos sin retirar pruebas.
+- **Defectos de integración corregidos:** la precarga global V4 eludía LRU y podía conservar 18 imágenes; ahora usa la misma ruta LRU que Arcade y procesa un bioma a la vez. `muestrearTransicion` ya no suma `dt` dos veces por cuadro. Se retiró la alteración de `VistaTres.prototype.dibujar` que elevaba presupuesto de regiones a 28 ms fuera del alcance V4. Calidad media usa `lejos` + `medio`.
+- **Pruebas nuevas:** la batería de `pruebas/paralaje-biomas.mjs` comprueba precarga global acotada (2 biomas/6 imágenes) y ausencia de interceptación de VistaTres; `.github/workflows/v4-relevo-qa.yml` ejecuta V4, C-M34, 3D y modos en Chromium tras construir HTML offline. Revisar el estado real de la CI antes de informar "verde".
+- **Archivos respetados:** los 18 WebP y el manifiesto originales de Gemini, `js/47-clasicos.js`, `js/45-tres.js`, fachadas de Codex, MC4, guardados y ramas R3–R6. Los artefactos generados `dist/` se reconstruyen durante CI pero no se han versionado en este relevo; Claude debe hacerlo antes de publicar.
+- **Coordinación:** `reportes/2026-11-22-chatgpt-relevo-gemini-v4.md`, `coord/agentes/chatgpt-v4-relevo.json` y `coord/buzon/20261122-2256-chatgpt-relevo-v4.md`. El PR debe apuntar a la rama de Gemini para no duplicar arte; Claude une primero el relevo y luego revisa PR #18 a `main`.
+- **Para la próxima IA:** registrar cambios, mediciones y pendientes propios en §8, actualizar ficha propia y enviar un buzón nuevo, sin borrar los anteriores; no declarar pruebas ejecutadas ni FPS medidos sin evidencias.
