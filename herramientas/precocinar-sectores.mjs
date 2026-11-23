@@ -151,15 +151,16 @@ function construir(c){
   }
   return {sets,cota};
 }
-function mallasSector(s,cota){
+function mallasSector(s,cota,niveles){
   const grupos=[new Map(),new Map(),new Map()],clusters=new Map(),{sx,sy,base}=s;
   for(const e of s.edificios){
-    for(let lod=0;lod<2;lod++){
+    for(let lod=0;lod<2;lod++){if(!niveles.includes(lod))continue;
       const v=geoTriangulos(poligono(e,lod),e,{sx,sy,base,cota});
       if(!v.length)continue;
       const k=String(e.k),m=grupos[lod],arr=m.get(k)||[];
       arr.push(...v);m.set(k,arr);
     }
+    if(!niveles.includes(2))continue;
     const cx=Math.floor((e.x-sx*1000)/40),cy=Math.floor((e.y-sy*1000)/40),ck=cx+','+cy,R=clusters.get(ck),p=poligono(e,1);
     const xs=p.filter((_,i)=>i%2===0),ys=p.filter((_,i)=>i%2===1);
     const bb={x0:Math.min(...xs),x1:Math.max(...xs),y0:Math.min(...ys),y1:Math.max(...ys),h:e.h};
@@ -172,22 +173,27 @@ function mallasSector(s,cota){
   }
   return grupos;
 }
-function escribir(datos,salida,hashOrigen){
+function escribir(datos,salida,hashOrigen,niveles=[0,1,2]){
+  if(!Array.isArray(niveles)||!niveles.length||new Set(niveles).size!==niveles.length||niveles.some(n=>![0,1,2].includes(n)))error('niveles inválidos');
   const {sets,cota}=datos;fs.mkdirSync(salida,{recursive:true});
-  const manifest={version:1,origen_sha256:hashOrigen,sector_m:1000,formato:'floats-xyz-yup-deflateraw',niveles:[0,1,2],sectores:{},bytes_compresos:0,triangulos:[0,0,0]};
+  const manifest={version:2,origen_sha256:hashOrigen,sector_m:1000,formato:'posiciones-i16-q20-o-f32-xyz-yup-deflateraw',niveles,sectores:{},bytes_compresos:0,bytes_por_lod:[0,0,0],triangulos:[0,0,0]};
   for(const [key,s] of [...sets].sort((a,b)=>a[0].localeCompare(b[0]))){
     const salidaSector={origen:[s.sx*1000,s.base,s.sy*1000],edificios:s.edificios.length,lod:{}};
-    const grupos=mallasSector(s,cota);
-    for(let lod=0;lod<3;lod++){
+    const grupos=mallasSector(s,cota,niveles);
+    for(const lod of niveles){
       const info=[],bytes=[];let ofs=0;
       for(const [k,arr] of [...grupos[lod]].sort((a,b)=>Number(a[0])-Number(b[0]))){
-        const f=new Float32Array(arr),buffer=Buffer.from(f.buffer,f.byteOffset,f.byteLength);
-        info.push({clase:Number(k),offset:ofs,bytes:buffer.byteLength,triangulos:f.length/9});
-        bytes.push(buffer);ofs+=buffer.byteLength;manifest.triangulos[lod]+=f.length/9;
+        if(!arr.every(Number.isFinite))error('coordenadas NaN en sector '+key);
+        const q=arr.map(x=>Math.round(x*20));
+        const compacto=q.every(x=>x>=-32768&&x<=32767);
+        const f=compacto?Int16Array.from(q):Float32Array.from(arr);
+        const buffer=Buffer.from(f.buffer,f.byteOffset,f.byteLength);
+        info.push({clase:Number(k),offset:ofs,bytes:buffer.byteLength,triangulos:arr.length/9,codificacion:compacto?'i16q20':'f32',escala_m:compacto?0.05:1});
+        bytes.push(buffer);ofs+=buffer.byteLength;manifest.triangulos[lod]+=arr.length/9;
       }
       const bin=zlib.deflateRawSync(Buffer.concat(bytes),{level:6});
       const filename='sector_'+s.sx+'_'+s.sy+'_lod'+lod+'.bin';
-      fs.writeFileSync(path.join(salida,filename),bin);manifest.bytes_compresos+=bin.length;
+      fs.writeFileSync(path.join(salida,filename),bin);manifest.bytes_compresos+=bin.length;manifest.bytes_por_lod[lod]+=bin.length;
       salidaSector.lod[lod]={archivo:filename,bytes:bin.length,sha256:SHA(bin),grupos:info};
     }
     manifest.sectores[key]=salidaSector;
@@ -213,7 +219,7 @@ function selfTest(){
     for(const t of Object.values(m.sectores))for(const o of Object.values(t.lod)){
       const b=fs.readFileSync(path.join(outdir,o.archivo));assert.equal(SHA(b),o.sha256);
       const inflated=zlib.inflateRawSync(b),total=o.grupos.reduce((s,g)=>s+g.bytes,0);
-      assert.equal(inflated.length,total);assert.equal(total%36,0);
+      assert.equal(inflated.length,total);assert(o.grupos.every(g=>g.codificacion==='i16q20'?g.bytes%18===0:g.bytes%36===0));
     }
     assert(m.triangulos[0]>0&&m.triangulos[1]>0&&m.triangulos[2]>0);
     const cz=zlib.deflateRawSync(z),cj=zlib.deflateRawSync(Buffer.from(JSON.stringify(J)));
@@ -273,6 +279,8 @@ else if(process.argv.includes('--exportar-huellas')){
 else{
   const entrada=arg('--entrada'),salida=arg('--salida');
   if(!entrada||!salida)error('uso: node herramientas/precocinar-sectores.mjs --entrada datos/medellin/mundo.mc4 --salida <directorio>');
-  const bytes=fs.readFileSync(entrada),c=mc4(bytes),t=performance.now(),m=escribir(construir(c),salida,SHA(bytes));
-  console.log(JSON.stringify({ciudad:c.meta.ciudad,sectores:Object.keys(m.sectores).length,triangulos:m.triangulos,bytes:m.bytes_compresos,elapsed_ms:Math.round(performance.now()-t),rss_mb:Math.round(process.memoryUsage().rss/1048576)},null,2));
+  const bytes=fs.readFileSync(entrada),c=mc4(bytes),t=performance.now();
+  const niveles=arg('--niveles','0,1,2').split(',').map(Number);
+  const m=escribir(construir(c),salida,SHA(bytes),niveles);
+  console.log(JSON.stringify({ciudad:c.meta.ciudad,sectores:Object.keys(m.sectores).length,triangulos:m.triangulos,bytes:m.bytes_compresos,bytes_por_lod:m.bytes_por_lod,elapsed_ms:Math.round(performance.now()-t),rss_mb:Math.round(process.memoryUsage().rss/1048576)},null,2));
 }
