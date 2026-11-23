@@ -1,0 +1,40 @@
+name: Motor City R6-b - QA sector Worker offline
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  r6b:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Sintaxis
+        run: |
+          node --check herramientas/r6b-compacto.mjs
+          node --check herramientas/precocinar-sectores.mjs
+          node --check js/45-z-r6b.js
+          node --check pruebas/r6b-datos.mjs
+          node --check pruebas/r6b-browser.mjs
+          node herramientas/precocinar-sectores.mjs --self-test
+      - name: Presupuesto y datos MC4 reales
+        run: node pruebas/r6b-datos.mjs
+      - name: Construir mundo offline
+        run: |
+          node motor.mjs construir
+          wc -c dist/juegos/getaway.html
+      - name: Instalar Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Worker Blob offline y fallback
+        run: node pruebas/r6b-browser.mjs
+      - name: Regresiones 3D y modos
+        run: |
+          node pruebas/tres.mjs
+          node pruebas/modos.mjs
