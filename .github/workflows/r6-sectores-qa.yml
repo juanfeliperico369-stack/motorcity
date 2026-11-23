@@ -1,0 +1,81 @@
+name: Motor City R6 · prueba de mallas prehorneadas
+
+on:
+  pull_request:
+    paths:
+      - 'herramientas/precocinar-sectores.mjs'
+      - 'herramientas/validar-sectores.mjs'
+      - '.github/workflows/r6-sectores-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  precocinado:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Sintaxis y contrato MC4 (ED1 y EDJ)
+        run: |
+          node --check herramientas/precocinar-sectores.mjs
+          node herramientas/precocinar-sectores.mjs --self-test
+      - name: Precocinar MC4 real de Guatapé en tres niveles
+        run: |
+          node herramientas/precocinar-sectores.mjs \
+            --entrada datos/guatape/mundo.mc4 \
+            --salida "$RUNNER_TEMP/r6-guatape" > "$RUNNER_TEMP/r6-medicion.json"
+          cat "$RUNNER_TEMP/r6-medicion.json"
+          node -e "const m=require(process.env.RUNNER_TEMP+'/r6-guatape/manifiesto.json');if(!Object.keys(m.sectores).length||m.triangulos.some(n=>n<=0))process.exit(1);console.log('R6 sectores:',Object.keys(m.sectores).length,'triangulos:',m.triangulos.join('/'),'bytes:',m.bytes_compresos)"
+      - name: Precocinar MC4 real de Medellín y medir memoria
+        timeout-minutes: 15
+        run: |
+          node --max-old-space-size=4096 herramientas/precocinar-sectores.mjs \
+            --entrada datos/medellin/mundo.mc4 \
+            --salida "$RUNNER_TEMP/r6-medellin" > "$RUNNER_TEMP/r6-medellin-medicion.json"
+          cat "$RUNNER_TEMP/r6-medellin-medicion.json"
+          node -e "const m=require(process.env.RUNNER_TEMP+'/r6-medellin/manifiesto.json');if(Object.keys(m.sectores).length<20||m.triangulos.some(n=>n<=0))process.exit(1);console.log('R6 Medellin:',Object.keys(m.sectores).length,'sectores,',m.bytes_compresos,'bytes')"
+      - name: Precocinar Medellín solo con LOD lejano y comparar peso
+        timeout-minutes: 10
+        run: |
+          node --max-old-space-size=4096 herramientas/precocinar-sectores.mjs \
+            --entrada datos/medellin/mundo.mc4 \
+            --salida "$RUNNER_TEMP/r6-medellin-lod2" --niveles 2 > "$RUNNER_TEMP/r6-medellin-lod2-medicion.json"
+          cat "$RUNNER_TEMP/r6-medellin-lod2-medicion.json"
+          node -e "const a=require(process.env.RUNNER_TEMP+'/r6-medellin-medicion.json'),b=require(process.env.RUNNER_TEMP+'/r6-medellin-lod2-medicion.json');if(b.bytes>=a.bytes||b.triangulos[0]!==0||b.triangulos[1]!==0||b.triangulos[2]<=0)process.exit(1);console.log('R6 ahorro LOD2:',(100*(1-b.bytes/a.bytes)).toFixed(1)+'%')"
+      - name: Variante LOD2 de 80 m y comparación cuantitativa
+        timeout-minutes: 10
+        run: |
+          node --max-old-space-size=4096 herramientas/precocinar-sectores.mjs \
+            --entrada datos/medellin/mundo.mc4 \
+            --salida "$RUNNER_TEMP/r6-medellin-lod2-80m" --niveles 2 --celda-lod2 80 > "$RUNNER_TEMP/r6-medellin-lod2-80m-medicion.json"
+          cat "$RUNNER_TEMP/r6-medellin-lod2-80m-medicion.json"
+          node -e "const a=require(process.env.RUNNER_TEMP+'/r6-medellin-lod2-medicion.json'),b=require(process.env.RUNNER_TEMP+'/r6-medellin-lod2-80m-medicion.json');if(b.bytes>=a.bytes||b.triangulos[2]>=a.triangulos[2]||b.celda_lod2_m!==80)process.exit(1);console.log('R6 ahorro 80m vs 40m:',(100*(1-b.bytes/a.bytes)).toFixed(1)+'%, triangulos:',b.triangulos[2])"
+      - name: Exportación diagnóstica de huellas reales MC4 sin fuentes externas
+        run: |
+          node herramientas/precocinar-sectores.mjs \
+            --entrada datos/guatape/mundo.mc4 \
+            --exportar-huellas "$RUNNER_TEMP/r6-guatape-huellas.json" > "$RUNNER_TEMP/r6-guatape-huellas-medicion.json"
+          cat "$RUNNER_TEMP/r6-guatape-huellas-medicion.json"
+          node -e "const fs=require('fs'),h=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+'/r6-guatape-huellas.json','utf8'));if(h.type!=='FeatureCollection'||h.crs!=='MC4-LOCAL-METROS'||h.features.length<10||h.features.some(f=>f.geometry.type!=='Polygon'||!f.properties||!('pisos_estimados' in f.properties)))process.exit(1);console.log('R6 huellas auditables:',h.features.length,'con referencia local y pisos marcados como estimados')"
+      - name: Validar hashes, offsets y coordenadas de los bloques reales
+        timeout-minutes: 12
+        run: |
+          node herramientas/validar-sectores.mjs --directorio "$RUNNER_TEMP/r6-guatape"
+          node --max-old-space-size=4096 herramientas/validar-sectores.mjs --directorio "$RUNNER_TEMP/r6-medellin-lod2-80m"
+      - name: Publicar evidencia cuantitativa (no assets al juego)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r6-guatape-diagnostico
+          path: |
+            ${{ runner.temp }}/r6-medicion.json
+            ${{ runner.temp }}/r6-medellin-medicion.json
+            ${{ runner.temp }}/r6-medellin-lod2-medicion.json
+            ${{ runner.temp }}/r6-medellin-lod2-80m-medicion.json
+            ${{ runner.temp }}/r6-guatape-huellas-medicion.json
+          if-no-files-found: ignore

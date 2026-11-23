@@ -750,3 +750,18 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 - **Verificado:** metadatos de ICDE/IGAC y fichas de licencia. No pruebas de motor porque esta entrega no lo modifica. La etiqueta «datos descargables» del catálogo no implica que el archivo se haya descargado o se haya comprobado su acceso.
 - **Falta:** decisión **expresa del autor** sobre licencia CC BY-SA para la cartografía derivada, verificación del archivo real, precisión y referencia vertical, y pruebas antes de modificar el juego. Mantener el terreno actual mientras tanto.
 - **Coordinación:** `coord/agentes/chatgpt-r5.json` y `coord/buzon/20261122-2055-chatgpt-r5.md`, sin pisar Codex R1, ChatGPT R3/R4 o Gemini V4. A la próxima IA le corresponde registrar su trabajo y riesgos en §8.
+
+### ChatGPT · 22-nov-2026 · R6 prehorneado de sectores 1 km y 3 LOD
+- **Pedido:** continuar R3/R4/R6 tras la integración R1 de Codex, con Gemini trabajando V4 en paralelo y respetando el plan de Motor City 4.9.
+- **Hecho:** `herramientas/precocinar-sectores.mjs` lee MC4 ED1/EDJ y relieve existentes, construye mallas por sector de **1 km**, con LOD 0 (huellas), LOD 1 (cajas orientadas) y LOD 2 (agrupación lejana de 40 m). Exporta deflateRaw, sumas SHA-256, clases y manifiesto. No hay modificaciones del MC4.
+- **Pruebas locales:** `node --check` y `node herramientas/precocinar-sectores.mjs --self-test`: 2 sectores, 3 niveles, 46/40/30 triángulos, 873 bytes en fixture, comprobación de EDJ y ED1 sintéticos y de hashes. Se añadió CI de medición con Guatapé real en `.github/workflows/r6-sectores-qa.yml`.
+- **Límites:** herramienta de construcción, no activación de render. No afirmar mejora de FPS ni reducción de memoria en teléfono hasta conectar los datos en VistaTres, comparar pesos reales y probar GPU.
+- **Falta:** prehornear/medir Medellín real, conectar el lector offline al HTML único con carga diferida y respaldo a malla actual, y ejecutar pruebas completas del motor antes de fusionar.
+- **Coordinación:** informe `reportes/2026-11-22-chatgpt-r6-sectores-lod.md`, ficha `coord/agentes/chatgpt-r6.json` y mensaje `coord/buzon/20261122-2055-chatgpt-r6.md`. No tocar R1 de Codex, V4 de Gemini o trabajos R3/R4/R5.
+- **Para la siguiente IA:** registrar resultados cuantitativos del MC4 verdadero, pruebas de compatibilidad, riesgos y límites en este relevo §8 antes de cualquier fusión.
+
+
+### ChatGPT · actualización R6 del 22-nov-2026 · Precocinado medido en Medellín real
+- CI específica 45099935194 exitosa: Guatapé 21 sectores/440.925 bytes; Medellín 2.086 sectores, LOD 0/1/2 6.853.547/6.394.570/2.339.000 triángulos y 101.492.868 bytes, 13,17 s de generación. Salida solo LOD 2: 10.646.954 bytes y 2,29 s, ahorro medido del 89,5 % contra los tres niveles; 281 MB RSS del proceso, no memoria GPU.
+- El prehorneador usa ahora coordenadas relativas cuantizadas i16 a 5 cm cuando caben, fallback f32 cuando no, opción --niveles para evitar generar bloques no usados y --exportar-huellas para extracción de huellas MC4 con fines de auditoría R3/R4. El MC4 original, guardados, shaders y HTML no se modificaron.
+- Es un artefacto de construcción, todavía NO un motor más rápido: un LOD 2 de 2,339 millones de triángulos no debe cargarse completo ni sumarse al HTML sin caché espacial. A la siguiente IA le corresponde medir presupuesto de carga por sector y la reducción de geometría real en VistaTres; registrar resultados de las cuatro suites y no afirmar FPS sin pruebas.
