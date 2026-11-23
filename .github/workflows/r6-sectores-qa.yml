@@ -38,6 +38,14 @@ jobs:
             --salida "$RUNNER_TEMP/r6-medellin" > "$RUNNER_TEMP/r6-medellin-medicion.json"
           cat "$RUNNER_TEMP/r6-medellin-medicion.json"
           node -e "const m=require(process.env.RUNNER_TEMP+'/r6-medellin/manifiesto.json');if(Object.keys(m.sectores).length<20||m.triangulos.some(n=>n<=0))process.exit(1);console.log('R6 Medellin:',Object.keys(m.sectores).length,'sectores,',m.bytes_compresos,'bytes')"
+      - name: Precocinar Medellín solo con LOD lejano y comparar peso
+        timeout-minutes: 10
+        run: |
+          node --max-old-space-size=4096 herramientas/precocinar-sectores.mjs \
+            --entrada datos/medellin/mundo.mc4 \
+            --salida "$RUNNER_TEMP/r6-medellin-lod2" --niveles 2 > "$RUNNER_TEMP/r6-medellin-lod2-medicion.json"
+          cat "$RUNNER_TEMP/r6-medellin-lod2-medicion.json"
+          node -e "const a=require(process.env.RUNNER_TEMP+'/r6-medellin-medicion.json'),b=require(process.env.RUNNER_TEMP+'/r6-medellin-lod2-medicion.json');if(b.bytes>=a.bytes||b.triangulos[0]!==0||b.triangulos[1]!==0||b.triangulos[2]<=0)process.exit(1);console.log('R6 ahorro LOD2:',(100*(1-b.bytes/a.bytes)).toFixed(1)+'%')"
       - name: Publicar evidencia cuantitativa (no assets al juego)
         if: always()
         uses: actions/upload-artifact@v4
@@ -46,4 +54,5 @@ jobs:
           path: |
             ${{ runner.temp }}/r6-medicion.json
             ${{ runner.temp }}/r6-medellin-medicion.json
+            ${{ runner.temp }}/r6-medellin-lod2-medicion.json
           if-no-files-found: ignore
