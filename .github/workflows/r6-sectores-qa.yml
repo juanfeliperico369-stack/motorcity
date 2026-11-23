@@ -13,7 +13,7 @@ permissions:
 jobs:
   precocinado:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,10 +30,20 @@ jobs:
             --salida "$RUNNER_TEMP/r6-guatape" > "$RUNNER_TEMP/r6-medicion.json"
           cat "$RUNNER_TEMP/r6-medicion.json"
           node -e "const m=require(process.env.RUNNER_TEMP+'/r6-guatape/manifiesto.json');if(!Object.keys(m.sectores).length||m.triangulos.some(n=>n<=0))process.exit(1);console.log('R6 sectores:',Object.keys(m.sectores).length,'triangulos:',m.triangulos.join('/'),'bytes:',m.bytes_compresos)"
+      - name: Precocinar MC4 real de Medellín y medir memoria
+        timeout-minutes: 15
+        run: |
+          node --max-old-space-size=4096 herramientas/precocinar-sectores.mjs \
+            --entrada datos/medellin/mundo.mc4 \
+            --salida "$RUNNER_TEMP/r6-medellin" > "$RUNNER_TEMP/r6-medellin-medicion.json"
+          cat "$RUNNER_TEMP/r6-medellin-medicion.json"
+          node -e "const m=require(process.env.RUNNER_TEMP+'/r6-medellin/manifiesto.json');if(Object.keys(m.sectores).length<20||m.triangulos.some(n=>n<=0))process.exit(1);console.log('R6 Medellin:',Object.keys(m.sectores).length,'sectores,',m.bytes_compresos,'bytes')"
       - name: Publicar evidencia cuantitativa (no assets al juego)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: r6-guatape-diagnostico
-          path: ${{ runner.temp }}/r6-medicion.json
+          path: |
+            ${{ runner.temp }}/r6-medicion.json
+            ${{ runner.temp }}/r6-medellin-medicion.json
           if-no-files-found: ignore
