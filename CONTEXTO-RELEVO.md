@@ -844,3 +844,17 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 - **Esperan al autor:** la licencia del catastro (R3), el MDT LiDAR CC BY‑SA (R5) y **medir en su celular con 📏** (copiar el resultado y pegarlo en el chat).
 - **Sigue (Claude):** fase 4 (lenguaje de misiones, repeticiones exactas y el bot que gana cada misión); y lo que las otras IA no alcancen, en el orden de «★ Estado 5.2» de los pedidos.
 - **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
+
+### Gemini · Antigravity («hydrogen») · 23‑nov‑2026 · 5.2 · G5‑07 Fichas de los 30 sitios icónicos de Medellín (para C5‑02)
+- **Pedido:** `G5-07` de `docs/PEDIDOS-GEMINI-5.0.md` («★ Estado 5.2», rama `ia/gemini/g5-07-sitios` sobre `origin/main` `df80193`).
+- **Hecho:**
+  - Catálogo completo en `docs/sitios/`: manifiesto legible por máquina `docs/sitios/sitios.json` + 30 fichas detalladas `docs/sitios/<id>.md` + índice y guía de integración para Codex `docs/sitios/README.md`.
+  - Cobertura de los 20 sitios explícitos del pedido (`coltejer`, `candelaria`, `palacio_cultura`, `plaza_botero`, `edificio_epm`, `alpujarra`, `pueblito_paisa`, `parque_explora`, `orquideorama`, `planetario`, `parque_deseos`, `biblioteca_espana`, `estadio_atanasio`, `catedral_metropolitana`, `museo_antioquia`, `plaza_mayor`, `teatro_pablo_tobon`, `ruta_n`, `parque_lleras`, `plaza_libertad`) + 10 hitos clave reales presentes en `datos/medellin/mundo.mc4` (`teatro_metropolitano`, `pies_descalzos`, `parque_luces`, `edificio_vasquez`, `edificio_carre`, `biblioteca_epm`, `estacion_ferrocarril`, `palacio_nacional`, `casa_memoria`, `mamm`).
+  - Cada ficha trae coordenadas WGS84, proyección verificada en metros de `mundo.mc4` (`x, y, cota_m`), enlace a `hito_mc4`, `osm_id` verificado o consulta Overpass explícita, dimensiones, paleta HEX, 4–5 rasgos reconocibles, receta de modelado y presupuestos LOD0/LOD1 (**23 540 / 6 740 tris totales**).
+  - 30 imágenes de referencia WebP `768×512` sin texto ni logos en `docs/sitios/img/<id>.webp` (`401,6 KB` total): `edificio_epm.webp` generada con **Nano Banana** y las otras 29 como maquetas 3D limpias de estudio (cuota de `gemini-3.1-flash-image` en enfriamiento de ~5 h; desbloquean `C5-02` hoy y pueden refrescarse con Nano Banana luego sin cambiar rutas).
+  - Validador `pruebas/sitios-medellin.mjs` (**671 ok, 0 fallos**) y reporte `reportes/2026-11-23-gemini-g5-07-sitios.md`.
+- **Peso añadido al HTML (`dist/juegos/getaway.html`):** **`+0 KB`**.
+- **Pruebas:** `construir.mjs` (`getaway.html 28734 KB`), `sitios-medellin.mjs` (`671/671`), `dinamica.mjs` (`25/25`), `historieta.mjs` (`gpu: true`, `3,4 ms`), `paralaje-biomas.mjs` (`18/18`), `humano.mjs` (`metro 35 s`, `carrera 431 m`), `prueba.mjs --navegador` (`158/158`, `112,2 s`).
+- **Sigue (Gemini):** `G5-04` (Minijuegos táctiles cortos en `juegos/getaway/64-minijuegos.js`), seguido de `G5-01-b` (Historieta noche/1P/lluvia) y `G5-05` (Guía sin flecha en Modo cine).
+- **Instrucción para la IA que siga:** deja siempre tu entrada aquí en `CONTEXTO-RELEVO.md` § 8, tu mensaje en `coord/buzon/` y actualiza tu ficha en `coord/agentes/`.
+

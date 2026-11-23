@@ -3,53 +3,53 @@
   "agente": "antigravity",
   "marca": "Gemini",
   "apodo": "hydrogen",
-  "rama": "ia/gemini/g5-02-anillos",
-  "base": "2633fdf",
-  "version_motor": "5.0.0",
-  "actualizado": "2026-11-23T04:20:00Z",
+  "rama": "ia/gemini/g5-07-sitios",
+  "base": "df80193",
+  "version_motor": "5.2.0",
+  "actualizado": "2026-11-23T14:55:00Z",
   "estado": "listo_para_integrar",
-  "pedido_actual": "G5-02",
-  "rol": "Anillos de recoger y entregar en Mandados y EnCicla y controles táctiles de vuelo (🔼 Subir y 🔽 Bajar) para jetpack, avioneta y avión en Motor City 5.0 (G5-02, +9.4 KB al HTML)",
+  "pedido_actual": "G5-07",
+  "rol": "Fichas arquitectónicas e imágenes de referencia de los 30 sitios icónicos de Medellín para C5-02 de Codex (Motor City 5.2, +0 KB al HTML)",
   "entregas_5_0": {
     "G5-01": {
       "rama": "ia/gemini/g5-01-historieta",
       "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/21",
-      "estado": "completado",
+      "estado": "integrado_en_main",
       "peso_html_kb": "+3.1 KB"
     },
     "G5-02": {
       "rama": "ia/gemini/g5-02-anillos",
-      "estado": "completado",
-      "peso_html_kb": "+9.4 KB",
+      "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/23",
+      "estado": "integrado_en_main",
+      "peso_html_kb": "+9.4 KB"
+    },
+    "G5-07": {
+      "rama": "ia/gemini/g5-07-sitios",
+      "estado": "listo_para_integrar",
+      "peso_html_kb": "+0 KB",
       "archivos": [
-        "juegos/getaway/60-modos.js",
-        "juegos/getaway/61-anillos.js",
-        "pruebas/anillos.mjs",
-        "reportes/2026-11-23-gemini-g5-02-anillos.md",
-        "reportes/img/gemini-g5-02/"
+        "docs/sitios/README.md",
+        "docs/sitios/sitios.json",
+        "docs/sitios/*.md (30 fichas)",
+        "docs/sitios/img/*.webp (30 referencias 768×512, 401.6 KB)",
+        "pruebas/sitios-medellin.mjs",
+        "reportes/2026-11-23-gemini-g5-07-sitios.md"
       ]
     },
     "G5-10_V4": {
       "rama": "ia/antigravity/v4-paralaje-biomas",
       "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/18",
-      "estado": "completado"
+      "estado": "integrado_en_main"
     }
   },
   "zonas_respetadas_no_toco": [
     "js/37-dinamica.js (Claude)",
     "js/45-tres.js (Claude / ChatGPT)",
+    "js/25-ia.js (Claude)",
+    "juegos/getaway/66-ciudad-viva.js (Claude)",
+    "juegos/getaway/67-retos-semaforo.js (Claude)",
+    "juegos/getaway/68-medir.js (Claude)",
     "docs/PEDIDOS-CHATGPT-5.0.md (ChatGPT / Codex)"
   ],
-  "siguiente_pedido": "G5-03 (ia/gemini/g5-03-frases)",
-  "entregables_v4": {
-    "plan": "docs/PLAN-V4-PARALAJE-GEMINI.md",
-    "reporte": "reportes/gemini-v4-paralaje-biomas.md",
-    "texturas_biomas": "arte/arcade/biomas/*.webp (18 texturas 1024×256 RGBA WebP lossless con detalle regional colombiano y geológico, costura_mae = 0.0000, 540.58 KB)",
-    "manifiesto": "arte/arcade/biomas/manifiesto.json",
-    "modulo_motor": "js/47-paralaje-biomas.js (MC.ParalajeBiomas + capa 0 cirros/aves + aureola solar + neblina entre planos + inclinación centrífuga, 0 líneas tocadas en js/47-clasicos.js)",
-    "prueba_e2e": "pruebas/paralaje-biomas.mjs",
-    "capturas": "reportes/img/gemini-v4/ (27 capturas WebP antes/después día/noche 412×860 y 860×412 + 6 previews 3×)"
-  },
-  "mision_v4": "MISIÓN V4: Revolución visual de los biomas y el modo Arcade (Issue #14)",
-  "rama_v4": "ia/antigravity/v4-paralaje-biomas"
+  "siguiente_pedido": "G5-04 (ia/gemini/g5-04-minijuegos)"
 }
