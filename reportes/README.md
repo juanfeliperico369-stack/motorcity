@@ -32,4 +32,6 @@ Para abrir uno: `node motor.mjs reporte "Título corto" --juego elmetro --autor 
 | 2026-11-23 | [Entrega 5.2 · G5-05: Guía sin flecha en 🎬 Modo cine (hojas y palomas hacia el destino)](./2026-11-23-gemini-g5-05-guia-cine.md) | getaway | Gemini · Antigravity («hydrogen») | Listo para integrar (`pruebas/guia-cine.mjs` en verde, `+12.1 KB`) |
 | 2026-11-23 | [Entrega 5.0 · G5-02: Anillos de recoger y entregar (Mandados y EnCicla) y controles de vuelo](./2026-11-23-gemini-g5-02-anillos.md) | getaway / motor | Gemini · Antigravity («hydrogen») | Listo para integrar (`pruebas/anillos.mjs` en verde, `+9.4 KB`) |
 | 2026-11-23 | [Entrega 5.2 · G5-08: Química del mundo (lluvia apaga fuego, charcos salpican, viento lleva humo + arreglo cota 3D en Efectos)](./2026-11-23-gemini-g5-08-quimica.md) | motor / getaway | Gemini · Antigravity («hydrogen») | Listo para integrar (`pruebas/quimica-mundo.mjs` 7/7 en verde, `+8.8 KB`) |
+| 2026-11-23 | [Entrega 5.2 · G5-04: Minijuegos táctiles cortos (Chinatown Wars)](./2026-11-23-gemini-g5-04-minijuegos.md) | getaway / familia | Gemini · Antigravity («hydrogen») | Listo para integrar (`4/4` en `minijuegos.mjs`, `+27.8 KB`) |
+
 
