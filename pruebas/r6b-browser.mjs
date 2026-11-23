@@ -21,10 +21,10 @@ try{
   const url=process.env.MC_PRUEBAS_URL?
     new URL('dist/juegos/getaway.html',process.env.MC_PRUEBAS_URL).href:pathToFileURL(archivo).href;
   await page.goto(url+'?portada',{waitUntil:'domcontentloaded',timeout:60000});
-  await page.waitForFunction(()=>window.TURNO_LISTO&&window.TURNO?.planeta,{timeout:40000});
+  await page.waitForFunction(()=>window.TURNO_LISTO&&window.TURNO?.planeta,null,{timeout:40000});
   await page.click('#bLibre');
   await page.click('#ciudades [data-c="guatape"]');
-  await page.waitForFunction(()=>TURNO?.id==='guatape'&&!TURNO.transicion&&TURNO.cuerpo&&TURNO.vistas,{timeout:90000});
+  await page.waitForFunction(()=>TURNO?.id==='guatape'&&!TURNO.transicion&&TURNO.cuerpo&&TURNO.vistas,null,{timeout:90000});
   await page.evaluate(()=>{
     const G=TURNO;MC.opciones.graficos='realistas';G.vistas.motor3d='gl';
     G.vistas.auto=false;G.vistas.calidad=1;G.vistas.reiniciarGL();
@@ -33,7 +33,7 @@ try{
   await page.waitForFunction(()=>{
     const g=TURNO?.vistas?.gl;
     return !!g?.tres&&!!g.ok&&MC.R6B.estadisticas(g).sectores>=1;
-  },{timeout:90000});
+  },null,{timeout:90000});
   const etapa=await page.evaluate(()=>{
     const G=TURNO,g=G.vistas.gl,s=MC.R6B.estadisticas(g);
     return {ciudad:G.id,tres:g.tres,ready:s.regiones,sectores:s.sectores,worker:s.worker,
@@ -45,7 +45,7 @@ try{
     MC.R6B.activo=false;TURNO.vistas.reiniciarGL();
     TURNO.vistaId='tercera';TURNO.vistas.usar('tercera',TURNO.E);
   });
-  await page.waitForFunction(()=>TURNO?.vistas?.gl?.tres&&TURNO.vistas.gl.mvp,{timeout:30000});
+  await page.waitForFunction(()=>TURNO?.vistas?.gl?.tres&&TURNO.vistas.gl.mvp,null,{timeout:30000});
   const respaldo=await page.evaluate(()=>{
     const G=TURNO,g=G.vistas.gl;
     return {mvp:!!g.mvp,tres:!!g.tres,trabajador:!!g._r6b};
