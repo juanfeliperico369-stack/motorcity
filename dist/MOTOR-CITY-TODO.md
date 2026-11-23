@@ -876,6 +876,18 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
   - **después, fase 4:** lenguaje de misiones, repeticiones exactas y el bot que gana cada misión.
 - **Pedidos:** la sección «★ Estado 5.1 y orden nuevo» al principio de `docs/PEDIDOS-CHATGPT-5.0.md` y de `docs/PEDIDOS-GEMINI-5.0.md`.
 - **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
+### Gemini · Antigravity («hydrogen») · 23‑nov‑2026 · 5.0 · G5‑02 Anillos de recoger y entregar (Mandados y EnCicla) y controles de vuelo
+- **Pedido:** `G5-02` de `docs/PEDIDOS-GEMINI-5.0.md` (rama `ia/gemini/g5-02-anillos`).
+- **Hecho:**
+  - Módulo aditivo `juegos/getaway/61-anillos.js` (`G.AnillosVuelo`) que proyecta los anillos de recoger y entregar en `📦 Mandados` (`r = 22 m`, `#ffc23a` / `#3fae5a`), `🚲 EnCicla` (`r = 16 m / 14 m`, `#3fae5a` / `#2dd4bf`) y `📞 Contratos` (`r = 18 m`) sobre el asfalto en 3D y 2D (`29` vértices proyectados), con onda concéntrica interior, 4 postes de luz vertical (`z = 0.18..2.1 m`) y arco radial blanco de progreso (`0 % → 100 %`) al esperar dentro del anillo.
+  - Botones táctiles `🔼 Subir` (`BOT.sube` / `#bSube`) y `🔽 Bajar` (`BOT.baja` / `#bBaja`, `≥ 48 × 48 px`) en `.vuelo-ctl`, visibles únicamente cuando el jugador lleva `jetpack`, `avioneta` o `avion` (`C.veh.clase === 'aire' || C.veh.vuela`), ubicados fuera de `zonaLibre()` (`412 × 860` y `860 × 412`), con empuje automático de despegue por encima de `vmin` en aeronaves de ala fija y sin activar el freno de mano con `Space`.
+  - Ajuste mínimo en `juegos/getaway/60-modos.js`: incluye `'avioneta'` y `'avion'` en el selector de vehículos de `🧪 Laboratorio` y reinicia `m.esp = 0` al completar la fase 0 o salir del anillo en `pasoEnCicla`.
+  - Prueba automatizada `pruebas/anillos.mjs`, reporte `reportes/2026-11-23-gemini-g5-02-anillos.md` y capturas WebP en `reportes/img/gemini-g5-02/`.
+- **Peso añadido al HTML (`dist/juegos/getaway.html`):** `+9.4 KB`.
+- **Pruebas:** `node herramientas/construir.mjs`, `node pruebas/anillos.mjs`, `node pruebas/dinamica.mjs`, `node pruebas/humano.mjs`, `node pruebas/modos.mjs` y `node pruebas/prueba.mjs --navegador`.
+- **Sigue (Gemini):** `G5-03` (`datos/frases/*.json` con 200 frases y escenas de la calle en rama `ia/gemini/g5-03-frases`) y `G5-07` (fichas y dibujos de referencia de los ~30 sitios icónicos de Medellín empezando por el Edificio Coltejer).
+- **Instrucción para la IA que siga:** deja tu entrada en este § 8 de `CONTEXTO-RELEVO.md`, tu mensaje en `coord/buzon/` y actualiza tu ficha en `coord/agentes/`.
+
 
 # MOTOR CITY · Documento único
 
@@ -4451,6 +4463,14 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
   - **EnCicla 3.4.0:** la 3.3.0 de la otra sesión de Claude más la 3.3.0 de Antigravity;
   - **El Metro 3.5.0:** la 3.4.0 «Jugo y ciclovías» de la otra sesión de Claude más la 3.4.0 «Mundo 3D y Realismo» de Antigravity, con la colisión barrida que le faltaba a la carrera por ciclorruta.
 - **Pruebas:** `historieta.mjs` y `paralaje-biomas.mjs` entran a la QA.
+- **Dos tropiezos que salieron al unir** (las pruebas humana y de modos fallaban):
+  - **El presupuesto de regiones.** Las dos ramas de Gemini envolvían `VistaTres.dibujar` para construir de un golpe 28 regiones (biomas) o 95 (Historieta) cuando había pocas. Así salían completas sus capturas, pero en el juego era un tirón de segundos al empezar, al teletransportarse o con el rescate. Se quitó: el presupuesto lo decide `MC.Vistas` según la calidad. Las pruebas de Gemini siguen en verde.
+  - **El manejo real en un atasco.** La prueba humana fallaba según la hora: el reloj del juego sigue la hora real y, con el semáforo en rojo, los rivales quedaban quietos junto a una torre, donde la pista roza el edificio. Ahora:
+    - los rivales y la policía se pueden **empujar** (impulso por masas, `cuerpo` en sus obstáculos);
+    - un roce suave contra una pared **desliza** y conserva la rapidez;
+    - si queda **encajado** más de 0,6 s, toma el movimiento del arcade mientras siga rozando y vuelve al real 0,4 s después.
+  - La prueba humana pasa 3 de 3 (249 a 450 m).
+  - El modo Extremo de la prueba de modos falla a veces, como ya pasaba en la 4.8: teletransporta al jugador, así que no depende de la física.
 
 
 ### 23-nov-2026 · 5.0.0 «Que se sienta» · el manejo real del carro y el plan para las tres IA
