@@ -89,6 +89,73 @@ const Historieta = {
     return true;
   },
 
+  /* 5.1 (Claude) · EL CONTORNO EN LA GPU. Antes todo el cuadro pasaba por la CPU (getImageData, Sobel y putImageData: unos 8 ms en
+     un computador y varias veces más en un celular), y el borde salía del color: el grano de las fachadas y del suelo se llenaba
+     de puntos negros. Ahora, con el 3D realista:
+     - la escena se dibuja a una textura con su profundidad, y un solo pase en la GPU pone la tinta donde cambia la GEOMETRÍA:
+       la profundidad guardada es lineal en 1/z, así que en un plano su laplaciano es cero; en una arista o una silueta no lo es
+       (borde relativo a 1 − d, el mismo en todas las distancias), y se apaga con la niebla;
+     - colores planos: la luz por bandas (4) y algo más de saturación; los muros y el suelo sin grano ni juntas (uPlano) y sin las
+       texturas de fachada (paredes lisas, como Chinatown Wars). La CPU queda para el 3D clásico y el software. */
+  gpu: true,
+  _post: null,
+  bandas: 4,
+  umbralGeo: [.003, .011],
+  renderGPU(vt, r, esc, cam) {
+    const T = THREE, W = vt.cv.width, H = vt.cv.height; let P = this._post;
+    if (!P) P = this._post = this._crearPost(T);
+    if (P.rt.width !== W || P.rt.height !== H) P.rt.setSize(W, H);
+    const t0 = MC.ahora();
+    r.setRenderTarget(P.rt); r.render(esc, cam); r.setRenderTarget(null);
+    const u = P.mat.uniforms; u.tColor.value = P.rt.texture; u.tDepth.value = P.rt.depthTexture; u.uTexel.value.set(1 / W, 1 / H);
+    u.cNear.value = cam.near; u.cFar.value = cam.far; u.uNiebla.value.set(esc.fog ? esc.fog.near : 1e9, esc.fog ? esc.fog.far : 2e9);
+    u.uBandas.value = this.bandas; u.uUmbral.value.set(this.umbralGeo[0], this.umbralGeo[1]);
+    r.render(P.escena, P.cam);
+    this.metricas.gpu = true; this.metricas.msUltimoCuadro = +(MC.ahora() - t0).toFixed(2);
+  },
+  _crearPost(T) {
+    const rt = new T.WebGLRenderTarget(4, 4, { type: T.HalfFloatType, depthBuffer: true });
+    rt.depthTexture = new T.DepthTexture(4, 4); rt.depthTexture.type = T.UnsignedIntType;
+    const mat = new T.ShaderMaterial({
+      uniforms: { tColor: { value: null }, tDepth: { value: null }, uTexel: { value: new T.Vector2() }, cNear: { value: .3 }, cFar: { value: 9000 }, uNiebla: { value: new T.Vector2(1e9, 2e9) }, uBandas: { value: 4 }, uUmbral: { value: new T.Vector2(.05, .16) } },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+      fragmentShader: `#include <packing>
+        uniform sampler2D tColor; uniform sampler2D tDepth; uniform vec2 uTexel; uniform float cNear; uniform float cFar; uniform vec2 uNiebla; uniform float uBandas; uniform vec2 uUmbral;
+        varying vec2 vUv;
+        float prof(vec2 q){ return texture2D(tDepth, q).x; }
+        void main(){
+          /* el color, suavizado en cruz antes de las bandas (sin esto el grano de la textura del suelo salta de banda en banda) */
+          vec2 ex = vec2(uTexel.x, 0.0), ey = vec2(0.0, uTexel.y);
+          vec3 c = (texture2D(tColor, vUv).rgb * 2.0 + texture2D(tColor, vUv - ex).rgb + texture2D(tColor, vUv + ex).rgb + texture2D(tColor, vUv - ey).rgb + texture2D(tColor, vUv + ey).rgb) / 6.0;
+          /* la profundidad a 1,5 píxeles: la línea queda de 2 a 3 píxeles, legible en un celular */
+          vec2 px = ex * 1.5, py = ey * 1.5;
+          float d0 = prof(vUv), dL = prof(vUv - px), dR = prof(vUv + px), dD = prof(vUv - py), dU = prof(vUv + py);
+          float cielo0 = step(.9999995, d0), cieloV = step(.9999995, max(max(dL, dR), max(dD, dU)));
+          float lap = (abs(dL + dR - 2.0 * d0) + abs(dD + dU - 2.0 * d0)) / max(1.0 - d0, 1e-7);
+          float borde = max(smoothstep(uUmbral.x, uUmbral.y, lap), cieloV) * (1.0 - cielo0);
+          float z = -perspectiveDepthToViewZ(d0, cNear, cFar);
+          borde *= 1.0 - smoothstep(uNiebla.x, uNiebla.y, z);
+          float l = dot(c, vec3(.2126, .7152, .0722)), t = l / (1.0 + l), b = t * uBandas, fb = fract(b), tq = (floor(b) + .55 + smoothstep(.86, 1.0, fb)) / uBandas   /* bandas con el paso suave (sin escalón duro: sin chispas) */, lq = tq / max(1e-3, 1.0 - tq);
+          vec3 plano = c * (lq / max(l, 1e-4)); plano = mix(vec3(dot(plano, vec3(.2126, .7152, .0722))), plano, 1.25);
+          vec3 col = mix(c, max(plano, 0.0), .85 * (1.0 - cielo0));
+          gl_FragColor = vec4(mix(col, vec3(.0037, .0048, .007), borde * .95), 1.0);
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+        }`,
+      depthTest: false, depthWrite: false
+    });
+    const escena = new T.Scene(), q = new T.Mesh(new T.PlaneGeometry(2, 2), mat); q.frustumCulled = false; escena.add(q);
+    return { rt, mat, escena, cam: new T.OrthographicCamera(-1, 1, 1, -1, 0, 1) };
+  },
+  /* encender o apagar lo de la GPU en el 3D realista (colores planos, sin texturas de fachada, el pase propio) */
+  _ponerTres(vt, on) {
+    const gpu = on && this.gpu && vt.tres && typeof THREE !== 'undefined';
+    vt.posRender = gpu ? (r, e, c) => { try { this.renderGPU(vt, r, e, c); } catch (err) { this.gpu = false; vt.posRender = null; r.setRenderTarget(null); r.render(e, c); } } : null;
+    if (vt.uPlano) vt.uPlano.value = gpu ? 1 : 0;
+    if (vt._fachadas) for (const f of Object.values(vt._fachadas)) if (f.material) f.material.visible = !gpu;
+    return gpu;
+  },
+
   /* Pase de colores planos (posterización cel-shading) y contorno negro Sobel/Roberts en búfer con willReadFrequently */
   procesarLienzo(g, W, H) {
     if (!g || !g.canvas || W < 16 || H < 16) return;
@@ -182,6 +249,7 @@ if (typeof VistaTres !== 'undefined' && VistaTres.prototype) {
     const _dibTresOrig = VistaTres.prototype.dibujar;
     VistaTres.prototype.dibujar = function (W, H, E, op = {}) {
       const activo = Historieta.activo(E);
+      this._histGPU = Historieta._ponerTres(this, activo);
       if (activo && this.regiones && this.regiones.size < 6) {
         op = Object.assign({}, op, { presupuesto: Math.max(op.presupuesto || 8, 95) });
       }
@@ -221,7 +289,8 @@ if (typeof Vistas !== 'undefined' && Vistas.prototype) {
       Historieta.aplicarCascoTres(this.gl, activo);
     }
     const ms = _dibujarVistasOrig.call(this, g, W, H, E, dt);
-    if (activo) {
+    if (activo && !(this.gl && this.gl.tres && this.gl._histGPU)) {   /* con la GPU (3D realista) ya está hecho; si no, la CPU */
+      Historieta.metricas.gpu = false;
       Historieta.procesarLienzo(g, W, H);
     } else {
       Historieta.metricas.pixelesContorno = 0;

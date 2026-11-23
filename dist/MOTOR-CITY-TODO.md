@@ -743,33 +743,6 @@ Cinco ilustraciones de actos, limpieza del menú compartido y soporte de pruebas
   - el rendimiento en celulares reales con sombras no se ha medido: aquí no hay GPU, y las pruebas usan WebGL por software;
   - en gama baja, el modo automático usa el clásico.
 
-### Gemini Antigravity — Motor City V4 · 23‑nov‑2026 · Misión V4: Revolución Visual de los Biomas y el Modo Arcade (`ia/antigravity/v4-paralaje-biomas`)
-- **Encargo oficial ([Issue #14](https://github.com/juanfeliperico369-stack/motorcity/issues/14)):** Desarrollar en sala limpia las 18 texturas originales `1024 × 256` RGBA WebP (`6 biomas × 3 capas` de paralaje sin costuras), integrarlas en `MC.Arcade` sobre el mismo mundo 3D con ciclo día/noche/niebla, caché LRU, escalado de calidad, respaldo procedural y mejoras de dirección visual, sin tocar ninguno de los archivos de Codex ni de Claude.
-- **Hecho (sobre `origin/main` `f1510e1`, Motor City `4.9.0`, 0 líneas modificadas en `js/45-tres.js`, `js/45-gl.js`, `js/47-clasicos.js`, `arte/fachadas/medellin/`, `geo/territorio.py`, `datos/medellin/mundo.mc4` y `juegos/getaway/60-modos.js`):**
-  - **Fase 1 — 18 texturas originales `1024 × 256` RGBA WebP (`arte/arcade/biomas/*.webp`, `540,58 KB` total) + `arte/arcade/biomas/manifiesto.json`:**
-    - Biomas con identidad geológica y regional colombiana: `costa` (espuma de rompiente, faro lejano, cocoteros con anillos de corteza y pasto de duna), `desierto` (mesetas estratificadas, barrancos de arenisca roja, cardones acostillados y agaves), `bosque` (cintas de neblina andina, guayacanes amarillos en flor, helechos arbóreos y raíces de contrafuerte), `montana` (clave canónica sin `ñ`: barrancos de la cordillera central, cascada plateada de quebrada andina, talud de tierra colorada y frailejones de páramo), `nieve` (picos glaciares con grietas azul hielo y abetos subalpinos nevados) y `lagos` (monolito granítico estriado estilo Piedra del Peñol, islas con orillas de tierra roja saprolítica de Guatapé y juncos), con `llanura` manteniendo el respaldo procedural para verificar el fallback.
-    - Capas: `lejos` (`velocidad: 0.12`), `medio` (`velocidad: 0.35`), `cerca` (`velocidad: 0.70`), transparencia real (`24,6 % – 79,0 %`), fila superior `y = 0` 100 % transparente, iluminación neutra cenital y costura horizontal exacta **`costura_mae = 0.0000`** en los 18 archivos.
-  - **Fase 2 — Integración aditiva en `MC.Arcade` (`js/47-paralaje-biomas.js` → `MC.ParalajeBiomas`):**
-    - Envoltura no invasiva sobre `Arcade.prototype.dibujar` que reemplaza las 2 montañas procedurales por las 3 capas del bioma detrás de la calzada, árboles, postes, edificios y vehículos (jamás invade la carretera ni el HUD: `difCalzada < 0,36 / 255`).
-    - Detección del bioma real del mundo 3D (`M.carretera.bioma(C.y)`) con transición suave (`crossfade`), capa 0 ultra-lejana (`vel: 0.04`) con cirros y bandadas de aves en V, aureola solar crepuscular detrás de la cordillera lejana, velos dinámicos de neblina de valle entre planos (`lejos ↔ medio ↔ cerca`), tinte dinámico día/noche/bruma/niebla/lluvia desde `cieloRetro(E)` (`source-atop`), caché LRU acotada a `<= 2` biomas (`máximo 6 imágenes`), reducción automática de calidad (`calidad = 0.50 → 2 capas`, `calidad = 0.30 → respaldo procedural`) y respaldo procedural automático si falta cualquier textura o en `llanura`.
-  - **Fase 3 — Jugabilidad y dirección visual Arcade:**
-    - Chevrones diegéticos de anticipación de curvas sobre la cresta exterior del horizonte (`|curva| > 0.14 rad`), inclinación lateral centrífuga en curvas, líneas periféricas de velocidad (`v > 19 m/s`), velo atmosférico de costura en el horizonte y velocidades coprimas `12 : 35 : 70`.
-  - **Documentación, pruebas y capturas:**
-    - [`docs/PLAN-V4-PARALAJE-GEMINI.md`](docs/PLAN-V4-PARALAJE-GEMINI.md) (incluye síntesis de 5 líneas de la lectura obligatoria y parche opcional de 2 líneas para `js/47-clasicos.js:157`).
-    - [`reportes/gemini-v4-paralaje-biomas.md`](reportes/gemini-v4-paralaje-biomas.md) + 27 imágenes WebP en `reportes/img/gemini-v4/` (6 vistas previas de repetición 3× + comparativas antes/después día y noche en `412×860` y `860×412`).
-    - [`pruebas/paralaje-biomas.mjs`](pruebas/paralaje-biomas.mjs): suite E2E en Node + Chromium.
-- **Cómo lo probé (las 5 órdenes obligatorias de § 7 en verde):**
-  - `node herramientas/construir.mjs` (`motor.js` `2478 KB`, `dist/juegos/getaway.html` `26844 KB`, `+751 KB` / `+2,88 %`);
-  - `node pruebas/prueba.mjs --navegador` (**158/158 en verde**, `112,2 s`, `0` errores);
-  - `node pruebas/tres.mjs` (**en verde**, `VistaTres` día/dron/noche/clásico, `0` errores);
-  - `node pruebas/modos.mjs` (**en verde**, carreras, extremo, mandados, EnCicla, metro, acelerador fijo y mapa);
-  - `node pruebas/paralaje-biomas.mjs` (**18/18 texturas y 7/7 escenas de bioma en verde**, `costura_mae = 0.0000`, `lruMax = 2`, `imgsEnCache = 6`, `heapMB = 110.6`, respaldo y degradación de calidad verificados).
-- **Falta / Siguiente paso:**
-  - **Claude:** revisar e integrar el [PR #18](https://github.com/juanfeliperico369-stack/motorcity/pull/18) de `ia/antigravity/v4-paralaje-biomas` en `main` (y opcionalmente aplicar el parche de 2 líneas en `js/47-clasicos.js:157` documentado en `docs/PLAN-V4-PARALAJE-GEMINI.md` § 3.2).
-  - **Autor / QA físico:** verificar la sensación visual de los 6 biomas en un celular físico con GPU.
-- **Instrucción obligatoria para la siguiente IA (Claude, Codex, ChatGPT o quien siga):** al terminar tu turno, **deja siempre tu propio documento de contexto y relevo**: añade tu entrada aquí en `CONTEXTO-RELEVO.md` § 8 (sin borrar las anteriores), actualiza tu ficha en `coord/agentes/<tu-id>.json`, deja un mensaje en `coord/buzon/` y **especifícale exactamente esta misma obligación a la siguiente IA**.
-
-
 
 ### Codex · 22-nov-2026 · R1 fachadas de Medellín
 
@@ -800,6 +773,53 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
   - fase 4: lenguaje de misiones, repeticiones exactas y bot que las gana.
 - **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
 
+### ChatGPT · 22-nov-2026 · R3 fuente oficial potencial de pisos
+- **Leído:** relevo 4.9, plan de realismo, `docs/PEDIDOS-CHATGPT-4.9.md`, bitácora, documentación del motor, skills y reporte R1 de Codex.
+- **Hecho:** localicé la capa municipal `VC_Catastro_VCT/MapServer/8` (Construccion) con geometrías, `numero_pisos`, `numero_sotanos`, `tipo_construccion`, `id_construccion` y SRID 9377, distinta de la capa parcial documentada por Codex. No es evidencia aún de cobertura en todas las comunas.
+- **Código:** `geo/auditar_pisos_catastro.py` solicita solo 4 recuentos estadísticos, sin descarga de predios, y solo al activarlo con `--consultar`. Informe `reportes/2026-11-22-chatgpt-r3-catastro-fuente-oficial.md`.
+- **Probado:** 7 verificaciones sintéticas y compilación Python 3 aprobadas. Consulta de red, cobertura por comuna, licencia y correspondencia con ED1 pendientes.
+- **No tocado:** MC4, `geo/territorio.py`, mundos, guardados, R1 de Codex, V4 de Gemini, ni `main`.
+- **Siguiente paso:** verificar licencia, recuentos reales, proyección EPSG:9377, unión geométrica y cobertura por comuna antes de integrar oficialmente los pisos.
+- **Coordinación:** `coord/agentes/chatgpt-r3.json` y `coord/buzon/20261122-2055-chatgpt-r3.md`. Al siguiente agente se le pide mantener este relevo §8 con pruebas y límites.
+
+### ChatGPT · 22-nov-2026 · R4 techos Overture (relevo de Codex R1)
+- **Contexto leído:** `docs/PEDIDOS-CHATGPT-4.9.md`, `docs/PLAN-REALISMO.md`, `docs/TURNO-CERO.md`, bitácora 4.7–4.9 y las skills del motor. Codex entregó la integración R1 en PR #15, con GitHub Actions en verde y R3/R4 pendientes.
+- **Hecho:** nueva herramienta `geo/auditar_cubiertas_overture.py` que mide, sin editar mundo ni hacer red, la cobertura de `roof_shape`, `roof_color`, `roof_material`, `facade_color`, `facade_material`, alturas y pisos en `geo/cache/edificios.parquet`; informe `reportes/2026-11-22-chatgpt-r4-auditoria-overture.md`.
+- **Hallazgo:** `geo/fetch.py` ya solicita varios campos de tejado de Overture; `geo/territorio.py` no los selecciona. La caché tampoco preserva el ID Overture en la selección actual, y el MC4 fusionado emplea ED1 de El Metro: falta comprobar la correspondencia de cada huella antes de aplicar datos.
+- **Probado:** prueba sintética de ocho condiciones y `py_compile` de Python 3. La ejecución con Parquet real está pendiente; no hay datos para declarar porcentajes de techo.
+- **No tocado:** `js/45-tres.js`, R1, `geo/territorio.py`, `herramientas/fusionar.mjs`, `datos/medellin/mundo.mc4`, guardados ni ramas de otras IA.
+- **Falta:** medir cobertura con caché, incorporar IDs y una unión geométrica inequívoca; para R3 conseguir pisos oficiales fuera de Popular, El Poblado y Robledo. R5 no se aplica hasta decisión de licencia del autor.
+- **Coordinación:** `coord/agentes/chatgpt-r4.json` y `coord/buzon/20261122-2055-chatgpt-r4.md`; Codex conserva `coord/agentes/chatgpt.json` para que no haya conflicto.
+- **Siguiente IA:** actualizar también esta sección §8 con los resultados reales, pruebas, limitaciones y riesgos; entregar el mismo contrato al siguiente agente.
+
+
+### ChatGPT · actualización R4-R3 del 22-nov-2026 · Unión espacial validada sintéticamente
+- Se añadieron geo/reproyectar_huellas_fuente.py y geo/cruzar_huellas_seguros.py para convertir WGS84/9377 al MC4 local y rechazar asignaciones erróneas de techos y pisos por intersección, márgenes y duplicados. Ver reportes/2026-11-22-chatgpt-r4-preparacion-cruce.md.
+- CI dedicada run 45099980386: 23 comprobaciones sintéticas aprobadas y Python compila; 8 atributos, 8 coincidencias, 7 proyección. Una ejecución anterior falló por literal de nueva línea y se corrigió.
+- Aún no hay porcentajes de cobertura real ni licencia oficial verificada para redistribuir datos catastrales; nada se aplicó al MC4 o render. Siguiente agente debe ejecutar la cadena sobre datos autorizados, medir falsos positivos y dejar informe de cobertura por comuna.
+
+### ChatGPT · 22-nov-2026 · R5 relieve (solo informe y licencia)
+- **Pedido del autor:** continuar lo pendiente de Codex en orden `docs/PEDIDOS-CHATGPT-4.9.md`, sin tocar `main` ni otros juegos.
+- **Investigado:** ficha oficial del MDT LiDAR 2024 de Medellín, malla de **1 m**, **37.639,66 ha**, **EPSG:9377**, generado por la Alcaldía y custodiado/distribuido por IGAC, con licencia declarada **CC BY-SA 4.0**. Universidad de Bristol indica **CC BY-NC-SA 4.0** para FABDEM, por lo que no se incorpora para uso comercial sin permiso. Ver `reportes/2026-11-22-chatgpt-r5-relieve-licencias.md`.
+- **Hecho:** informe comparativo de fuentes, obligaciones de licencia, ruta de integración hipotética y condiciones de autorización. **No se descargó ni procesó un MDT; no se modificó MC4 ni código jugable.**
+- **Verificado:** metadatos de ICDE/IGAC y fichas de licencia. No pruebas de motor porque esta entrega no lo modifica. La etiqueta «datos descargables» del catálogo no implica que el archivo se haya descargado o se haya comprobado su acceso.
+- **Falta:** decisión **expresa del autor** sobre licencia CC BY-SA para la cartografía derivada, verificación del archivo real, precisión y referencia vertical, y pruebas antes de modificar el juego. Mantener el terreno actual mientras tanto.
+- **Coordinación:** `coord/agentes/chatgpt-r5.json` y `coord/buzon/20261122-2055-chatgpt-r5.md`, sin pisar Codex R1, ChatGPT R3/R4 o Gemini V4. A la próxima IA le corresponde registrar su trabajo y riesgos en §8.
+
+### ChatGPT · 22-nov-2026 · R6 prehorneado de sectores 1 km y 3 LOD
+- **Pedido:** continuar R3/R4/R6 tras la integración R1 de Codex, con Gemini trabajando V4 en paralelo y respetando el plan de Motor City 4.9.
+- **Hecho:** `herramientas/precocinar-sectores.mjs` lee MC4 ED1/EDJ y relieve existentes, construye mallas por sector de **1 km**, con LOD 0 (huellas), LOD 1 (cajas orientadas) y LOD 2 (agrupación lejana de 40 m). Exporta deflateRaw, sumas SHA-256, clases y manifiesto. No hay modificaciones del MC4.
+- **Pruebas locales:** `node --check` y `node herramientas/precocinar-sectores.mjs --self-test`: 2 sectores, 3 niveles, 46/40/30 triángulos, 873 bytes en fixture, comprobación de EDJ y ED1 sintéticos y de hashes. Se añadió CI de medición con Guatapé real en `.github/workflows/r6-sectores-qa.yml`.
+- **Límites:** herramienta de construcción, no activación de render. No afirmar mejora de FPS ni reducción de memoria en teléfono hasta conectar los datos en VistaTres, comparar pesos reales y probar GPU.
+- **Falta:** prehornear/medir Medellín real, conectar el lector offline al HTML único con carga diferida y respaldo a malla actual, y ejecutar pruebas completas del motor antes de fusionar.
+- **Coordinación:** informe `reportes/2026-11-22-chatgpt-r6-sectores-lod.md`, ficha `coord/agentes/chatgpt-r6.json` y mensaje `coord/buzon/20261122-2055-chatgpt-r6.md`. No tocar R1 de Codex, V4 de Gemini o trabajos R3/R4/R5.
+- **Para la siguiente IA:** registrar resultados cuantitativos del MC4 verdadero, pruebas de compatibilidad, riesgos y límites en este relevo §8 antes de cualquier fusión.
+
+
+### ChatGPT · actualización R6 del 22-nov-2026 · Precocinado medido en Medellín real
+- CI específica 45099935194 exitosa: Guatapé 21 sectores/440.925 bytes; Medellín 2.086 sectores, LOD 0/1/2 6.853.547/6.394.570/2.339.000 triángulos y 101.492.868 bytes, 13,17 s de generación. Salida solo LOD 2: 10.646.954 bytes y 2,29 s, ahorro medido del 89,5 % contra los tres niveles; 281 MB RSS del proceso, no memoria GPU.
+- El prehorneador usa ahora coordenadas relativas cuantizadas i16 a 5 cm cuando caben, fallback f32 cuando no, opción --niveles para evitar generar bloques no usados y --exportar-huellas para extracción de huellas MC4 con fines de auditoría R3/R4. El MC4 original, guardados, shaders y HTML no se modificaron.
+- Es un artefacto de construcción, todavía NO un motor más rápido: un LOD 2 de 2,339 millones de triángulos no debe cargarse completo ni sumarse al HTML sin caché espacial. A la siguiente IA le corresponde medir presupuesto de carga por sector y la reducción de geometría real en VistaTres; registrar resultados de las cuatro suites y no afirmar FPS sin pruebas.
 ### Gemini · Antigravity («hydrogen») · 23‑nov‑2026 · 5.0 · G5‑01 Vista «Historieta» (Chinatown Wars)
 - **Pedido:** `G5-01` de `docs/PEDIDOS-GEMINI-5.0.md` (rama `ia/gemini/g5-01-historieta`).
 - **Hecho:**
@@ -811,6 +831,33 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 - **Pruebas:** `node herramientas/construir.mjs`, `node pruebas/historieta.mjs` (`pitchGrados: 55`, `angCamGrados: 55`, `regiones3D: 12`, `cascoTres: true`, `pctContorno: 36.08%`, `hudSolapa: 0`), `node pruebas/dinamica.mjs` (19/19), `node pruebas/modos.mjs`, `node pruebas/humano.mjs` y `node pruebas/prueba.mjs --navegador`.
 - **Sigue (Gemini):** `G5-02` (anillos de recoger y entregar en Mandados/EnCicla y controles de vuelo para jetpack y avión en rama `ia/gemini/g5-02-anillos`), `G5-03` (`datos/frases/*.json`) y `G5-07` (fichas de los ~30 sitios icónicos de Medellín empezando por el Edificio Coltejer).
 - **Instrucción para la IA que siga:** deja tu entrada en este § 8 de `CONTEXTO-RELEVO.md`, tu mensaje en `coord/buzon/` y actualiza tu ficha en `coord/agentes/`.
+
+### Gemini Antigravity — Motor City V4 · 23‑nov‑2026 · Misión V4: Revolución Visual de los Biomas y el Modo Arcade (`ia/antigravity/v4-paralaje-biomas`)
+- **Encargo oficial ([Issue #14](https://github.com/juanfeliperico369-stack/motorcity/issues/14)):** Desarrollar en sala limpia las 18 texturas originales `1024 × 256` RGBA WebP (`6 biomas × 3 capas` de paralaje sin costuras), integrarlas en `MC.Arcade` sobre el mismo mundo 3D con ciclo día/noche/niebla, caché LRU, escalado de calidad, respaldo procedural y mejoras de dirección visual, sin tocar ninguno de los archivos de Codex ni de Claude.
+- **Hecho (sobre `origin/main` `f1510e1`, Motor City `4.9.0`, 0 líneas modificadas en `js/45-tres.js`, `js/45-gl.js`, `js/47-clasicos.js`, `arte/fachadas/medellin/`, `geo/territorio.py`, `datos/medellin/mundo.mc4` y `juegos/getaway/60-modos.js`):**
+  - **Fase 1 — 18 texturas originales `1024 × 256` RGBA WebP (`arte/arcade/biomas/*.webp`, `540,58 KB` total) + `arte/arcade/biomas/manifiesto.json`:**
+    - Biomas con identidad geológica y regional colombiana: `costa` (espuma de rompiente, faro lejano, cocoteros con anillos de corteza y pasto de duna), `desierto` (mesetas estratificadas, barrancos de arenisca roja, cardones acostillados y agaves), `bosque` (cintas de neblina andina, guayacanes amarillos en flor, helechos arbóreos y raíces de contrafuerte), `montana` (clave canónica sin `ñ`: barrancos de la cordillera central, cascada plateada de quebrada andina, talud de tierra colorada y frailejones de páramo), `nieve` (picos glaciares con grietas azul hielo y abetos subalpinos nevados) y `lagos` (monolito granítico estriado estilo Piedra del Peñol, islas con orillas de tierra roja saprolítica de Guatapé y juncos), con `llanura` manteniendo el respaldo procedural para verificar el fallback.
+    - Capas: `lejos` (`velocidad: 0.12`), `medio` (`velocidad: 0.35`), `cerca` (`velocidad: 0.70`), transparencia real (`24,6 % – 79,0 %`), fila superior `y = 0` 100 % transparente, iluminación neutra cenital y costura horizontal exacta **`costura_mae = 0.0000`** en los 18 archivos.
+  - **Fase 2 — Integración aditiva en `MC.Arcade` (`js/47-paralaje-biomas.js` → `MC.ParalajeBiomas`):**
+    - Envoltura no invasiva sobre `Arcade.prototype.dibujar` que reemplaza las 2 montañas procedurales por las 3 capas del bioma detrás de la calzada, árboles, postes, edificios y vehículos (jamás invade la carretera ni el HUD: `difCalzada < 0,36 / 255`).
+    - Detección del bioma real del mundo 3D (`M.carretera.bioma(C.y)`) con transición suave (`crossfade`), capa 0 ultra-lejana (`vel: 0.04`) con cirros y bandadas de aves en V, aureola solar crepuscular detrás de la cordillera lejana, velos dinámicos de neblina de valle entre planos (`lejos ↔ medio ↔ cerca`), tinte dinámico día/noche/bruma/niebla/lluvia desde `cieloRetro(E)` (`source-atop`), caché LRU acotada a `<= 2` biomas (`máximo 6 imágenes`), reducción automática de calidad (`calidad = 0.50 → 2 capas`, `calidad = 0.30 → respaldo procedural`) y respaldo procedural automático si falta cualquier textura o en `llanura`.
+  - **Fase 3 — Jugabilidad y dirección visual Arcade:**
+    - Chevrones diegéticos de anticipación de curvas sobre la cresta exterior del horizonte (`|curva| > 0.14 rad`), inclinación lateral centrífuga en curvas, líneas periféricas de velocidad (`v > 19 m/s`), velo atmosférico de costura en el horizonte y velocidades coprimas `12 : 35 : 70`.
+  - **Documentación, pruebas y capturas:**
+    - [`docs/PLAN-V4-PARALAJE-GEMINI.md`](docs/PLAN-V4-PARALAJE-GEMINI.md) (incluye síntesis de 5 líneas de la lectura obligatoria y parche opcional de 2 líneas para `js/47-clasicos.js:157`).
+    - [`reportes/gemini-v4-paralaje-biomas.md`](reportes/gemini-v4-paralaje-biomas.md) + 27 imágenes WebP en `reportes/img/gemini-v4/` (6 vistas previas de repetición 3× + comparativas antes/después día y noche en `412×860` y `860×412`).
+    - [`pruebas/paralaje-biomas.mjs`](pruebas/paralaje-biomas.mjs): suite E2E en Node + Chromium.
+- **Cómo lo probé (las 5 órdenes obligatorias de § 7 en verde):**
+  - `node herramientas/construir.mjs` (`motor.js` `2478 KB`, `dist/juegos/getaway.html` `26844 KB`, `+751 KB` / `+2,88 %`);
+  - `node pruebas/prueba.mjs --navegador` (**158/158 en verde**, `112,2 s`, `0` errores);
+  - `node pruebas/tres.mjs` (**en verde**, `VistaTres` día/dron/noche/clásico, `0` errores);
+  - `node pruebas/modos.mjs` (**en verde**, carreras, extremo, mandados, EnCicla, metro, acelerador fijo y mapa);
+  - `node pruebas/paralaje-biomas.mjs` (**18/18 texturas y 7/7 escenas de bioma en verde**, `costura_mae = 0.0000`, `lruMax = 2`, `imgsEnCache = 6`, `heapMB = 110.6`, respaldo y degradación de calidad verificados).
+- **Falta / Siguiente paso:**
+  - **Claude:** revisar e integrar el [PR #18](https://github.com/juanfeliperico369-stack/motorcity/pull/18) de `ia/antigravity/v4-paralaje-biomas` en `main` (y opcionalmente aplicar el parche de 2 líneas en `js/47-clasicos.js:157` documentado en `docs/PLAN-V4-PARALAJE-GEMINI.md` § 3.2).
+  - **Autor / QA físico:** verificar la sensación visual de los 6 biomas en un celular físico con GPU.
+- **Instrucción obligatoria para la siguiente IA (Claude, Codex, ChatGPT o quien siga):** al terminar tu turno, **deja siempre tu propio documento de contexto y relevo**: añade tu entrada aquí en `CONTEXTO-RELEVO.md` § 8 (sin borrar las anteriores), actualiza tu ficha en `coord/agentes/<tu-id>.json`, deja un mensaje en `coord/buzon/` y **especifícale exactamente esta misma obligación a la siguiente IA**.
+
 
 
 # MOTOR CITY · Documento único

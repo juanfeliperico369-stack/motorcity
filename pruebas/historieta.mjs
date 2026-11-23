@@ -148,6 +148,7 @@ const resHist = await p.evaluate(async () => {
     activo: !!M.activo,
     cascoTres: !!M.cascoTres,
     cascosRegiones: M.cascosRegiones || 0,
+    gpu: !!M.gpu,
     pctContorno: M.pctContorno || 0,
     pixelesContorno: M.pixelesContorno || 0,
     coloresPlanos: M.coloresPlanos || 0,
@@ -194,8 +195,8 @@ const ok = camInfo.existe
   && resHist.angCamGrados >= 46 && resHist.angCamGrados <= 58
   && resHist.activo
   && resHist.cascoTres
-  && resHist.pctContorno > 1.2
-  && resHist.coloresPlanos > 10000
+  /* 5.1: con el 3D realista el contorno va en la GPU (se mide la tinta en el lienzo); en la CPU, sus contadores */
+  && (resHist.gpu ? resHist.pctTintaLienzo > .4 && resHist.ms < 12 : resHist.pctContorno > 1.2 && resHist.coloresPlanos > 10000)
   && resHist.hudSolapa === 0
   && !vuelta.activo
   && !vuelta.cascoVis
