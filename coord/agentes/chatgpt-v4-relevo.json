@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "agente": "chatgpt-v4-relevo",
+  "marca": "ChatGPT (OpenAI)",
+  "fecha_local": "2026-11-22",
+  "rama": "ia/chatgpt/v4-relevo-antigravity-20261122",
+  "origen": "Gemini Antigravity PR #18, commit 1e8da23931ecede100d1c5249c716324ee0521cc",
+  "tarea": "Auditoría y corrección de regresiones de la integración V4 Arcade; PR apilado sobre la rama de Gemini",
+  "hecho": [
+    "Arreglada prueba de presupuesto LRU de rasters del MC4 (C-M34)",
+    "Precarga de biomas respetando máximo 2 biomas/6 imágenes",
+    "No intervenir en VistaTres desde Arcade",
+    "Evitar fundido de bioma con dt doble",
+    "Calidad media usa lejos/medio",
+    "E2E ampliada y CI dedicada"
+  ],
+  "limitaciones": [
+    "18 imágenes WebP de Gemini no se alteran",
+    "No integrado a main",
+    "Artefactos dist no regenerados en commit",
+    "GPU física y consumo de energía aún sin medir"
+  ],
+  "archivos": [
+    "js/47-paralaje-biomas.js",
+    "pruebas/paralaje-biomas.mjs",
+    "pruebas/paquete-capas-browser.mjs",
+    ".github/workflows/v4-relevo-qa.yml",
+    "reportes/2026-11-22-chatgpt-relevo-gemini-v4.md"
+  ],
+  "coordinacion": [
+    "Gemini PR #18",
+    "Codex R1 PR #15",
+    "ChatGPT R3/R4/R5/R6 PR #16,17,19,20"
+  ],
+  "pruebas": "Pendiente resultado de nueva ejecución GitHub Actions para esta rama",
+  "siguiente": "Claude: merge PR de relevo contra rama de Gemini, reconstruir dist, luego revisar PR #18 para main; conservar historial de autoría."
+}
