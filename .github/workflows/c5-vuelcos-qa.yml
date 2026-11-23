@@ -1,0 +1,36 @@
+name: Motor City · C5-01 vuelcos y deformación
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'js/38-vuelcos.js'
+      - 'js/45-gl.js'
+      - 'juegos/getaway/20-juego.js'
+      - 'pruebas/vuelcos.mjs'
+      - '.github/workflows/c5-vuelcos-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  c5-vuelcos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Compilar juego offline y comprobar sintaxis
+        run: |
+          node --check js/38-vuelcos.js
+          node --check pruebas/vuelcos.mjs
+          node motor.mjs construir
+      - name: Dinámica de vuelcos determinista
+        run: node pruebas/vuelcos.mjs
+      - name: Regresión de la física previa (motos, frenadas, tráfico)
+        run: node pruebas/dinamica.mjs
+      - name: Construcción sin regresión Node
+        run: node motor.mjs prueba
