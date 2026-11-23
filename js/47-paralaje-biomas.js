@@ -25,6 +25,7 @@ const ParalajeBiomas = {
   _tintes: new Map(),
   _ordenLRU: [],
   _estado: { bioma: null, anterior: null, mezcla: 1, mundo: null, yUlt: null },
+  _transicionPendiente: null,
   metricas: {
     decodificadas: 0,
     aciertosCache: 0,
@@ -233,14 +234,15 @@ const ParalajeBiomas = {
 
   /* Comprueba si el bioma actual tiene sus 3 capas listas para reemplazar las montañas procedurales */
   listoPara(M, C, E) {
-    if (!this.activo) { this.metricas.fallbackActivo = true; return false; }
+    if (!this.activo) { this._transicionPendiente = null; this.metricas.fallbackActivo = true; return false; }
     const niveles = this.nivelesPorCalidad(E);
-    if (!niveles.length) { this.metricas.fallbackActivo = true; return false; }
+    if (!niveles.length) { this._transicionPendiente = null; this.metricas.fallbackActivo = true; return false; }
     const tr = this.muestrearTransicion(M, C, E && E.dt);
-    if (!this.esBiomaSoportado(tr.actual)) { this.metricas.fallbackActivo = true; return false; }
+    if (!this.esBiomaSoportado(tr.actual)) { this._transicionPendiente = null; this.metricas.fallbackActivo = true; return false; }
     const imgs = this._asegurarImagenes(tr.actual);
-    if (!imgs) { this.metricas.fallbackActivo = true; return false; }
+    if (!imgs) { this._transicionPendiente = null; this.metricas.fallbackActivo = true; return false; }
     if (tr.vecino && this.esBiomaSoportado(tr.vecino)) this._asegurarImagenes(tr.vecino);
+    this._transicionPendiente = { mundo: M, evento: E, valor: tr };
     this.metricas.fallbackActivo = false;
     return true;
   },
@@ -251,7 +253,11 @@ const ParalajeBiomas = {
     const M = arcade.M, C = cuerpoRetro(E), cielo = cieloRetro(E);
     const niebla = E && E.clima ? E.clima.niebla || 0 : 0, lluvia = E && E.clima ? E.clima.lluvia || 0 : 0, noche = cielo.noche || 0;
     const niveles = this.nivelesPorCalidad(E);
-    const tr = this.muestrearTransicion(M, C, E && E.dt);
+    /* El método listoPara ya actualizó la transición este cuadro: no sumar dt dos veces. */
+    const trPrev = this._transicionPendiente;
+    this._transicionPendiente = null;
+    const tr = trPrev && trPrev.mundo === M && trPrev.evento === E
+      ? trPrev.valor : this.muestrearTransicion(M, C, E && E.dt);
     const imgsA = this._asegurarImagenes(tr.actual);
     if (!imgsA || !niveles.length) { this.metricas.fallbackActivo = true; return 0; }
     const imgsB = (tr.vecino && tr.pesoVecino > .02 && this.esBiomaSoportado(tr.vecino)) ? this._asegurarImagenes(tr.vecino) : null;
@@ -447,6 +453,7 @@ const ParalajeBiomas = {
 
   /* Libera lienzos e imágenes en caché al cambiar de mundo o cerrar la vista */
   liberar() {
+    this._transicionPendiente = null;
     this._imgs.clear();
     this._tintes.clear();
     this._ordenLRU.length = 0;
