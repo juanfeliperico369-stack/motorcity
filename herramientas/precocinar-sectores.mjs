@@ -234,7 +234,42 @@ function selfTest(){
     console.log('✓ R6: MC4 EDJ+ED1, 2 sectores, 3 LOD, '+m.triangulos.join('/')+' triángulos, '+m.bytes_compresos+' bytes comprimidos y checksums OK');
   }finally{fs.rmSync(outdir,{recursive:true,force:true});}
 }
+function exportarHuellas(c,salida,hashOrigen){
+  // Solo preparación local para la auditoría R3/R4; NUNCA se empaqueta por defecto.
+  const ec=c.meta.capas.comuna, raw=ec&&ec.tipo==='u8'?c.capa('comuna'):null;
+  let nombres=[];
+  try{nombres=JSON.parse(c.capa('info').toString('utf8')).comunas||[];}catch{};
+  const ms=ec?ec.paso*c.meta.tile:0,w=ec?.w||0,h=ec?.h||0;
+  const nombre=e=>{
+    if(!raw||!ms||!w||!h)return 'sin_comuna';
+    const i=limite(Math.floor(e.x/ms),0,w-1),j=limite(Math.floor(e.y/ms),0,h-1),code=raw[j*w+i];
+    return code>0&&code<=nombres.length?nombres[code-1]:'sin_comuna';
+  };
+  fs.mkdirSync(path.dirname(salida),{recursive:true});
+  const fd=fs.openSync(salida,'w');let n=0;
+  try{
+    fs.writeSync(fd,JSON.stringify({type:'FeatureCollection',crs:'MC4-LOCAL-METROS',origen_sha256:hashOrigen}).slice(0,-1)+',"features":[');
+    for(const e of edificiosDe(c)){
+      const P=esquinas(e),anillo=[];
+      for(let k=0;k<P.length;k+=2)anillo.push([P[k],P[k+1]]);
+      anillo.push(anillo[0]);
+      const feature={type:'Feature',id:'edificio-'+n,properties:{comuna:nombre(e),pisos_estimados:e.pis},
+        geometry:{type:'Polygon',coordinates:[anillo]}};
+      fs.writeSync(fd,(n?',':'')+JSON.stringify(feature));n++;
+    }
+    fs.writeSync(fd,']}');
+  }finally{fs.closeSync(fd);}
+  return n;
+}
+
 if(process.argv.includes('--self-test'))selfTest();
+else if(process.argv.includes('--exportar-huellas')){
+  const entrada=arg('--entrada'),salida=arg('--exportar-huellas');
+  if(!entrada||!salida)error('faltan --entrada y --exportar-huellas');
+  const bytes=fs.readFileSync(entrada),c=mc4(bytes),t=performance.now();
+  const edificios=exportarHuellas(c,salida,SHA(bytes));
+  console.log(JSON.stringify({ciudad:c.meta.ciudad,edificios,archivo:salida,bytes:fs.statSync(salida).size,elapsed_ms:Math.round(performance.now()-t)},null,2));
+}
 else{
   const entrada=arg('--entrada'),salida=arg('--salida');
   if(!entrada||!salida)error('uso: node herramientas/precocinar-sectores.mjs --entrada datos/medellin/mundo.mc4 --salida <directorio>');
