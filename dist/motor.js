@@ -1,4 +1,4 @@
-/* Motor City 5.1.0 · 2026-11-23 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 5.2.0 · 2026-11-23 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin internet; trae three.js 0.170 (MIT, © three.js authors) para el 3D realista.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -29,7 +29,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '5.1.0',
+  version: '5.2.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -3982,10 +3982,18 @@ class Cuerpo {
      (Antes se cortaba el tiempo de cada cuadro —a 0,1 s aquí y a 0,05 s en el modelo del taller—: con 15 cuadros por segundo el
      juego andaba en cámara lenta, y eso se sentía «pesado».) */
   actualizar(dt, E = {}) {
-    dt = Math.min(dt || 0, .2); if (dt <= .026) return this._paso(dt, E);
+    dt = Math.min(dt || 0, .2); const a0 = this.a; if (dt <= .026) { this._paso(dt, E); this._ladear(a0, dt); return this; }
     const n = Math.min(8, Math.ceil(dt / .025)), h = dt / n, ev = new Set();
     for (let i = 0; i < n; i++) { this._paso(h, i ? Object.assign({}, E, { salto: false }) : E); for (const e of this.eventos) ev.add(e); }
-    this.eventos.length = 0; for (const e of ev) this.eventos.push(e); return this;
+    this.eventos.length = 0; for (const e of ev) this.eventos.push(e); this._ladear(a0, dt); return this;
+  }
+  /* 5.2 · C5-01 (retomado por Claude): las motos y lo de ruedas (bici, patinete, skate, patines) se inclinan hacia adentro de la curva, φ = atan(v·ω/g) con la
+     gravedad real (9,81) y el giro de verdad (ω = cuánto cambió el rumbo), con tope (45° la moto, 32° la bici), suavizado como
+     el peso que se pasa de un lado al otro. En el aire y quieto, se endereza. Lo dibuja el 3D: el modelo, el piloto y las ruedas. */
+  _ladear(a0, dt) {
+    const k = this.veh && this.veh.clase; if (k !== 'moto' && k !== 'rueda') { this.ladeo = 0; return; } if (!(dt > 0)) return;
+    const w = angDif(a0, this.a) / dt, tope = k === 'moto' ? .78 : .56, obj = this.enAire || this.nadando ? 0 : clamp(Math.atan(this.v * w / 9.81), -tope, tope);
+    this.ladeo = (this.ladeo || 0) + (obj - (this.ladeo || 0)) * (1 - Math.exp(-dt / .14));
   }
   _paso(dt, E = {}) {
     const V = this.veh, M = this.mundo; this.eventos.length = 0; this._dt = dt;
@@ -5004,7 +5012,11 @@ const Dinamica = {
        rápida se va de largo de trompa, no hace trompo); la cola se suelta con el freno de mano o con potencia de sobra */
     const ue = Math.max(.5, au), af = Math.atan2(D.w + H.a * D.r, ue) - dl * Math.sign(D.u || 1), ar = Math.atan2(D.w - H.b * D.r, ue), Bf = H.rig / (1.4 * Math.max(.1, mu)), Br = Bf * 1.35, muR = mu * 1.06;
     const lat = (al, Fz, Fx, B, m2) => { const cap = Math.sqrt(Math.max(0, 1 - Math.min(1, (Fx / Math.max(1, m2 * Fz)) ** 2))); return -m2 * Fz * Math.sin(1.4 * Math.atan(B * al)) * Math.max(.25, cap); };
-    let Fyf = lat(af, Fzf, Fxf, Bf, mu), Fyr = lat(ar, Fzr, Fxr, Br, muR); if (U.mano) Fyr *= .2;
+    /* 5.2: casi quieto (menos de 0,5 m/s) la deriva se mide contra un piso de 0,5 m/s y, con el volante a tope, se inventaba un
+       derrape de la trompa que frenaba tanto como empujaba el motor: arrancando con el dedo de lado el carro no se movía. Ahí el carro
+       va por donde apuntan las ruedas (el cinemático de abajo), así que las fuerzas de lado entran de a poco desde 0 */
+    const kLat = clamp(au / .5, 0, 1);
+    let Fyf = lat(af, Fzf, Fxf, Bf, mu) * kLat, Fyr = lat(ar, Fzr, Fxr, Br, muR) * kLat; if (U.mano) Fyr *= .2;
     const ax = (Fxf * cd + Fxr - Fyf * sd - Fres) / m, ay = (Fxf * sd + Fyf * cd + Fyr) / m, dr = (H.a * (Fyf * cd + Fxf * sd) - H.b * Fyr) / H.Iz;
     const u0 = D.u; D.u += (ax + D.w * D.r) * h; D.w += (ay - D.u * D.r) * h; D.r += dr * h;
     /* control de estabilidad (ESP): si el carro gira más de lo que piden las ruedas y la cola se está yendo, frena por rueda (aquí:
@@ -6651,9 +6663,15 @@ class VistaGL {
   /* las cosas que se mueven, en una sola malla por cuadro */
   _dinamico(E) {
     const m = new Malla(), M = this.mundo, O = this.O, rel = (x, y, z) => [x - O[0], z - O[2], y - O[1]];
-    const pj = E.jugador; if (pj && !E._sinJugador) { const C = pj.cuerpo, A = pj.aspecto, zb = M.cota(C.x, C.y) + C.zPaso + C.z, J = Personaje.pose(C.estado || 'quieto', C.fase, { alto: A.alto, manubrio: C.veh.manubrio }), ca = Math.cos(C.a), sa = Math.sin(C.a), P = j => rel(C.x + ca * j[0], C.y + sa * j[0], zb + j[1]), Lp = (j, l) => { const p = P(j); return [p[0] - sa * l, p[1], p[2] + ca * l]; };
+    const pj = E.jugador; if (pj && !E._sinJugador) { const C = pj.cuerpo, A = pj.aspecto, zb = M.cota(C.x, C.y) + C.zPaso + C.z, J = Personaje.pose(C.estado || 'quieto', C.fase, { alto: A.alto, manubrio: C.veh.manubrio }), ca = Math.cos(C.a), sa = Math.sin(C.a), fi = C.veh.clase === 'moto' || C.veh.clase === 'rueda' ? C.ladeo || 0 : 0, cf = Math.cos(fi), sf = Math.sin(fi),
+        /* 5.2 · C5-01: moto y bici inclinadas φ hacia adentro de la curva (todo gira alrededor de la línea de las llantas en el piso) */
+        P = j => rel(C.x + ca * j[0] - sa * j[1] * sf, C.y + sa * j[0] + ca * j[1] * sf, zb + j[1] * cf), Lp = (j, l) => { const p = P(j); return [p[0] - sa * l * cf, p[1] - l * sf, p[2] + ca * l * cf]; };
       const piel = hex3(A.cPiel), cam = hex3(A.cCamisa), pan = hex3(A.cPantalon);
-      if (C.veh.clase !== 'pie') { const V = C.veh; if ((V.clase === 'auto' || V.clase === 'pesado') && this._sinCabeza) { /* 4.8 (pedido de Gemini): en primera persona no se dibuja la carrocería alrededor del ojo; solo el capó adelante, como la cámara de cabina */ if (V.clase === 'auto') { const r = rel(C.x + ca * 1.18, C.y + sa * 1.18, zb + .62); m.caja(r[0], r[1], r[2], C.a, 1.8, (V.ancho || 1.8) * .9, .1, hex3(V.color || '#c0392b')); } } else if (V.clase === 'auto' || V.clase === 'pesado') { const r = rel(C.x, C.y, zb + (C.rebote || 0)), Mo = Modelos.L.size ? Modelos.vehiculo({ tipo: V.clase === 'pesado' ? 'camion' : 'carro', modelo: V.modelo }) : null; if (Mo) m.modelo(Mo, r[0], r[1], r[2], C.a, { largo: V.largo, tinte: V.tinte || null, oscuro: pj.oscuro || 0, dano: pj.dano || null, distancia: 0, cab: C.cabeceo || 0, alab: C.alabeo || 0 }); else m.carro3d(r[0], r[1], r[2], C.a, V.largo, V.ancho, V.color || '#c0392b', V.clase === 'pesado' ? 'buseta' : 'carro', E.cielo ? E.cielo.noche : 0); } else { m.hueso(P([-.5, .35]), P([.55, .35]), .04, hex3('#1b1f27')); m.hueso(P([-.05, .4]), P([.3, .85]), .035, hex3(V.color || '#7ab800')); m.hueso(P([.55, .35]), P([.38, 1.0]), .03, hex3('#2b2f38')); for (const u of [-.52, .55]) m.caja(...rel(C.x + ca * u, C.y + sa * u, zb), C.a, .68, .06, .68, hex3('#1b1f27')); } }
+      if (C.veh.clase !== 'pie') { const V = C.veh; if ((V.clase === 'auto' || V.clase === 'pesado') && this._sinCabeza) { /* 4.8 (pedido de Gemini): en primera persona no se dibuja la carrocería alrededor del ojo; solo el capó adelante, como la cámara de cabina */ if (V.clase === 'auto') { const r = rel(C.x + ca * 1.18, C.y + sa * 1.18, zb + .62); m.caja(r[0], r[1], r[2], C.a, 1.8, (V.ancho || 1.8) * .9, .1, hex3(V.color || '#c0392b')); } } else if (V.clase === 'auto' || V.clase === 'pesado') { const r = rel(C.x, C.y, zb + (C.rebote || 0)), Mo = Modelos.L.size ? Modelos.vehiculo({ tipo: V.clase === 'pesado' ? 'camion' : 'carro', modelo: V.modelo }) : null; if (Mo) m.modelo(Mo, r[0], r[1], r[2], C.a, { largo: V.largo, tinte: V.tinte || null, oscuro: pj.oscuro || 0, dano: pj.dano || null, distancia: 0, cab: C.cabeceo || 0, alab: C.alabeo || 0 }); else m.carro3d(r[0], r[1], r[2], C.a, V.largo, V.ancho, V.color || '#c0392b', V.clase === 'pesado' ? 'buseta' : 'carro', E.cielo ? E.cielo.noche : 0); } else { const Mm = V.clase === 'moto' && Modelos.L.size ? Modelos.vehiculo({ tipo: 'moto', modelo: V.modelo }) : null;
+        if (Mm) { const r = rel(C.x, C.y, zb); m.modelo(Mm, r[0], r[1], r[2], C.a, { largo: V.largo, tinte: V.tinte || null, oscuro: pj.oscuro || 0, dano: pj.dano || null, distancia: 0, alab: -fi, cab: C.cabeceo || 0 }); }
+        else { const neg = hex3('#1b1f27'); m.hueso(P([-.5, .35]), P([.55, .35]), .04, neg); m.hueso(P([-.05, .4]), P([.3, .85]), .035, hex3(V.color || '#7ab800')); m.hueso(P([.55, .35]), P([.38, 1.0]), .03, hex3('#2b2f38'));
+          /* las ruedas: un aro de 8 tramos que se inclina con la bici (antes, una caja que se quedaba derecha) */
+          for (const u of [-.52, .55]) for (let i = 0; i < 8; i++) { const a1 = i / 8 * TAU, a2 = (i + 1) / 8 * TAU; m.hueso(P([u + Math.cos(a1) * .33, .34 + Math.sin(a1) * .33]), P([u + Math.cos(a2) * .33, .34 + Math.sin(a2) * .33]), .045, neg); } } } }
       const MoJ = C.veh.clase === 'pie' && pj.modelo && !C.nadando ? Modelos.L.get(pj.modelo) : null; if (MoJ) { const r = rel(C.x, C.y, zb), clip = C.estado === 'corre' ? 'sprint_loop' : C.estado === 'camina' || Math.abs(C.v) > .3 ? (Math.abs(C.v) > 3.2 ? 'sprint_loop' : 'walk_loop') : 'idle_breath'; m.modelo(MoJ, r[0], r[1], r[2], C.a, { k: (A.alto || 1.7) / MoJ.alto, clip, t: E.t || 0 }); } else if (!(C.veh.clase === 'auto' || C.veh.clase === 'pesado')) { m.hueso(Lp(J.cadera, .12), Lp(J.rodI, .12), .07, pan); m.hueso(Lp(J.rodI, .12), Lp(J.pieI, .12), .06, pan); m.hueso(Lp(J.cadera, -.12), Lp(J.rodD, -.12), .07, pan); m.hueso(Lp(J.rodD, -.12), Lp(J.pieD, -.12), .06, pan); if (!this._sinCabeza) m.hueso(P(J.cadera), P(J.pecho), .17, cam); m.hueso(Lp(J.pecho, .2), Lp(J.codoI, .22), .05, cam); m.hueso(Lp(J.codoI, .22), Lp(J.manoI, .2), .045, A.manga ? cam : piel); m.hueso(Lp(J.pecho, -.2), Lp(J.codoD, -.22), .05, cam); m.hueso(Lp(J.codoD, -.22), Lp(J.manoD, -.2), .045, A.manga ? cam : piel); const h = P(J.cabeza); if (!this._sinCabeza) m.caja(h[0], h[1] - .13, h[2], C.a, .24, .22, .26, piel); if (this._sinCabeza) { /* en primera persona se ven las manos y el manubrio */ } else if (A.cCasco) m.caja(h[0], h[1] + .06, h[2], C.a, .3, .27, .12, hex3(A.cCasco)); else m.caja(h[0] - ca * .03, h[1] + .07, h[2] - sa * .03, C.a, .26, .24, .08, hex3(A.cPelo)); }
     }
     this._njug = m.d.length;   // 3.0: lo del jugador va primero (se repinta encima en las cámaras aéreas)
@@ -7212,11 +7230,54 @@ class VistaTres extends VistaGL {
         f.albedo = textura(dia, 1024); f.emision = textura(noche, 512);
         f.material = new T.MeshStandardMaterial({ map: f.albedo, emissiveMap: f.emision,
           emissive: 0xffffff, emissiveIntensity: 0, roughness: .9, side: T.DoubleSide });
+        this._cuartosR1(f.material, id, datos);
         f.listo = true; dia.onload = noche.onload = null; f.dia = f.noche = null; this._fachadasActualizar = true;
       };
       dia.onload = noche.onload = revisar;
       dia.src = datos.dia; noche.src = datos.noche;
     }
+  }
+  /* 5.2 · R8 (retomado por Claude): CUARTOS FALSOS detrás de las ventanas encendidas de noche («interior mapping», la idea de
+     Joost van Dongen, 2008; código propio). Cada vano de la textura R1 mide 2,7 × 3 m (columnas × pisos del manifiesto): detrás
+     de él se traza un rayo dentro de una caja de 2,7 × 3 × (3 a 5) m y se pinta lo que toca (pared del fondo con un cuadro o un
+     mueble, piso de madera o baldosa, techo con su lámpara, paredes de los lados), con la luz de una lámpara en el techo. La
+     máscara de la ventana (rejas y cortinas incluidas) sale de la textura de emisión; cada cuarto cambia de color, de hondo y de
+     luz (cálida, blanca o el azul de un televisor) según su sitio. Solo con GPU media o alta y calidad > 0,35 (uCuartos); en gama
+     baja y en la vista Historieta queda la ventana plana de siempre. */
+  _cuartosR1(mat, id, datos) {
+    const U = this.uCuartos || (this.uCuartos = { value: 0 });
+    mat.customProgramCacheKey = () => 'fachadaR1:' + id;
+    mat.onBeforeCompile = s => {
+      s.uniforms.uCuartos = U; s.uniforms.uRejR1 = { value: new THREE.Vector2(datos.columnas || 4, datos.pisos || 4) };
+      s.vertexShader = s.vertexShader.replace('#include <common>', '#include <common>\nattribute vec2 aTan;\nattribute float aSem;\nvarying vec3 vMundoF;\nvarying vec2 vTanF;\nvarying float vSemF;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvMundoF = (modelMatrix * vec4(transformed, 1.0)).xyz; vTanF = aTan; vSemF = aSem;');
+      s.fragmentShader = s.fragmentShader.replace('#include <common>', `#include <common>
+uniform float uCuartos; uniform vec2 uRejR1; varying vec3 vMundoF; varying vec2 vTanF; varying float vSemF;
+vec3 cuartoR1(vec2 uvc, vec3 pos) {
+  vec3 T = normalize(vec3(vTanF.x, 0.0, vTanF.y)), N = vec3(-T.z, 0.0, T.x), rd = normalize(pos - cameraPosition); if (dot(N, rd) > 0.0) N = -N;
+  float du = dot(rd, T), dv = rd.y, dw = max(dot(rd, -N), .06);
+  vec2 cel = uvc * uRejR1, f = fract(cel) * vec2(2.7, 3.0), k = floor(cel);
+  float s = fract(sin(vSemF * 91.7 + k.x * 12.9898 + k.y * 78.233) * 43758.5453), sb = fract(s * 7.13), sc = fract(s * 13.7), sd = fract(s * 3.71);
+  float D = 3.0 + 2.0 * sb;
+  vec3 pared = s < .55 ? vec3(.86, .79, .66) : s < .8 ? vec3(.62, .73, .8) : s < .92 ? vec3(.8, .62, .54) : vec3(.66, .78, .6);
+  vec3 piso = sc < .5 ? vec3(.34, .2, .11) : vec3(.42, .4, .37), techo = vec3(.95, .93, .9);
+  vec3 luz = sd < .14 ? vec3(.42, .58, 1.0) : sd < .6 ? vec3(1.0, .76, .48) : vec3(1.0, .93, .82);
+  float tU = du > 0.0 ? (2.7 - f.x) / du : -f.x / min(du, -1e-4), tV = dv > 0.0 ? (3.0 - f.y) / dv : -f.y / min(dv, -1e-4), tW = D / dw;
+  float t = min(min(tU, tV), tW); vec3 h = vec3(f.x + du * t, f.y + dv * t, dw * t); vec3 c;
+  if (t == tW) { c = pared;
+    c = mix(c, vec3(.22, .3, .42) + .45 * vec3(sc, s, sb), step(.45, sb) * step(abs(h.x - 1.35 - (sc - .5) * .6), .42) * step(abs(h.y - 1.8), .3));
+    c = mix(c, pared * .42, step(h.y, .8) * step(abs(h.x - 1.35 + (s - .5) * .9), .75)); }
+  else if (t == tV) c = dv > 0.0 ? techo : piso;
+  else c = pared * .62;
+  float dl = length(h - vec3(1.35, 2.85, D * .45));
+  c *= luz * (.16 + 1.3 / (1.0 + dl * dl * .4));
+  return c * (1.0 - .35 * h.z / D) * .74;
+}`).replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+#ifdef USE_EMISSIVEMAP
+  if (uCuartos > .5) { float masc = clamp(dot(emissiveColor.rgb, vec3(.3, .59, .11)) * 1.9, 0.0, 1.0);
+    totalEmissiveRadiance = totalEmissiveRadiance * .3 + emissive * cuartoR1(vEmissiveMapUv, vMundoF) * masc * 1.05; }
+#endif`);
+    };
   }
   _tipoFachada(e, st, Z) {
     const clase = e.clase || '';
@@ -7242,9 +7303,11 @@ class VistaTres extends VistaGL {
     const lado = area > 0 ? 1 : -1;
     const muro = (id, x0, y0, x1, y1, abajo, alto, u0, u1, v0, v1) => {
       const f = this._fachadas[id]; if (!f || !f.listo || alto <= 0) return;
-      const k = this._paredesR1[id] || (this._paredesR1[id] = { p: [], uv: [] });
+      const k = this._paredesR1[id] || (this._paredesR1[id] = { p: [], uv: [], t: [], s: [] });
       const x = [x0, x1, x1, x0], z = [y0, y1, y1, y0], y = [zb + abajo, zb + abajo, zb + abajo + alto, zb + abajo + alto];
-      for (const a of [0, 1, 2, 0, 2, 3]) { k.p.push(x[a], y[a], z[a]); k.uv.push(a === 0 || a === 3 ? u0 : u1, a < 2 ? v0 : v1); }
+      /* 5.2 · R8: la dirección del muro (hacia donde crece u) y una semilla por muro, para los cuartos falsos */
+      const lt = Math.hypot(x1 - x0, y1 - y0) || 1, tx = (x1 - x0) / lt, tz = (y1 - y0) / lt, sem = Math.abs(Math.sin((x0 + O[0]) * 12.9898 + (y0 + O[1]) * 78.233) * 43758.5453) % 1;
+      for (const a of [0, 1, 2, 0, 2, 3]) { k.p.push(x[a], y[a], z[a]); k.uv.push(a === 0 || a === 3 ? u0 : u1, a < 2 ? v0 : v1); k.t.push(tx, tz); k.s.push(sem); }
     };
     for (let i = 0; i < P.length; i += 2) {
       const j = (i + 2) % P.length, dx = P[j] - P[i], dy = P[j + 1] - P[i + 1], L = Math.hypot(dx, dy);
@@ -7270,6 +7333,7 @@ class VistaTres extends VistaGL {
       const geo = new T.BufferGeometry();
       geo.setAttribute('position', new T.Float32BufferAttribute(datos.p, 3));
       geo.setAttribute('uv', new T.Float32BufferAttribute(datos.uv, 2));
+      geo.setAttribute('aTan', new T.Float32BufferAttribute(datos.t, 2)); geo.setAttribute('aSem', new T.Float32BufferAttribute(datos.s, 1));
       geo.computeVertexNormals(); geo.computeBoundingSphere();
       const pared = new T.Mesh(geo, this._fachadas[id].material);
       pared.userData.fachadaR1 = id; pared.receiveShadow = true; grupo.add(pared);
@@ -7319,6 +7383,7 @@ class VistaTres extends VistaGL {
     const noche = S.noche || 0, dia = clamp(S.luzSol ?? .6, 0, 1), bajo = clamp(1 - L[1] * 1.8, 0, 1);
     this.uNoche.value = noche;
     for (const f of Object.values(this._fachadas)) if (f.material) f.material.emissiveIntensity = noche * 1.8;
+    if (this.uCuartos) { const nv = GPU.perfil().nivel; this.uCuartos.value = noche > .05 && cal > .35 && nv !== 'baja' && nv !== 'software' && !this.uPlano.value ? 1 : 0; }   /* R8: los cuartos falsos */
     this.hemi.intensity = .2 + 1.35 * clamp(S.ambiente ?? .8, 0, 1.2) + .35 * dia * (1 - L[1]);   /* con el sol bajo (mañana y tarde) el cielo rellena más */ r.toneMappingExposure = 1.12 + .25 * noche;   /* la luz del cielo rellena las sombras (en la calle nunca son negras) */   /* de noche: luz de luna y de la ciudad, sin quedar a oscuras */ this.hemi.color.setRGB(.93 + S.top[0] * .07, .94 + S.top[1] * .06, .95 + S.top[2] * .05, T.SRGBColorSpace);   /* luz de cielo casi neutra: el azul ya lo pone el domo */ this.hemi.groundColor.setRGB(.55, .5, .43, T.SRGBColorSpace);   /* cielo poco saturado: las sombras no se vuelven azules */
     this.sol.intensity = 2.4 * dia * (1 - lluvia * .45) * (1 - niebla * .5); this.sol.color.setRGB(1, .97 - .28 * bajo, .9 - .5 * bajo, T.SRGBColorSpace);
     /* sombras: una caja que sigue a lo que se mira, alineada a la rejilla de texeles (no tiemblan al moverse) */

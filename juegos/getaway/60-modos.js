@@ -77,12 +77,12 @@ const Modos = {
     if (s0 > 0) { const P2 = []; for (let s = s0; s <= p.L - (cerrada ? 0 : 1); s += 6) { const q = p.punto(s); P2.push(q.x, q.y); } if (cerrada) for (let s = 0; s < s0; s += 6) { const q = p.punto(s); P2.push(q.x, q.y); } if (P2.length >= 8) return this._pistaLista(new PistaTC(P2, cerrada), cerrada, extremo, tipo, desnivel, antes); }
     return this._pistaLista(p, cerrada, extremo, tipo, desnivel, antes);
   },
-  _pistaLista(p, cerrada, extremo, tipo, desnivel, antes) {
+  _pistaLista(p, cerrada, extremo, tipo, desnivel, antes, op = {}) {   /* op (5.2, retos del semáforo): nombres de los rivales y alLado (salen junto al jugador) */
     const C = G.cuerpo, vueltas = cerrada && p.L < 2200 ? 2 : 1, q0 = p.punto(0);
     if (extremo) { if (C.veh.id !== 'mtb') C.setVeh('mtb'); } else if (C.veh.clase === 'pie' || C.veh.clase === 'rueda') { C.setVeh(G.veh); C.estacionado = null; }
     const d0 = Math.hypot(q0.x - C.x, q0.y - C.y);   /* 4.8 (ChatGPT TC-P1-08): lejos de la salida, el jugador elige ir manejando o saltar a la parrilla */
-    const nombres = extremo ? ['Lucía «la Flecha»', 'el Mono Rendón'] : ['Lucía «la Flecha»', 'el Mono Rendón', 'Kira Salazar'], R = [];
-    nombres.forEach((nombre, k) => { const off = (k + 1) * 7, q = p.punto(cerrada ? -off : 0), lado = (k % 2 ? 1 : -1) * 2.2, Cb = new MC.Cuerpo(G.M, { x: q.x - Math.sin(q.a) * lado - (cerrada ? 0 : Math.cos(q.a) * off), y: q.y + Math.cos(q.a) * lado - (cerrada ? 0 : Math.sin(q.a) * off), a: q.a, veh: extremo ? 'mtb' : ['tc_noir', 'tc_arrow', 'tc_mercury'][k] || 'carro' }); Cb.ia = true; R.push({ nombre, color: ['#2f80ed', '#27ae60', '#f2c94c'][k], cuerpo: Cb, s: cerrada ? -off : 0, ruta: null, fin: null, habil: .9 + k * .05 }); });
+    const nombres = op.nombres || (extremo ? ['Lucía «la Flecha»', 'el Mono Rendón'] : ['Lucía «la Flecha»', 'el Mono Rendón', 'Kira Salazar']), R = [];
+    nombres.forEach((nombre, k) => { const off = op.alLado ? 0 : (k + 1) * 7, q = p.punto(cerrada ? -off : 0), lado = (k % 2 ? 1 : -1) * (op.alLado ? 3.2 : 2.2), Cb = new MC.Cuerpo(G.M, { x: q.x - Math.sin(q.a) * lado - (cerrada ? 0 : Math.cos(q.a) * off), y: q.y + Math.cos(q.a) * lado - (cerrada ? 0 : Math.sin(q.a) * off), a: q.a, veh: extremo ? 'mtb' : ['tc_noir', 'tc_arrow', 'tc_mercury'][k] || 'carro' }); Cb.ia = true; R.push({ nombre, color: ['#2f80ed', '#27ae60', '#f2c94c'][k], cuerpo: Cb, s: cerrada ? -off : 0, ruta: null, fin: null, habil: .9 + k * .05 }); });
     this.m = { id: extremo ? 'extremo' : 'carrera', extremo, p, vueltas, total: vueltas * p.L, rivales: R, yo: { s: 0, fin: null }, t: -3.5, puntos: 0, aire: 0, enAire: false, antes: extremo ? antes : null, tipo, desnivel };
     if (extremo && BOT.saltar) BOT.saltar.hidden = false;
     const c = this.m; if (d0 > 30) { c.ir = true; G.objetivo = { x: q0.x, y: q0.y, texto: '🏁 Salida' };

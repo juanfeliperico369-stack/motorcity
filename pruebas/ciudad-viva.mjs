@@ -103,7 +103,7 @@ if (!process.argv.includes('--sin-navegador')) {
     await espera(600); const reac = G.E.peatones.filter(p => p.reac).map(p => p.reac.tipo); CV._ultDicho = -99; const R0 = G.E.peatones.find(p => p.reac && enPantalla(pr(p.x, p.y, 2.7))) || G.E.peatones.find(p => enPantalla(pr(p.x, p.y, 2.7))) || cerca; CV.decir(R0, 'atropello', { reloj: G.reloj, tono: 'adulto' });
     await espera(200); const dib = G.Viva.dibujados, dentro = CV.dichos.filter(D => enPantalla(pr(D.p.x, D.p.y, 2.7))).length;
     window._cv = { esc, sentados, car, cota, reac, dib, dentro, n0 }; return 1; });
-  await p.screenshot({ path: path.join(RAIZ, 'reportes/ciudad-viva-5.2.png') });
+  await p.screenshot({ path: path.join(RAIZ, 'reportes/ciudad-viva-5.2.jpg'), type: 'jpeg', quality: 80 });
   const r = await p.evaluate(async () => { const G = TURNO, espera = ms => new Promise(q => setTimeout(q, ms)), { esc, sentados, car, cota, reac, dib, dentro, n0 } = window._cv;
     /* el testigo (3 s) y la ambulancia */
     let serv = null; for (let i = 0; i < 40 && !G.Viva.servicios.length; i++) await espera(250); serv = G.Viva.servicios[0];

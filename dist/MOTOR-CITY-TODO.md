@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 5.1.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 5.2.0 · no se edita a mano: edita los documentos de origen -->
 
 # Contexto y entrega de Codex · Motor City y Turno Cero
 
