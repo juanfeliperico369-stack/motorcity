@@ -53,6 +53,9 @@ const datosBiomas = {};
   if (fs.existsSync(mb)) for (const [id, t] of Object.entries(JSON.parse(fs.readFileSync(mb, 'utf8')).texturas || {})) {
     const f = path.join(RAIZ, 'arte/arcade/biomas', path.basename(t.ruta || id + '.webp')); if (fs.existsSync(f)) datosBiomas[id] = 'data:image/webp;base64,' + fs.readFileSync(f).toString('base64'); } }
 /* 5.2: las frases de la ciudad viva (MC.CiudadViva), desde datos/frases/ciudad.json */
+/* 5.3 · los sitios icónicos de Medellín (fichas de Gemini G5-07 en docs/sitios/sitios.json), compactos: id, nombre, categoría,
+   posición del MC4, alto, planta y colores (MC.Sitios los arma en el 3D realista) */
+let datosSitios = []; { const fs2 = path.join(RAIZ, 'docs/sitios/sitios.json'); if (fs.existsSync(fs2)) { const S = JSON.parse(fs.readFileSync(fs2, 'utf8')); datosSitios = (S.sitios || []).filter(s => s.mc4 && s.dimensiones).map(s => ({ id: s.id, n: s.nombre, cat: s.categoria, x: s.mc4.x, y: s.mc4.y, alto: s.dimensiones.altura_m, planta: s.dimensiones.planta_m, col: s.colores_hex })); } }
 let datosFrases = null; { const fj = path.join(RAIZ, 'datos/frases/ciudad.json'); if (fs.existsSync(fj)) { const F = JSON.parse(fs.readFileSync(fj, 'utf8')); datosFrases = { familia: F.familia || [], adulto: F.adulto || [] }; } }
 const motor = `/* ${VER.nombre} ${VER.version} · ${VER.fecha} · https://github.com/${VER.fuente_de_verdad}
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin internet; trae three.js 0.170 (MIT, © three.js authors) para el 3D realista.
@@ -62,6 +65,7 @@ const motor = `/* ${VER.nombre} ${VER.version} · ${VER.fecha} · https://github
 ${threeJS}const MC_FACHADAS_R1 = ${JSON.stringify(datosFachadas)};
 const MC_BIOMAS_V4 = ${JSON.stringify(datosBiomas)};
 const MC_FRASES = ${JSON.stringify(datosFrases)};
+const MC_SITIOS = ${JSON.stringify(datosSitios)};
 ${cuerpo}
 MC.archivos = ${JSON.stringify(lista)};
 root.MC = MC;

@@ -103,6 +103,23 @@ jobs:
         run: node pruebas/retos-semaforo.mjs
       - name: 5.2 · 📏 Medir el rendimiento (?medir, G5-12)
         run: node pruebas/medir.mjs
+      - name: 5.3 · 🏛️ Sitios icónicos de Medellín en 3D (fichas G5-07 de Gemini; C5-02 primera versión)
+        run: |
+          node pruebas/sitios-medellin.mjs
+          node pruebas/sitios-3d.mjs
+      - name: 5.3 · 🚗 Vuelcos (C5-01 de ChatGPT) y 🔌 puentear tras un robo (G5-04 de Gemini)
+        run: |
+          node pruebas/vuelcos.mjs
+          node pruebas/puentear-robo.mjs
+      - name: 5.3 · 🔧 Minijuegos, 🍃 guía sin flecha en cine y 🧪 química del mundo (Gemini G5-04, G5-05 y G5-08)
+        run: |
+          node pruebas/minijuegos.mjs
+          node pruebas/guia-cine.mjs
+          node pruebas/quimica-mundo.mjs
+      - name: 5.3 · R6-b (ChatGPT): datos compactos y Worker con respaldo (apagado por defecto; ?r6b)
+        run: |
+          node pruebas/r6b-datos.mjs
+          node pruebas/r6b-browser.mjs
       - name: 4.9.1 · R1 · Fachadas de Medellín (ChatGPT) en el 3D realista
         run: node pruebas/r1-fachadas.mjs
       - name: C-M34 · tres mundos offline con rasters de 1 km
