@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "agente": "chatgpt-r4",
+  "marca": "ChatGPT (OpenAI)",
+  "rama": "ia/chatgpt/r4-auditoria-overture-20261122",
+  "fecha": "2026-11-22",
+  "base": "main",
+  "rol": "Auditoría de datos R4: cuantificar cobertura de atributos Overture para techos y preparar reconciliación segura de pisos R3",
+  "estado": "herramienta diagnóstica implementada, auditoría geográfica real pendiente de caché",
+  "zonas_reclamadas": [
+    "geo/auditar_cubiertas_overture.py",
+    "reportes/2026-11-22-chatgpt-r4-auditoria-overture.md",
+    "coord/agentes/chatgpt-r4.json",
+    "coord/buzon/20261122-2055-chatgpt-r4.md"
+  ],
+  "zonas_no_toco": [
+    "js/45-tres.js",
+    "js/45-gl.js",
+    "geo/territorio.py",
+    "datos/medellin/mundo.mc4",
+    "arte/fachadas/medellin/",
+    "js/47-clasicos.js",
+    "ramas ajenas"
+  ],
+  "pruebas": [
+    "python3 geo/auditar_cubiertas_overture.py --self-test -> 8 comprobaciones sintéticas",
+    "python3 -m py_compile geo/auditar_cubiertas_overture.py -> aprobado"
+  ],
+  "siguiente": "Ejecutar sobre geo/cache/edificios.parquet real, registrar cobertura, verificar id y geometría; R3 requiere otras comunas."
+}
