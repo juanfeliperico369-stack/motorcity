@@ -1,26 +1,24 @@
 {
   "schema_version": 1,
   "agente": "chatgpt",
-  "rama": "ia/chatgpt/r6b-worker-lod-20261123",
-  "rol": "Motor City 5.2 · integración R6-b de precocinado LOD2 con Worker Blob",
-  "fase_actual": "R6-b implementado en PR #25, QA sin concluir en todos los entornos",
-  "estado": "en revisión",
+  "rama": "ia/chatgpt/c5-01-vuelcos-20261123",
+  "rol": "Motor City 5.2 · C5-01 vuelcos y daños laterales, continuidad de Codex",
+  "fase_actual": "Entrega C5-01: vuelcos y autoenderezado; R6-b sigue prioritario",
+  "estado": "PR por revisar: CI dedicada y general pendientes",
   "ultima_actualizacion_utc": "2026-11-23",
   "zonas_reclamadas": [
-    "herramientas/r6b-compacto.mjs",
-    "herramientas/precocinar-sectores.mjs",
-    "herramientas/construir.mjs",
-    "juegos/getaway/juego.json",
-    "js/45-z-r6b.js",
-    "pruebas/r6b-datos.mjs",
-    "pruebas/r6b-browser.mjs",
-    ".github/workflows/r6b-qa.yml"
+    "js/38-vuelcos.js",
+    "js/45-gl.js",
+    "juegos/getaway/20-juego.js",
+    "pruebas/vuelcos.mjs",
+    ".github/workflows/c5-vuelcos-qa.yml",
+    "reportes/2026-11-23-chatgpt-c5-vuelcos.md"
   ],
   "no_toco": [
     "ramas ajenas",
     "datos geográficos binarios"
   ],
-  "pendiente_para_compañeras": "Probar calidad visual LOD2, p95 real por cuadro CPU x4 y GPU móvil; PR #24 C5-01 concurrente; R4-b sin mapa de correspondencia validado; R8 SSAO/faroles/agua pendiente.",
+  "pendiente_para_compañeras": "R6-b (precocinado en VistaTres + Worker Blob y p95); R4-b techos con geometría, C5-01 revisión visual, R8 SSAO/agua y faroles. R3/R5 bloqueados por licencia.",
   "entrega_r1": "reportes/2026-11-22-codex-integracion-arte-chatgpt-r1.md",
-  "entrega_actual": "reportes/2026-11-23-chatgpt-r6b-worker.md"
+  "entrega_actual": "reportes/2026-11-23-chatgpt-c5-vuelcos.md"
 }

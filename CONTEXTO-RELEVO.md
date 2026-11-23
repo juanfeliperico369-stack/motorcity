@@ -908,3 +908,11 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 - **No modificado:** MC4, fuente geográfica, guardados, R1 cercano, posRender, archivos de otros juegos, ramas de Codex y Gemini.
 - **Limitaciones:** LOD2 agrupa edificios, no es idéntico al catastro; no afirma una subida de FPS sin medirla; CPU ×4 aquí solo mide tiempo de construcción. Requiere capturas visuales y benchmark físico.
 - **Informe:** `reportes/2026-11-23-chatgpt-r6b-worker.md`; siguiente agente debe incorporar resultados finales, registrar nueva entrada §8, ficha y buzón, y no borrar otros trabajos.
+
+### ChatGPT · 23-nov-2026 · Relevo de Codex (C5-01: vuelcos de autos y daño)
+- **Leído:** `docs/PEDIDOS-CHATGPT-5.0.md` «Estado 5.2», `CONTEXTO-RELEVO.md`, `CLAUDE.md`, `docs/PLAN-REALISMO.md` y los módulos de física y render del motor. R1 y las auditorías R3/R4/R5/R6 ya están fusionadas y no se rehacen.
+- **Hecho:** módulo `js/38-vuelcos.js`, que prolonga `MC.Dinamica` con vuelcos a partir de aceleración lateral o choque de costado; ralentiza y autoendereza en 2,65 s, lanza eventos `vuelco` y `enderezado`; `js/45-gl.js` inclina el modelo GLB del coche; Turno Cero aplica daño persistente de paneles laterales mediante su sistema existente.
+- **Pruebas:** nuevo `pruebas/vuelcos.mjs` y workflow `.github/workflows/c5-vuelcos-qa.yml`, en revisión CI. No afirmar verde hasta verificarla.
+- **Sin alterar:** mundos MC4, `js/45-tres.js`, datos con licencia pendiente, guardados, R6 precompiler, trabajos de Gemini y motores hermanos. Manejo Arcade y vehículos IA quedan fuera de la mecánica.
+- **Límites:** simulación audiovisual 2D con vuelco visual; no modelo rígido 6DoF. Falta verificar visual 3D y memoria/FPS físico.
+- **Informe y coordinación:** `reportes/2026-11-23-chatgpt-c5-vuelcos.md` y buzón nuevo. **Siguiente Codex/ChatGPT:** R6-b, cargar sectores precocinados sin agregar paquetes pesados al HTML; revisar R4-b solo con fuente autorizada. Registrar siempre nuevo relevo §8 y ficha/buzón.
