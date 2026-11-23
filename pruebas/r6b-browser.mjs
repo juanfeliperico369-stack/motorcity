@@ -11,7 +11,7 @@ const archivo=path.join(root,'dist/juegos/getaway.html');
 assert(fs.existsSync(archivo),'Falta construir dist/juegos/getaway.html');
 const html=fs.readFileSync(archivo,'utf8');
 assert(html.includes('mc-r6b-guatape'),'R6-b Guatapé no está empaquetado');
-assert(html.includes('mc-r6b-medellin'),'R6-b Medellín no está empaquetado');
+/* 5.3: Medellín solo se incrusta si se pide en juego.json (r6b_ciudades); R6-b va apagado por defecto (?r6b) */
 const navegador=await chromium.launch({args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 const page=await navegador.newPage({viewport:{width:412,height:860},hasTouch:true});
 const errores=[],red=[];
@@ -26,7 +26,7 @@ try{
   await page.click('#ciudades [data-c="guatape"]');
   await page.waitForFunction(()=>TURNO?.id==='guatape'&&!TURNO.transicion&&TURNO.cuerpo&&TURNO.vistas,null,{timeout:90000});
   await page.evaluate(()=>{
-    const G=TURNO;MC.R6B.forzarPrueba=true;MC.opciones.graficos='realistas';G.vistas.motor3d='gl';
+    const G=TURNO;MC.R6B.forzarPrueba=true;MC.R6B.activo=true;MC.opciones.graficos='realistas';G.vistas.motor3d='gl';
     G.vistas.auto=false;G.vistas.calidad=1;G.vistas.reiniciarGL();
     G.vistaId='dron';G.vistas.usar('dron',G.E);
   });

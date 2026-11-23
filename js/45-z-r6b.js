@@ -4,8 +4,12 @@
    cajas LOD2 de 1 km y genera triángulos solo para las regiones visibles.
    Si no hay Worker/DecompressionStream o un sector falla, VistaTres original.
    ===================================================================== */
+/* 5.3 (Claude, al unir): APAGADO POR DEFECTO. En Chromium con la ciudad de Medellín no mejoró nada medible y, al llegar cada
+   sector, borraba regiones ya armadas: tras 30 s había 65 regiones y 81 pendientes, contra 128 y 0 sin él. Además las cajas
+   juntan los edificios de cada celda de 80 m (no son 1:1). Queda listo para medirlo en un celular: ?r6b en la dirección lo prende
+   (y en el HTML solo va el paquete de Guatapé; para Medellín, "r6b_ciudades" en juegos/getaway/juego.json). */
 const R6B = {
-  activo: true, maxSectores: 6,
+  activo: typeof location !== 'undefined' && /[?&]r6b\b/.test(location.search), maxSectores: 6,
   estadisticas(vista) {
     const s=vista&&vista._r6b;
     return s ? { activo:!s.fallo, worker:!!s.worker, esperando:s.pendientes.size,
@@ -88,8 +92,7 @@ const R6B = {
         for(const r of m.regiones||[]){
           const info={p:new Float32Array(r.p),c:new Float32Array(r.c)};
           s.ready.set(r.id,info);keys.push(r.id);
-          const rg=vista.regiones&&vista.regiones.get(r.id);
-          if(rg&&rg.detalle<=1){vista._borrar(rg);vista.regiones.delete(r.id);}
+          /* 5.3: ya no se borra la región armada (eso rearmaba la ciudad sin parar); las cajas se usan la próxima vez que se arme */
         }
         s.enviados.add(m.key);s.orden.push({key:m.key,keys});
         while(s.orden.length>R6B.maxSectores){

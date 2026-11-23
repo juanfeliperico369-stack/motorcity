@@ -611,3 +611,26 @@ if (typeof EXTRAS !== 'undefined' && EXTRAS.paso) {
   });
 }
 G.Minijuegos = Minijuegos;
+
+/* =====================================================================
+   5.3 · Claude: el minijuego entra al juego (G5-04 pedía puentear el carro en Turno Cero, idea de Chinatown Wars).
+   Después de robar un carro (a pie, 🚗) aparece por 6 s «🔌 Puentear»: es OPCIONAL y no frena nada (el carro ya es tuyo y
+   puedes arrancar). Si lo aceptas y unes los cables a tiempo, el dueño no alcanza a reportarlo: la búsqueda baja lo que subió
+   el robo (y el minijuego da su premio de siempre). Si no lo tocas, el botón se va solo.
+   ===================================================================== */
+const PuentearRobo = {
+  chip: null, _t: 0, _calor: 0, ofrecidos: 0,
+  ofrecer(calor) {
+    if (!G.ui || !G.ui.capa || G.hist || G.pausa || Minijuegos.activo) return;
+    this.quitar(); this._calor = calor; this._t = 6; this.ofrecidos++;
+    if (!document.getElementById('mcChipCss')) { const st = document.createElement('style'); st.id = 'mcChipCss'; st.textContent = '.mcui .mc-chip{position:absolute;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);min-height:48px;padding:0 18px;border-radius:24px;border:2px solid #f2b84b;background:rgba(18,20,26,.92);color:#fff;font:600 15px system-ui,sans-serif;z-index:30;box-shadow:0 4px 14px rgba(0,0,0,.4)}.mcui .mc-chip:active{transform:translateX(-50%) scale(.97)}'; document.head.appendChild(st); }
+    const b = document.createElement('button'); b.className = 'mc-chip'; b.type = 'button'; b.textContent = '🔌 Puentear: que nadie lo reporte';
+    b.onclick = () => { this.quitar(); Minijuegos.abrir('puentear').then(r => { if (!r || !r.ok || !G.busq) return; const B = G.busq; B.heat = Math.max(0, B.heat - this._calor); if (B._nivel) B._nivel(); G.ui.aviso('🔌 Arrancó sin alarma: nadie alcanzó a reportar el robo', 2800, 'minijuego'); MC.emit('puentear:robo', { calor: this._calor }); }); };
+    G.ui.capa.appendChild(b); this.chip = b;
+  },
+  quitar() { if (this.chip) { this.chip.remove(); this.chip = null; } },
+  paso(dt) { if (this.chip && ((this._t -= dt) <= 0 || G.pausa || G.cuerpo.veh.clase === 'pie')) this.quitar(); }
+};
+if (typeof robarCarro === 'function') robarCarro = (orig => function () { const antes = G.veh, calor0 = G.busq ? G.busq.heat : 0; orig(); if (G.veh !== antes || (G.busq && G.busq.heat > calor0)) PuentearRobo.ofrecer(G.busq ? Math.max(0, G.busq.heat - calor0) : 0); })(robarCarro);
+EXTRAS.paso.push(dt => PuentearRobo.paso(dt));
+G.PuentearRobo = PuentearRobo;
