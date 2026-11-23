@@ -94,12 +94,12 @@ await p.evaluate(() => { for (const el of document.querySelectorAll('.mcui .dial
 /* 2a. Auditoría píxel a píxel de las 18 texturas decodificadas en el navegador */
 const auditTexturas = await p.evaluate(async () => {
   const PB = MC.ParalajeBiomas;
-  await PB.precargar();
   const cv = document.createElement('canvas');
   cv.width = 1024; cv.height = 256;
   const g = cv.getContext('2d', { willReadFrequently: true });
   const res = {};
   for (const b of PB.BIOMAS) {
+    await PB.precargar(b);
     for (const nv of PB.NIVELES) {
       const id = b + '_' + nv;
       const rec = PB._imgs.get(id);
@@ -137,6 +137,20 @@ for (const [id, r] of Object.entries(auditTexturas)) {
   ok(r.transPct > 20 && r.opacosPct > 15, `${id}: proporción alfa fuera de rango (${r.transPct}% trans)`);
   ok(r.costuraMae < 0.5, `${id}: costura horizontal alta (${r.costuraMae})`);
 }
+
+/* Relevo: la precarga de todos los biomas debe respetar el LRU durante y después,
+   no decodificar permanentemente 18 imágenes en memoria. */
+const precargaGlobal = await p.evaluate(async () => {
+  const PB = MC.ParalajeBiomas;
+  const correcto = await PB.precargar();
+  return { correcto, biomas: PB._ordenLRU.length, imagenes: PB._imgs.size, tintes: PB._tintes.size };
+});
+ok(precargaGlobal.correcto && precargaGlobal.biomas <= 2 && precargaGlobal.imagenes <= 6 &&
+  precargaGlobal.tintes <= 6, 'La precarga global debe respetar caché de 2 biomas/6 imágenes');
+
+/* La función de render de VistaTres no debe ser alterada por una mejora exclusiva de Arcade. */
+ok(!fs.readFileSync(path.join(RAIZ, 'js/47-paralaje-biomas.js'), 'utf8').includes('VistaTres.prototype.dibujar ='),
+  'V4 no debe modificar el presupuesto de render de VistaTres');
 
 /* 2b. Verificar que los 6 biomas + llanura existen en los tramos reales de MC.Planeta y que cambiar a Arcade conserva el mismo mundo 3D */
 const RUTAS_BIOMA = [
