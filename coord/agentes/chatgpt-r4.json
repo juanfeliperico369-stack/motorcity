@@ -6,7 +6,7 @@
   "fecha": "2026-11-22",
   "base": "main",
   "rol": "Auditoría de datos R4: cuantificar cobertura de atributos Overture para techos y preparar reconciliación segura de pisos R3",
-  "estado": "herramienta diagnóstica implementada, auditoría geográfica real pendiente de caché",
+  "estado": "reproyección y unión geométrica sintética probada; licencia y cobertura real pendientes",
   "zonas_reclamadas": [
     "geo/auditar_cubiertas_overture.py",
     "reportes/2026-11-22-chatgpt-r4-auditoria-overture.md",
@@ -26,5 +26,12 @@
     "python3 geo/auditar_cubiertas_overture.py --self-test -> 8 comprobaciones sintéticas",
     "python3 -m py_compile geo/auditar_cubiertas_overture.py -> aprobado"
   ],
-  "siguiente": "Ejecutar sobre geo/cache/edificios.parquet real, registrar cobertura, verificar id y geometría; R3 requiere otras comunas."
+  "siguiente": "Con fuente autorizada, calcular cobertura por comuna y correspondencia 1:1, calibrar umbrales de IoU antes de escribir MC4.",
+  "prueba_ci": "https://github.com/juanfeliperico369-stack/motorcity/actions/runs/45099980386",
+  "verificaciones_sinteticas": 23,
+  "modulos": [
+    "geo/auditar_cubiertas_overture.py",
+    "geo/reproyectar_huellas_fuente.py",
+    "geo/cruzar_huellas_seguros.py"
+  ]
 }
