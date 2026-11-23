@@ -154,13 +154,11 @@ def main():
     resumen={k:v for k,v in m.items() if k!='parejas'}
     resumen['estado']='diagnostico_sin_modificar_MC4'
     Path(op.reporte).parent.mkdir(parents=True,exist_ok=True)
-    Path(op.reporte).write_text(json.dumps(resumen,ensure_ascii=False,indent=2)+'
-',encoding='utf8')
+    Path(op.reporte).write_text(json.dumps(resumen,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
     print('✓ Diagnóstico seguro:',resumen['coincidencias_seguras'],'de',resumen['base_total'],'objetivos')
     if op.exportar:
         Path(op.exportar).parent.mkdir(parents=True,exist_ok=True)
-        Path(op.exportar).write_text(json.dumps({'atribucion':op.atribucion,'parejas':m['parejas']},ensure_ascii=False,indent=2)+'
-',encoding='utf8')
+        Path(op.exportar).write_text(json.dumps({'atribucion':op.atribucion,'parejas':m['parejas']},ensure_ascii=False,indent=2)+'\n',encoding='utf8')
 
 if __name__=='__main__':
     main()
