@@ -25,6 +25,7 @@ const ParalajeBiomas = {
   _tintes: new Map(),
   _ordenLRU: [],
   _estado: { bioma: null, anterior: null, mezcla: 1, mundo: null, yUlt: null },
+  _transicionPendiente: null,
   metricas: {
     decodificadas: 0,
     aciertosCache: 0,
@@ -106,7 +107,7 @@ const ParalajeBiomas = {
   nivelesPorCalidad(E) {
     const cal = (E && E.calidad != null) ? E.calidad : (typeof TURNO !== 'undefined' && TURNO.vistas && TURNO.vistas.calidad != null) ? TURNO.vistas.calidad : 1;
     if (cal < .38) { this.metricas.modoCalidad = 'procedural'; return []; }
-    if (cal < .62) { this.metricas.modoCalidad = 'media'; return ['lejos', 'cerca']; }
+    if (cal < .62) { this.metricas.modoCalidad = 'media'; return ['lejos', 'medio']; }
     this.metricas.modoCalidad = 'alta';
     return this.NIVELES;
   },
@@ -171,34 +172,31 @@ const ParalajeBiomas = {
     return todasListas ? res : null;
   },
 
-  /* Precarga asíncrona verificable para pruebas o inicio de tramo */
+  /* Precarga secuencial: no excede nunca los dos biomas de la caché LRU.
+     La precarga global recorre todos los biomas para auditoría, pero al terminar
+     solo conserva los dos últimos. No registra handlers duplicados en las imágenes. */
   async precargar(bioma) {
     const lista = bioma ? [bioma] : this.BIOMAS;
     if (typeof Image === 'undefined') return false;
-    const promesas = [];
+    let todoCorrecto = true;
     for (const b of lista) {
-      if (!this.esBiomaSoportado(b)) continue;
-      for (const nv of this.NIVELES) {
-        const id = b + '_' + nv;
-        let rec = this._imgs.get(id);
-        if (!rec) {
-          const img = new Image();
-          rec = { id, img, ok: false, err: false };
-          this._imgs.set(id, rec);
-          img.src = this.DATA[id];
-        }
-        if (rec.img.complete && rec.img.naturalWidth === 1024) {
-          rec.ok = true;
-        } else {
-          promesas.push(new Promise(r => {
-            rec.img.onload = () => { rec.ok = rec.img.naturalWidth === 1024 && rec.img.naturalHeight === 256; this.metricas.decodificadas++; r(rec.ok); };
-            rec.img.onerror = () => { rec.err = true; r(false); };
-          }));
-        }
-      }
+      if (!this.esBiomaSoportado(b)) { todoCorrecto = false; continue; }
+      this._asegurarImagenes(b);
+      const resultados = await Promise.all(this.NIVELES.map(nv => {
+        const rec = this._imgs.get(b + '_' + nv);
+        if (!rec) return Promise.resolve(false);
+        if (rec.ok) return Promise.resolve(true);
+        if (rec.err) return Promise.resolve(false);
+        return new Promise(resolve => {
+          const verificar = () => resolve(rec.img.naturalWidth === 1024 && rec.img.naturalHeight === 256);
+          rec.img.addEventListener('load', verificar, { once: true });
+          rec.img.addEventListener('error', () => resolve(false), { once: true });
+          if (rec.img.complete) verificar();
+        });
+      }));
+      if (!resultados.every(Boolean)) todoCorrecto = false;
     }
-    await Promise.all(promesas);
-    return true;
+    return todoCorrecto;
   },
 
   /* Devuelve un lienzo 1024×256 con el tinte atmosférico de hora, bruma y niebla aplicado con source-atop */
@@ -236,14 +234,15 @@ const ParalajeBiomas = {
 
   /* Comprueba si el bioma actual tiene sus 3 capas listas para reemplazar las montañas procedurales */
   listoPara(M, C, E) {
-    if (!this.activo) { this.metricas.fallbackActivo = true; return false; }
+    if (!this.activo) { this._transicionPendiente = null; this.metricas.fallbackActivo = true; return false; }
     const niveles = this.nivelesPorCalidad(E);
-    if (!niveles.length) { this.metricas.fallbackActivo = true; return false; }
+    if (!niveles.length) { this._transicionPendiente = null; this.metricas.fallbackActivo = true; return false; }
     const tr = this.muestrearTransicion(M, C, E && E.dt);
-    if (!this.esBiomaSoportado(tr.actual)) { this.metricas.fallbackActivo = true; return false; }
+    if (!this.esBiomaSoportado(tr.actual)) { this._transicionPendiente = null; this.metricas.fallbackActivo = true; return false; }
     const imgs = this._asegurarImagenes(tr.actual);
-    if (!imgs) { this.metricas.fallbackActivo = true; return false; }
+    if (!imgs) { this._transicionPendiente = null; this.metricas.fallbackActivo = true; return false; }
     if (tr.vecino && this.esBiomaSoportado(tr.vecino)) this._asegurarImagenes(tr.vecino);
+    this._transicionPendiente = { mundo: M, evento: E, valor: tr };
     this.metricas.fallbackActivo = false;
     return true;
   },
@@ -254,7 +253,11 @@ const ParalajeBiomas = {
     const M = arcade.M, C = cuerpoRetro(E), cielo = cieloRetro(E);
     const niebla = E && E.clima ? E.clima.niebla || 0 : 0, lluvia = E && E.clima ? E.clima.lluvia || 0 : 0, noche = cielo.noche || 0;
     const niveles = this.nivelesPorCalidad(E);
-    const tr = this.muestrearTransicion(M, C, E && E.dt);
+    /* El método listoPara ya actualizó la transición este cuadro: no sumar dt dos veces. */
+    const trPrev = this._transicionPendiente;
+    this._transicionPendiente = null;
+    const tr = trPrev && trPrev.mundo === M && trPrev.evento === E
+      ? trPrev.valor : this.muestrearTransicion(M, C, E && E.dt);
     const imgsA = this._asegurarImagenes(tr.actual);
     if (!imgsA || !niveles.length) { this.metricas.fallbackActivo = true; return 0; }
     const imgsB = (tr.vecino && tr.pesoVecino > .02 && this.esBiomaSoportado(tr.vecino)) ? this._asegurarImagenes(tr.vecino) : null;
@@ -450,6 +453,7 @@ const ParalajeBiomas = {
 
   /* Libera lienzos e imágenes en caché al cambiar de mundo o cerrar la vista */
   liberar() {
+    this._transicionPendiente = null;
     this._imgs.clear();
     this._tintes.clear();
     this._ordenLRU.length = 0;
@@ -539,15 +543,7 @@ if (typeof Arcade !== 'undefined') {
       };
     }
   }
-  if (typeof VistaTres !== 'undefined' && VistaTres.prototype && VistaTres.prototype.dibujar) {
-    const _dibTres = VistaTres.prototype.dibujar;
-    VistaTres.prototype.dibujar = function (W, H, E, op = {}) {
-      if (this.regiones && this.regiones.size < 24) {
-        op = Object.assign({}, op, { presupuesto: Math.max(op.presupuesto || 10, 28) });
-      }
-      return _dibTres.call(this, W, H, E, op);
-    };
-  }
+  /* Relevo ChatGPT: V4 no altera presupuestos ni renderizado de VistaTres. */
 }
 
 MC.ParalajeBiomas = ParalajeBiomas;

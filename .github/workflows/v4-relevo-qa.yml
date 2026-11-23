@@ -1,0 +1,41 @@
+name: Motor City V4 · relevo de Gemini y QA Arcade
+
+on:
+  pull_request:
+    branches: ['ia/antigravity/v4-paralaje-biomas', main]
+    paths:
+      - 'js/47-paralaje-biomas.js'
+      - 'pruebas/paralaje-biomas.mjs'
+      - 'pruebas/paquete-capas-browser.mjs'
+      - '.github/workflows/v4-relevo-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  v4-paralaje:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Compilar el motor offline y validar sintaxis
+        run: |
+          node --check pruebas/paralaje-biomas.mjs
+          node --check pruebas/paquete-capas-browser.mjs
+          node motor.mjs construir
+      - name: Chromium para pruebas de Arcade y mundo
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: V4 · biomas, transparencia, caché y transiciones
+        run: node pruebas/paralaje-biomas.mjs
+      - name: C-M34 · tres mundos offline con presupuesto LRU 4 MB
+        run: node pruebas/paquete-capas-browser.mjs
+      - name: 3D realista sin efectos colaterales de Arcade
+        run: node pruebas/tres.mjs
+      - name: Modos principales sin regresiones
+        run: node pruebas/modos.mjs
