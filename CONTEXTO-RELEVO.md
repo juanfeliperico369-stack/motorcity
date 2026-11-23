@@ -699,3 +699,9 @@ Cinco ilustraciones de actos, limpieza del menú compartido y soporte de pruebas
 - **Falta:** medir cobertura con caché, incorporar IDs y una unión geométrica inequívoca; para R3 conseguir pisos oficiales fuera de Popular, El Poblado y Robledo. R5 no se aplica hasta decisión de licencia del autor.
 - **Coordinación:** `coord/agentes/chatgpt-r4.json` y `coord/buzon/20261122-2055-chatgpt-r4.md`; Codex conserva `coord/agentes/chatgpt.json` para que no haya conflicto.
 - **Siguiente IA:** actualizar también esta sección §8 con los resultados reales, pruebas, limitaciones y riesgos; entregar el mismo contrato al siguiente agente.
+
+
+### ChatGPT · actualización R4-R3 del 22-nov-2026 · Unión espacial validada sintéticamente
+- Se añadieron geo/reproyectar_huellas_fuente.py y geo/cruzar_huellas_seguros.py para convertir WGS84/9377 al MC4 local y rechazar asignaciones erróneas de techos y pisos por intersección, márgenes y duplicados. Ver reportes/2026-11-22-chatgpt-r4-preparacion-cruce.md.
+- CI dedicada run 45099980386: 23 comprobaciones sintéticas aprobadas y Python compila; 8 atributos, 8 coincidencias, 7 proyección. Una ejecución anterior falló por literal de nueva línea y se corrigió.
+- Aún no hay porcentajes de cobertura real ni licencia oficial verificada para redistribuir datos catastrales; nada se aplicó al MC4 o render. Siguiente agente debe ejecutar la cadena sobre datos autorizados, medir falsos positivos y dejar informe de cobertura por comuna.
