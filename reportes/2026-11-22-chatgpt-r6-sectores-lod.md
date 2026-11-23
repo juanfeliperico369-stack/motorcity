@@ -69,3 +69,29 @@ Desglose de bytes de Medellín con 3 niveles: LOD 0 **46.943.067**; LOD 1 **43.9
 **Validación:** `node --check`, `node herramientas/precocinar-sectores.mjs --self-test`, ejecución real de Guatapé y Medellín, comprobación de hashes y proporciones, y comparación `--niveles 2` completadas en CI dedicada. La prueba general `Motor City · compilación y calidad` se verifica por separado, y en ramas derivadas de main puede fallar una aserción obsoleta de **16 sectores residentes** en `pruebas/paquete-capas-browser.mjs`; Codex ya documentó y corrigió esa prueba en PR #15. No silenciar ni desactivar ningún test.
 
 **Decisión técnica:** proponer **LOD 2 por demanda** como primer camino a evaluar en navegador, conservando LOD 0/1 procedurales, con fallback a VistaGL y sin cambiar los guardados. Las mallas binarizadas no deben añadirse al HTML hasta que un presupuesto real de megabytes, memoria y primeros cuadros haya sido comprobado.
+
+## Segundo ajuste verificado · LOD lejano de 80 m y extracción de polígonos
+
+En el prehorneador añadí la opción --celda-lod2 80 (válida entre 20 y 200 m; la opción por defecto conserva 40 m) y un validador separado herramientas/validar-sectores.mjs. El validador comprueba el SHA256 de cada bloque, las sumas de triángulos, offsets, codificaciones i16/f32, escala métrica y que ninguna coordenada tenga NaN o supere los límites razonables del sector. Se ejecuta sobre los bloques reales en la CI específica.
+
+GitHub Actions run 45100331203 (success), con Medellín real y solamente LOD 2:
+
+| Parámetro | Celdas 40 m | Celdas 80 m |
+|---|---:|---:|
+| Sectores | 2.086 | 2.086 |
+| Triángulos LOD 2 | 2.339.000 | 1.159.190 |
+| Bytes comprimidos | 10.646.954 | 5.302.620 |
+| Tiempo prehorneado | ~2,76 s | ~2,04 s |
+| RSS del prehorneador | ~283 MB | ~279 MB |
+
+Reducción medida: 50,2 % del tamaño de solo LOD 2 de 40 m, y 94,8 % respecto al paquete con los tres niveles 40 m (101.492.868 bytes). 80 m es una propuesta para **distancias mayores**, no sustituto obligado del LOD de proximidad: puede mezclar edificios distintos y empeorar el perfil de la ciudad; faltan capturas del render y evaluación de fidelidad.
+
+En el mismo run, la exportación GeoJSON de huellas MC4 de Guatapé generó 2.661 polígonos con CRS MC4-LOCAL-METROS, cada uno marcado con pisos_estimados. No agrega alturas oficiales ni datos nuevos al juego.
+
+Comandos de validación nuevos:
+
+    node herramientas/precocinar-sectores.mjs --entrada datos/medellin/mundo.mc4 --salida /tmp/r6-lod2-80 --niveles 2 --celda-lod2 80
+    node herramientas/validar-sectores.mjs --directorio /tmp/r6-lod2-80
+    node herramientas/precocinar-sectores.mjs --entrada datos/guatape/mundo.mc4 --exportar-huellas /tmp/r6-guatape.json
+
+La ejecución específica nueva que incluye el validador es 45100415846. Verificar su resultado final y cualquier fallo; no afirmar que está en verde antes de que termine.
