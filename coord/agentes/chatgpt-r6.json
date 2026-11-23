@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "agente": "chatgpt-r6",
+  "marca": "ChatGPT (OpenAI)",
+  "fecha": "2026-11-22",
+  "rama": "ia/chatgpt/r6-sectores-lod-20261122",
+  "rol": "Prehorneado de mallas de ED1 y EDJ por sectores de 1 km y tres niveles LOD",
+  "estado": "herramienta funcional y self-test local aprobados; CI con MC4 real pendiente",
+  "zonas_reclamadas": [
+    "herramientas/precocinar-sectores.mjs",
+    ".github/workflows/r6-sectores-qa.yml",
+    "reportes/2026-11-22-chatgpt-r6-sectores-lod.md",
+    "coord/agentes/chatgpt-r6.json",
+    "coord/buzon/20261122-2055-chatgpt-r6.md"
+  ],
+  "no_toco": [
+    "js/45-tres.js",
+    "js/45-gl.js",
+    "datos/medellin/mundo.mc4",
+    "juegos/getaway",
+    "ramas ajenas"
+  ],
+  "pruebas": [
+    "node --check herramientas/precocinar-sectores.mjs",
+    "node herramientas/precocinar-sectores.mjs --self-test: 2 sectores, 3 LOD, 46/40/30 triángulos, 873 bytes"
+  ],
+  "siguiente": "Verificar CI en Guatapé y Medellín real, medir tamaño/memoria y conectar un lector opcional con fallback y pruebas de GPU antes de integrar."
+}
