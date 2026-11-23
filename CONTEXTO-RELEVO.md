@@ -844,3 +844,12 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 - **Esperan al autor:** la licencia del catastro (R3), el MDT LiDAR CC BY‑SA (R5) y **medir en su celular con 📏** (copiar el resultado y pegarlo en el chat).
 - **Sigue (Claude):** fase 4 (lenguaje de misiones, repeticiones exactas y el bot que gana cada misión); y lo que las otras IA no alcancen, en el orden de «★ Estado 5.2» de los pedidos.
 - **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
+
+
+### ChatGPT · 23-nov-2026 · Relevo de Codex (C5-01: vuelcos de autos y daño)
+- **Leído:** `docs/PEDIDOS-CHATGPT-5.0.md` «Estado 5.2», `CONTEXTO-RELEVO.md`, `CLAUDE.md`, `docs/PLAN-REALISMO.md` y los módulos de física y render del motor. R1 y las auditorías R3/R4/R5/R6 ya están fusionadas y no se rehacen.
+- **Hecho:** módulo `js/38-vuelcos.js`, que prolonga `MC.Dinamica` con vuelcos a partir de aceleración lateral o choque de costado; ralentiza y autoendereza en 2,65 s, lanza eventos `vuelco` y `enderezado`; `js/45-gl.js` inclina el modelo GLB del coche; Turno Cero aplica daño persistente de paneles laterales mediante su sistema existente.
+- **Pruebas:** nuevo `pruebas/vuelcos.mjs` y workflow `.github/workflows/c5-vuelcos-qa.yml`, en revisión CI. No afirmar verde hasta verificarla.
+- **Sin alterar:** mundos MC4, `js/45-tres.js`, datos con licencia pendiente, guardados, R6 precompiler, trabajos de Gemini y motores hermanos. Manejo Arcade y vehículos IA quedan fuera de la mecánica.
+- **Límites:** simulación audiovisual 2D con vuelco visual; no modelo rígido 6DoF. Falta verificar visual 3D y memoria/FPS físico.
+- **Informe y coordinación:** `reportes/2026-11-23-chatgpt-c5-vuelcos.md` y buzón nuevo. **Siguiente Codex/ChatGPT:** R6-b, cargar sectores precocinados sin agregar paquetes pesados al HTML; revisar R4-b solo con fuente autorizada. Registrar siempre nuevo relevo §8 y ficha/buzón.
