@@ -28,15 +28,15 @@
 
 ---
 
-## 0. Entregables de la 5.2.0 «Ciudad viva» (HTML, APK y enlaces)
+## 0. Entregables de la 5.3.0 «Todo lo nuevo, unido» (HTML, APK y enlaces)
 > **Un solo juego de prueba (decisión del autor en 4.6):** Turno Cero. Adentro, 🎮 Modos: Carreras, Extremo, Mandados, EnCicla y manejar el Metro, el tranvía y el Metroplús. Los juegos sueltos Carreras y Extremo se borraron; Mandados queda solo como banco interno de pruebas automáticas.
 
 | Juego | Enlace | HTML (un solo archivo) | APK |
 |---|---|---|---|
 | Página del motor | <https://juanfeliperico369-stack.github.io/motorcity/> | `index.html` | — |
-| **Turno Cero 5.2.0** (18+), el juego de prueba con todo: 🗣️ ciudad viva (la gente reacciona, habla y llama; 🚑 y 🚒 llegan por la ruta real), 🚦 retos desde cualquier semáforo, 🏍️ motos que se inclinan, 🪟 cuartos falsos de noche, 📏 medir el rendimiento, 🗯️ vista Historieta, 🏔️ paralaje por biomas en Arcade, 🛞 manejo real (peso, suspensión, marchas, derrapes y choques), 🖼️ 3D realista (three.js), ⚙️ Flexibilidad, 🆘 rescate, 🚀 Ir en el mapa, pantalla en mitades, un solo mapa, 🌄 miradores | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v5.2.0/MotorCity-getaway.apk> |
-| Juega EnCicla 3.4.0 (unión de las 3.3.0 de Claude y de Antigravity) | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | <https://github.com/juanfeliperico369-stack/BicicletasUno/releases/download/v3.4.0/JuegaEnCicla-v3.4.0-debug.apk> (y `descargas/JuegaEnCicla.apk` en Pages) |
-| El Metro 3.5.0 (unión de las 3.4.0 de Claude y de Antigravity) | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://juanfeliperico369-stack.github.io/MetroZero/el-metro.apk> (código 33) |
+| **Turno Cero 5.3.0** (18+), el juego de prueba con todo: 🏛️ 30 sitios icónicos en 3D, 🚗 vuelcos, 🔌 puentear, 🧪 química del mundo, 🍃 guía de cine, 🔧 minijuegos, 🗣️ ciudad viva (la gente reacciona, habla y llama; 🚑 y 🚒 llegan por la ruta real), 🚦 retos desde cualquier semáforo, 🏍️ motos que se inclinan, 🪟 cuartos falsos de noche, 📏 medir el rendimiento, 🗯️ vista Historieta, 🏔️ paralaje por biomas en Arcade, 🛞 manejo real (peso, suspensión, marchas, derrapes y choques), 🖼️ 3D realista (three.js), ⚙️ Flexibilidad, 🆘 rescate, 🚀 Ir en el mapa, pantalla en mitades, un solo mapa, 🌄 miradores | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v5.3.0/MotorCity-getaway.apk> |
+| Juega EnCicla **3.7.0 en `main`** (unión de las dos 3.6 sobre la 3.5.0); la página sigue en la 3.4.0 hasta que el benchmark de `publicar.yml` cumpla o el autor decida | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | <https://github.com/juanfeliperico369-stack/BicicletasUno/releases/download/v3.4.0/JuegaEnCicla-v3.4.0-debug.apk> (y `descargas/JuegaEnCicla.apk` en Pages) |
+| El Metro 3.8.0 (unión de las 3.7 de Claude «Épocas» y de Antigravity, más CX‑36 de Codex) | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://juanfeliperico369-stack.github.io/MetroZero/el-metro.apk> (código 36) |
 | Run Scooter | <https://juanfeliperico369-stack.github.io/RunRunZero/> | `RunRunZero/web/index.html` | <https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk> |
 
 Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (Capacitor 7). El proxy de esta sesión no deja subir etiquetas: el flujo, lanzado a mano, crea él mismo la release `v<VERSION.json>`. EnCicla (`android.yml`) y El Metro (`apk.yml`) hacen lo mismo con la versión de cada juego; Run Scooter la publica en su página con cada empuje a `main`.
@@ -916,3 +916,21 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 - **Sin alterar:** mundos MC4, `js/45-tres.js`, datos con licencia pendiente, guardados, R6 precompiler, trabajos de Gemini y motores hermanos. Manejo Arcade y vehículos IA quedan fuera de la mecánica.
 - **Límites:** simulación audiovisual 2D con vuelco visual; no modelo rígido 6DoF. Falta verificar visual 3D y memoria/FPS físico.
 - **Informe y coordinación:** `reportes/2026-11-23-chatgpt-c5-vuelcos.md` y buzón nuevo. **Siguiente Codex/ChatGPT:** R6-b, cargar sectores precocinados sin agregar paquetes pesados al HTML; revisar R4-b solo con fuente autorizada. Registrar siempre nuevo relevo §8 y ficha/buzón.
+
+### Claude · 23‑nov‑2026 · motor 5.3.0 «Todo lo nuevo, unido»
+- **Pedido del autor:** «Retoma, continúa y termina; integra todo lo nuevo, compréndelo y mejóralo; y dame el prompt de relevo para la otra IA».
+- **Unido y mejorado:** las 7 ramas del motor (G5‑07, G5‑01‑b, G5‑05, G5‑08, G5‑04, C5‑01 y R6‑b). Claude:
+  - corrigió los vuelcos (enterrados boca arriba, y manejables volcados);
+  - apagó R6‑b (`?r6b`) con la medición que lo justifica;
+  - metió el minijuego de puentear en el robo de carros.
+- **Nuevo:** `MC.Sitios`, los 30 sitios icónicos en el 3D realista con las fichas de Gemini. El Coltejer y el Planetario faltaban.
+- **Hermanos:**
+  - **EnCicla 3.7.0** en `main`, con `tests/run.js` en verde. La página no se actualiza por la compuerta de rendimiento de GPT‑6, que no se tocó: decide el autor.
+  - **El Metro 3.8.0** publicado con la APK 36.
+- **Probado:** la batería completa del motor (34 pruebas, con `prueba.mjs --navegador`); EnCicla `tests/run.js` (170); El Metro, 100 partidas con 0 errores, más GA‑36 y las cuatro de GPT‑6 Eón.
+- **Esperan al autor:**
+  - la licencia del catastro y el LiDAR CC BY‑SA;
+  - medir con 📏 en el celular;
+  - decidir la compuerta de rendimiento de EnCicla.
+- **El prompt de relevo** está en `docs/PROMPT-RELEVO.md`.
+- **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
