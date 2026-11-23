@@ -46,3 +46,26 @@ Para completar R6 se necesita:
 **Coordinación:** R1 de Codex PR #15; R3 PR #17, R4 PR #16, R5 PR #19 y V4 de Gemini PR #18 siguen en revisión independiente. La siguiente IA debe terminar el lector de runtime, medir y mantener el relevo.
 
 **Firma: ChatGPT (OpenAI).**
+
+
+## 23-nov-2026 UTC · Datos reales y evolución de compactación (CI comprobada)
+
+La herramienta pasó de `floats-xyz-yup` a **formato de manifiesto versión 2**, con vértices `i16q20` (paso de **5 cm**) cuando todas las coordenadas relativas del sector caben en int16, y **fallback f32** cuando se saldrían del rango. Los offsets, tamaños, cantidad de triángulos y la codificación real están en cada grupo del manifiesto; las sumas SHA-256 comprueban los bloques. La cuantización afecta a las mallas precocinadas; **el MC4 y la física conservan su precisión previa**.
+
+Se añadió `--niveles 0,1,2` o `--niveles 2` para no generar datos no solicitados, y `--exportar-huellas /tmp/huellas.geojson` para preparar un GeoJSON de polígonos **ya presentes en el MC4**, con comuna y pisos **estimados** (no confundir con catastro oficial). Esta exportación solo se ejecuta por elección explícita, nunca al construir el juego.
+
+**Evidencia directa en [GitHub Actions run 45099935194](https://github.com/juanfeliperico369-stack/motorcity/actions/runs/45099935194), exitosa:**
+
+| Mundo/operación | Sectores de 1 km | Triángulos LOD 0 / 1 / 2 | Bytes comprimidos | Duración de generación | RSS del proceso |
+|---|---:|---:|---:|---:|---:|
+| Guatapé, 3 niveles | 21 | 29.793 / 26.610 / 12.680 | 440.925 | ~0,1 s | ~81 MB |
+| Medellín, 3 niveles | 2.086 | 6.853.547 / 6.394.570 / 2.339.000 | 101.492.868 | 13,17 s | 295 MB |
+| Medellín, **solo LOD 2** | 2.086 | 0 / 0 / 2.339.000 | **10.646.954** | **2,29 s** | 281 MB |
+
+Desglose de bytes de Medellín con 3 niveles: LOD 0 **46.943.067**; LOD 1 **43.902.847**; LOD 2 **10.646.954**. Elegir solo LOD 2 representa un **ahorro medido del 89,5 %** frente al total comprimido; la cuantización de todos los niveles redujo además el tamaño inicial de 120.018.749 a 101.492.868 bytes (15,4 %). No se ha demostrado todavía una mejora de FPS, porque estos datos no han reemplazado las mallas del render.
+
+**Limitación de calidad y rendimiento:** incluso LOD 2 contiene **2,339 millones de triángulos** en todo Medellín. El candidato debe **cargarse por sectores visibles**, no entero al abrir el juego. El tamaño reportado corresponde a los **bloques binarios** sin contar manifiesto, envoltorio base64, HTML ni geometría existente; los modelos de CPU y memoria reflejan el ejecutor Linux de GitHub, **no teléfonos**. La herramienta no se ha conectado todavía a VistaTres y por eso no existe captura de antes/después in-game.
+
+**Validación:** `node --check`, `node herramientas/precocinar-sectores.mjs --self-test`, ejecución real de Guatapé y Medellín, comprobación de hashes y proporciones, y comparación `--niveles 2` completadas en CI dedicada. La prueba general `Motor City · compilación y calidad` se verifica por separado, y en ramas derivadas de main puede fallar una aserción obsoleta de **16 sectores residentes** en `pruebas/paquete-capas-browser.mjs`; Codex ya documentó y corrigió esa prueba en PR #15. No silenciar ni desactivar ningún test.
+
+**Decisión técnica:** proponer **LOD 2 por demanda** como primer camino a evaluar en navegador, conservando LOD 0/1 procedurales, con fallback a VistaGL y sin cambiar los guardados. Las mallas binarizadas no deben añadirse al HTML hasta que un presupuesto real de megabytes, memoria y primeros cuadros haya sido comprobado.
