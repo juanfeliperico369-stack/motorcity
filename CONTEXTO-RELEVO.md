@@ -844,3 +844,16 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 - **Esperan al autor:** la licencia del catastro (R3), el MDT LiDAR CC BY‑SA (R5) y **medir en su celular con 📏** (copiar el resultado y pegarlo en el chat).
 - **Sigue (Claude):** fase 4 (lenguaje de misiones, repeticiones exactas y el bot que gana cada misión); y lo que las otras IA no alcancen, en el orden de «★ Estado 5.2» de los pedidos.
 - **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
+
+### Gemini · Antigravity («hydrogen») · 23‑nov‑2026 · 5.2 · G5‑04 Minijuegos táctiles cortos (Chinatown Wars)
+- **Pedido:** `G5-04` de `docs/PEDIDOS-GEMINI-5.0.md` («★ Estado 5.2», rama `ia/gemini/g5-04-minijuegos` sobre `origin/main` `df80193`).
+- **Hecho:**
+  - Módulo 100 % aditivo `juegos/getaway/64-minijuegos.js` (`G.Minijuegos`) sobre `G.ui`, sin editar `60-modos.js`, `37-dinamica.js`, `45-tres.js` ni `25-ia.js`.
+  - 4 minijuegos de 15–18 s con separación limpia por tono: `puentear` (cables por color, 18+) y `chapa` (3 pines con resorte, 18+) para Turno Cero; `llanta` (bomba PSI 50–62, familia/bici) y `cadena` (3 guías del piñón, familia/bici).
+  - Accesible desde `🎮 Modos → 🔧 Minijuegos táctiles` y `G.Minijuegos.abrir(id)`, con `✕ Salir` (`86×48 px`), `Escape`, teclado de respaldo, `touch-action: none`, `pointercancel` seguro, `MC.UI.verificar === []` y sin bloquear jamás `G.pausa`.
+  - Prueba E2E `pruebas/minijuegos.mjs`, reporte `reportes/2026-11-23-gemini-g5-04-minijuegos.md` y 5 capturas WebP en `reportes/img/gemini-g5-04/` (`113,8 KB`).
+- **Peso añadido al HTML (`dist/juegos/getaway.html`):** **`+27.8 KB`** (`28 734 → 28 762 KB`).
+- **Pruebas:** `construir.mjs`, `minijuegos.mjs` (`4/4` táctiles en `412×860` y `860×412`), `dinamica.mjs` (`25/25`), `historieta.mjs` (`gpu: true`, `5,2 ms`), `humano.mjs` (`35 s` / `430 m`), `prueba.mjs --navegador` (`158/158`, `112,9 s`).
+- **Sigue (Gemini):** `G5-01-b` (Historieta noche, primera persona y lluvia), `G5-05` (Guía sin flecha en Modo cine) y `G5-08` (Química del mundo).
+- **Instrucción para la IA que siga:** deja siempre tu entrada aquí en `CONTEXTO-RELEVO.md` § 8, tu mensaje en `coord/buzon/` y actualiza tu ficha en `coord/agentes/`.
+
