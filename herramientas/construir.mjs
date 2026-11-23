@@ -35,8 +35,11 @@ const manifiestoFachadas = path.join(carpetaFachadas, 'manifiesto.json');
 if (fs.existsSync(manifiestoFachadas)) {
   const mf = JSON.parse(fs.readFileSync(manifiestoFachadas, 'utf8'));
   for (const f of mf.fachadas || []) {
-    const dia = path.join(carpetaFachadas, path.basename(f.day));
-    const noche = path.join(carpetaFachadas, path.basename(f.emission));
+    /* las copias de juego (albedo 1024, emisión 512: herramientas/fachadas_juego.py) pesan 1,4 MB en vez de 6,7;
+       si faltan, los originales de 2048 */
+    const ligera = (n) => path.join(carpetaFachadas, 'juego', f.id + '_' + n + '.webp');
+    const dia = fs.existsSync(ligera('albedo_1024')) ? ligera('albedo_1024') : path.join(carpetaFachadas, path.basename(f.day));
+    const noche = fs.existsSync(ligera('emision_512')) ? ligera('emision_512') : path.join(carpetaFachadas, path.basename(f.emission));
     if (!fs.existsSync(dia) || !fs.existsSync(noche)) continue;
     datosFachadas[f.id] = { columnas: f.modulos_x, pisos: f.pisos_y,
       dia: 'data:image/webp;base64,' + fs.readFileSync(dia).toString('base64'),

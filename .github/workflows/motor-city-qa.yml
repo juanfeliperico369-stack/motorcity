@@ -89,6 +89,8 @@ jobs:
         run: node pruebas/rescate-mapa.mjs
       - name: 4.9 · 🖼️ 3D realista (three.js incrustado)
         run: node pruebas/tres.mjs
+      - name: 4.9.1 · R1 · Fachadas de Medellín (ChatGPT) en el 3D realista
+        run: node pruebas/r1-fachadas.mjs
       - name: C-M34 · tres mundos offline con rasters de 1 km
         run: node pruebas/paquete-capas-browser.mjs
       - name: C-M34 · deduplicación y viaje real entre ciudades (Chromium offline)

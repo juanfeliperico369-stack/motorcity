@@ -4,6 +4,9 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+process.chdir(RAIZ);
 const require = createRequire(import.meta.url), { chromium } = require('playwright');
 const dir = 'arte/fachadas/medellin', manifiesto = JSON.parse(fs.readFileSync(dir + '/manifiesto.json'));
 assert.equal(manifiesto.fachadas.length, 6);
@@ -11,13 +14,14 @@ for (const f of manifiesto.fachadas) for (const [campo, hash] of [['day', 'albed
   const archivo = fs.readFileSync(path.join(dir, path.basename(f[campo])));
   assert.equal(crypto.createHash('sha256').update(archivo).digest('hex'), f[hash]);
 }
-const url = new URL('dist/juegos/getaway.html?portada', process.env.MC_PRUEBAS_URL || 'http://127.0.0.1:8890/');
-const browser = await chromium.launch({ executablePath: process.env.MC_CHROMIUM || '/usr/bin/chromium', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+/* sin servidor: el HTML único se abre como archivo (como lo abre la gente); MC_PRUEBAS_URL y MC_CHROMIUM siguen sirviendo */
+const url = new URL('dist/juegos/getaway.html?portada', process.env.MC_PRUEBAS_URL || pathToFileURL(RAIZ + '/').href);
+const browser = await chromium.launch({ ...(process.env.MC_CHROMIUM ? { executablePath: process.env.MC_CHROMIUM } : {}), args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 try {
   const page = await browser.newPage({ viewport: { width: 860, height: 600 } });
   const errores = [], externos = [];
   page.on('pageerror', e => errores.push(e.message));
-  page.on('request', r => { if (!r.isNavigationRequest() && !/^(data|blob):/.test(r.url())) externos.push(r.url()); });
+  page.on('request', r => { if (!r.isNavigationRequest() && !/^(data|blob|file):/.test(r.url())) externos.push(r.url()); });
   await page.goto(url.href);
   await page.waitForFunction(() => window.TURNO_LISTO);
   await page.click('#bAbierto');
@@ -60,7 +64,7 @@ try {
   });
   assert(respaldo, 'Una imagen ausente conserva la geometría procedural');
   assert.deepEqual(estado.seleccion, ['vidrio_torre', 'local_persiana', null]);
-  assert.deepEqual(estado.superficie, [1024, 1024]); assert.equal(estado.emision, 0);
+  assert.deepEqual(estado.superficie, [1024, 512]); assert.equal(estado.emision, 0);
   await page.evaluate(() => { TURNO.reloj.min = 1230; });
   await page.waitForFunction(() => TURNO.vistas.gl._fachadas.concreto.material.emissiveIntensity > 0);
   assert.deepEqual(errores, []); assert.deepEqual(externos, []);

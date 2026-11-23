@@ -4,7 +4,7 @@
   "tipo": "atlas_de_fachadas_prueba_arte",
   "version": "0.1.0",
   "objetivo": "Motor City 4.9, VistaTres._edificio",
-  "estado": "recursos_propuestos_no_conectados_al_motor",
+  "estado": "conectado en VistaTres (4.9.1); en el HTML van las copias de juego de arte/fachadas/medellin/juego (albedo 1024, emisión 512)",
   "formato": "WebP",
   "dimensiones_px": [
     2048,

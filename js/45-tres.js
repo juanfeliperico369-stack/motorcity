@@ -88,17 +88,17 @@ class VistaTres extends VistaGL {
       this._fachadas[id] = f;
       const revisar = () => {
         if (f.listo || !dia.complete || !noche.complete || !dia.naturalWidth || !noche.naturalWidth) return;
-        const T = THREE, textura = imagen => {
-          /* El original de 2048 queda en el repositorio; 1024 reduce memoria GPU
-             en celulares y mantiene las dos capas con el mismo remuestreo. */
-          const lienzo = document.createElement('canvas'); lienzo.width = lienzo.height = 1024;
-          lienzo.getContext('2d').drawImage(imagen, 0, 0, 1024, 1024);
+        const T = THREE, textura = (imagen, tope) => {
+          /* El original de 2048 queda en el repositorio; en la GPU, el albedo a 1024 y la emisión (solo ventanas) a 512:
+             unos 7 MB por familia en vez de 11 (con mipmaps), pensando en celulares. */
+          const lado = Math.min(tope, imagen.naturalWidth || tope), lienzo = document.createElement('canvas'); lienzo.width = lienzo.height = lado;
+          lienzo.getContext('2d').drawImage(imagen, 0, 0, lado, lado);
           const t = new T.CanvasTexture(lienzo);
           t.colorSpace = T.SRGBColorSpace; t.wrapS = t.wrapT = T.RepeatWrapping;
           t.anisotropy = Math.min(4, this.r.capabilities.getMaxAnisotropy());
           t.needsUpdate = true; return t;
         };
-        f.albedo = textura(dia); f.emision = textura(noche);
+        f.albedo = textura(dia, 1024); f.emision = textura(noche, 512);
         f.material = new T.MeshStandardMaterial({ map: f.albedo, emissiveMap: f.emision,
           emissive: 0xffffff, emissiveIntensity: 0, roughness: .9, side: T.DoubleSide });
         f.listo = true; dia.onload = noche.onload = null; f.dia = f.noche = null; this._fachadasActualizar = true;
