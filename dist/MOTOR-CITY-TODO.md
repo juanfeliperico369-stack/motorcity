@@ -744,6 +744,10 @@ Cinco ilustraciones de actos, limpieza del menú compartido y soporte de pruebas
   - en gama baja, el modo automático usa el clásico.
 
 
+### Codex · 22-nov-2026 · R1 fachadas de Medellín
+
+Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-codex-integracion-arte-chatgpt-r1.md para técnica, capturas, pruebas y límites. R4 y R3 fueron investigados y siguen pendientes. La siguiente IA debe escribir su propio documento de contexto y transmitir la misma instrucción a quien continúe.
+
 # MOTOR CITY · Documento único
 
 > **Para el autor (OneZero) y para todas las IAs:** Gemini (Antigravity y Nano Banana), ChatGPT (Codex), Claude y las IAs de Juega EnCicla, El Metro y Run Scooter.
@@ -4292,6 +4296,12 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 ---
 
 # ANEXO I. Bitácora (`BITACORA.md`)
+
+
+### 22-nov-2026 · R1 fachadas de Medellín (rama de revisión)
+- Doce texturas de ChatGPT integradas en VistaTres con emisión nocturna y respaldo procedural.
+- Capturas y pruebas en reportes/2026-11-22-codex-integracion-arte-chatgpt-r1.md.
+- R4 y R3 investigados, pendientes de fuentes y regeneración verificadas.
 
 
 ### 22-nov-2026 · 4.9.0 «Realismo» · three.js incrustado y el 3D realista

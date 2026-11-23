@@ -1,5 +1,11 @@
 # Bitácora de Motor City
 
+## 22-nov-2026 · R1 fachadas de Medellín (rama de revisión)
+- Doce texturas de ChatGPT integradas en VistaTres con emisión nocturna y respaldo procedural.
+- Capturas y pruebas en reportes/2026-11-22-codex-integracion-arte-chatgpt-r1.md.
+- R4 y R3 investigados, pendientes de fuentes y regeneración verificadas.
+
+
 ## 22-nov-2026 · 4.9.0 «Realismo» · three.js incrustado y el 3D realista
 - **El autor:**
   - «Nuestro motor no logra mapear todo tal cual: los relieves, las casas y los edificios no son como son, y los gráficos aún son básicos. ¿Qué debemos hacer?».
