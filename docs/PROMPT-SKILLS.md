@@ -35,7 +35,7 @@ Vas a integrar en tu entorno las skills y los plugins del proyecto **Motor City*
 **Descartado:** un «system prompt» filtrado de otra empresa.
 
 ## 2. Si tienes terminal y el repositorio (Claude Code, Codex, Gemini CLI, Antigravity, Cursor…)
-1. Ponte al día: `git pull` en la rama en la que trabajas.
+1. Ponte al día: `git pull` en la rama en la que trabajas. Si no tienes el repositorio, clónalo: `git clone https://github.com/juanfeliperico369-stack/motorcity` (los juegos están en `BicicletasUno`, `MetroZero` y `RunRunZero`, de la misma cuenta).
 2. Corre **un solo comando** desde la raíz del repositorio:
    - en `motorcity`: `node motor.mjs skills --integrar --agente <tu-agente>`;
    - en `BicicletasUno`, `MetroZero` o `RunRunZero`: `node motor-city/motor.mjs skills --integrar --agente <tu-agente>`.
@@ -86,14 +86,14 @@ Vas a integrar en tu entorno las skills y los plugins del proyecto **Motor City*
 - Nunca subas llaves. El correo del autor es privado. No hagas un pull request si el autor no lo pide.
 
 ## 6. Si eres un chat sin terminal (ChatGPT o Gemini en la web, un Gem o un Proyecto)
-No puedes instalar nada. Lee en GitHub `docs/SKILLS-Y-PLUGINS.md` y el `SKILL.md` de tu rol, y copia sus reglas en las instrucciones de tu Gem o de tu Proyecto:
+No puedes instalar nada. Lee en GitHub `docs/SKILLS-Y-PLUGINS.md` (<https://github.com/juanfeliperico369-stack/motorcity>) y el `SKILL.md` de tu rol: los del motor están en `.claude/skills/`; los de El Metro, en `.agents/skills/` del repositorio `MetroZero`. Copia sus reglas en las instrucciones de tu Gem o de tu Proyecto:
 - **artista:** `el-metro-arte` y `motor-city-arte`;
 - **mapas:** `medellin-fiel` y `motor-city-territorio`;
 - **páginas web:** `motor-city-diseno-ui` y `motor-city-web-moderna`.
 
 Dile al autor qué copiaste.
 
-## 7. Informa en 5 líneas
+## 7. Informa en 4 líneas
 - qué agente eres;
 - el comando que corriste y su resultado (la línea «4) Verificación»);
 - qué skills ves en tu lista;
