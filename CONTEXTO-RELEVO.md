@@ -856,5 +856,16 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 - **Peso añadido al HTML (`dist/juegos/getaway.html`):** **`+0 KB`**.
 - **Pruebas:** `construir.mjs` (`getaway.html 28734 KB`), `sitios-medellin.mjs` (`671/671`), `dinamica.mjs` (`25/25`), `historieta.mjs` (`gpu: true`, `3,4 ms`), `paralaje-biomas.mjs` (`18/18`), `humano.mjs` (`metro 35 s`, `carrera 431 m`), `prueba.mjs --navegador` (`158/158`, `112,2 s`).
 - **Sigue (Gemini):** `G5-04` (Minijuegos táctiles cortos en `juegos/getaway/64-minijuegos.js`), seguido de `G5-01-b` (Historieta noche/1P/lluvia) y `G5-05` (Guía sin flecha en Modo cine).
+### Gemini · Antigravity («hydrogen») · 23‑nov‑2026 · 5.2 · G5‑01‑b Historieta GPU (noche, lluvia y primera persona)
+- **Pedido:** `G5-01-b` de `docs/PEDIDOS-GEMINI-5.0.md` («★ Estado 5.2», rama `ia/gemini/g5-01-b-historieta` sobre `origin/main` `df80193`).
+- **Hecho:**
+  - Pulido 100 % en GPU en `js/47-historieta.js` (sin volver a CPU en 3D realista, sin tocar `js/45-tres.js` ni subir `op.presupuesto`):
+    1. `r.getDrawingBufferSize(sz)` para `P.rt`, eliminando las franjas negras en L del borde derecho/inferior en `noche` (`pctBordeDerNegro: 0 %`).
+    2. Bandas perceptuales (`bandas: 5`, potencia `0.55`, ganancia acotada `[0.55, 1.45]`): la noche deja de lavarse a tono diurno (`lumMedia 101,0 → 34,3`) y la lluvia gana contraste (`70,8`).
+    3. Zona muerta de cuantización (`8.5e-5`) + `umbralPrimera: [0.012, 0.034]` activos solo en `E.camara.perfil === 'primera'`, eliminando las rayas cebra sobre el asfalto en primera persona mientras mantiene nítido el contorno negro en vista Historieta 55° (`umbralGeo: [0.0032, 0.0115]`).
+  - `pruebas/historieta.mjs` ampliada con aserciones de noche, lluvia y primera persona; reporte `reportes/2026-11-23-gemini-g5-01-b-historieta.md` y 8 capturas WebP antes/después en `reportes/img/gemini-g5-01-b/` (`269,1 KB`).
+- **Peso añadido al HTML (`dist/juegos/getaway.html`):** **`+1.0 KB`** (`28 734 → 28 735 KB`).
+- **Pruebas:** `construir.mjs`, `historieta.mjs` (`dia 3,7 ms`, `noche 2,3 ms`, `lluvia 2,8 ms`, `primera 6,0 ms`), `dinamica.mjs` (`25/25`), `humano.mjs` (`35 s` / `430 m`), `prueba.mjs --navegador` (`158/158`, `114,0 s`).
+- **Sigue (Gemini):** `G5-05` (Guía sin flecha en Modo cine) y `G5-08` (Química del mundo).
 - **Instrucción para la IA que siga:** deja siempre tu entrada aquí en `CONTEXTO-RELEVO.md` § 8, tu mensaje en `coord/buzon/` y actualiza tu ficha en `coord/agentes/`.
 

@@ -3,43 +3,28 @@
   "agente": "antigravity",
   "marca": "Gemini",
   "apodo": "hydrogen",
-  "rama": "ia/gemini/g5-07-sitios",
+  "rama": "ia/gemini/g5-01-b-historieta",
   "base": "df80193",
   "version_motor": "5.2.0",
-  "actualizado": "2026-11-23T14:55:00Z",
+  "actualizado": "2026-11-23T15:34:00Z",
   "estado": "listo_para_integrar",
-  "pedido_actual": "G5-07",
-  "rol": "Fichas arquitectónicas e imágenes de referencia de los 30 sitios icónicos de Medellín para C5-02 de Codex (Motor City 5.2, +0 KB al HTML)",
+  "pedido_actual": "G5-01-b",
+  "rol": "Segunda pasada GPU de Vista Historieta (noche, lluvia y primera persona en 412×860, +1.0 KB al HTML)",
   "entregas_5_0": {
-    "G5-01": {
-      "rama": "ia/gemini/g5-01-historieta",
-      "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/21",
-      "estado": "integrado_en_main",
-      "peso_html_kb": "+3.1 KB"
-    },
-    "G5-02": {
-      "rama": "ia/gemini/g5-02-anillos",
-      "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/23",
-      "estado": "integrado_en_main",
-      "peso_html_kb": "+9.4 KB"
-    },
-    "G5-07": {
-      "rama": "ia/gemini/g5-07-sitios",
+    "G5-01": { "rama": "ia/gemini/g5-01-historieta", "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/21", "estado": "integrado_en_main", "peso_html_kb": "+3.1 KB" },
+    "G5-02": { "rama": "ia/gemini/g5-02-anillos", "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/23", "estado": "integrado_en_main", "peso_html_kb": "+9.4 KB" },
+    "G5-07": { "rama": "ia/gemini/g5-07-sitios", "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/26", "estado": "listo_para_integrar", "peso_html_kb": "+0 KB" },
+    "G5-04": { "rama": "ia/gemini/g5-04-minijuegos", "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/27", "estado": "listo_para_integrar", "peso_html_kb": "+27.8 KB" },
+    "G5-01-b": {
+      "rama": "ia/gemini/g5-01-b-historieta",
       "estado": "listo_para_integrar",
-      "peso_html_kb": "+0 KB",
+      "peso_html_kb": "+1.0 KB",
       "archivos": [
-        "docs/sitios/README.md",
-        "docs/sitios/sitios.json",
-        "docs/sitios/*.md (30 fichas)",
-        "docs/sitios/img/*.webp (30 referencias 768×512, 401.6 KB)",
-        "pruebas/sitios-medellin.mjs",
-        "reportes/2026-11-23-gemini-g5-07-sitios.md"
+        "js/47-historieta.js",
+        "pruebas/historieta.mjs",
+        "reportes/2026-11-23-gemini-g5-01-b-historieta.md",
+        "reportes/img/gemini-g5-01-b/"
       ]
-    },
-    "G5-10_V4": {
-      "rama": "ia/antigravity/v4-paralaje-biomas",
-      "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/18",
-      "estado": "integrado_en_main"
     }
   },
   "zonas_respetadas_no_toco": [
@@ -48,8 +33,7 @@
     "js/25-ia.js (Claude)",
     "juegos/getaway/66-ciudad-viva.js (Claude)",
     "juegos/getaway/67-retos-semaforo.js (Claude)",
-    "juegos/getaway/68-medir.js (Claude)",
-    "docs/PEDIDOS-CHATGPT-5.0.md (ChatGPT / Codex)"
+    "juegos/getaway/68-medir.js (Claude)"
   ],
-  "siguiente_pedido": "G5-04 (ia/gemini/g5-04-minijuegos)"
+  "siguiente_pedido": "G5-05 (ia/gemini/g5-05-guia-cine)"
 }

@@ -26,5 +26,6 @@ Para abrir uno: `node motor.mjs reporte "Título corto" --juego elmetro --autor 
 | 2026-11-23 | [Misión V4: Revolución visual de los 6 biomas (18 texturas `1024×256` RGBA WebP sin costuras) e integración de paralaje en `MC.Arcade`](./gemini-v4-paralaje-biomas.md) | motor / getaway | Gemini Antigravity — Motor City V4 | Listo para integrar (`18/18` texturas + `5/5` suites en verde) |
 | 2026-11-23 | [Entrega 5.0 · G5-02: Anillos de recoger y entregar (Mandados y EnCicla) y controles de vuelo](./2026-11-23-gemini-g5-02-anillos.md) | getaway / motor | Gemini · Antigravity («hydrogen») | Integrado en 5.2 |
 | 2026-11-23 | [Entrega 5.2 · G5-07: Fichas de los 30 sitios icónicos de Medellín (para C5-02)](./2026-11-23-gemini-g5-07-sitios.md) | motor / mapa | Gemini · Antigravity («hydrogen») | Listo para integrar (`671/671` en `sitios-medellin.mjs`, `+0 KB`) |
+| 2026-11-23 | [Entrega 5.2 · G5-01-b: Historieta GPU — noche, lluvia y primera persona (412×860)](./2026-11-23-gemini-g5-01-b-historieta.md) | motor / getaway | Gemini · Antigravity («hydrogen») | Listo para integrar (`historieta.mjs` día/noche/lluvia/1P en verde, `+1.0 KB`) |
 
 
