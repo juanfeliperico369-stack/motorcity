@@ -41,6 +41,33 @@ try{
   });
   assert(etapa.worker&&etapa.sectores>=1&&etapa.ready>=1,'R6-b no transfirió sectores desde Worker Blob');
   assert(etapa.sectores<=6,'La caché R6-b excedió 6 sectores');
+  /* Benchmark estructural CPU 4× sobre una misma región de 160 m:
+     únicamente tiempo de generación (no FPS ni GPU). Sin asumir mejora
+     en plataformas distintas al Chromium del ejecutor. */
+  const cdp=await page.context().newCDPSession(page);
+  await cdp.send('Emulation.setCPUThrottlingRate',{rate:4});
+  const rendimiento=await page.evaluate(()=>{
+    const g=TURNO.vistas.gl, id=g._r6b&&g._r6b.ready.keys().next().value;
+    if(!id)return {muestras:0,razon:'sin región precocinada'};
+    const [gx,gy]=id.split(',').map(Number);
+    const medir=activo=>{
+      MC.R6B.activo=activo;const medidas=[];
+      for(let i=0;i<12;i++){
+        const t=performance.now(),r=g._region(gx,gy,1);
+        medidas.push(performance.now()-t);
+        g._borrar(r);
+      }
+      medidas.sort((a,b)=>a-b);
+      return {mediana:Math.round(medidas[5]*100)/100,
+        p95:Math.round(medidas[11]*100)/100};
+    };
+    const normal=medir(false),lod=medir(true);
+    MC.R6B.activo=true;
+    return {muestras:12,normal,lod,detalle:1,region:id,throttleCPU:4};
+  });
+  await cdp.send('Emulation.setCPUThrottlingRate',{rate:1});
+  assert(rendimiento.muestras===12&&Number.isFinite(rendimiento.lod.p95)&&
+    Number.isFinite(rendimiento.normal.p95),'No se midió el costo de construir regiones');
   await page.evaluate(()=>{
     MC.R6B.activo=false;TURNO.vistas.reiniciarGL();
     TURNO.vistaId='tercera';TURNO.vistas.usar('tercera',TURNO.E);
@@ -53,5 +80,5 @@ try{
   assert(respaldo.mvp&&respaldo.tres&&!respaldo.trabajador,'Fallback procedural no funciona');
   assert.equal(red.length,0,'El HTML offline hizo solicitudes externas: '+red.join(','));
   assert.equal(errores.length,0,'Errores en Chromium: '+errores.join(','));
-  console.log('✓ R6-b Worker Blob, sectores, LRU y respaldo 3D sin internet: '+JSON.stringify({etapa,respaldo}));
+  console.log('✓ R6-b Worker Blob, sectores, LRU y respaldo 3D sin internet: '+JSON.stringify({etapa,respaldo,rendimiento}));
 }finally{await navegador.close();}
