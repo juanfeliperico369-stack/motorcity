@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'herramientas/precocinar-sectores.mjs'
+      - 'herramientas/validar-sectores.mjs'
       - '.github/workflows/r6-sectores-qa.yml'
   workflow_dispatch:
 
@@ -61,6 +62,11 @@ jobs:
             --exportar-huellas "$RUNNER_TEMP/r6-guatape-huellas.json" > "$RUNNER_TEMP/r6-guatape-huellas-medicion.json"
           cat "$RUNNER_TEMP/r6-guatape-huellas-medicion.json"
           node -e "const fs=require('fs'),h=JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+'/r6-guatape-huellas.json','utf8'));if(h.type!=='FeatureCollection'||h.crs!=='MC4-LOCAL-METROS'||h.features.length<10||h.features.some(f=>f.geometry.type!=='Polygon'||!f.properties||!('pisos_estimados' in f.properties)))process.exit(1);console.log('R6 huellas auditables:',h.features.length,'con referencia local y pisos marcados como estimados')"
+      - name: Validar hashes, offsets y coordenadas de los bloques reales
+        timeout-minutes: 12
+        run: |
+          node herramientas/validar-sectores.mjs --directorio "$RUNNER_TEMP/r6-guatape"
+          node --max-old-space-size=4096 herramientas/validar-sectores.mjs --directorio "$RUNNER_TEMP/r6-medellin-lod2-80m"
       - name: Publicar evidencia cuantitativa (no assets al juego)
         if: always()
         uses: actions/upload-artifact@v4
