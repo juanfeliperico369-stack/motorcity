@@ -688,3 +688,12 @@ Cinco ilustraciones de actos, limpieza del menú compartido y soporte de pruebas
   - el rendimiento en celulares reales con sombras no se ha medido: aquí no hay GPU, y las pruebas usan WebGL por software;
   - en gama baja, el modo automático usa el clásico.
 
+
+
+### ChatGPT · 22-nov-2026 · R5 relieve (solo informe y licencia)
+- **Pedido del autor:** continuar lo pendiente de Codex en orden `docs/PEDIDOS-CHATGPT-4.9.md`, sin tocar `main` ni otros juegos.
+- **Investigado:** ficha oficial del MDT LiDAR 2024 de Medellín, malla de **1 m**, **37.639,66 ha**, **EPSG:9377**, generado por la Alcaldía y custodiado/distribuido por IGAC, con licencia declarada **CC BY-SA 4.0**. Universidad de Bristol indica **CC BY-NC-SA 4.0** para FABDEM, por lo que no se incorpora para uso comercial sin permiso. Ver `reportes/2026-11-22-chatgpt-r5-relieve-licencias.md`.
+- **Hecho:** informe comparativo de fuentes, obligaciones de licencia, ruta de integración hipotética y condiciones de autorización. **No se descargó ni procesó un MDT; no se modificó MC4 ni código jugable.**
+- **Verificado:** metadatos de ICDE/IGAC y fichas de licencia. No pruebas de motor porque esta entrega no lo modifica. La etiqueta «datos descargables» del catálogo no implica que el archivo se haya descargado o se haya comprobado su acceso.
+- **Falta:** decisión **expresa del autor** sobre licencia CC BY-SA para la cartografía derivada, verificación del archivo real, precisión y referencia vertical, y pruebas antes de modificar el juego. Mantener el terreno actual mientras tanto.
+- **Coordinación:** `coord/agentes/chatgpt-r5.json` y `coord/buzon/20261122-2055-chatgpt-r5.md`, sin pisar Codex R1, ChatGPT R3/R4 o Gemini V4. A la próxima IA le corresponde registrar su trabajo y riesgos en §8.
