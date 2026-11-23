@@ -192,7 +192,7 @@ if (fs.existsSync(dirJ) && !process.argv.includes('--sin-juegos')) for (const id
       if (p.excluido) console.warn('⚠ R6-b: '+m+' excluido por presupuesto '+p.stats.bytes+' B');
       else {
         const datos = validarR6b(p);
-        mundosHTML += '<script type="text/plain" id="mc-r6b-' + m + '">' + JSON.stringify(p).replaceAll('<', '\\u003c') + '</script>\\n';
+        mundosHTML += '<script type="text/plain" id="mc-r6b-' + m + '">' + JSON.stringify(p).replaceAll('<', '\\u003c') + '</script>\n';
         console.log('✓ R6-b '+m+': '+datos.sectores+' sectores, '+datos.regiones+' regiones, '+datos.cajas+' cajas, '+datos.bytes+' B comprimidos');
       }
     }
