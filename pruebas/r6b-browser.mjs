@@ -26,7 +26,7 @@ try{
   await page.click('#ciudades [data-c="guatape"]');
   await page.waitForFunction(()=>TURNO?.id==='guatape'&&!TURNO.transicion&&TURNO.cuerpo&&TURNO.vistas,null,{timeout:90000});
   await page.evaluate(()=>{
-    const G=TURNO;MC.opciones.graficos='realistas';G.vistas.motor3d='gl';
+    const G=TURNO;MC.R6B.forzarPrueba=true;MC.opciones.graficos='realistas';G.vistas.motor3d='gl';
     G.vistas.auto=false;G.vistas.calidad=1;G.vistas.reiniciarGL();
     G.vistaId='dron';G.vistas.usar('dron',G.E);
   });
@@ -69,7 +69,7 @@ try{
   assert(rendimiento.muestras===12&&Number.isFinite(rendimiento.lod.p95)&&
     Number.isFinite(rendimiento.normal.p95),'No se midió el costo de construir regiones');
   await page.evaluate(()=>{
-    MC.R6B.activo=false;TURNO.vistas.reiniciarGL();
+    MC.R6B.activo=false;MC.R6B.forzarPrueba=false;TURNO.vistas.reiniciarGL();
     TURNO.vistaId='tercera';TURNO.vistas.usar('tercera',TURNO.E);
   });
   await page.waitForFunction(()=>TURNO?.vistas?.gl?.tres&&TURNO.vistas.gl.mvp,null,{timeout:30000});
