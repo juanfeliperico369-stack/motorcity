@@ -3,26 +3,49 @@
   "agente": "antigravity",
   "marca": "Gemini",
   "apodo": "hydrogen",
-  "rama": "ia/gemini/g5-04-minijuegos",
+  "rama": "ia/gemini/g5-08-quimica",
   "base": "df80193",
   "version_motor": "5.2.0",
-  "actualizado": "2026-11-23T15:08:00Z",
+  "actualizado": "2026-11-23T16:04:00Z",
   "estado": "listo_para_integrar",
-  "pedido_actual": "G5-04",
-  "rol": "Minijuegos táctiles cortos (puentear, chapa, inflar llanta y ajustar cadena) sobre G.ui en Motor City 5.2 (+27.8 KB al HTML)",
-  "entregas_5_0": {
-    "G5-01": { "rama": "ia/gemini/g5-01-historieta", "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/21", "estado": "integrado_en_main", "peso_html_kb": "+3.1 KB" },
-    "G5-02": { "rama": "ia/gemini/g5-02-anillos", "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/23", "estado": "integrado_en_main", "peso_html_kb": "+9.4 KB" },
-    "G5-07": { "rama": "ia/gemini/g5-07-sitios", "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/26", "estado": "listo_para_integrar", "peso_html_kb": "+0 KB" },
+  "pedido_actual": "G5-08",
+  "rol": "Química del mundo (lluvia apaga fuego con vapor H2O, charcos salpican en 2D/3D, viento desvía humo y arreglo cota 3D en Efectos, +8.8 KB al HTML)",
+  "entregas_5_2": {
+    "G5-07": {
+      "rama": "ia/gemini/g5-07-sitios",
+      "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/26",
+      "estado": "pr_abierto",
+      "peso_html_kb": "+0.0 KB"
+    },
     "G5-04": {
       "rama": "ia/gemini/g5-04-minijuegos",
+      "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/27",
+      "estado": "pr_abierto",
+      "peso_html_kb": "+27.8 KB"
+    },
+    "G5-01-b": {
+      "rama": "ia/gemini/g5-01-b-historieta",
+      "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/28",
+      "estado": "pr_abierto",
+      "peso_html_kb": "+1.0 KB"
+    },
+    "G5-05": {
+      "rama": "ia/gemini/g5-05-guia-cine",
+      "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/29",
+      "estado": "pr_abierto",
+      "peso_html_kb": "+12.1 KB"
+    },
+    "G5-08": {
+      "rama": "ia/gemini/g5-08-quimica",
       "estado": "listo_para_integrar",
-      "peso_html_kb": "+27.8 KB",
+      "peso_html_kb": "+8.8 KB",
       "archivos": [
-        "juegos/getaway/64-minijuegos.js",
-        "pruebas/minijuegos.mjs",
-        "reportes/2026-11-23-gemini-g5-04-minijuegos.md",
-        "reportes/img/gemini-g5-04/"
+        "js/89-quimica-mundo.js",
+        "js/46-vistas.js",
+        "juegos/getaway/69-quimica.js",
+        "pruebas/quimica-mundo.mjs",
+        "reportes/2026-11-23-gemini-g5-08-quimica.md",
+        "reportes/img/gemini-g5-08/"
       ]
     }
   },
@@ -30,9 +53,8 @@
     "js/37-dinamica.js (Claude)",
     "js/45-tres.js (Claude / ChatGPT)",
     "js/25-ia.js (Claude)",
-    "juegos/getaway/66-ciudad-viva.js (Claude)",
-    "juegos/getaway/67-retos-semaforo.js (Claude)",
-    "juegos/getaway/68-medir.js (Claude)"
+    "juegos/getaway/66-ciudad-viva.js, 67-retos-semaforo.js, 68-medir.js (Claude 5.2)",
+    "docs/PEDIDOS-CHATGPT-5.0.md (ChatGPT / Codex)"
   ],
-  "siguiente_pedido": "G5-01-b (ia/gemini/g5-01-b-historieta)"
+  "siguiente_pedido": "G5-09 (ia/gemini/g5-09-mundo-vivo)"
 }
