@@ -1,4 +1,4 @@
-/* Motor City 4.9.0 · 2026-11-22 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 5.0.0 · 2026-11-23 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin internet; trae three.js 0.170 (MIT, © three.js authors) para el 3D realista.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -27,7 +27,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '4.9.0',
+  version: '5.0.0',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -2508,6 +2508,10 @@ class Trafico {
     const grupos = new Map(); for (const g of A) { const k = g.e.i * 2 + (g.dir > 0 ? 1 : 0); (grupos.get(k) || grupos.set(k, []).get(k)).push(g); }
     for (const L of grupos.values()) { L.sort((p, q) => (p.s - q.s) * p.dir); for (let i = 0; i < L.length; i++) L[i].delante = L[i + 1] || null; }
     for (const g of A) {
+      /* 5.0 · golpeado por el jugador (MC.Dinamica): sale corrido y girando, se detiene, y luego vuelve despacio a su carril */
+      if (g.golpe) { const k = g.golpe, sp = Math.hypot(k.vx, k.vy), f = sp > 1e-3 ? Math.max(0, sp - 7 * dt) / sp : 0; g.x += k.vx * dt; g.y += k.vy * dt; g.a += k.r * dt; k.vx *= f; k.vy *= f; k.r *= Math.exp(-2.5 * dt); k.t -= dt; g.v = 0; g.frena = 1;
+        if (k.t <= 0) { const pr = g.e.t.proyectar(g.x, g.y); g.s = clamp(pr.s, 0, g.e.largo); const q = g.e.t.at(g.s, (g.e.ancho / 4 + .3) * g.dir); g.off = { x: g.x - q.x, y: g.y - q.y, a: angDif(q.a + (g.dir > 0 ? 0 : Math.PI), g.a) }; g.golpe = null; }
+        continue; }
       const e = g.e, finS = g.dir > 0 ? e.largo : 0, falta = Math.abs(finS - g.s), nodo = g.dir > 0 ? e.b : e.a;
       let objetivo = g.vmax;
       if (g.delante) { const hueco = Math.abs(g.delante.s - g.s) - (g.largo + g.delante.largo) / 2; objetivo = Math.min(objetivo, Math.max(0, (hueco - 2.5) * 1.2)); }
@@ -2521,6 +2525,7 @@ class Trafico {
         g.e = o.arista; g.dir = o.adelante ? 1 : -1; g.s = o.adelante ? sobra : o.arista.largo - sobra;
       }
       const q = g.e.t.at(g.s, (g.e.ancho / 4 + .3) * g.dir); g.x = q.x; g.y = q.y; g.a = q.a + (g.dir > 0 ? 0 : Math.PI);
+      if (g.off) { const o = g.off, k = Math.exp(-dt * 1.3); o.x *= k; o.y *= k; o.a *= k; g.x += o.x; g.y += o.y; g.a += o.a; g.v = Math.min(g.v, 3); if (Math.abs(o.x) + Math.abs(o.y) < .05) g.off = null; }
     }
     this._peatones(dt, cx, cy, calidad);
     return A;
@@ -3827,7 +3832,7 @@ class Cuerpo {
   vmax() { const V = this.veh, base = V.id === 'pie' ? (this.corriendo ? V.vcorre : V.vmax) : V.vmax; return base * this.escala * (Vehiculos.escala || 1); }
   /* ¿puede este vehículo estar en (x, y)? */
   puede(x, y, sondeo = false) {
-    const V = this.veh; if (V.clase === 'aire' && this.z > 3) return this.mundo.dentro(x, y);
+    const V = this.veh; this._obst = null; if (V.clase === 'aire' && this.z > 3) return this.mundo.dentro(x, y);
     if (this.paso) return true;
     /* un tablero o una rampa que queda entre los pies y la cabeza es una pared (no se atraviesa ni se pasa por debajo) */
     const pie = this.zPaso + this.z, alto = this.altoCuerpo(); for (const S of this.superficies(x, y)) if (S.P && S.h - pie > this.escalonDin() && S.h - pie < alto) return false;
@@ -3844,7 +3849,7 @@ class Cuerpo {
       if (!(this.z > 1.2) && !(this.ia && enVia)) { const o = Terreno.obstaculo(this, x, y, V.clase === 'pie' ? .25 : Math.min(.9, (V.ancho || .6) / 2)); /* 4.5: lo que se rompe (canecas, conos, bancas, hidrantes, postes, paraderos…) no frena en seco: se lo lleva por delante si va rápido */
         if (o && !sondeo && MC.Rotos && MC.Rotos.puede(o, this)) { MC.Rotos.romper(this.mundo, o, this); return true; }
         if (o && sondeo && MC.Rotos && MC.Rotos.puede(o, this)) return true;
-        if (o && !(this.ia && V.clase !== 'pie' && MENOR_IA.has(o.t))) return this._bloquea(o.t ? ({ arbol: 'un árbol', poste: 'un poste', roca: 'una roca', banca: 'una banca', paradero: 'un paradero', palma: 'una palma' }[o.t] || 'algo') : (o.motivo || 'algo')); }
+        if (o && !(this.ia && V.clase !== 'pie' && MENOR_IA.has(o.t))) return (this._obst = o), this._bloquea(o.t ? ({ arbol: 'un árbol', poste: 'un poste', roca: 'una roca', banca: 'una banca', paradero: 'un paradero', palma: 'una palma' }[o.t] || 'algo') : (o.motivo || 'algo')); }
     }
     return true;
   }
@@ -3875,6 +3880,8 @@ class Cuerpo {
     /* el terreno manda en la velocidad: vadear, nadar, arena, nieve, monte (MC.Terreno) */
     const Tp = this.paso || (V.clase === 'aire' && this.z > 3) ? { f: 1 } : Terreno.paso(this, this.x, this.y); this.nadando = !!Tp.nada; this.vadeando = !!Tp.vadea;
     const suelo = this.paso ? 1 : Math.max(.12, Tp.ok === false ? .15 : Tp.f), loma = V.electrico ? clamp(1 - this.pend * .4, .85, 1.15) : Vehiculos.loma(V, this.pend);
+    /* 5.0 · la dinámica real del carro (MC.Dinamica: peso, suspensión, marchas, derrapes y choques con impulso) si el juego la pide */
+    if (!this.nadando && MC.Dinamica && MC.Dinamica.activa(this)) return this._real(dt, E, suelo, loma);
     /* 4.6 · manejo arcade (el de Juega EnCicla, llevado a todos los vehículos): a pie, bicis, motos, carros y pesados */
     if (V.clase !== 'aire' && V.clase !== 'agua' && !this.nadando && !(MC.opciones && MC.opciones.manejo === 'simulacion')) return this._arcade(dt, E, suelo, loma);
     const vmax = this.vmax() * suelo * loma * (E.turbo ? 1.25 : 1), objetivo = acel >= 0 ? vmax * acel : -vmax * .35 * -acel;
@@ -4773,6 +4780,235 @@ Cuerpo.prototype.actualizar = function (dt, E = {}) {
   this._niveles(dt); this.estado = 'sentado'; return this;
 };
 
+/* ---- js/37-dinamica.js ---- */
+/* =====================================================================
+   DINÁMICA REAL DEL CARRO (5.0) · «que se sienta»: peso, suspensión, marchas, derrapes y choques
+   Pedido del autor: llegar al nivel de los grandes juegos de mundo abierto. Lo primero que se siente en 10 segundos es el carro.
+   Ideas (sala limpia, nada de su código): la «hoja de manejo» por vehículo de los juegos de mundo abierto de los 2000 (unos
+   30 números por carro) y el modelo de bicicleta de dos ejes de los libros de dinámica vehicular (Gillespie, Milliken,
+   Pacejka: la curva de agarre que se satura, la «fórmula mágica»).
+   - HOJA DE MANEJO: masa, batalla, reparto de peso, altura del centro de masa, agarre μ, rigidez de las llantas, tracción
+     (trasera, delantera o 4×4), motor (kW, N·m, rpm), marchas automáticas, frenos, dirección y suspensión. Sale de la ficha del
+     taller (Turno Cero trae masa, kW, N·m, Cd y área reales) o, sin ficha, de vmax, acc y masa de su clase.
+   - EJES CON CARGA QUE CAMBIA: al frenar el peso pasa adelante (la trompa se hunde y la cola se aligera), al acelerar, atrás.
+   - LLANTAS: agarre lateral que crece con el ángulo de deriva hasta un pico (~8°) y luego cede un poco (se puede derrapar y
+     recuperar), y círculo de fricción: si el eje motriz empuja a fondo, agarra menos de lado (la cola se sale con potencia);
+     el freno de mano bloquea atrás y la cola se suelta.
+   - MOTOR Y MARCHAS: par según las rpm con tope de potencia, corte de rpm, cambios automáticos con un corte breve del empuje,
+     freno de motor. Las rpm salen de las ruedas y dan el tono del motor (f = rpm/60 × cilindros/2, MC.PersecucionAudio).
+   - CARROCERÍA CON RESORTES: cabeceo (frenar y acelerar), alabeo (curvas) y rebote (bordillos y aterrizajes), para dibujarla.
+   - CHOQUES CON IMPULSO: contra una pared rebota según el ángulo y gira si el golpe va de lado; contra el tráfico reparte el
+     golpe según las masas, y el otro carro sale corrido y atravesado (MC.Trafico lo devuelve a su carril después).
+   - Con el joystick que apunta en el mundo, un control de estabilidad pide el giro que el agarre permite (como el ESP de un
+     carro de verdad): responde rápido, pero si entras muy rápido a la curva el carro se va de largo; con el freno de mano, no
+     hay ayuda y la cola se cruza.
+   Se usa con MC.opciones.manejo = 'real' (⚙️ Flexibilidad → 🛞 Manejo; en Turno Cero es lo de fábrica). La IA sigue en arcade.
+   ===================================================================== */
+const DIN_CLASE = {
+  auto: { pesoAdel: .55, cgAlto: .55, mu: 1, rig: 20, traccion: 'tras', kW: 90, Nm: 170, rpmMax: 6500, ralenti: 850, marchas: [3.5, 2.1, 1.45, 1.1, .87], rueda: .31, frenoG: .95, dirMax: .58, suspHz: 1.55, amort: .38, cil: 4, cd: .32, area: 2.1, crr: .013 },
+  pesado: { pesoAdel: .5, cgAlto: 1.1, mu: .85, rig: 16, traccion: 'tras', kW: 160, Nm: 700, rpmMax: 3200, ralenti: 650, marchas: [6.5, 4, 2.6, 1.7, 1.2, 1], rueda: .5, frenoG: .72, dirMax: .52, suspHz: 1.15, amort: .36, cil: 6, cd: .7, area: 6.5, crr: .008 },
+  moto: { pesoAdel: .48, cgAlto: .62, mu: 1.05, rig: 18, traccion: 'tras', kW: 45, Nm: 55, rpmMax: 10500, ralenti: 1300, marchas: [2.8, 2, 1.55, 1.25, 1.05, .92], rueda: .3, frenoG: .9, dirMax: .5, suspHz: 1.9, amort: .4, cil: 2, cd: .6, area: .8, crr: .015 }
+};
+/* masas del tráfico (kg) para repartir el golpe */
+const DIN_MASA_TRAF = { carro: 1250, taxi: 1250, moto: 220, bici: 90, buseta: 7000, camion: 9000 };
+const Dinamica = {
+  /* el juego pide más empuje que el de un carro real (las persecuciones arrancan fuerte, como la biblia de Turno Cero: ×1,6) */
+  potenciaJuego: 1.6,
+  /* y llantas con más agarre que las de calle (≈1,3 g en asfalto seco): ágil en la ciudad, pero con peso y derrapes */
+  agarreJuego: 1.3,
+  activa(C) { const k = C.veh.clase; return !C.ia && !!MC.opciones && MC.opciones.manejo === 'real' && (k === 'auto' || k === 'pesado' || k === 'moto'); },
+  /* la hoja de manejo del vehículo (se calcula una vez por vehículo y escala de velocidad) */
+  hoja(V) {
+    const esc = (MC.Vehiculos && MC.Vehiculos.escala) || 1; if (V._hoja && V._hoja.esc === esc) return V._hoja;
+    const B = DIN_CLASE[V.clase === 'pesado' ? 'pesado' : V.clase === 'moto' ? 'moto' : 'auto'], F = V.ficha || {}, h = Object.assign({}, B, V.hojaManejo || {});
+    h.esc = esc; h.masa = V.masa || F.masa || 1300; h.largo = V.largo || 4.3; h.ancho = V.ancho || 1.8;
+    h.batalla = (V.hojaManejo && V.hojaManejo.batalla) || F.distEjes || clamp(h.largo * .6, 1.2, 6);
+    h.a = h.batalla * (1 - h.pesoAdel); h.b = h.batalla * h.pesoAdel;   /* del centro de masa al eje de adelante (a) y al de atrás (b) */
+    h.Iz = h.masa * (h.largo * h.largo + h.ancho * h.ancho) / 12;
+    if (F.potenciaKW) { h.kW = F.potenciaKW; h.Nm = F.parNm || h.Nm; h.cd = F.cd || h.cd; h.area = F.area || h.area; h.crr = F.crr || h.crr; h.mu = F.mu || h.mu; }
+    else { const vm = Math.max(5, V.vmax || 20); h.kW = Math.max(4, (Fis.arrastre(C.rhoAire, vm, h.cd, h.area) + Fis.rodadura(h.crr, h.masa)) * vm / .85 / 1000); h.Nm = Math.max(25, h.masa * Math.max(1.5, V.acc || 3) * h.rueda / (h.marchas[0] * 3.9 * .9)); }
+    /* el desarrollo: en la última marcha, la velocidad tope del vehículo (con algo de margen para el turbo) cae cerca del corte */
+    const vref = Math.max(5, (V.vmax || 25) * esc * 1.12); h.final = (V.hojaManejo && V.hojaManejo.final) || (h.rpmMax * .92 * TAU / 60 * h.rueda) / (h.marchas[h.marchas.length - 1] * vref);
+    return (V._hoja = h);
+  },
+  estado() { return { u: 0, w: 0, r: 0, d: 0, marcha: 1, rpm: 0, cambio: 0, ax: 0, ay: 0, cab: 0, vcab: 0, alab: 0, valab: 0, reb: 0, vreb: 0, patina: 0, deriva: 0 }; },
+  /* par del motor (N·m) a esas rpm: curva con pico en el 62 % y tope de potencia */
+  par(H, rpm) { const k = rpm / H.rpmMax, p = H.Nm * Math.max(.3, 1 - .45 * Math.pow((k - .62) / .62, 2)), w = Math.max(1, rpm * TAU / 60); return Math.min(p, H.kW * 1000 / w); },
+  /* un paso PURO (se prueba en Node): D = estado, H = hoja, U = mando { thr 0..1, freno 0..1, rev 0..1, delta (rad), mano },
+     A = ambiente { mu (agarre del piso × clima), crrExtra, pend (subida + en el sentido del carro), vlim, potencia (×), enAire } */
+  paso(D, H, U, A, h) {
+    const m = H.masa, g = C.g, L = H.batalla, mu = H.mu * (A.mu ?? 1) * Dinamica.agarreJuego, dl = U.delta || 0, cd = Math.cos(dl), sd = Math.sin(dl);
+    /* cargas por eje con la transferencia de la aceleración anterior */
+    const tr = m * clamp(D.ax, -12, 12) * H.cgAlto / L, Ff0 = m * g * H.pesoAdel, Fzf = Math.max(m * g * .12, Ff0 - tr), Fzr = Math.max(m * g * .12, m * g - Ff0 + tr);
+    /* motor: rpm desde las ruedas (con embrague que patina al arrancar) */
+    const n = H.marchas.length, au = Math.abs(D.u), rev = U.rev > 0 && D.u < .6;
+    if (rev) D.marcha = -1; else if (D.marcha < 1) D.marcha = 1;
+    const rel = (D.marcha < 0 ? H.marchas[0] * 1.1 : H.marchas[D.marcha - 1]) * H.final, rpmRueda = au / H.rueda * rel * 60 / TAU, thr = rev ? U.rev : U.thr;
+    const rpmLibre = H.ralenti + thr * (H.rpmMax * .55 - H.ralenti); D.rpm = clamp(Math.max(rpmRueda, rpmRueda < rpmLibre ? lerp(rpmRueda, rpmLibre, clamp(1 - rpmRueda / rpmLibre, 0, 1)) : 0, H.ralenti), H.ralenti, H.rpmMax * 1.02);
+    D.cambio = Math.max(0, D.cambio - h);
+    /* cambios automáticos: arriba cerca del corte (con un corte breve del empuje), abajo cuando el motor se cae */
+    if (!rev && D.cambio <= 0) { if (rpmRueda > H.rpmMax * .9 && D.marcha < n && thr > .1) { D.marcha++; D.cambio = .16; D.cambioEv = 1; } else if (D.marcha > 1 && rpmRueda < H.rpmMax * .4) { D.marcha--; D.cambio = .06; } }
+    let Fd = 0; const vlim = A.vlim || 1e9;
+    if (thr > 0 && D.cambio <= 0 && D.rpm < H.rpmMax) {
+      const tope = rev ? clamp((8 - au) / 2, 0, 1) : clamp((vlim - D.u) / Math.max(1, vlim * .07), 0, 1);   /* se acerca a su tope sin golpe (el tope del juego: daño, suelo, turbo) */
+      Fd = Dinamica.par(H, D.rpm) * rel * .88 / H.rueda * thr * (A.potencia ?? 1) * Dinamica.potenciaJuego * tope * (rev ? -1 : 1);
+    }
+    /* freno de motor sin acelerar (suave) */
+    if (thr === 0 && !U.freno && au > 1) Fd -= Math.sign(D.u) * H.Nm * .1 * rel / H.rueda * (D.rpm / H.rpmMax);
+    /* el empuje se reparte por eje y no pasa del agarre (si pasa, las ruedas patinan) */
+    const kf = H.traccion === 'del' ? 1 : H.traccion === '4x4' ? .4 : 0, Fdf = Fd * kf, Fdr = Fd * (1 - kf);
+    /* control de tracción (como los carros de hoy): el empuje no pasa del 75 % del agarre del eje (y menos si la cola ya se está
+       yendo, o si las ruedas van giradas), para que quede agarre de lado; sin él (freno de mano) las ruedas patinan y la cola se sale */
+    const limF = mu * Fzf, limR = mu * Fzr, tcs = U.mano ? 1 : clamp(.92 - D.deriva * 3 - Math.abs(dl) * .5, .3, .92);
+    D.patina = (Math.abs(Fdf) > limF * tcs * 1.05 || Math.abs(Fdr) > limR * tcs * 1.05) && au < 6 && thr > .5 ? 1 : 0;
+    let Fxf = clamp(Fdf, -limF * tcs, limF * tcs), Fxr = clamp(Fdr, -limR * tcs, limR * tcs);
+    /* frenos: 65 % adelante, sin bloquear (ABS); el de mano bloquea atrás */
+    if (U.freno > 0 && au > .05) { const Fb = U.freno * H.frenoG * m * g, sg = Math.sign(D.u); Fxf -= sg * Math.min(Fb * .65, limF * .97); Fxr -= sg * Math.min(Fb * .35, limR * .97); }
+    if (U.mano && au > .3) Fxr = -Math.sign(D.u) * limR * .7;
+    /* resistencias: aire, rodadura (más en tierra y pasto) y la pendiente */
+    const Fres = Math.sign(D.u) * (Fis.arrastre(C.rhoAire, D.u, H.cd, H.area) + (H.crr + (A.crrExtra || 0)) * m * g) + m * g * (A.pend || 0) / Math.sqrt(1 + (A.pend || 0) * (A.pend || 0));
+    if (A.enAire) { D.u -= Math.sign(D.u) * Math.min(au, .2 * h); D.r *= Math.exp(-.5 * h); D.d = dl; return D; }
+    /* llantas: ángulos de deriva y fuerza lateral que se satura; círculo de fricción con lo que ya usa el eje a lo largo */
+    /* atrás las llantas son más rígidas y agarran un poco más (subviraje de fábrica, como los carros de calle: en una curva muy
+       rápida se va de largo de trompa, no hace trompo); la cola se suelta con el freno de mano o con potencia de sobra */
+    const ue = Math.max(.5, au), af = Math.atan2(D.w + H.a * D.r, ue) - dl * Math.sign(D.u || 1), ar = Math.atan2(D.w - H.b * D.r, ue), Bf = H.rig / (1.4 * Math.max(.1, mu)), Br = Bf * 1.35, muR = mu * 1.06;
+    const lat = (al, Fz, Fx, B, m2) => { const cap = Math.sqrt(Math.max(0, 1 - Math.min(1, (Fx / Math.max(1, m2 * Fz)) ** 2))); return -m2 * Fz * Math.sin(1.4 * Math.atan(B * al)) * Math.max(.25, cap); };
+    let Fyf = lat(af, Fzf, Fxf, Bf, mu), Fyr = lat(ar, Fzr, Fxr, Br, muR); if (U.mano) Fyr *= .2;
+    const ax = (Fxf * cd + Fxr - Fyf * sd - Fres) / m, ay = (Fxf * sd + Fyf * cd + Fyr) / m, dr = (H.a * (Fyf * cd + Fxf * sd) - H.b * Fyr) / H.Iz;
+    const u0 = D.u; D.u += (ax + D.w * D.r) * h; D.w += (ay - D.u * D.r) * h; D.r += dr * h;
+    /* control de estabilidad (ESP): si el carro gira más de lo que piden las ruedas y la cola se está yendo, frena por rueda (aquí:
+       un momento que lleva el giro hacia el pedido y quita un poco de velocidad). Con el freno de mano no actúa: ahí se derrapa */
+    if (!U.mano && Math.abs(D.u) > 2) { const rRef = D.u * Math.tan(dl) / L, ex = D.r - rRef; if (D.deriva > .06 && Math.abs(ex) > .1) { const k2 = Math.min(1, h * 5); D.r -= ex * k2; D.u -= Math.sign(D.u) * Math.min(Math.abs(D.u), Math.abs(ex) * 2.5 * h); D.w *= 1 - Math.min(.5, h * 3); } }
+    if (U.freno > 0 && Math.sign(D.u) !== Math.sign(u0) && u0 !== 0) D.u = 0;   /* los frenos detienen, no echan para atrás */
+    /* a poca velocidad el modelo dinámico no sirve (divide por casi cero): se mezcla con el cinemático (el carro va por donde apuntan las ruedas) */
+    const k = clamp((Math.abs(D.u) - 1.5) / 3, 0, 1); if (k < 1) { const rk = D.u * Math.tan(dl) / L; D.r = lerp(rk, D.r, k); D.w = lerp(rk * H.b, D.w, k); }
+    if (Math.abs(D.u) < .12 && thr === 0) { D.u = 0; D.w *= .5; D.r *= .5; }
+    D.ax = lerp(D.ax, ax, Math.min(1, h * 12)); D.ay = lerp(D.ay, ay, Math.min(1, h * 12)); D.d = dl;
+    D.deriva = Math.abs(D.u) > 1 ? Math.abs(Math.atan2(D.w, Math.abs(D.u))) : 0;
+    return D;
+  },
+  /* la carrocería sobre sus resortes (para dibujar): cabeceo + nariz arriba, alabeo + el lado izquierdo arriba, rebote en metros */
+  resortes(D, H, h, moto) {
+    const w = TAU * H.suspHz, z = 2 * H.amort * w, kc = H.cgAlto / .55;
+    /* exagerado a propósito, como en los juegos de mundo abierto (se tiene que ver en un celular): ~4° al frenar fuerte, ~6° en curva */
+    const cab = clamp(D.ax * .0068 * kc, -.09, .07), alab = moto ? 0 : clamp(D.ay * .0085 * kc, -.12, .12);
+    D.vcab += (w * w * (cab - D.cab) - z * D.vcab) * h; D.cab += D.vcab * h;
+    D.valab += (w * w * (alab - D.alab) - z * D.valab) * h; D.alab += D.valab * h;
+    D.vreb += (-w * w * D.reb - z * D.vreb) * h; D.reb = clamp(D.reb + D.vreb * h, -.25, .25);
+  },
+  /* el mando a partir de la entrada del jugador (joystick que apunta en el mundo, o volante y pedales) */
+  mando(Q, D, H, E, mu, vlim = 30) {
+    const U = { thr: 0, freno: 0, rev: 0, delta: 0, mano: !!E.derrape }, au = Math.abs(D.u), g = C.g, L = H.batalla, gir = MC.opciones.giro || 1;
+    const dmax = H.dirMax * lerp(1, .32, clamp(au / 35, 0, 1));
+    let dObj = 0;
+    if (E.dir && E.dir.m > .08) {
+      const ta = Math.atan2(E.dir.y, E.dir.x), da = angDif(Q.a, ta), am = Math.abs(da);
+      D.revT = Math.max(0, (D.revT || 0) - (Q._dt || 1 / 60));
+      /* trancado de trompa contra algo y pidiendo otro rumbo: una reversa corta girando (lo que haría una persona) */
+      if (!U.mano && Q.bloqueo && D.choqueDir > 0 && au < 1.5 && am > .9 && !D.revT) D.revT = .9;
+      if (D.revT > 0) { U.rev = Math.max(.6, E.dir.m); const rObj = clamp(da * 2, -1.2, 1.2); dObj = Math.atan(L * rObj / Math.min(-1.2, D.u)); }
+      else if (am > 2.4 && D.u < 2) {   /* el joystick apunta atrás y casi quieto: reversa (vuelta en tres puntos) */
+        U.rev = E.dir.m; const db = angDif(Q.a + Math.PI, ta), rObj = clamp(-db * 3, -1.4, 1.4);   /* la trompa gira hacia donde apunta el dedo (como en arcade) */ dObj = Math.atan(L * rObj / Math.min(-1.2, D.u));
+      } else {
+        /* control de estabilidad: el giro que se pide (6 × lo que falta) sin pasar del que el agarre da a esta velocidad */
+        const rGrip = mu * g / Math.max(2, au) * 1.05, rObj = clamp(da * 6 * gir, -1, 1) * (U.mano ? 2.4 : Math.min(2.4, rGrip));
+        dObj = Math.atan(L * rObj / Math.max(1.5, D.u)) + (rObj - D.r) * .06;
+        /* la velocidad que se pide, como en el arcade: a fondo de frente y menos cuanto más de lado apunta el dedo (para dar la curva);
+           si va más rápido, frena con los frenos de verdad (el peso se va adelante); con el freno de mano no hay ayuda */
+        const vObj = vlim * E.dir.m * (.3 + .7 * Math.max(0, Math.cos(da)));
+        if (!U.mano && D.u > vObj + 1.5) U.freno = clamp((D.u - vObj) / 8, 0, .85);
+        else if (D.u < vObj) U.thr = E.dir.m * clamp(1.15 - am * .55, .25, 1);
+      }
+    } else {
+      const ac = clamp(E.acel || 0, -1, 1), gi = clamp(E.giro || 0, -1, 1);
+      /* volante y teclado: el ángulo pedido, sin pasar del que satura las llantas a esta velocidad (salvo con el freno de mano) */
+      const dLim = Math.max(.035, Math.atan(L * mu * g * 1.05 / Math.max(1, D.u * D.u))); dObj = gi * dmax * gir; if (!U.mano) dObj = clamp(dObj, -dLim, dLim);
+      if (ac > 0) U.thr = ac; else if (ac < 0) { if (D.u > .5) U.freno = -ac; else U.rev = -ac; }
+    }
+    if (E.frenoK && U.freno) U.freno *= E.frenoK;
+    /* la dirección gira a una velocidad finita (como un volante de verdad) */
+    const vel = 4.2 * gir * (Q._dt || 1 / 60); D.d = clamp(D.d + clamp(clamp(dObj, -dmax, dmax) - D.d, -vel, vel), -dmax, dmax); U.delta = D.d;
+    return U;
+  },
+  /* el tono del motor para el sonido */
+  sonido(Q) { const D = Q._din, H = D && Q.veh && Q.veh._hoja; return D && H ? { rpm: D.rpm, rpmMax: H.rpmMax, cilindros: H.cil, carga: D.carga || 0, marcha: D.marcha } : null; }
+};
+/* ---------- el cuerpo del jugador con la dinámica real ---------- */
+Cuerpo.prototype._real = function (dt, E, suelo, loma) {
+  const V = this.veh, M = this.mundo, H = Dinamica.hoja(V), moto = V.clase === 'moto';
+  let D = this._din; if (!D || D.veh !== V) { D = this._din = Dinamica.estado(); D.veh = V; D.u = this.v; D.d = 0; }
+  /* si el juego cambió la velocidad desde afuera (teletransporte, cinemático, rescate), el modelo la toma */
+  if (Math.abs(this.v - D.u) > 1.5) { D.u = this.v; D.w = 0; D.r = 0; }
+  this._dt = dt;
+  /* el piso: agarre (asfalto 1; pasto, tierra y arena menos), clima, y lo blando frena (rodadura extra) */
+  /* (como en los juegos de mundo abierto, en pasto o tierra se agarra menos pero se puede manejar: μ del piso de 0,6 a 1) */
+  const lluvia = (E.lluvia || (E.clima && E.clima.lluvia) || 0), sup = clamp(TT_SUPERFICIE[this.tt] ?? .6, .15, 1), mu = clamp((.5 + .5 * sup) * (lluvia > .35 ? .8 : 1) * (Ambiente.agarre(E.clima || this.clima) || 1), .12, 1.05);
+  const turbo = !!E.turbo, vlim = this.vmax() * suelo * (turbo ? 1.25 : 1);
+  if (E.asistencia === true) this._asistencia(E, E.giro || 0, E.acel || 0, dt);
+  const U = Dinamica.mando(this, D, H, E, mu * H.mu * Dinamica.agarreJuego, vlim); if (this._asis && E.asistencia === true && Math.abs(U.delta) < .2) U.delta = clamp(U.delta + this._asis * .12, -H.dirMax, H.dirMax);
+  D.carga = Math.max(U.thr, U.rev); D.U = U; D.A = null;
+  this._vPedida = U.thr > 0 ? vlim * U.thr : U.rev > 0 ? -8 * U.rev : 0;
+  /* las lomas pesan, pero el carro sube (como en los juegos de mundo abierto: la pendiente cuenta al 60 %) */
+  const A = D.A = { mu, crrExtra: (1 - clamp(suelo, 0, 1)) * .1, pend: this.paso ? 0 : this.pend * .6, vlim, potencia: clamp(this.escala, .1, 1.2) * (turbo ? 1.4 : 1), enAire: this.enAire };
+  /* integrar en pasos cortos (fuerzas de llantas rígidas) y mover una sola vez con choques */
+  const n = Math.max(1, Math.ceil(dt / .006)), h = dt / n; let dx = 0, dy = 0;
+  for (let i = 0; i < n; i++) { Dinamica.paso(D, H, U, A, h); Dinamica.resortes(D, H, h, moto); this.a += D.r * h; const ca = Math.cos(this.a), sa = Math.sin(this.a); dx += (ca * D.u - sa * D.w) * h; dy += (sa * D.u + ca * D.w) * h; }
+  if (D.cambioEv) { this.eventos.push('cambio'); D.cambioEv = 0; }
+  /* salto (las motos) y caída, igual que en arcade */
+  if (!this.enAire) this.coyote = .12; else this.coyote = Math.max(0, (this.coyote || 0) - dt);
+  if (E.salto) this.bufSalto = .14; else this.bufSalto = Math.max(0, (this.bufSalto || 0) - dt);
+  if (this.bufSalto > 0 && V.salto && (!this.enAire || (this.coyote > 0 && this.vz <= 0))) { this.vz = Math.sqrt(2 * GRAV * .6 * V.salto); this.enAire = true; this.coyote = 0; this.bufSalto = 0; this.eventos.push('salto'); MC.emit('salto', this); }
+  if (this.enAire) { this.z += this.vz * dt; this.vz -= GRAV * dt; if (this.z <= 0) { const vz = this.vz; this.z = 0; this.enAire = false; this.eventos.push(vz < -6 ? 'aterrizaFuerte' : 'aterriza'); D.vreb += Math.max(-2.5, vz * .25); this.vz = 0; } }
+  const x0m = this.x, y0m = this.y; this._moverReal(dx, dy, dt, D, H);
+  this.v = D.u; this.giroV = D.r; this.rpm = D.rpm; this.marcha = D.marcha;
+  this.rumboRodado = Math.abs(D.u) > .5 ? this.a + Math.atan2(D.w, Math.abs(D.u)) * Math.sign(D.u) : this.a;
+  this.deslizamiento = D.deriva; if ((D.deriva > .2 && Math.abs(D.u) > 6) || (D.patina && Math.abs(D.u) > 2)) this.eventos.push('derrape');
+  this.inclinacion = Math.atan(clamp(this.pend, -.65, .65)); this.cabeceo = D.cab; this.alabeo = D.alab; this.rebote = D.reb;
+  this.choque = Math.max(0, (this.choque || 0) - dt);
+  this._despues(E, x0m, y0m, dt); this._niveles(dt);
+  if (this.eventos.includes('desatasco')) { D.u = this.v = 0; D.w = 0; D.r = 0; }
+  if (this.eventos.includes('bordillo')) { D.vreb -= .55 * Math.min(1, Math.abs(D.u) / 12); D.vcab += (Math.random() - .5) * .4; }
+  this.fase += Math.abs(this.v) * dt * 1.2;
+  this.estado = Personaje.estadoPara(V, Math.abs(this.v), this.enAire); this.buceando = false; this.aire = Math.min(1, this.aire + dt / 4);
+  const quiere = (E.dir && E.dir.m > .3) || (E.acel || 0) > .3; if (this.bloqueoAgua && quiere) this.empujaAgua += dt; else this.empujaAgua = Math.max(0, this.empujaAgua - dt * 2);
+  this.bloqueoAgua = false; if (this.bajarseEnAgua && this.empujaAgua > .6) { this.empujaAgua = 0; this.bajarse('agua'); }
+  return this;
+};
+/* moverse con choques de verdad: impulso con rebote según el ángulo, giro si el golpe es de lado y reparto con el otro carro */
+Cuerpo.prototype._moverReal = function (dx, dy, dt, D, H) {
+  const L = Math.hypot(dx, dy); if (L < 1e-7) return;
+  if (this.puede(this.x + dx, this.y + dy)) { this.x += dx; this.y += dy; return; }
+  const ob = this._obst;   /* lo que lo paró (antes de que otras consultas lo borren) */
+  /* metido dentro de algo (salió así, o el otro se le vino encima): se deja salir */
+  if (!this.puede(this.x, this.y, true)) { this.x += dx; this.y += dy; return; }
+  const r = Math.max(.6, Math.min(1.5, H.ancho * .7)), px = this.x + dx, py = this.y + dy; let bx = 0, by = 0;
+  for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, cx = Math.cos(a), cy = Math.sin(a); if (!this.puede(px + cx * r, py + cy * r, true)) { bx += cx; by += cy; } }
+  const bl = Math.hypot(bx, by), nx = bl > .01 ? -bx / bl : -dx / L, ny = bl > .01 ? -by / bl : -dy / L;
+  const ca = Math.cos(this.a), sa = Math.sin(this.a); let Vx = ca * D.u - sa * D.w, Vy = sa * D.u + ca * D.w;
+  const ag = ob && ob.ag, m1 = H.masa, m2 = ag ? (ag.masa || DIN_MASA_TRAF[ag.tipo] || 1300) : Infinity, V2x = ag ? Math.cos(ag.a || 0) * (ag.v || 0) : 0, V2y = ag ? Math.sin(ag.a || 0) * (ag.v || 0) : 0;
+  const vn = (Vx - V2x) * nx + (Vy - V2y) * ny; D.choqueDir = D.u >= 0 ? 1 : -1;   /* de trompa (1) o de cola (−1): para saber si conviene la reversa */
+  if (vn < 0) {
+    const e = ag ? .3 : .16, j = -(1 + e) * vn / (1 / m1 + (isFinite(m2) ? 1 / m2 : 0));
+    Vx += j / m1 * nx; Vy += j / m1 * ny;
+    /* roce a lo largo de la pared */
+    const tx = -ny, ty = nx, vt = Vx * tx + Vy * ty, fr = Math.min(Math.abs(vt), .35 * j / m1); Vx -= Math.sign(vt) * fr * tx; Vy -= Math.sign(vt) * fr * ty;
+    /* el golpe en una punta hace girar: momento = brazo × impulso (la punta que va adelante) */
+    const sg = D.u >= 0 ? 1 : -1, rcx = ca * H.largo * .45 * sg, rcy = sa * H.largo * .45 * sg; D.r = clamp(D.r + (rcx * j * ny - rcy * j * nx) / H.Iz * .7, -4, 4);
+    if (ag) { const k = j / m2; ag.golpe = { vx: V2x - k * nx, vy: V2y - k * ny, r: clamp(-(rcx * ny - rcy * nx) * k * .25, -2.5, 2.5), t: 2.4 }; }
+    D.u = Vx * ca + Vy * sa; D.w = -Vx * sa + Vy * ca;
+    const imp = -vn; if (imp > 2.5 && !(this.choque > .15)) { this.eventos.push('choque'); this.choque = .4; this.impacto = imp; this.normalChoque = [nx, ny]; MC.emit('choque', this); }
+    D.vcab -= Math.min(.8, imp * .05) * sg; D.valab += (Math.random() - .5) * Math.min(.6, imp * .04);
+  }
+  /* lo que queda del movimiento: a lo largo de la pared, si cabe; si no, un empujoncito hacia afuera */
+  const sx = Vx * dt, sy = Vy * dt;
+  if (Math.hypot(sx, sy) > 1e-5 && this.puede(this.x + sx, this.y + sy, true)) { this.x += sx; this.y += sy; return; }
+  /* la ayuda de esquinas (la de EnCicla y del arcade): prueba ángulos cercanos y resbala, girando un poco hacia el hueco */
+  const st = Math.max(L, .03), dir = Math.atan2(dy, dx);
+  for (const da of (D.d >= 0 ? [.35, -.35, .7, -.7, 1.1, -1.1] : [-.35, .35, -.7, .7, -1.1, 1.1])) { const ax = this.x + Math.cos(dir + da) * st, ay = this.y + Math.sin(dir + da) * st; if (this.puede(ax, ay, true)) { this.x = ax; this.y = ay; this.a += da * Math.min(1, dt * 6); return; } }
+  if (this.puede(this.x + nx * .05, this.y + ny * .05, true)) { this.x += nx * .05; this.y += ny * .05; }
+};
+Object.assign(MC, { Dinamica, DIN_CLASE });
+
 /* ---- js/37-flexibilidad.js ---- */
 /* =====================================================================
    FLEXIBILIDAD (4.8) · que cada quien ajuste el juego a su mano
@@ -4781,6 +5017,7 @@ Cuerpo.prototype.actualizar = function (dt, E = {}) {
    tamaño de los botones, cámara y calidad). El motor no guarda nada: cada juego guarda el objeto donde quiera
    (Turno Cero en leerG().flex) y lo aplica al cargar.
    - 🕹️ control: según la cámara (lo de siempre), apuntar en el mundo, volante o un pulgar (acelera solo);
+   - 🛞 manejo de los carros (5.0): real (MC.Dinamica: peso, suspensión, marchas, derrapes, choques con impulso) o arcade;
    - 🎯 giro: normal, rápido o suave (MC.opciones.giro, en el manejo y en la física);
    - 🚗 velocidad de los vehículos: ×1 a ×1,5 o ×0,8 (MC.Vehiculos.escala; también para los rivales, para que sea justo);
    - 🎥 distancia de la cámara: normal, lejos o cerca (MC.opciones.camDist);
@@ -4796,6 +5033,7 @@ const Flex = {
   /* [clave, nombre, opciones]: la primera opción es la de fábrica */
   DEF: [
     ['control', '🕹️ Control', [['auto', 'según la cámara'], ['mundo', 'apuntar hacia donde voy'], ['volante', 'volante (↑ acelera, ◀ ▶ giran)'], ['un_pulgar', 'un pulgar (acelera solo)']]],
+    ['manejo', '🛞 Manejo de los carros', [['real', 'real: peso, suspensión, marchas y derrapes'], ['arcade', 'arcade: va por donde apuntas, sin derrapar']]],
     ['giro', '🎯 Giro', [[1, 'normal'], [1.3, 'rápido'], [.75, 'suave']]],
     ['velocidad', '🚗 Velocidad de los vehículos', [[1, '×1'], [1.25, '×1,25'], [1.5, '×1,5'], [.8, '×0,8']]],
     ['camara', '🎥 Distancia de la cámara', [[1, 'normal'], [1.3, 'lejos'], [.8, 'cerca']]],
@@ -4815,7 +5053,7 @@ const Flex = {
   siguiente(f, k) { const ops = this.DEF.find(d => d[0] === k)[2], i = ops.findIndex(p => p[0] === f[k]); return Object.assign({}, f, { [k]: ops[(i + 1) % ops.length][0] }); },
   aplicar(f, op = {}) {
     f = this.valores(f); const O = MC.opciones;
-    O.giro = f.giro; O.camDist = f.camara; O.ui = f.ui; O.pantalla = f.pantalla; const cambiaGraf = O.graficos !== undefined && O.graficos !== f.graficos; O.graficos = f.graficos; O.vibrar = f.vibrar; O.zurdo = f.mano === 'zurda'; O.control = f.control;
+    O.manejo = f.manejo; O.giro = f.giro; O.camDist = f.camara; O.ui = f.ui; O.pantalla = f.pantalla; const cambiaGraf = O.graficos !== undefined && O.graficos !== f.graficos; O.graficos = f.graficos; O.vibrar = f.vibrar; O.zurdo = f.mano === 'zurda'; O.control = f.control;
     if (MC.Vehiculos) MC.Vehiculos.escala = f.velocidad;
     if (typeof document !== 'undefined') { document.documentElement.style.setProperty('--mc-ui', String(f.ui)); if (document.body) document.body.classList.toggle('mc-zurdo', O.zurdo); }
     const V = op.vistas; if (V) { if (f.calidad === 'auto') V.auto = true; else { V.auto = false; V.calidad = f.calidad; } }
@@ -6255,7 +6493,7 @@ class VistaGL {
     const m = new Malla(), M = this.mundo, O = this.O, rel = (x, y, z) => [x - O[0], z - O[2], y - O[1]];
     const pj = E.jugador; if (pj && !E._sinJugador) { const C = pj.cuerpo, A = pj.aspecto, zb = M.cota(C.x, C.y) + C.zPaso + C.z, J = Personaje.pose(C.estado || 'quieto', C.fase, { alto: A.alto, manubrio: C.veh.manubrio }), ca = Math.cos(C.a), sa = Math.sin(C.a), P = j => rel(C.x + ca * j[0], C.y + sa * j[0], zb + j[1]), Lp = (j, l) => { const p = P(j); return [p[0] - sa * l, p[1], p[2] + ca * l]; };
       const piel = hex3(A.cPiel), cam = hex3(A.cCamisa), pan = hex3(A.cPantalon);
-      if (C.veh.clase !== 'pie') { const V = C.veh; if ((V.clase === 'auto' || V.clase === 'pesado') && this._sinCabeza) { /* 4.8 (pedido de Gemini): en primera persona no se dibuja la carrocería alrededor del ojo; solo el capó adelante, como la cámara de cabina */ if (V.clase === 'auto') { const r = rel(C.x + ca * 1.18, C.y + sa * 1.18, zb + .62); m.caja(r[0], r[1], r[2], C.a, 1.8, (V.ancho || 1.8) * .9, .1, hex3(V.color || '#c0392b')); } } else if (V.clase === 'auto' || V.clase === 'pesado') { const r = rel(C.x, C.y, zb), Mo = Modelos.L.size ? Modelos.vehiculo({ tipo: V.clase === 'pesado' ? 'camion' : 'carro', modelo: V.modelo }) : null; if (Mo) m.modelo(Mo, r[0], r[1], r[2], C.a, { largo: V.largo, tinte: V.tinte || null, oscuro: pj.oscuro || 0, dano: pj.dano || null, distancia: 0 }); else m.carro3d(r[0], r[1], r[2], C.a, V.largo, V.ancho, V.color || '#c0392b', V.clase === 'pesado' ? 'buseta' : 'carro', E.cielo ? E.cielo.noche : 0); } else { m.hueso(P([-.5, .35]), P([.55, .35]), .04, hex3('#1b1f27')); m.hueso(P([-.05, .4]), P([.3, .85]), .035, hex3(V.color || '#7ab800')); m.hueso(P([.55, .35]), P([.38, 1.0]), .03, hex3('#2b2f38')); for (const u of [-.52, .55]) m.caja(...rel(C.x + ca * u, C.y + sa * u, zb), C.a, .68, .06, .68, hex3('#1b1f27')); } }
+      if (C.veh.clase !== 'pie') { const V = C.veh; if ((V.clase === 'auto' || V.clase === 'pesado') && this._sinCabeza) { /* 4.8 (pedido de Gemini): en primera persona no se dibuja la carrocería alrededor del ojo; solo el capó adelante, como la cámara de cabina */ if (V.clase === 'auto') { const r = rel(C.x + ca * 1.18, C.y + sa * 1.18, zb + .62); m.caja(r[0], r[1], r[2], C.a, 1.8, (V.ancho || 1.8) * .9, .1, hex3(V.color || '#c0392b')); } } else if (V.clase === 'auto' || V.clase === 'pesado') { const r = rel(C.x, C.y, zb + (C.rebote || 0)), Mo = Modelos.L.size ? Modelos.vehiculo({ tipo: V.clase === 'pesado' ? 'camion' : 'carro', modelo: V.modelo }) : null; if (Mo) m.modelo(Mo, r[0], r[1], r[2], C.a, { largo: V.largo, tinte: V.tinte || null, oscuro: pj.oscuro || 0, dano: pj.dano || null, distancia: 0, cab: C.cabeceo || 0, alab: C.alabeo || 0 }); else m.carro3d(r[0], r[1], r[2], C.a, V.largo, V.ancho, V.color || '#c0392b', V.clase === 'pesado' ? 'buseta' : 'carro', E.cielo ? E.cielo.noche : 0); } else { m.hueso(P([-.5, .35]), P([.55, .35]), .04, hex3('#1b1f27')); m.hueso(P([-.05, .4]), P([.3, .85]), .035, hex3(V.color || '#7ab800')); m.hueso(P([.55, .35]), P([.38, 1.0]), .03, hex3('#2b2f38')); for (const u of [-.52, .55]) m.caja(...rel(C.x + ca * u, C.y + sa * u, zb), C.a, .68, .06, .68, hex3('#1b1f27')); } }
       const MoJ = C.veh.clase === 'pie' && pj.modelo && !C.nadando ? Modelos.L.get(pj.modelo) : null; if (MoJ) { const r = rel(C.x, C.y, zb), clip = C.estado === 'corre' ? 'sprint_loop' : C.estado === 'camina' || Math.abs(C.v) > .3 ? (Math.abs(C.v) > 3.2 ? 'sprint_loop' : 'walk_loop') : 'idle_breath'; m.modelo(MoJ, r[0], r[1], r[2], C.a, { k: (A.alto || 1.7) / MoJ.alto, clip, t: E.t || 0 }); } else if (!(C.veh.clase === 'auto' || C.veh.clase === 'pesado')) { m.hueso(Lp(J.cadera, .12), Lp(J.rodI, .12), .07, pan); m.hueso(Lp(J.rodI, .12), Lp(J.pieI, .12), .06, pan); m.hueso(Lp(J.cadera, -.12), Lp(J.rodD, -.12), .07, pan); m.hueso(Lp(J.rodD, -.12), Lp(J.pieD, -.12), .06, pan); if (!this._sinCabeza) m.hueso(P(J.cadera), P(J.pecho), .17, cam); m.hueso(Lp(J.pecho, .2), Lp(J.codoI, .22), .05, cam); m.hueso(Lp(J.codoI, .22), Lp(J.manoI, .2), .045, A.manga ? cam : piel); m.hueso(Lp(J.pecho, -.2), Lp(J.codoD, -.22), .05, cam); m.hueso(Lp(J.codoD, -.22), Lp(J.manoD, -.2), .045, A.manga ? cam : piel); const h = P(J.cabeza); if (!this._sinCabeza) m.caja(h[0], h[1] - .13, h[2], C.a, .24, .22, .26, piel); if (this._sinCabeza) { /* en primera persona se ven las manos y el manubrio */ } else if (A.cCasco) m.caja(h[0], h[1] + .06, h[2], C.a, .3, .27, .12, hex3(A.cCasco)); else m.caja(h[0] - ca * .03, h[1] + .07, h[2] - sa * .03, C.a, .26, .24, .08, hex3(A.cPelo)); }
     }
     this._njug = m.d.length;   // 3.0: lo del jugador va primero (se repinta encima en las cámaras aéreas)
@@ -6627,16 +6865,19 @@ Malla.prototype.modelo = function (Mo, x, y, z, a, op = {}) {
     fz = Mo.frente === 'z' || Mo.frente === '-z', inv = Mo.frente === '-z' ? -1 : 1;
   const k = op.k || (op.largo ? op.largo / (fz ? Mo.ancho : Mo.largo) : 1), tin = op.tinte ? hex3(op.tinte) : null, D = op.dano, ky = op.ky || k;
   /* 4.0.x: de noche cada modelo tiene un mínimo de luz propia (el sombreador solo usa la emisión de noche) y los faros se encienden */
+  const rot = !!(op.cab || op.alab), cp = Math.cos(op.cab || 0), sp = Math.sin(op.cab || 0), cr = Math.cos(op.alab || 0), sr = Math.sin(op.alab || 0);   /* cabeceo (+ trompa arriba) y alabeo (+ lado izquierdo arriba) */
   const e0 = op.e != null ? op.e : Modelos.brillo, osc = Math.min(.8, (op.oscuro || 0) + (D ? Math.max(D.f || 0, D.b || 0, D.l || 0, D.r || 0) * .25 : 0));
   /* abolladuras por zona (frente, atrás, izquierda, derecha; 0–1): los vértices de esa punta se meten hacia adentro y bajan un poco */
   const L2 = (fz ? Mo.ancho : Mo.largo) * k / 2, W2 = (fz ? Mo.largo : Mo.ancho) * k / 2;
   for (let t = 0; t < n; t++) {
     const ti = indices ? indices[t] : t, o = ti * 21, fl = T[o + 15], cuerpo = fl === 1, sh = cuerpo && tin && Mo.tono ? Mo.tono[ti] : 1, r0 = cuerpo && tin ? tin[0] * sh : T[o + 12], g0 = cuerpo && tin ? tin[1] * sh : T[o + 13], b0 = cuerpo && tin ? tin[2] * sh : T[o + 14], m = 1 - osc, r = r0 * m, g = g0 * m, b = b0 * m, e = fl >= 2 ? (D && ((fl === 2 && D.f > .6) || (fl === 3 && D.b > .6)) ? 0 : 1) : e0;
-    const nu = (fz ? T[o + 11] : T[o + 9]) * inv, nv = (fz ? -T[o + 9] : T[o + 11]) * inv, nx = nu * ca - nv * sa, nz = nu * sa + nv * ca, ny = T[o + 10];
+    let nu = (fz ? T[o + 11] : T[o + 9]) * inv, nv = (fz ? -T[o + 9] : T[o + 11]) * inv, ny = T[o + 10]; if (rot) { const a1 = nv * cr - ny * sr, b1 = nv * sr + ny * cr; nv = a1; ny = nu * sp + b1 * cp; nu = nu * cp - b1 * sp; }
+    const nx = nu * ca - nv * sa, nz = nu * sa + nv * ca;
     for (let j = 0; j < 3; j++) { const px = T[o + j * 3], py = T[o + j * 3 + 1], pz = T[o + j * 3 + 2]; let u = (fz ? pz : px) * k * inv, v = (fz ? -px : pz) * k * inv, h = py * ky;
       if (D) { const pf = u - L2 * .45, pb = -L2 * .45 - u, pl = v - W2 * .35, pr = -W2 * .35 - v;
         if (pf > 0 && D.f) { u -= pf * D.f * .55; h -= pf * D.f * .18; } if (pb > 0 && D.b) { u += pb * D.b * .55; h -= pb * D.b * .14; }
         if (pl > 0 && D.l) v -= pl * D.l * .6; if (pr > 0 && D.r) v += pr * D.r * .6; }
+      if (rot) { const v1 = v * cr - h * sr, h1 = v * sr + h * cr; v = v1; h = u * sp + h1 * cp; u = u * cp - h1 * sp; }   /* 5.0: la carrocería sobre sus resortes (alabeo y cabeceo de MC.Dinamica) */
       d.push(x + u * ca - v * sa, y + h, z + u * sa + v * ca, nx, ny, nz, r, g, b, e); }
   }
 };
@@ -8041,6 +8282,9 @@ const PersecucionAudio = {
     return { doppler: factor, volumen: clamp((op.intensidad ?? 1) * at * obst * int, 0, 1), corte: op.ocluido ? 650 : op.interior ? 1600 : 3200 };
   },
   motor(op = {}) {
+    /* 5.0 · con rpm (MC.Dinamica): el pulso de encendido f = rpm/60 × cilindros/2 (4 cilindros: 28 Hz en mínimo, 200 Hz a 6.000) y su octava abajo */
+    if (op.rpm > 0) { const f = op.rpm / 60 * (op.cilindros || 4) / 2, k = clamp(op.rpm / (op.rpmMax || 6500), 0, 1), c = clamp(op.carga ?? 0, 0, 1);
+      return { agudo: f, grave: f / 2, corte: 380 + k * 1500 + c * 700, volumen: op.activo ? .028 + k * .03 + c * .025 : 0, rpm: op.rpm }; }
     const v = Math.max(0, Math.abs(Number(op.velocidad) || 0)), a = clamp(Number(op.aceleracion) || 0, -1, 1),
       marcha = Math.min(5, Math.floor(v / 9)), rpm = clamp(.25 + ((v - marcha * 9) / 9) * .75, .25, 1);
     return { agudo: 42 + rpm * 70 + marcha * 6, grave: (42 + rpm * 70 + marcha * 6) / 2,
@@ -9638,7 +9882,7 @@ const Publico = {
 };
 MC.Publico = Publico;
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-raster-sector.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","32-rotos.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-flexibilidad.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","45-pvs.js","45-tres.js","46-vistas.js","47-clasicos.js","47-colormap.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","70-mapa.js","71-rostros.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-efectos.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-raster-sector.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","32-rotos.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-dinamica.js","37-flexibilidad.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","45-pvs.js","45-tres.js","46-vistas.js","47-clasicos.js","47-colormap.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","70-mapa.js","71-rostros.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-efectos.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;
