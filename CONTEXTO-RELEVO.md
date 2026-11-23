@@ -688,3 +688,7 @@ Cinco ilustraciones de actos, limpieza del menú compartido y soporte de pruebas
   - el rendimiento en celulares reales con sombras no se ha medido: aquí no hay GPU, y las pruebas usan WebGL por software;
   - en gama baja, el modo automático usa el clásico.
 
+
+### Codex · 22-nov-2026 · R1 fachadas de Medellín
+
+Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-codex-integracion-arte-chatgpt-r1.md para técnica, capturas, pruebas y límites. R4 y R3 fueron investigados y siguen pendientes. La siguiente IA debe escribir su propio documento de contexto y transmitir la misma instrucción a quien continúe.
