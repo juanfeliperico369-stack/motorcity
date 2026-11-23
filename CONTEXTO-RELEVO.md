@@ -726,3 +726,19 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 - **No tocado:** MC4, `geo/territorio.py`, mundos, guardados, R1 de Codex, V4 de Gemini, ni `main`.
 - **Siguiente paso:** verificar licencia, recuentos reales, proyección EPSG:9377, unión geométrica y cobertura por comuna antes de integrar oficialmente los pisos.
 - **Coordinación:** `coord/agentes/chatgpt-r3.json` y `coord/buzon/20261122-2055-chatgpt-r3.md`. Al siguiente agente se le pide mantener este relevo §8 con pruebas y límites.
+
+### ChatGPT · 22-nov-2026 · R4 techos Overture (relevo de Codex R1)
+- **Contexto leído:** `docs/PEDIDOS-CHATGPT-4.9.md`, `docs/PLAN-REALISMO.md`, `docs/TURNO-CERO.md`, bitácora 4.7–4.9 y las skills del motor. Codex entregó la integración R1 en PR #15, con GitHub Actions en verde y R3/R4 pendientes.
+- **Hecho:** nueva herramienta `geo/auditar_cubiertas_overture.py` que mide, sin editar mundo ni hacer red, la cobertura de `roof_shape`, `roof_color`, `roof_material`, `facade_color`, `facade_material`, alturas y pisos en `geo/cache/edificios.parquet`; informe `reportes/2026-11-22-chatgpt-r4-auditoria-overture.md`.
+- **Hallazgo:** `geo/fetch.py` ya solicita varios campos de tejado de Overture; `geo/territorio.py` no los selecciona. La caché tampoco preserva el ID Overture en la selección actual, y el MC4 fusionado emplea ED1 de El Metro: falta comprobar la correspondencia de cada huella antes de aplicar datos.
+- **Probado:** prueba sintética de ocho condiciones y `py_compile` de Python 3. La ejecución con Parquet real está pendiente; no hay datos para declarar porcentajes de techo.
+- **No tocado:** `js/45-tres.js`, R1, `geo/territorio.py`, `herramientas/fusionar.mjs`, `datos/medellin/mundo.mc4`, guardados ni ramas de otras IA.
+- **Falta:** medir cobertura con caché, incorporar IDs y una unión geométrica inequívoca; para R3 conseguir pisos oficiales fuera de Popular, El Poblado y Robledo. R5 no se aplica hasta decisión de licencia del autor.
+- **Coordinación:** `coord/agentes/chatgpt-r4.json` y `coord/buzon/20261122-2055-chatgpt-r4.md`; Codex conserva `coord/agentes/chatgpt.json` para que no haya conflicto.
+- **Siguiente IA:** actualizar también esta sección §8 con los resultados reales, pruebas, limitaciones y riesgos; entregar el mismo contrato al siguiente agente.
+
+
+### ChatGPT · actualización R4-R3 del 22-nov-2026 · Unión espacial validada sintéticamente
+- Se añadieron geo/reproyectar_huellas_fuente.py y geo/cruzar_huellas_seguros.py para convertir WGS84/9377 al MC4 local y rechazar asignaciones erróneas de techos y pisos por intersección, márgenes y duplicados. Ver reportes/2026-11-22-chatgpt-r4-preparacion-cruce.md.
+- CI dedicada run 45099980386: 23 comprobaciones sintéticas aprobadas y Python compila; 8 atributos, 8 coincidencias, 7 proyección. Una ejecución anterior falló por literal de nueva línea y se corrigió.
+- Aún no hay porcentajes de cobertura real ni licencia oficial verificada para redistribuir datos catastrales; nada se aplicó al MC4 o render. Siguiente agente debe ejecutar la cadena sobre datos autorizados, medir falsos positivos y dejar informe de cobertura por comuna.
