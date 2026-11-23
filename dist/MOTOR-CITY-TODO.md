@@ -743,6 +743,33 @@ Cinco ilustraciones de actos, limpieza del menú compartido y soporte de pruebas
   - el rendimiento en celulares reales con sombras no se ha medido: aquí no hay GPU, y las pruebas usan WebGL por software;
   - en gama baja, el modo automático usa el clásico.
 
+### Gemini Antigravity — Motor City V4 · 23‑nov‑2026 · Misión V4: Revolución Visual de los Biomas y el Modo Arcade (`ia/antigravity/v4-paralaje-biomas`)
+- **Encargo oficial ([Issue #14](https://github.com/juanfeliperico369-stack/motorcity/issues/14)):** Desarrollar en sala limpia las 18 texturas originales `1024 × 256` RGBA WebP (`6 biomas × 3 capas` de paralaje sin costuras), integrarlas en `MC.Arcade` sobre el mismo mundo 3D con ciclo día/noche/niebla, caché LRU, escalado de calidad, respaldo procedural y mejoras de dirección visual, sin tocar ninguno de los archivos de Codex ni de Claude.
+- **Hecho (sobre `origin/main` `f1510e1`, Motor City `4.9.0`, 0 líneas modificadas en `js/45-tres.js`, `js/45-gl.js`, `js/47-clasicos.js`, `arte/fachadas/medellin/`, `geo/territorio.py`, `datos/medellin/mundo.mc4` y `juegos/getaway/60-modos.js`):**
+  - **Fase 1 — 18 texturas originales `1024 × 256` RGBA WebP (`arte/arcade/biomas/*.webp`, `540,58 KB` total) + `arte/arcade/biomas/manifiesto.json`:**
+    - Biomas con identidad geológica y regional colombiana: `costa` (espuma de rompiente, faro lejano, cocoteros con anillos de corteza y pasto de duna), `desierto` (mesetas estratificadas, barrancos de arenisca roja, cardones acostillados y agaves), `bosque` (cintas de neblina andina, guayacanes amarillos en flor, helechos arbóreos y raíces de contrafuerte), `montana` (clave canónica sin `ñ`: barrancos de la cordillera central, cascada plateada de quebrada andina, talud de tierra colorada y frailejones de páramo), `nieve` (picos glaciares con grietas azul hielo y abetos subalpinos nevados) y `lagos` (monolito granítico estriado estilo Piedra del Peñol, islas con orillas de tierra roja saprolítica de Guatapé y juncos), con `llanura` manteniendo el respaldo procedural para verificar el fallback.
+    - Capas: `lejos` (`velocidad: 0.12`), `medio` (`velocidad: 0.35`), `cerca` (`velocidad: 0.70`), transparencia real (`24,6 % – 79,0 %`), fila superior `y = 0` 100 % transparente, iluminación neutra cenital y costura horizontal exacta **`costura_mae = 0.0000`** en los 18 archivos.
+  - **Fase 2 — Integración aditiva en `MC.Arcade` (`js/47-paralaje-biomas.js` → `MC.ParalajeBiomas`):**
+    - Envoltura no invasiva sobre `Arcade.prototype.dibujar` que reemplaza las 2 montañas procedurales por las 3 capas del bioma detrás de la calzada, árboles, postes, edificios y vehículos (jamás invade la carretera ni el HUD: `difCalzada < 0,36 / 255`).
+    - Detección del bioma real del mundo 3D (`M.carretera.bioma(C.y)`) con transición suave (`crossfade`), capa 0 ultra-lejana (`vel: 0.04`) con cirros y bandadas de aves en V, aureola solar crepuscular detrás de la cordillera lejana, velos dinámicos de neblina de valle entre planos (`lejos ↔ medio ↔ cerca`), tinte dinámico día/noche/bruma/niebla/lluvia desde `cieloRetro(E)` (`source-atop`), caché LRU acotada a `<= 2` biomas (`máximo 6 imágenes`), reducción automática de calidad (`calidad = 0.50 → 2 capas`, `calidad = 0.30 → respaldo procedural`) y respaldo procedural automático si falta cualquier textura o en `llanura`.
+  - **Fase 3 — Jugabilidad y dirección visual Arcade:**
+    - Chevrones diegéticos de anticipación de curvas sobre la cresta exterior del horizonte (`|curva| > 0.14 rad`), inclinación lateral centrífuga en curvas, líneas periféricas de velocidad (`v > 19 m/s`), velo atmosférico de costura en el horizonte y velocidades coprimas `12 : 35 : 70`.
+  - **Documentación, pruebas y capturas:**
+    - [`docs/PLAN-V4-PARALAJE-GEMINI.md`](docs/PLAN-V4-PARALAJE-GEMINI.md) (incluye síntesis de 5 líneas de la lectura obligatoria y parche opcional de 2 líneas para `js/47-clasicos.js:157`).
+    - [`reportes/gemini-v4-paralaje-biomas.md`](reportes/gemini-v4-paralaje-biomas.md) + 27 imágenes WebP en `reportes/img/gemini-v4/` (6 vistas previas de repetición 3× + comparativas antes/después día y noche en `412×860` y `860×412`).
+    - [`pruebas/paralaje-biomas.mjs`](pruebas/paralaje-biomas.mjs): suite E2E en Node + Chromium.
+- **Cómo lo probé (las 5 órdenes obligatorias de § 7 en verde):**
+  - `node herramientas/construir.mjs` (`motor.js` `2478 KB`, `dist/juegos/getaway.html` `26844 KB`, `+751 KB` / `+2,88 %`);
+  - `node pruebas/prueba.mjs --navegador` (**158/158 en verde**, `112,2 s`, `0` errores);
+  - `node pruebas/tres.mjs` (**en verde**, `VistaTres` día/dron/noche/clásico, `0` errores);
+  - `node pruebas/modos.mjs` (**en verde**, carreras, extremo, mandados, EnCicla, metro, acelerador fijo y mapa);
+  - `node pruebas/paralaje-biomas.mjs` (**18/18 texturas y 7/7 escenas de bioma en verde**, `costura_mae = 0.0000`, `lruMax = 2`, `imgsEnCache = 6`, `heapMB = 110.6`, respaldo y degradación de calidad verificados).
+- **Falta / Siguiente paso:**
+  - **Claude:** revisar e integrar el [PR #18](https://github.com/juanfeliperico369-stack/motorcity/pull/18) de `ia/antigravity/v4-paralaje-biomas` en `main` (y opcionalmente aplicar el parche de 2 líneas en `js/47-clasicos.js:157` documentado en `docs/PLAN-V4-PARALAJE-GEMINI.md` § 3.2).
+  - **Autor / QA físico:** verificar la sensación visual de los 6 biomas en un celular físico con GPU.
+- **Instrucción obligatoria para la siguiente IA (Claude, Codex, ChatGPT o quien siga):** al terminar tu turno, **deja siempre tu propio documento de contexto y relevo**: añade tu entrada aquí en `CONTEXTO-RELEVO.md` § 8 (sin borrar las anteriores), actualiza tu ficha en `coord/agentes/<tu-id>.json`, deja un mensaje en `coord/buzon/` y **especifícale exactamente esta misma obligación a la siguiente IA**.
+
+
 
 ### Codex · 22-nov-2026 · R1 fachadas de Medellín
 
