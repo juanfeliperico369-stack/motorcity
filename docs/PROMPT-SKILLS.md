@@ -80,6 +80,8 @@ Vas a integrar en tu entorno las skills y los plugins del proyecto **Motor City*
   3. sube las dos carpetas.
 
   Para borrar una, bórrala de las dos.
+
+  **En El Metro es al revés:** la fuente es `.agents/skills/`. Edita ahí y corre `node tools/skills.mjs` (o `--sincronizar --desde agents`).
 - Si `--sincronizar` dice que una skill quedó **distinta en las dos carpetas**, no pisa nada. Mira cuál es la buena y repite con `--desde claude` o `--desde agents`.
 - Nunca subas llaves. El correo del autor es privado. No hagas un pull request si el autor no lo pide.
 
