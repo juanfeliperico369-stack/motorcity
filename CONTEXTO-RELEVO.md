@@ -868,4 +868,14 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 - **Pruebas:** `construir.mjs`, `historieta.mjs` (`dia 3,7 ms`, `noche 2,3 ms`, `lluvia 2,8 ms`, `primera 6,0 ms`), `dinamica.mjs` (`25/25`), `humano.mjs` (`35 s` / `430 m`), `prueba.mjs --navegador` (`158/158`, `114,0 s`).
 - **Sigue (Gemini):** `G5-05` (Guía sin flecha en Modo cine) y `G5-08` (Química del mundo).
 - **Instrucción para la IA que siga:** deja siempre tu entrada aquí en `CONTEXTO-RELEVO.md` § 8, tu mensaje en `coord/buzon/` y actualiza tu ficha en `coord/agentes/`.
+### Gemini · Antigravity («hydrogen») · 23‑nov‑2026 · 5.2 · G5‑05 Guía sin flecha en 🎬 Modo cine (Ghost of Tsushima)
+- **Pedido:** `G5-05` de `docs/PEDIDOS-GEMINI-5.0.md` («★ Estado 5.2», rama `ia/gemini/g5-05-guia-cine`).
+- **Hecho:**
+  - Módulo 100 % aditivo `juegos/getaway/65-guia-cine.js` (`G.GuiaCine`): cuando `G.cine` está encendido (sin minimapa ni flecha) y hay `G.objetivo || G.destinoLibre`, emite hojas reales en `MC.Vida.emitir('hoja')`, hebras curvas de brisa con hojas doradas de guayacán y verdes sobre `EXTRAS.capas`, y bandadas guía de 3 palomas urbanas en `MC.Vida.aves` (`guiaCine: true`) orientadas hacia el destino o suavizadas hacia la próxima esquina de `G.Cine`.
+  - Funciona en carro, moto, bici y a pie, y se ve tanto en 3D realista (`VistaTres`, donde `GuiaCine` avanza y dibuja sus palomas guía sin duplicar en 2D) como en 2D (`Vista2D`). Al apagar 🎬 Modo cine deja de emitir y retira las bandadas guía.
+  - Prueba automatizada `pruebas/guia-cine.mjs` (basada en `requestAnimationFrame`), reporte `reportes/2026-11-23-gemini-g5-05-guia-cine.md` y 3 capturas antes/después WebP (`114.8 KB`) en `reportes/img/gemini-g5-05/`.
+- **Peso añadido al HTML (`dist/juegos/getaway.html`):** `+12.1 KB` (`+12 364 bytes`).
+- **Pruebas:** `construir.mjs` ✓ · `guia-cine.mjs` ✓ (2/2 corridas, `errRumboPaloma 0.001 rad`, `avanzoPaloma 5.37 m`, `miniOculto true`, `pieActivo true`, `apagado true`, `red 0`) · `dinamica.mjs` ✓ (`25/25`) · `historieta.mjs` ✓ (`gpu true`, `hudSolapa 0`) · `humano.mjs` ✓ (`metro 35 s`, `carrera 432 m` a `31.5 m/s`) · `prueba.mjs --navegador` ✓ (`158/158`, `112.1 s`).
+- **Sigue (Gemini):** `G5-08` (Química del mundo en `ia/gemini/g5-08-quimica`), luego `G5-09`, `G5-10`, `G5-11` y `G5-13`.
+- **Instrucción para la IA que siga:** deja tu entrada en este § 8 de `CONTEXTO-RELEVO.md`, tu mensaje en `coord/buzon/` y actualiza tu ficha en `coord/agentes/`.
 
