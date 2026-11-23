@@ -688,3 +688,14 @@ Cinco ilustraciones de actos, limpieza del menú compartido y soporte de pruebas
   - el rendimiento en celulares reales con sombras no se ha medido: aquí no hay GPU, y las pruebas usan WebGL por software;
   - en gama baja, el modo automático usa el clásico.
 
+
+
+### ChatGPT · 22-nov-2026 · R4 techos Overture (relevo de Codex R1)
+- **Contexto leído:** `docs/PEDIDOS-CHATGPT-4.9.md`, `docs/PLAN-REALISMO.md`, `docs/TURNO-CERO.md`, bitácora 4.7–4.9 y las skills del motor. Codex entregó la integración R1 en PR #15, con GitHub Actions en verde y R3/R4 pendientes.
+- **Hecho:** nueva herramienta `geo/auditar_cubiertas_overture.py` que mide, sin editar mundo ni hacer red, la cobertura de `roof_shape`, `roof_color`, `roof_material`, `facade_color`, `facade_material`, alturas y pisos en `geo/cache/edificios.parquet`; informe `reportes/2026-11-22-chatgpt-r4-auditoria-overture.md`.
+- **Hallazgo:** `geo/fetch.py` ya solicita varios campos de tejado de Overture; `geo/territorio.py` no los selecciona. La caché tampoco preserva el ID Overture en la selección actual, y el MC4 fusionado emplea ED1 de El Metro: falta comprobar la correspondencia de cada huella antes de aplicar datos.
+- **Probado:** prueba sintética de ocho condiciones y `py_compile` de Python 3. La ejecución con Parquet real está pendiente; no hay datos para declarar porcentajes de techo.
+- **No tocado:** `js/45-tres.js`, R1, `geo/territorio.py`, `herramientas/fusionar.mjs`, `datos/medellin/mundo.mc4`, guardados ni ramas de otras IA.
+- **Falta:** medir cobertura con caché, incorporar IDs y una unión geométrica inequívoca; para R3 conseguir pisos oficiales fuera de Popular, El Poblado y Robledo. R5 no se aplica hasta decisión de licencia del autor.
+- **Coordinación:** `coord/agentes/chatgpt-r4.json` y `coord/buzon/20261122-2055-chatgpt-r4.md`; Codex conserva `coord/agentes/chatgpt.json` para que no haya conflicto.
+- **Siguiente IA:** actualizar también esta sección §8 con los resultados reales, pruebas, limitaciones y riesgos; entregar el mismo contrato al siguiente agente.
