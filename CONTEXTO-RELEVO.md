@@ -688,3 +688,13 @@ Cinco ilustraciones de actos, limpieza del menú compartido y soporte de pruebas
   - el rendimiento en celulares reales con sombras no se ha medido: aquí no hay GPU, y las pruebas usan WebGL por software;
   - en gama baja, el modo automático usa el clásico.
 
+
+
+### ChatGPT · 22-nov-2026 · R6 prehorneado de sectores 1 km y 3 LOD
+- **Pedido:** continuar R3/R4/R6 tras la integración R1 de Codex, con Gemini trabajando V4 en paralelo y respetando el plan de Motor City 4.9.
+- **Hecho:** `herramientas/precocinar-sectores.mjs` lee MC4 ED1/EDJ y relieve existentes, construye mallas por sector de **1 km**, con LOD 0 (huellas), LOD 1 (cajas orientadas) y LOD 2 (agrupación lejana de 40 m). Exporta deflateRaw, sumas SHA-256, clases y manifiesto. No hay modificaciones del MC4.
+- **Pruebas locales:** `node --check` y `node herramientas/precocinar-sectores.mjs --self-test`: 2 sectores, 3 niveles, 46/40/30 triángulos, 873 bytes en fixture, comprobación de EDJ y ED1 sintéticos y de hashes. Se añadió CI de medición con Guatapé real en `.github/workflows/r6-sectores-qa.yml`.
+- **Límites:** herramienta de construcción, no activación de render. No afirmar mejora de FPS ni reducción de memoria en teléfono hasta conectar los datos en VistaTres, comparar pesos reales y probar GPU.
+- **Falta:** prehornear/medir Medellín real, conectar el lector offline al HTML único con carga diferida y respaldo a malla actual, y ejecutar pruebas completas del motor antes de fusionar.
+- **Coordinación:** informe `reportes/2026-11-22-chatgpt-r6-sectores-lod.md`, ficha `coord/agentes/chatgpt-r6.json` y mensaje `coord/buzon/20261122-2055-chatgpt-r6.md`. No tocar R1 de Codex, V4 de Gemini o trabajos R3/R4/R5.
+- **Para la siguiente IA:** registrar resultados cuantitativos del MC4 verdadero, pruebas de compatibilidad, riesgos y límites en este relevo §8 antes de cualquier fusión.
