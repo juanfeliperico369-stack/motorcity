@@ -688,3 +688,13 @@ Cinco ilustraciones de actos, limpieza del menú compartido y soporte de pruebas
   - el rendimiento en celulares reales con sombras no se ha medido: aquí no hay GPU, y las pruebas usan WebGL por software;
   - en gama baja, el modo automático usa el clásico.
 
+
+
+### ChatGPT · 22-nov-2026 · R3 fuente oficial potencial de pisos
+- **Leído:** relevo 4.9, plan de realismo, `docs/PEDIDOS-CHATGPT-4.9.md`, bitácora, documentación del motor, skills y reporte R1 de Codex.
+- **Hecho:** localicé la capa municipal `VC_Catastro_VCT/MapServer/8` (Construccion) con geometrías, `numero_pisos`, `numero_sotanos`, `tipo_construccion`, `id_construccion` y SRID 9377, distinta de la capa parcial documentada por Codex. No es evidencia aún de cobertura en todas las comunas.
+- **Código:** `geo/auditar_pisos_catastro.py` solicita solo 4 recuentos estadísticos, sin descarga de predios, y solo al activarlo con `--consultar`. Informe `reportes/2026-11-22-chatgpt-r3-catastro-fuente-oficial.md`.
+- **Probado:** 7 verificaciones sintéticas y compilación Python 3 aprobadas. Consulta de red, cobertura por comuna, licencia y correspondencia con ED1 pendientes.
+- **No tocado:** MC4, `geo/territorio.py`, mundos, guardados, R1 de Codex, V4 de Gemini, ni `main`.
+- **Siguiente paso:** verificar licencia, recuentos reales, proyección EPSG:9377, unión geométrica y cobertura por comuna antes de integrar oficialmente los pisos.
+- **Coordinación:** `coord/agentes/chatgpt-r3.json` y `coord/buzon/20261122-2055-chatgpt-r3.md`. Al siguiente agente se le pide mantener este relevo §8 con pruebas y límites.
