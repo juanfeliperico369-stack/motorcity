@@ -844,3 +844,12 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 - **Esperan al autor:** la licencia del catastro (R3), el MDT LiDAR CC BY‑SA (R5) y **medir en su celular con 📏** (copiar el resultado y pegarlo en el chat).
 - **Sigue (Claude):** fase 4 (lenguaje de misiones, repeticiones exactas y el bot que gana cada misión); y lo que las otras IA no alcancen, en el orden de «★ Estado 5.2» de los pedidos.
 - **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
+
+
+### ChatGPT · 23-nov-2026 · Codex R6-b: Worker Blob y LOD2 en el juego
+- **Leído:** pedidos 5.2, relevo y CI verde de main; la generación de R6 ya existía, pero no estaba conectada al render. Los datos de R3 y R5 continúan bloqueados por licencia.
+- **Implementado:** `herramientas/r6b-compacto.mjs` construye cajas LOD2 por regiones 160 m y sectores 1 km, cuantizadas 12,5 cm y comprimidas por sector; `construir.mjs` las incrusta solo en Turno Cero de Guatapé/Medellín si pesan hasta 2,5 MB por ciudad. `js/45-z-r6b.js` crea Web Worker Blob sin internet, cachea seis sectores y aporta una malla de detalle lejano a VistaTres con fallback.
+- **Pruebas:** `pruebas/r6b-datos.mjs` para los dos MC4 reales y `pruebas/r6b-browser.mjs` para Worker offline + fallback + prueba constructiva de región CPU ×4, p95. Nueva GitHub Actions `r6b-qa.yml` y CI general. Confirmar estado final en PR #25 antes de fusionar.
+- **No modificado:** MC4, fuente geográfica, guardados, R1 cercano, posRender, archivos de otros juegos, ramas de Codex y Gemini.
+- **Limitaciones:** LOD2 agrupa edificios, no es idéntico al catastro; no afirma una subida de FPS sin medirla; CPU ×4 aquí solo mide tiempo de construcción. Requiere capturas visuales y benchmark físico.
+- **Informe:** `reportes/2026-11-23-chatgpt-r6b-worker.md`; siguiente agente debe incorporar resultados finales, registrar nueva entrada §8, ficha y buzón, y no borrar otros trabajos.
