@@ -4549,7 +4549,8 @@ const CAM_PERFIL = {
      pitch: inclinación de lejos; pitchCerca: de cerca (se ven las fachadas); fov estrecho en la maqueta = casi ortográfica */
   cenital: { fijo: true, pitch: 1.38, pitchCerca: 1.16, fov: .62, dist: 0, alto: 0, alejaVel: .75 },   /* 4.7: 79° de lejos y 66° de cerca (GTA 1 y 2: desde arriba, con las fachadas apenas asomando); antes 62° y 42°, casi oblicua */
   oblicua: { fijo: true, pitch: .86, pitchCerca: .62, fov: .7, dist: 0, alto: 0, alejaVel: .35 },
-  maqueta: { fijo: true, pitch: .66, pitchCerca: .58, fov: .3, yaw45: true, dist: 0, alto: 0 }
+  maqueta: { fijo: true, pitch: .66, pitchCerca: .58, fov: .3, yaw45: true, dist: 0, alto: 0 },
+  historieta: { fijo: true, pitch: .96, pitchCerca: .88, fov: .68, giraRumbo: true, dist: 0, alto: 0, alejaVel: .45 }   /* 5.0 (G5-01 · Chinatown Wars): ~55° desde arriba, gira suave con el rumbo del carro */
 };
 class Camara {
   constructor(op = {}) {
@@ -4566,7 +4567,7 @@ class Camara {
     else if (g.tipo === 'mirar') { if (this.modo === 'libre') { const c = Math.cos(this.yaw), s = Math.sin(this.yaw); this.x -= (g.dx * c + g.dy * s) / this.zoom; this.y -= (-g.dx * s + g.dy * c) / this.zoom; } else { this.mira += g.dx * .006; this.d.pitch = clamp(this.d.pitch + g.dy * .004, -.4, 1.4); if (g.fijo) this._fija = true; } }
     else if (g.tipo === 'recentrar') { this.mira = 0; this._fija = false; this.d = Object.assign({}, CAM_PERFIL[this.perfil] || this.d); }   /* 4.8: doble toque arriba endereza la cámara */
   }
-  usarPerfil(p) { if (!CAM_PERFIL[p]) return; this.perfil = p; this.d = Object.assign({}, CAM_PERFIL[p]); this.mira = 0; this._fija = false; }
+  usarPerfil(p) { if (!CAM_PERFIL[p]) return; this.perfil = p; this.d = Object.assign({}, CAM_PERFIL[p]); this.mira = 0; this._fija = false; this._rumboIniciado = false; }
   /* giro y inclinación animados (la vista lateral gira de a 90°, como el mundo de FEZ) */
   girar90(dir = 1) { const base = this.yawObj ?? this.yaw; this.yawObj = Math.round(base / (Math.PI / 2)) * (Math.PI / 2) + dir * Math.PI / 2; return this; }
   girarA(yaw) { this.yawObj = yaw; return this; }
@@ -4626,7 +4627,14 @@ class Camara {
      3D de los navegadores. Con la velocidad y la persecución se aleja y se inclina hacia adelante (Reckless Getaway, #DRIVE);
      en persecución, además, un vaivén lateral; el trauma la sacude. */
   _aereo(dt, o) {
-    const P = this.d, M = o.mundo || this.mundo, Hp = this.pantalla ? this.pantalla[1] : 800, Zl = this.limites.zoom;
+    const esHist = this.perfil === 'historieta' || (typeof MC !== 'undefined' && MC.opciones && MC.opciones.graficos === 'historieta' && (this.perfil === 'cenital' || this.perfil === 'oblicua'));
+    const P = esHist ? CAM_PERFIL.historieta : this.d, M = o.mundo || this.mundo, Hp = this.pantalla ? this.pantalla[1] : 800, Zl = this.limites.zoom;
+    if (P.giraRumbo && o.a != null && this.yawObj == null && !this._fija && !(this._mirando > 0)) {
+      if (Math.abs(this.mira) > .001) this.mira *= Math.pow(.35, dt);
+      const yr = -(o.a + Math.PI / 2) + (this.mira || 0);
+      if (!this._rumboIniciado) { this.yaw = yr; this._vy.v = 0; this._rumboIniciado = true; }
+      else if (Math.abs(o.v || 0) > .35 || Math.abs(angDif(this.yaw, yr)) > .04) this.yaw = resorteAng(this.yaw, yr, this._vy, .28, dt);
+    }
     const t = clamp(Math.log(this.zoom / Zl[0]) / Math.log(Zl[1] / Zl[0]), 0, 1), vel = clamp((Math.abs(o.v || 0) - 6) / 24, 0, 1), per = clamp(this.persecucion || 0, 0, 1);
     this._vel = lerp(this._vel || 0, vel, Math.min(1, dt * 1.2)); this._per = lerp(this._per || 0, per, Math.min(1, dt * 1.5));
     const pitch = lerp(P.pitch, P.pitchCerca ?? P.pitch, t) - this._vel * .07 - this._per * .05;
@@ -5126,7 +5134,7 @@ const Flex = {
     ['ui', '🔠 Tamaño de la interfaz', [[1, '100 %'], [1.15, '115 %'], [1.3, '130 %'], [.9, '90 %']]],
     ['calidad', '🎨 Calidad', [['auto', 'automática'], [.45, 'baja'], [.7, 'media'], [1, 'alta']]],
     ['vibrar', '📳 Vibración en choques', [[true, 'sí'], [false, 'no']]],
-    ['graficos', '🖼️ Gráficos', [['auto', 'automáticos: realistas si el aparato da la talla'], ['realistas', 'realistas: sol con sombras, luz física y cielo (three.js)'], ['clasicos', 'clásicos: más livianos para celulares modestos']]],
+    ['graficos', '🖼️ Gráficos', [['auto', 'automáticos: realistas si el aparato da la talla'], ['realistas', 'realistas: sol con sombras, luz física y cielo (three.js)'], ['clasicos', 'clásicos: más livianos para celulares modestos'], ['historieta', 'historieta: colores planos y contorno negro (Chinatown Wars)']]],
     ['pantalla', '✂️ Pantalla', [['mitades', 'en mitades: arriba la cámara, abajo manejar'], ['clasica', 'clásica: joystick en toda la izquierda']]]
   ],
   actual: null,
@@ -5140,7 +5148,7 @@ const Flex = {
     if (MC.Vehiculos) MC.Vehiculos.escala = f.velocidad;
     if (typeof document !== 'undefined') { document.documentElement.style.setProperty('--mc-ui', String(f.ui)); if (document.body) document.body.classList.toggle('mc-zurdo', O.zurdo); }
     const V = op.vistas; if (V) { if (f.calidad === 'auto') V.auto = true; else { V.auto = false; V.calidad = f.calidad; } }
-    if (V && cambiaGraf && V.reiniciarGL) V.reiniciarGL();   /* 4.9: cambia el 3D (realista ⇄ clásico) en caliente */
+    if (V && cambiaGraf && V.reiniciarGL && (!V.gl || (f.graficos === 'clasicos') === !!V.gl.tres)) V.reiniciarGL();   /* 4.9: cambia el 3D (realista ⇄ clásico) en caliente */
     this.actual = f; MC.emit('flex', f); return f;
   },
   /* el esquema de MC.Manejo.aplicar según el ajuste y la cámara ('auto' deja lo que la cámara pide) */
@@ -7750,6 +7758,242 @@ const Colormap = {
 };
 MC.Colormap = Colormap;
 
+/* ---- js/47-historieta.js ---- */
+/* =====================================================================
+   VISTA «HISTORIETA» (5.0 · G5-01 · Gemini Antigravity)
+   Idea de GTA: Chinatown Wars en sala limpia:
+   1. Perfil de cámara 'historieta' en js/34-camara.js: inclinada a ~55° (0.96 rad)
+      desde arriba, que gira suave con el rumbo del carro (giraRumbo: true).
+   2. Opción 'historieta' en ⚙️ Flexibilidad → 🖼️ Gráficos (js/37-flexibilidad.js).
+   3. Contorno negro con casco invertido 3D (THREE.BackSide expandido en el plano
+      horizontal con sesgo de profundidad en vista para no tapar techos CW) sobre
+      las mallas dinámicas en three.js (sin tocar js/45-tres.js) + pase de colores
+      planos (cel-shading en bandas) y contorno Sobel/Roberts en tinta negra
+      (#0c0e14) legible a 412 px.
+   ===================================================================== */
+const Historieta = {
+  version: '5.0.0-g5-01',
+  umbralBorde: 44,
+  umbralTintaFuerte: 98,
+  bandasCel: 4,
+  saturacion: 1.25,
+  grosorCasco: .18,
+  _lum: null,
+  _bufOrig: null,
+  _cvProc: null,
+  _ctxProc: null,
+  metricas: {
+    activo: false,
+    cascoTres: false,
+    pixelesContorno: 0,
+    pctContorno: 0,
+    coloresPlanos: 0,
+    msUltimoCuadro: 0
+  },
+
+  /* Determina si el modo Historieta está activo por ⚙️ Gráficos o por perfil de cámara */
+  activo(E) {
+    const porGraf = !!(MC.opciones && MC.opciones.graficos === 'historieta');
+    const porCam = !!(E && E.camara && E.camara.perfil === 'historieta');
+    return porGraf || porCam;
+  },
+
+  /* Crea el material de casco invertido 3D (THREE.BackSide) que expande la silueta horizontal sin tapar caras superiores CW */
+  _crearMatCasco(T, grosor, sesgoZ) {
+    const m = new T.MeshBasicMaterial({
+      color: 0x0c0e14,
+      side: T.BackSide,
+      fog: true,
+      polygonOffset: true,
+      polygonOffsetFactor: 4,
+      polygonOffsetUnits: 4
+    });
+    m.onBeforeCompile = sh => {
+      sh.vertexShader = sh.vertexShader
+        .replace(
+          '#include <begin_vertex>',
+          '#include <begin_vertex>\ntransformed.xz += normal.xz * ' + grosor.toFixed(3) + ';\ntransformed.y -= 0.04;'
+        )
+        .replace(
+          '#include <project_vertex>',
+          'vec4 mvPosition = vec4( transformed, 1.0 );\n#ifdef USE_BATCHING\n  mvPosition = batchingMatrix * mvPosition;\n#endif\n#ifdef USE_INSTANCING\n  mvPosition = instanceMatrix * mvPosition;\n#endif\nmvPosition = modelViewMatrix * mvPosition;\nmvPosition.z -= ' + sesgoZ.toFixed(3) + ';\ngl_Position = projectionMatrix * mvPosition;'
+        );
+    };
+    return m;
+  },
+
+  /* Crea o actualiza el casco invertido 3D (THREE.BackSide) para vehículos y actores dinámicos en VistaTres sin tocar matCosas */
+  aplicarCascoTres(vt, encender) {
+    if (!vt || !vt.tres || typeof THREE === 'undefined') return false;
+    const T = THREE;
+    if (!encender || !vt.dyn || !vt.dyn.visible) {
+      if (vt._cascoDyn) vt._cascoDyn.visible = false;
+      this.metricas.cascoTres = false;
+      return false;
+    }
+
+    if (!vt._cascoMat) {
+      vt._cascoMat = this._crearMatCasco(T, this.grosorCasco, .95);
+    }
+
+    if (!vt._cascoDyn) {
+      vt._cascoDyn = new T.Mesh(vt.dyn.geometry, vt._cascoMat);
+      vt._cascoDyn.frustumCulled = false;
+      vt._cascoDyn.castShadow = false;
+      vt._cascoDyn.receiveShadow = false;
+      vt.escena.add(vt._cascoDyn);
+    } else if (vt._cascoDyn.geometry !== vt.dyn.geometry) {
+      vt._cascoDyn.geometry = vt.dyn.geometry;
+    }
+    vt._cascoDyn.visible = true;
+    this.metricas.cascoTres = true;
+    return true;
+  },
+
+  /* Pase de colores planos (posterización cel-shading) y contorno negro Sobel/Roberts en búfer con willReadFrequently */
+  procesarLienzo(g, W, H) {
+    if (!g || !g.canvas || W < 16 || H < 16) return;
+    const t0 = MC.ahora();
+    const esc = Math.min(1, 360 / Math.min(W, H));
+    const w = Math.max(64, Math.round(W * esc)), h = Math.max(64, Math.round(H * esc));
+    if (!this._cvProc || this._cvProc.width !== w || this._cvProc.height !== h) {
+      this._cvProc = document.createElement('canvas');
+      this._cvProc.width = w;
+      this._cvProc.height = h;
+      this._ctxProc = this._cvProc.getContext('2d', { willReadFrequently: true });
+    }
+    const q = this._ctxProc;
+    if (!q) return;
+    q.globalCompositeOperation = 'copy';
+    q.imageSmoothingEnabled = true;
+    q.drawImage(g.canvas, 0, 0, w, h);
+
+    let img;
+    try { img = q.getImageData(0, 0, w, h); } catch (e) { return; }
+    const d = img.data, nPx = w * h;
+    if (!this._lum || this._lum.length < nPx) {
+      this._lum = new Uint8Array(nPx);
+      this._bufOrig = new Uint8ClampedArray(nPx * 4);
+    }
+    const L = this._lum, orig = this._bufOrig;
+    orig.set(d);
+    for (let p = 0, i = 0; p < nPx; p++, i += 4) {
+      L[p] = (orig[i] * 77 + orig[i + 1] * 150 + orig[i + 2] * 29) >> 8;
+    }
+
+    const w4 = w << 2, umb = this.umbralBorde, span = Math.max(1, this.umbralTintaFuerte - umb);
+    const sat = this.saturacion;
+    let nContorno = 0, nPlanos = 0;
+
+    for (let y = 1; y < h - 1; y++) {
+      const fila = y * w;
+      for (let x = 1; x < w - 1; x++) {
+        const p = fila + x, i = p << 2;
+        const l0 = L[p];
+        const gx = Math.abs(L[p + 1] - L[p - 1]) + (Math.abs(L[p - w + 1] - L[p - w - 1]) >> 1) + (Math.abs(L[p + w + 1] - L[p + w - 1]) >> 1);
+        const gy = Math.abs(L[p + w] - L[p - w]) + (Math.abs(L[p + w - 1] - L[p - w - 1]) >> 1) + (Math.abs(L[p + w + 1] - L[p - w + 1]) >> 1);
+        const dc = (Math.abs(orig[i + 4] - orig[i - 4]) + Math.abs(orig[i + 5] - orig[i - 3]) + Math.abs(orig[i + w4] - orig[i - w4])) >> 2;
+        const borde = gx + gy + dc;
+
+        if (borde > umb) {
+          nContorno++;
+          const t = borde >= this.umbralTintaFuerte ? .94 : ((borde - umb) / span) * .94;
+          const k = 1 - t;
+          d[i] = (orig[i] * k + 12 * t) | 0;
+          d[i + 1] = (orig[i + 1] * k + 14 * t) | 0;
+          d[i + 2] = (orig[i + 2] * k + 20 * t) | 0;
+        } else {
+          nPlanos++;
+          const lq = (((l0 + 22) / 52) | 0) * 52 + 18;
+          const kLuz = l0 > 6 ? lq / l0 : 1;
+          let r = orig[i] * kLuz, gg = orig[i + 1] * kLuz, b = orig[i + 2] * kLuz;
+          r = lq + (r - lq) * sat;
+          gg = lq + (gg - lq) * sat;
+          b = lq + (b - lq) * sat;
+          d[i] = ((clamp(r, 0, 255) | 0) & 240) + 8;
+          d[i + 1] = ((clamp(gg, 0, 255) | 0) & 240) + 8;
+          d[i + 2] = ((clamp(b, 0, 255) | 0) & 240) + 8;
+        }
+      }
+    }
+    q.putImageData(img, 0, 0);
+    g.save();
+    g.imageSmoothingEnabled = true;
+    g.drawImage(this._cvProc, 0, 0, W, H);
+    g.restore();
+
+    this.metricas.pixelesContorno = nContorno;
+    this.metricas.pctContorno = +(nContorno / Math.max(1, (w - 2) * (h - 2)) * 100).toFixed(2);
+    this.metricas.coloresPlanos = nPlanos;
+    this.metricas.msUltimoCuadro = +(MC.ahora() - t0).toFixed(2);
+  }
+};
+
+/* Envolturas limpias sobre VistaTres y Vistas sin tocar js/45-tres.js */
+if (typeof VistaTres !== 'undefined' && VistaTres.prototype) {
+  if (VistaTres.prototype._ponerDinamico) {
+    const _ponerDynOrig = VistaTres.prototype._ponerDinamico;
+    VistaTres.prototype._ponerDinamico = function (D) {
+      const r = _ponerDynOrig.call(this, D);
+      Historieta.aplicarCascoTres(this, MC.opciones && MC.opciones.graficos === 'historieta');
+      return r;
+    };
+  }
+  if (VistaTres.prototype.dibujar) {
+    const _dibTresOrig = VistaTres.prototype.dibujar;
+    VistaTres.prototype.dibujar = function (W, H, E, op = {}) {
+      const activo = Historieta.activo(E);
+      if (activo && this.regiones && this.regiones.size < 6) {
+        op = Object.assign({}, op, { presupuesto: Math.max(op.presupuesto || 8, 95) });
+      }
+      return _dibTresOrig.call(this, W, H, E, op);
+    };
+  }
+  if (VistaTres.prototype.liberar) {
+    const _libTresOrig = VistaTres.prototype.liberar;
+    VistaTres.prototype.liberar = function () {
+      if (this._cascoDyn) {
+        try { this.escena.remove(this._cascoDyn); } catch (e) {}
+        this._cascoDyn = null;
+      }
+      return _libTresOrig.call(this);
+    };
+  }
+}
+
+if (typeof Vistas !== 'undefined' && Vistas.prototype) {
+  const _hayGLOrig = Vistas.prototype.hayGL;
+  Vistas.prototype.hayGL = function () {
+    const gr = MC.opciones && MC.opciones.graficos;
+    if (gr === 'historieta' && !this.glIntentado) {
+      MC.opciones.graficos = 'realistas';
+      const ok = _hayGLOrig.call(this);
+      MC.opciones.graficos = 'historieta';
+      return ok;
+    }
+    return _hayGLOrig.call(this);
+  };
+
+  const _dibujarVistasOrig = Vistas.prototype.dibujar;
+  Vistas.prototype.dibujar = function (g, W, H, E, dt = 1 / 60) {
+    const activo = Historieta.activo(E);
+    Historieta.metricas.activo = activo;
+    if (this.gl && this.gl.tres) {
+      Historieta.aplicarCascoTres(this.gl, activo);
+    }
+    const ms = _dibujarVistasOrig.call(this, g, W, H, E, dt);
+    if (activo) {
+      Historieta.procesarLienzo(g, W, H);
+    } else {
+      Historieta.metricas.pixelesContorno = 0;
+      Historieta.metricas.pctContorno = 0;
+    }
+    return ms;
+  };
+}
+
+MC.Historieta = Historieta;
+
 /* ---- js/47-seguir.js ---- */
 /* =====================================================================
    SEGUIR LA RUTA · el cuerpo va solo por la vía real (panorámica de plataformas, Run y paseo guiado)
@@ -9965,7 +10209,7 @@ const Publico = {
 };
 MC.Publico = Publico;
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-raster-sector.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","32-rotos.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-dinamica.js","37-flexibilidad.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","45-pvs.js","45-tres.js","46-vistas.js","47-clasicos.js","47-colormap.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","70-mapa.js","71-rostros.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-efectos.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
+MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-raster-sector.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","32-rotos.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-dinamica.js","37-flexibilidad.js","37-manejo.js","38-sprites.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","45-pvs.js","45-tres.js","46-vistas.js","47-clasicos.js","47-colormap.js","47-historieta.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","70-mapa.js","71-rostros.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-efectos.js","88-vida.js","89-exportar.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;

@@ -717,3 +717,16 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
   - fase 2: eventos y reacciones, escenas de la calle, frases con condiciones y despacho;
   - fase 4: lenguaje de misiones, repeticiones exactas y bot que las gana.
 - **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
+
+### Gemini · Antigravity («hydrogen») · 23‑nov‑2026 · 5.0 · G5‑01 Vista «Historieta» (Chinatown Wars)
+- **Pedido:** `G5-01` de `docs/PEDIDOS-GEMINI-5.0.md` (rama `ia/gemini/g5-01-historieta`).
+- **Hecho:**
+  - Perfil de cámara `historieta` en `js/34-camara.js` (`pitch: 0.96 rad` ≈ `55°`, `pitchCerca: 0.88`, `fov: 0.68`, `giraRumbo: true`) con rotación suave de `this.yaw` siguiendo el rumbo del vehículo en `_aereo(dt, o)` mediante `resorteAng`.
+  - Opción `['historieta', 'historieta: colores planos y contorno negro (Chinatown Wars)']` en `⚙️ Flexibilidad → 🖼️ Gráficos` (`js/37-flexibilidad.js`), conservando la instancia de `VistaTres` y sus regiones 3D al alternar entre `'auto'`, `'realistas'` e `'historieta'` en caliente.
+  - Módulo aditivo `js/47-historieta.js` (`MC.Historieta`, sin tocar `js/37-dinamica.js` ni `js/45-tres.js`): casco invertido 3D (`THREE.BackSide` expandido horizontalmente `0.18 m` con sesgo de profundidad `mvPosition.z -= 0.95` en espacio de vista para no oscurecer caras superiores con bobinado CW) sobre las mallas dinámicas de `VistaTres`, más pase de colores planos (4 bandas de cel-shading con saturación `×1.25`) y contorno negro Sobel/Roberts (`#0c0e14`) en búfer `willReadFrequently` legible a `412 × 860`.
+  - Prueba automatizada `pruebas/historieta.mjs`, reporte `reportes/2026-11-23-gemini-g5-01-historieta.md` y 4 capturas comparativas WebP en `reportes/img/gemini-g5-01/`.
+- **Peso añadido al HTML (`dist/juegos/getaway.html`):** `+3.1 KB` (`js/47-historieta.js` + ajustes mínimos en `js/34-camara.js` y `js/37-flexibilidad.js`).
+- **Pruebas:** `node herramientas/construir.mjs`, `node pruebas/historieta.mjs` (`pitchGrados: 55`, `angCamGrados: 55`, `regiones3D: 12`, `cascoTres: true`, `pctContorno: 36.08%`, `hudSolapa: 0`), `node pruebas/dinamica.mjs` (19/19), `node pruebas/modos.mjs`, `node pruebas/humano.mjs` y `node pruebas/prueba.mjs --navegador`.
+- **Sigue (Gemini):** `G5-02` (anillos de recoger y entregar en Mandados/EnCicla y controles de vuelo para jetpack y avión en rama `ia/gemini/g5-02-anillos`), `G5-03` (`datos/frases/*.json`) y `G5-07` (fichas de los ~30 sitios icónicos de Medellín empezando por el Edificio Coltejer).
+- **Instrucción para la IA que siga:** deja tu entrada en este § 8 de `CONTEXTO-RELEVO.md`, tu mensaje en `coord/buzon/` y actualiza tu ficha en `coord/agentes/`.
+
