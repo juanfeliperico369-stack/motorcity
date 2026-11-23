@@ -1,0 +1,39 @@
+name: Motor City R6 · prueba de mallas prehorneadas
+
+on:
+  pull_request:
+    paths:
+      - 'herramientas/precocinar-sectores.mjs'
+      - '.github/workflows/r6-sectores-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  precocinado:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Sintaxis y contrato MC4 (ED1 y EDJ)
+        run: |
+          node --check herramientas/precocinar-sectores.mjs
+          node herramientas/precocinar-sectores.mjs --self-test
+      - name: Precocinar MC4 real de Guatapé en tres niveles
+        run: |
+          node herramientas/precocinar-sectores.mjs \
+            --entrada datos/guatape/mundo.mc4 \
+            --salida "$RUNNER_TEMP/r6-guatape" > "$RUNNER_TEMP/r6-medicion.json"
+          cat "$RUNNER_TEMP/r6-medicion.json"
+          node -e "const m=require(process.env.RUNNER_TEMP+'/r6-guatape/manifiesto.json');if(!Object.keys(m.sectores).length||m.triangulos.some(n=>n<=0))process.exit(1);console.log('R6 sectores:',Object.keys(m.sectores).length,'triangulos:',m.triangulos.join('/'),'bytes:',m.bytes_compresos)"
+      - name: Publicar evidencia cuantitativa (no assets al juego)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r6-guatape-diagnostico
+          path: ${{ runner.temp }}/r6-medicion.json
+          if-no-files-found: ignore
