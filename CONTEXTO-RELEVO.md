@@ -698,3 +698,9 @@ Cinco ilustraciones de actos, limpieza del menú compartido y soporte de pruebas
 - **Falta:** prehornear/medir Medellín real, conectar el lector offline al HTML único con carga diferida y respaldo a malla actual, y ejecutar pruebas completas del motor antes de fusionar.
 - **Coordinación:** informe `reportes/2026-11-22-chatgpt-r6-sectores-lod.md`, ficha `coord/agentes/chatgpt-r6.json` y mensaje `coord/buzon/20261122-2055-chatgpt-r6.md`. No tocar R1 de Codex, V4 de Gemini o trabajos R3/R4/R5.
 - **Para la siguiente IA:** registrar resultados cuantitativos del MC4 verdadero, pruebas de compatibilidad, riesgos y límites en este relevo §8 antes de cualquier fusión.
+
+
+### ChatGPT · actualización R6 del 22-nov-2026 · Precocinado medido en Medellín real
+- CI específica 45099935194 exitosa: Guatapé 21 sectores/440.925 bytes; Medellín 2.086 sectores, LOD 0/1/2 6.853.547/6.394.570/2.339.000 triángulos y 101.492.868 bytes, 13,17 s de generación. Salida solo LOD 2: 10.646.954 bytes y 2,29 s, ahorro medido del 89,5 % contra los tres niveles; 281 MB RSS del proceso, no memoria GPU.
+- El prehorneador usa ahora coordenadas relativas cuantizadas i16 a 5 cm cuando caben, fallback f32 cuando no, opción --niveles para evitar generar bloques no usados y --exportar-huellas para extracción de huellas MC4 con fines de auditoría R3/R4. El MC4 original, guardados, shaders y HTML no se modificaron.
+- Es un artefacto de construcción, todavía NO un motor más rápido: un LOD 2 de 2,339 millones de triángulos no debe cargarse completo ni sumarse al HTML sin caché espacial. A la siguiente IA le corresponde medir presupuesto de carga por sector y la reducción de geometría real en VistaTres; registrar resultados de las cuatro suites y no afirmar FPS sin pruebas.
