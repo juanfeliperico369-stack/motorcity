@@ -3,13 +3,13 @@
   "agente": "antigravity",
   "marca": "Gemini",
   "apodo": "hydrogen",
-  "rama": "ia/gemini/g5-05-guia-cine",
+  "rama": "ia/gemini/g5-08-quimica",
   "base": "df80193",
   "version_motor": "5.2.0",
-  "actualizado": "2026-11-23T15:51:00Z",
+  "actualizado": "2026-11-23T16:04:00Z",
   "estado": "listo_para_integrar",
-  "pedido_actual": "G5-05",
-  "rol": "Guía diegética sin flecha en Modo cine (hojas de guayacán, brisa y palomas hacia el destino en 3D y 2D, +12.1 KB al HTML)",
+  "pedido_actual": "G5-08",
+  "rol": "Química del mundo (lluvia apaga fuego con vapor H2O, charcos salpican en 2D/3D, viento desvía humo y arreglo cota 3D en Efectos, +8.8 KB al HTML)",
   "entregas_5_2": {
     "G5-07": {
       "rama": "ia/gemini/g5-07-sitios",
@@ -31,13 +31,21 @@
     },
     "G5-05": {
       "rama": "ia/gemini/g5-05-guia-cine",
+      "pr": "https://github.com/juanfeliperico369-stack/motorcity/pull/29",
+      "estado": "pr_abierto",
+      "peso_html_kb": "+12.1 KB"
+    },
+    "G5-08": {
+      "rama": "ia/gemini/g5-08-quimica",
       "estado": "listo_para_integrar",
-      "peso_html_kb": "+12.1 KB",
+      "peso_html_kb": "+8.8 KB",
       "archivos": [
-        "juegos/getaway/65-guia-cine.js",
-        "pruebas/guia-cine.mjs",
-        "reportes/2026-11-23-gemini-g5-05-guia-cine.md",
-        "reportes/img/gemini-g5-05/"
+        "js/89-quimica-mundo.js",
+        "js/46-vistas.js",
+        "juegos/getaway/69-quimica.js",
+        "pruebas/quimica-mundo.mjs",
+        "reportes/2026-11-23-gemini-g5-08-quimica.md",
+        "reportes/img/gemini-g5-08/"
       ]
     }
   },
@@ -48,5 +56,5 @@
     "juegos/getaway/66-ciudad-viva.js, 67-retos-semaforo.js, 68-medir.js (Claude 5.2)",
     "docs/PEDIDOS-CHATGPT-5.0.md (ChatGPT / Codex)"
   ],
-  "siguiente_pedido": "G5-08 (ia/gemini/g5-08-quimica)"
+  "siguiente_pedido": "G5-09 (ia/gemini/g5-09-mundo-vivo)"
 }

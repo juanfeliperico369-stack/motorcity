@@ -877,5 +877,15 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 - **Peso añadido al HTML (`dist/juegos/getaway.html`):** `+12.1 KB` (`+12 364 bytes`).
 - **Pruebas:** `construir.mjs` ✓ · `guia-cine.mjs` ✓ (2/2 corridas, `errRumboPaloma 0.001 rad`, `avanzoPaloma 5.37 m`, `miniOculto true`, `pieActivo true`, `apagado true`, `red 0`) · `dinamica.mjs` ✓ (`25/25`) · `historieta.mjs` ✓ (`gpu true`, `hudSolapa 0`) · `humano.mjs` ✓ (`metro 35 s`, `carrera 432 m` a `31.5 m/s`) · `prueba.mjs --navegador` ✓ (`158/158`, `112.1 s`).
 - **Sigue (Gemini):** `G5-08` (Química del mundo en `ia/gemini/g5-08-quimica`), luego `G5-09`, `G5-10`, `G5-11` y `G5-13`.
+### Gemini · Antigravity («hydrogen») · 23‑nov‑2026 · 5.2 · G5‑08 Química del mundo (Zelda: Breath of the Wild)
+- **Pedido:** `G5-08` de `docs/PEDIDOS-GEMINI-5.0.md` («★ Estado 5.2», rama `ia/gemini/g5-08-quimica`).
+- **Hecho:**
+  - Módulo aditivo del motor `js/89-quimica-mundo.js` (`MC.QuimicaMundo`): envuelve `MC.Efectos.actualizar` y conecta `MC.Quim`/`MC.C`/`E.clima` con `MC.Efectos` y `MC.Vida` (lluvia apaga `Efectos.fuegos` sin explosión liberando vapor H₂O con `Quim.masaMolar('H2O')` y `C.Lv`; charcos deterministas en vías/plazas/andenes salpican en 2D y 3D proporcional a la velocidad; viento real desvía columnas de humo según altura `z`, más polvo y hojas).
+  - Puente aditivo `juegos/getaway/69-quimica.js`: al recibir `quimica:apaga` sobre el carro en llamas, limpia `G.ardiendo = false` y muestra aviso sin tocar `20-juego.js`.
+  - Arreglo quirúrgico en `js/46-vistas.js:81` (2 líneas): suma `M.cota(x, y)` al proyector `proy` de `MC.Efectos.dibujar` en 3D (convención 5.2), corrigiendo que todos los efectos de `MC.Efectos` quedaban 1.500 m bajo tierra en Medellín.
+  - Prueba automatizada `pruebas/quimica-mundo.mjs` (Node + Chromium `412×860`), reporte `reportes/2026-11-23-gemini-g5-08-quimica.md` y captura WebP (`35.2 KB`) en `reportes/img/gemini-g5-08/`.
+- **Peso añadido al HTML (`dist/juegos/getaway.html`):** `+8.8 KB` (`+9 062 bytes`).
+- **Pruebas:** `construir.mjs` ✓ · `quimica-mundo.mjs` ✓ (`7/7`) · `dinamica.mjs` ✓ (`25/25`) · `historieta.mjs` ✓ (`gpu true`, `5 ms`, `hudSolapa 0`) · `humano.mjs` ✓ (`metro 35 s`, `carrera 431 m` a `31.5 m/s`) · `prueba.mjs --navegador` ✓ (`158/158`, `112.9 s`).
+- **Sigue (Gemini):** `G5-09` (subtramas RPG y crónicas en `juegos/getaway/62-mundo-vivo.js`), `G5-10`, `G5-11` y `G5-13`.
 - **Instrucción para la IA que siga:** deja tu entrada en este § 8 de `CONTEXTO-RELEVO.md`, tu mensaje en `coord/buzon/` y actualiza tu ficha en `coord/agentes/`.
 
