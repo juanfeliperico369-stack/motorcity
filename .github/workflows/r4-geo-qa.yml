@@ -1,0 +1,31 @@
+name: Motor City R3-R4 · QA geográfica conservadora
+
+on:
+  pull_request:
+    paths:
+      - 'geo/auditar_cubiertas_overture.py'
+      - 'geo/cruzar_huellas_seguros.py'
+      - 'geo/reproyectar_huellas_fuente.py'
+      - '.github/workflows/r4-geo-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preprocesado:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Dependencias SOLO para herramientas geográficas
+        run: python -m pip install --disable-pip-version-check shapely==2.1.2 pyproj==3.7.2
+      - name: Pruebas sintéticas, faltantes, emparejamientos y proyecciones
+        run: |
+          python -m py_compile geo/auditar_cubiertas_overture.py geo/cruzar_huellas_seguros.py geo/reproyectar_huellas_fuente.py
+          python geo/auditar_cubiertas_overture.py --self-test
+          python geo/cruzar_huellas_seguros.py --self-test
+          python geo/reproyectar_huellas_fuente.py --self-test
