@@ -250,9 +250,7 @@ if (typeof VistaTres !== 'undefined' && VistaTres.prototype) {
     VistaTres.prototype.dibujar = function (W, H, E, op = {}) {
       const activo = Historieta.activo(E);
       this._histGPU = Historieta._ponerTres(this, activo);
-      if (activo && this.regiones && this.regiones.size < 6) {
-        op = Object.assign({}, op, { presupuesto: Math.max(op.presupuesto || 8, 95) });
-      }
+      /* 5.1: sin subir el presupuesto de regiones (armar 95 de un golpe era un tirón de segundos al prender la vista) */
       return _dibTresOrig.call(this, W, H, E, op);
     };
   }

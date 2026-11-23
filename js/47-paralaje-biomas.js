@@ -541,15 +541,10 @@ if (typeof Arcade !== 'undefined') {
       };
     }
   }
-  if (typeof VistaTres !== 'undefined' && VistaTres.prototype && VistaTres.prototype.dibujar) {
-    const _dibTres = VistaTres.prototype.dibujar;
-    VistaTres.prototype.dibujar = function (W, H, E, op = {}) {
-      if (this.regiones && this.regiones.size < 24) {
-        op = Object.assign({}, op, { presupuesto: Math.max(op.presupuesto || 10, 28) });
-      }
-      return _dibTres.call(this, W, H, E, op);
-    };
-  }
+  /* 5.1 (Claude): aquí había una envoltura de VistaTres.dibujar que, con menos de 24 regiones, subía el presupuesto a 28 regiones
+     por cuadro: al empezar, al teletransportarse o con el 🆘 rescate armaba la ciudad de un golpe (un tirón de segundos y el juego
+     en cámara lenta: fallaban las pruebas humana y de modos). El presupuesto lo decide MC.Vistas según la calidad; las pruebas
+     esperan a que la escena esté armada. */
 }
 
 MC.ParalajeBiomas = ParalajeBiomas;

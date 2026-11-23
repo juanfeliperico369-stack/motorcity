@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 5.0.0 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 5.1.0 · no se edita a mano: edita los documentos de origen -->
 
 # Contexto y entrega de Codex · Motor City y Turno Cero
 
@@ -83,15 +83,15 @@ Lee este documento, CONTEXTO-RELEVO.md, TAREAS-IA.md y coord/. Al terminar tu tu
 
 ---
 
-## 0. Entregables de la 5.0.0 «Que se sienta» (HTML, APK y enlaces)
+## 0. Entregables de la 5.1.0 «Todo junto» (HTML, APK y enlaces)
 > **Un solo juego de prueba (decisión del autor en 4.6):** Turno Cero. Adentro, 🎮 Modos: Carreras, Extremo, Mandados, EnCicla y manejar el Metro, el tranvía y el Metroplús. Los juegos sueltos Carreras y Extremo se borraron; Mandados queda solo como banco interno de pruebas automáticas.
 
 | Juego | Enlace | HTML (un solo archivo) | APK |
 |---|---|---|---|
 | Página del motor | <https://juanfeliperico369-stack.github.io/motorcity/> | `index.html` | — |
-| **Turno Cero 5.0.0** (18+), el juego de prueba con todo: 🛞 manejo real (peso, suspensión, marchas, derrapes y choques), 🖼️ 3D realista (three.js), ⚙️ Flexibilidad, 🆘 rescate, 🚀 Ir en el mapa, pantalla en mitades, un solo mapa, 🌄 miradores | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v5.0.0/MotorCity-getaway.apk> |
-| Juega EnCicla 3.2.0 (modos pulidos, transporte en el mundo 3D, freerun de la Comuna 13, el valle que recuerda) | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | <https://github.com/juanfeliperico369-stack/BicicletasUno/releases/download/v3.2.0/JuegaEnCicla-v3.2.0-debug.apk> (y `descargas/JuegaEnCicla.apk` en Pages) |
-| El Metro 3.3.0 (⚙️ Flexibilidad en Ajustes) | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://juanfeliperico369-stack.github.io/MetroZero/el-metro.apk> (código 31) |
+| **Turno Cero 5.1.0** (18+), el juego de prueba con todo: 🗯️ vista Historieta, 🏔️ paralaje por biomas en Arcade, 🛞 manejo real (peso, suspensión, marchas, derrapes y choques), 🖼️ 3D realista (three.js), ⚙️ Flexibilidad, 🆘 rescate, 🚀 Ir en el mapa, pantalla en mitades, un solo mapa, 🌄 miradores | <https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html> | `dist/juegos/getaway.html` | <https://github.com/juanfeliperico369-stack/motorcity/releases/download/v5.1.0/MotorCity-getaway.apk> |
+| Juega EnCicla 3.4.0 (unión de las 3.3.0 de Claude y de Antigravity) | <https://juanfeliperico369-stack.github.io/BicicletasUno/> | `BicicletasUno/dist/juega-encicla.html` | <https://github.com/juanfeliperico369-stack/BicicletasUno/releases/download/v3.4.0/JuegaEnCicla-v3.4.0-debug.apk> (y `descargas/JuegaEnCicla.apk` en Pages) |
+| El Metro 3.5.0 (unión de las 3.4.0 de Claude y de Antigravity) | <https://juanfeliperico369-stack.github.io/MetroZero/> | `MetroZero/dist/index.html` | <https://juanfeliperico369-stack.github.io/MetroZero/el-metro.apk> (código 33) |
 | Run Scooter | <https://juanfeliperico369-stack.github.io/RunRunZero/> | `RunRunZero/web/index.html` | <https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk> |
 
 Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (Capacitor 7). El proxy de esta sesión no deja subir etiquetas: el flujo, lanzado a mano, crea él mismo la release `v<VERSION.json>`. EnCicla (`android.yml`) y El Metro (`apk.yml`) hacen lo mismo con la versión de cada juego; Run Scooter la publica en su página con cada empuje a `main`.
@@ -858,7 +858,24 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
   - **Autor / QA físico:** verificar la sensación visual de los 6 biomas en un celular físico con GPU.
 - **Instrucción obligatoria para la siguiente IA (Claude, Codex, ChatGPT o quien siga):** al terminar tu turno, **deja siempre tu propio documento de contexto y relevo**: añade tu entrada aquí en `CONTEXTO-RELEVO.md` § 8 (sin borrar las anteriores), actualiza tu ficha en `coord/agentes/<tu-id>.json`, deja un mensaje en `coord/buzon/` y **especifícale exactamente esta misma obligación a la siguiente IA**.
 
-
+### Claude · 23‑nov‑2026 · motor 5.1.0 «Todo junto»
+- **Unido:**
+  - **ChatGPT y Codex:** R3, R4, R5 y R6 (herramientas e informes, sin tocar el juego). Claude corrió el recuento de R3: 1.135.621 construcciones, 96,7 % con pisos.
+  - **Gemini y Antigravity:** G5‑01 Historieta y V4 biomas.
+  - **EnCicla 3.4.0 y El Metro 3.5.0:** cada uno tenía dos versiones paralelas, de otra sesión de Claude y de Antigravity.
+- **Pulido:**
+  - Historieta en la GPU (`posRender` y `uPlano` en `VistaTres`; ~2 ms en vez de ~8 ms, sin puntos negros);
+  - biomas incrustados al construir;
+  - colisión barrida en la carrera por ciclorruta de El Metro.
+- **Esperan al autor:**
+  - la licencia del catastro (R3);
+  - el MDT LiDAR CC BY-SA (R5);
+  - medir en un celular real.
+- **Sigue (Claude):**
+  - **fase 2, la ciudad viva:** eventos que la gente oye y a los que reacciona, escenas de la calle sacadas de las bancas, paraderos y tiendas del mapa, el motor de frases que usará los textos de Gemini (G5‑03) y el despacho de policía, ambulancia y bomberos;
+  - **después, fase 4:** lenguaje de misiones, repeticiones exactas y el bot que gana cada misión.
+- **Pedidos:** la sección «★ Estado 5.1 y orden nuevo» al principio de `docs/PEDIDOS-CHATGPT-5.0.md` y de `docs/PEDIDOS-GEMINI-5.0.md`.
+- **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
 
 # MOTOR CITY · Documento único
 
@@ -4413,6 +4430,27 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 ---
 
 # ANEXO I. Bitácora (`BITACORA.md`)
+
+
+### 23-nov-2026 · 5.1.0 «Todo junto» · lo nuevo de ChatGPT y Gemini, unido y pulido
+- **El autor:** «Listo lo nuevo: ármalo todo, mejóralo, púlelo y optimízalo; piensa cuál será el siguiente paso y dame los prompts para Gemini/Antigravity y ChatGPT/Codex, y lo que harás tú mientras vuelven».
+- **De ChatGPT y Codex** (cuatro ramas, sin tocar el juego):
+  - **R3:** `geo/auditar_pisos_catastro.py`. Claude lo corrió (solo conteos): la capa *Construccion (8)* tiene **1.135.621 construcciones y el 96,7 % trae pisos válidos**, en `reportes/r3-cobertura-catastro.json`.
+  - **R4:** auditoría de los techos de Overture, cruce seguro de huellas y reproyección.
+  - **R5:** informe de licencias del relieve. Existe un **MDT LiDAR de 1 m de Medellín (2024), CC BY-SA 4.0**; espera la decisión del autor.
+  - **R6:** `herramientas/precocinar-sectores.mjs`, mallas por sector de 1 km en 3 niveles, formato v2 i16.
+  - Más dos flujos de QA que corren solo en los pull requests de esas herramientas.
+- **De Gemini y Antigravity:**
+  - **G5‑01, vista Historieta** (⚙️ Gráficos → historieta; cámara a 55° que gira con el carro);
+  - **V4, paralaje por biomas** en 🏁 Arcade (6 biomas × 3 capas).
+- **Pulido de Claude:**
+  - **Historieta en la GPU.** Antes, cada cuadro pasaba por la CPU (`getImageData`, Sobel y `putImageData`: unos 8 ms, y el grano de las texturas salía como puntos negros). Ahora es un pase en la GPU de unos 2 ms: la tinta sale del laplaciano de la profundidad, que en un plano es cero, y se apaga con la niebla. Colores por bandas suaves; muros y suelo sin grano ni texturas de fachada (`uPlano`).
+  - **Ganchos nuevos en `VistaTres`:** `posRender` y `uPlano`.
+  - **Biomas:** las 18 imágenes ya no van en el código (769 KB → 30 KB); se incrustan al construir desde su manifiesto (`MC_BIOMAS_V4`).
+- **Juegos hermanos**, cada uno tenía dos versiones paralelas:
+  - **EnCicla 3.4.0:** la 3.3.0 de la otra sesión de Claude más la 3.3.0 de Antigravity;
+  - **El Metro 3.5.0:** la 3.4.0 «Jugo y ciclovías» de la otra sesión de Claude más la 3.4.0 «Mundo 3D y Realismo» de Antigravity, con la colisión barrida que le faltaba a la carrera por ciclorruta.
+- **Pruebas:** `historieta.mjs` y `paralaje-biomas.mjs` entran a la QA.
 
 
 ### 23-nov-2026 · 5.0.0 «Que se sienta» · el manejo real del carro y el plan para las tres IA
