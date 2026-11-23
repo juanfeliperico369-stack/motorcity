@@ -63,6 +63,10 @@ const R6B = {
     return '('+trabajador.toString()+')();';
   },
   asegurar(vista) {
+    /* R6-b solo para GPU media/alta. En SwiftShader y gama baja el trabajo
+       de rearmado de cajas es más caro que la geometría tradicional. */
+    const perfil=typeof GPU!=='undefined'&&GPU.perfil?GPU.perfil():null;
+    if(!this.forzarPrueba&&perfil&&(perfil.nivel==='software'||perfil.nivel==='baja'))return null;
     if(!this.activo || vista._r6b && vista._r6b.fallo)return vista._r6b||null;
     if(vista._r6b)return vista._r6b;
     const id=vista.mundo&&vista.mundo.cfg&&vista.mundo.cfg.id;
