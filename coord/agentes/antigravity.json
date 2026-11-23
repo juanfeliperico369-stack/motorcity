@@ -6,15 +6,15 @@
   "rama": "ia/antigravity/v4-paralaje-biomas",
   "base": "f1510e1",
   "version_motor": "4.9.0",
-  "actualizado": "2026-11-23T02:02:00Z",
+  "actualizado": "2026-11-23T02:36:00Z",
   "estado": "entregado",
   "mision": "MISIÓN V4: Revolución visual de los biomas y el modo Arcade (Issue #14)",
   "entregables_v4": {
     "plan": "docs/PLAN-V4-PARALAJE-GEMINI.md",
     "reporte": "reportes/gemini-v4-paralaje-biomas.md",
-    "texturas_biomas": "arte/arcade/biomas/*.webp (18 texturas 1024×256 RGBA WebP lossless, costura_mae = 0.0000, 335.79 KB)",
+    "texturas_biomas": "arte/arcade/biomas/*.webp (18 texturas 1024×256 RGBA WebP lossless con detalle regional colombiano y geológico, costura_mae = 0.0000, 540.58 KB)",
     "manifiesto": "arte/arcade/biomas/manifiesto.json",
-    "modulo_motor": "js/47-paralaje-biomas.js (MC.ParalajeBiomas, aditivo, 0 líneas tocadas en js/47-clasicos.js)",
+    "modulo_motor": "js/47-paralaje-biomas.js (MC.ParalajeBiomas + capa 0 cirros/aves + aureola solar + neblina entre planos + inclinación centrífuga, 0 líneas tocadas en js/47-clasicos.js)",
     "prueba_e2e": "pruebas/paralaje-biomas.mjs",
     "capturas": "reportes/img/gemini-v4/ (27 capturas WebP antes/después día/noche 412×860 y 860×412 + 6 previews 3×)"
   },

@@ -23,7 +23,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(import.meta.url);
-const { chromium } = require('playwright');
+let playwrightMod;
+try { playwrightMod = require('playwright'); } catch { playwrightMod = require('/home/antigravity/.cache/pw-node/node_modules/playwright'); }
+const { chromium } = playwrightMod;
 
 const dirBiomas = path.join(RAIZ, 'arte/arcade/biomas');
 const rutaMan = path.join(dirBiomas, 'manifiesto.json');

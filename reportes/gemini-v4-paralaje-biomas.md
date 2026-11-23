@@ -18,28 +18,28 @@
 
 ## 2. Catálogo verificado de las 18 texturas (`1024 × 256` RGBA WebP)
 
-Todas las texturas fueron generadas en sala limpia con supersampling `2×` (`2048 × 512 → 1024 × 256` Lanczos), funciones armónicas periódicas en `2π·x / 1024` y codificación WebP RGBA lossless exacta (`exact=True`), logrando **`costura_mae = 0.0000`** en las 18 capas y un peso total en disco de **`335.79 KB` (`343,848 bytes`)**:
+Todas las texturas fueron generadas en sala limpia con supersampling `2×` (`2048 × 512 → 1024 × 256` Lanczos), funciones armónicas periódicas en `2π·x / 1024`, barrancos geológicos simétricos (`gully_field`), identidad regional colombiana (estrías de la Piedra del Peñol y orillas de tierra roja saprolítica en `lagos`, guayacanes en flor, helechos arbóreos y cintas de neblina andina en `bosque`, cascada plateada y frailejones de páramo en `montana`, mesetas estratificadas y agaves en `desierto`, espuma de rompiente, faro lejano y pasto de duna en `costa`, grietas glaciares en `nieve`) y codificación WebP RGBA lossless exacta (`exact=True`), logrando **`costura_mae = 0.0000`** en las 18 capas y un peso total en disco de **`540.58 KB` (`553,550 bytes`)**:
 
 | ID | Bioma | Capa | Dimensiones | Velocidad | Peso (KB) | Bytes | Transp. (%) | Opacidad (%) | Costura MAE | Color medio RGB | SHA-256 (16) |
 |---|---|---|---:|---:|---:|---:|---:|---:|---:|---|---|
-| `costa_lejos` | `costa` | `lejos` | `1024×256` | `0.12` | `11.03` | `11,298` | `39.4 %` | `60.6 %` | `0.0000` | `[79, 128, 152]` | `24cd36fc1acb511e` |
-| `costa_medio` | `costa` | `medio` | `1024×256` | `0.35` | `25.10` | `25,702` | `57.9 %` | `42.1 %` | `0.0000` | `[96, 129, 87]` | `86fd10f6b1a5c886` |
-| `costa_cerca` | `costa` | `cerca` | `1024×256` | `0.70` | `36.30` | `37,168` | `73.9 %` | `26.1 %` | `0.0000` | `[132, 138, 95]` | `148af54cea1b0f5f` |
-| `desierto_lejos` | `desierto` | `lejos` | `1024×256` | `0.12` | `12.58` | `12,878` | `38.8 %` | `61.2 %` | `0.0000` | `[168, 120, 88]` | `eeb1cec260c03d30` |
-| `desierto_medio` | `desierto` | `medio` | `1024×256` | `0.35` | `17.31` | `17,726` | `55.9 %` | `44.1 %` | `0.0000` | `[188, 138, 86]` | `e8dd96c01830a13f` |
-| `desierto_cerca` | `desierto` | `cerca` | `1024×256` | `0.70` | `12.64` | `12,942` | `78.7 %` | `21.3 %` | `0.0000` | `[153, 120, 73]` | `be7a36db3093d0fc` |
-| `bosque_lejos` | `bosque` | `lejos` | `1024×256` | `0.12` | `13.04` | `13,350` | `31.8 %` | `68.2 %` | `0.0000` | `[66, 108, 95]` | `2ce8e81c83f67cd9` |
-| `bosque_medio` | `bosque` | `medio` | `1024×256` | `0.35` | `20.92` | `21,418` | `56.9 %` | `43.1 %` | `0.0000` | `[54, 100, 61]` | `24f9479f877724b4` |
-| `bosque_cerca` | `bosque` | `cerca` | `1024×256` | `0.70` | `18.37` | `18,808` | `74.2 %` | `25.8 %` | `0.0000` | `[51, 91, 50]` | `b75ce2c2961f2b53` |
-| `montana_lejos` | `montana` | `lejos` | `1024×256` | `0.12` | `16.62` | `17,020` | `26.2 %` | `73.8 %` | `0.0000` | `[91, 102, 115]` | `88585a9d35c11462` |
-| `montana_medio` | `montana` | `medio` | `1024×256` | `0.35` | `18.45` | `18,888` | `52.5 %` | `47.5 %` | `0.0000` | `[89, 104, 76]` | `493156a5b57aff99` |
-| `montana_cerca` | `montana` | `cerca` | `1024×256` | `0.70` | `18.16` | `18,594` | `77.6 %` | `22.4 %` | `0.0000` | `[86, 99, 68]` | `d0edbefdd4a682e0` |
-| `nieve_lejos` | `nieve` | `lejos` | `1024×256` | `0.12` | `18.30` | `18,738` | `25.4 %` | `74.6 %` | `0.0000` | `[183, 196, 214]` | `635f189c1726bd80` |
-| `nieve_medio` | `nieve` | `medio` | `1024×256` | `0.35` | `24.42` | `25,008` | `58.6 %` | `41.4 %` | `0.0000` | `[184, 196, 208]` | `8cac0fb41923c7c4` |
-| `nieve_cerca` | `nieve` | `cerca` | `1024×256` | `0.70` | `24.00` | `24,572` | `79.6 %` | `20.4 %` | `0.0000` | `[182, 193, 202]` | `5671d9b49b036079` |
-| `lagos_lejos` | `lagos` | `lejos` | `1024×256` | `0.12` | `12.17` | `12,458` | `35.0 %` | `65.0 %` | `0.0000` | `[76, 115, 117]` | `e2500e84450dcdd8` |
-| `lagos_medio` | `lagos` | `medio` | `1024×256` | `0.35` | `18.00` | `18,436` | `61.2 %` | `38.8 %` | `0.0000` | `[77, 125, 77]` | `1660e0bb42ea6e45` |
-| `lagos_cerca` | `lagos` | `cerca` | `1024×256` | `0.70` | `18.40` | `18,844` | `78.2 %` | `21.8 %` | `0.0000` | `[67, 108, 63]` | `2801f69101206b62` |
+| `costa_lejos` | `costa` | `lejos` | `1024×256` | `0.12` | `23.15` | `23,708` | `38.5 %` | `61.5 %` | `0.0000` | `[83, 133, 156]` | `6c65f3744bda1f19` |
+| `costa_medio` | `costa` | `medio` | `1024×256` | `0.35` | `37.35` | `38,248` | `56.9 %` | `43.1 %` | `0.0000` | `[104, 136, 92]` | `37ee4ea2230f60df` |
+| `costa_cerca` | `costa` | `cerca` | `1024×256` | `0.70` | `51.91` | `53,156` | `71.7 %` | `28.3 %` | `0.0000` | `[128, 139, 94]` | `7cc89551ebeab919` |
+| `desierto_lejos` | `desierto` | `lejos` | `1024×256` | `0.12` | `29.18` | `29,876` | `38.0 %` | `62.0 %` | `0.0000` | `[169, 119, 86]` | `0f32ee979206de23` |
+| `desierto_medio` | `desierto` | `medio` | `1024×256` | `0.35` | `26.48` | `27,116` | `55.1 %` | `44.9 %` | `0.0000` | `[189, 138, 86]` | `a235b20632085cad` |
+| `desierto_cerca` | `desierto` | `cerca` | `1024×256` | `0.70` | `17.87` | `18,300` | `77.8 %` | `22.2 %` | `0.0000` | `[150, 120, 73]` | `c3ef90531ea8dcf6` |
+| `bosque_lejos` | `bosque` | `lejos` | `1024×256` | `0.12` | `29.35` | `30,058` | `31.0 %` | `69.0 %` | `0.0000` | `[68, 111, 97]` | `6a0246181a43ebdb` |
+| `bosque_medio` | `bosque` | `medio` | `1024×256` | `0.35` | `30.56` | `31,290` | `56.0 %` | `44.0 %` | `0.0000` | `[54, 99, 60]` | `d1b56e63573c48b9` |
+| `bosque_cerca` | `bosque` | `cerca` | `1024×256` | `0.70` | `27.17` | `27,824` | `72.7 %` | `27.3 %` | `0.0000` | `[54, 91, 49]` | `236f3467dd11cafd` |
+| `montana_lejos` | `montana` | `lejos` | `1024×256` | `0.12` | `36.38` | `37,250` | `25.5 %` | `74.5 %` | `0.0000` | `[90, 101, 114]` | `1a912edc6b78eeb9` |
+| `montana_medio` | `montana` | `medio` | `1024×256` | `0.35` | `29.05` | `29,752` | `51.7 %` | `48.3 %` | `0.0000` | `[93, 104, 76]` | `8545a05a0268fc23` |
+| `montana_cerca` | `montana` | `cerca` | `1024×256` | `0.70` | `26.65` | `27,288` | `76.3 %` | `23.7 %` | `0.0000` | `[86, 99, 68]` | `c6513bb0668a83f4` |
+| `nieve_lejos` | `nieve` | `lejos` | `1024×256` | `0.12` | `36.68` | `37,556` | `24.6 %` | `75.4 %` | `0.0000` | `[182, 195, 213]` | `095bf5448dfbcddc` |
+| `nieve_medio` | `nieve` | `medio` | `1024×256` | `0.35` | `33.91` | `34,726` | `57.7 %` | `42.3 %` | `0.0000` | `[181, 194, 207]` | `8a8f509fcdbc162e` |
+| `nieve_cerca` | `nieve` | `cerca` | `1024×256` | `0.70` | `27.92` | `28,586` | `79.0 %` | `21.0 %` | `0.0000` | `[178, 190, 199]` | `c20b7cc05492086d` |
+| `lagos_lejos` | `lagos` | `lejos` | `1024×256` | `0.12` | `25.46` | `26,068` | `34.1 %` | `65.9 %` | `0.0000` | `[74, 114, 116]` | `ac0ba97ef0851802` |
+| `lagos_medio` | `lagos` | `medio` | `1024×256` | `0.35` | `22.59` | `23,134` | `60.5 %` | `39.5 %` | `0.0000` | `[83, 125, 77]` | `5e926edc3ea1a349` |
+| `lagos_cerca` | `lagos` | `cerca` | `1024×256` | `0.70` | `28.92` | `29,614` | `76.8 %` | `23.2 %` | `0.0000` | `[66, 107, 63]` | `14d58c86d157914c` |
 
 ---
 
@@ -96,19 +96,19 @@ Cada vista previa concatena `3` repeticiones horizontales consecutivas (`x ∈ [
 
 | Bioma | Ruta real (`MC.Planeta`) | `y` (m) | `mismoMundo` | Capas activas | Draw calls | `difHorizonte` (RGB) | `% Horizonte cambiado` | `difCalzada` (RGB) | Respaldo procedural |
 |---|---|---:|---|---:|---:|---:|---:|---:|---|
-| **`costa`** | `ruta_atlantico` | `1800` | `true` | `3` | `5` | `25.05` | `66.0 %` | `0.2556` | `false` |
+| **`costa`** | `ruta_atlantico` | `1800` | `true` | `3` | `5` | `26.07` | `66.9 %` | `0.2556` | `false` |
 | **`llanura`** | `ruta_atlantico` | `5800` | `true` | `0` | `0` | `0.00` | `0.0 %` | `0.0000` | `true` (esperado) |
-| **`desierto`** | `ruta_atlantico` | `10000` | `true` | `3` | `5` | `37.43` | `70.6 %` | `0.2302` | `false` |
-| **`montana`** | `ruta_atlantico` | `14000` | `true` | `3` | `8` | `40.78` | `82.0 %` | `0.3551` | `false` |
-| **`bosque`** | `ruta_embalse` | `6000` | `true` | `3` | `6` | `35.49` | `73.6 %` | `0.2518` | `false` |
-| **`lagos`** | `ruta_embalse` | `10200` | `true` | `3` | `10` | `37.42` | `76.6 %` | `0.1887` | `false` |
-| **`nieve`** | `ruta_norte` | `9400` | `true` | `3` | `3` | `53.84` | `98.1 %` | `0.3565` | `false` |
+| **`desierto`** | `ruta_atlantico` | `10000` | `true` | `3` | `8` | `50.37` | `87.7 %` | `0.4094` | `false` |
+| **`montana`** | `ruta_atlantico` | `14000` | `true` | `3` | `8` | `55.65` | `98.7 %` | `0.3624` | `false` |
+| **`bosque`** | `ruta_embalse` | `6000` | `true` | `3` | `4` | `54.07` | `97.0 %` | `0.3370` | `false` |
+| **`lagos`** | `ruta_embalse` | `10200` | `true` | `3` | `10` | `54.59` | `98.8 %` | `0.2780` | `false` |
+| **`nieve`** | `ruta_norte` | `9400` | `true` | `3` | `3` | `55.29` | `98.1 %` | `0.3565` | `false` |
 
 ### 5.2 Impacto en tamaño, arranque y memoria
-- **Peso de las 18 texturas WebP en disco:** `335.79 KB` (`343,848 bytes`).
-- **Impacto en `dist/juegos/getaway.html` (HTML único offline):** `26,093 KB → 26,568 KB` (`+475 KB`, **`+1.82 %`**).
-- **Tiempo al primer cuadro jugable (`msPrimerCuadro`):** `3,078 ms` (sin bloqueo; decodificación diferida por bioma).
-- **Caché LRU acotada:** `lruMax = 2` biomas residentes (`imgsEnCache = 6` imágenes `1024×256`), `10` expulsiones limpias al recorrer los 6 biomas, `usedJSHeapSize = 132.6 MB`.
+- **Peso de las 18 texturas WebP en disco:** `540.58 KB` (`553,550 bytes`).
+- **Impacto en `dist/juegos/getaway.html` (HTML único offline):** `26,093 KB → 26,844 KB` (`+751 KB`, **`+2.88 %`**).
+- **Tiempo al primer cuadro jugable (`msPrimerCuadro`):** `3,078 – 4,702 ms` (sin bloqueo; decodificación diferida por bioma).
+- **Caché LRU acotada:** `lruMax = 2` biomas residentes (`imgsEnCache = 6` imágenes `1024×256`), `10` expulsiones limpias al recorrer los 6 biomas, `usedJSHeapSize = 110.6 MB`.
 - **Degradación de calidad y respaldo ante fallo:**
   - `calidad = 0.50` → `capasMedia = 2` (`lejos` + `cerca`).
   - `calidad = 0.30` → `capasBaja = 0`, `fbBaja = true` (respaldo procedural).
