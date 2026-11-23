@@ -151,7 +151,7 @@ function construir(c){
   }
   return {sets,cota};
 }
-function mallasSector(s,cota,niveles){
+function mallasSector(s,cota,niveles,celdaLejana=40){
   const grupos=[new Map(),new Map(),new Map()],clusters=new Map(),{sx,sy,base}=s;
   for(const e of s.edificios){
     for(let lod=0;lod<2;lod++){if(!niveles.includes(lod))continue;
@@ -161,7 +161,7 @@ function mallasSector(s,cota,niveles){
       arr.push(...v);m.set(k,arr);
     }
     if(!niveles.includes(2))continue;
-    const cx=Math.floor((e.x-sx*1000)/40),cy=Math.floor((e.y-sy*1000)/40),ck=cx+','+cy,R=clusters.get(ck),p=poligono(e,1);
+    const cx=Math.floor((e.x-sx*1000)/celdaLejana),cy=Math.floor((e.y-sy*1000)/celdaLejana),ck=cx+','+cy,R=clusters.get(ck),p=poligono(e,1);
     const xs=p.filter((_,i)=>i%2===0),ys=p.filter((_,i)=>i%2===1);
     const bb={x0:Math.min(...xs),x1:Math.max(...xs),y0:Math.min(...ys),y1:Math.max(...ys),h:e.h};
     if(!R)clusters.set(ck,bb);else{R.x0=Math.min(R.x0,bb.x0);R.x1=Math.max(R.x1,bb.x1);R.y0=Math.min(R.y0,bb.y0);R.y1=Math.max(R.y1,bb.y1);R.h=Math.max(R.h,bb.h);}
@@ -173,13 +173,14 @@ function mallasSector(s,cota,niveles){
   }
   return grupos;
 }
-function escribir(datos,salida,hashOrigen,niveles=[0,1,2]){
+function escribir(datos,salida,hashOrigen,niveles=[0,1,2],celdaLejana=40){
+  if(!Number.isSafeInteger(celdaLejana)||celdaLejana<20||celdaLejana>200)error('celda LOD2 fuera de [20,200] m');
   if(!Array.isArray(niveles)||!niveles.length||new Set(niveles).size!==niveles.length||niveles.some(n=>![0,1,2].includes(n)))error('niveles inválidos');
   const {sets,cota}=datos;fs.mkdirSync(salida,{recursive:true});
-  const manifest={version:2,origen_sha256:hashOrigen,sector_m:1000,formato:'posiciones-i16-q20-o-f32-xyz-yup-deflateraw',niveles,sectores:{},bytes_compresos:0,bytes_por_lod:[0,0,0],triangulos:[0,0,0]};
+  const manifest={version:2,origen_sha256:hashOrigen,sector_m:1000,celda_lod2_m:celdaLejana,formato:'posiciones-i16-q20-o-f32-xyz-yup-deflateraw',niveles,sectores:{},bytes_compresos:0,bytes_por_lod:[0,0,0],triangulos:[0,0,0]};
   for(const [key,s] of [...sets].sort((a,b)=>a[0].localeCompare(b[0]))){
     const salidaSector={origen:[s.sx*1000,s.base,s.sy*1000],edificios:s.edificios.length,lod:{}};
-    const grupos=mallasSector(s,cota,niveles);
+    const grupos=mallasSector(s,cota,niveles,celdaLejana);
     for(const lod of niveles){
       const info=[],bytes=[];let ofs=0;
       for(const [k,arr] of [...grupos[lod]].sort((a,b)=>Number(a[0])-Number(b[0]))){
@@ -281,6 +282,7 @@ else{
   if(!entrada||!salida)error('uso: node herramientas/precocinar-sectores.mjs --entrada datos/medellin/mundo.mc4 --salida <directorio>');
   const bytes=fs.readFileSync(entrada),c=mc4(bytes),t=performance.now();
   const niveles=arg('--niveles','0,1,2').split(',').map(Number);
-  const m=escribir(construir(c),salida,SHA(bytes),niveles);
-  console.log(JSON.stringify({ciudad:c.meta.ciudad,sectores:Object.keys(m.sectores).length,triangulos:m.triangulos,bytes:m.bytes_compresos,bytes_por_lod:m.bytes_por_lod,elapsed_ms:Math.round(performance.now()-t),rss_mb:Math.round(process.memoryUsage().rss/1048576)},null,2));
+  const celdaLejana=Number(arg('--celda-lod2','40'));
+  const m=escribir(construir(c),salida,SHA(bytes),niveles,celdaLejana);
+  console.log(JSON.stringify({ciudad:c.meta.ciudad,sectores:Object.keys(m.sectores).length,triangulos:m.triangulos,bytes:m.bytes_compresos,bytes_por_lod:m.bytes_por_lod,celda_lod2_m:celdaLejana,elapsed_ms:Math.round(performance.now()-t),rss_mb:Math.round(process.memoryUsage().rss/1048576)},null,2));
 }
