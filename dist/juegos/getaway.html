@@ -14159,14 +14159,14 @@ const Modos = {
     /* extremo: lo más alto cerca y, desde ahí, lo más bajo a menos de 1,2 km (bajadas de 1 a 4 km, no vueltas por medio valle) */
     if (extremo) { const alto = this.extremoVias(x0, y0, 1200, 1); const bajo = alto && this.extremoVias(alto.x, alto.y, 800, -1);
       if (alto && bajo && alto.z - bajo.z > 25) { const Q = rutaTC(M, [alto, bajo], false); if (bueno(Q)) { P = Q; tipo = 'Bajada'; desnivel = Math.round(alto.z - bajo.z); } } }
-    for (let intento = 0; intento < 6 && !P; intento++) { cerrada = intento % 2 === 0; const pts = [], n = cerrada ? 5 : 2, R = (extremo ? 260 : 380) * Math.pow(.7, intento);
+    for (let intento = 0; intento < 12 && !P; intento++) { cerrada = intento % 2 === 0; const pts = [], n = cerrada ? 5 : 2, R = (extremo ? 260 : 380) * Math.pow(.78, intento % 6);
       for (let k = 0; k < n; k++) { const a = k / n * TAU + this._rnd() * .4, q = M.viaCercana(x0 + Math.cos(a) * R * (cerrada ? 1 : 3.2), y0 + Math.sin(a) * R * (cerrada ? .8 : 3.2), 220, extremo ? null : deCarro); if (q) pts.push(q); }
       if (!cerrada) { const q0 = M.viaCercana(x0, y0, 120, extremo ? null : deCarro); if (q0) pts.unshift(q0); pts.length = Math.min(pts.length, 2); }
       if (pts.length >= 2) { const Q = rutaTC(M, pts, cerrada); if (bueno(Q)) { P = Q; tipo = cerrada ? 'Circuito' : 'Sprint'; } } }
     if (!P) return false;
     const p = new PistaTC(P, cerrada); if (p.L < 300) return false; const vueltas = cerrada && p.L < 2200 ? 2 : 1, antes = C.veh.id;
-    /* 4.7: la salida, en un tramo despejado: si los primeros 15 m de pista chocan con algo (un edificio, un poste), la salida avanza por la pista */
-    let s0 = 0; const libre = s => { for (let d = 2; d <= 15; d += 2.5) { const q = p.punto(s + d); if (G.M.edificioEn(q.x, q.y, 1.2)) return false; } return true; }; while (s0 < Math.min(150, p.L / 3) && !libre(s0)) s0 += 6;
+    /* 4.7: la salida, en un tramo despejado: si los primeros 36 m de pista chocan con algo o doblan en seco, la salida avanza por la pista */
+    let s0 = 0; const libre = s => { const a0 = p.punto(s).a; for (let d = 2; d <= 36; d += 3) { const q = p.punto(s + d); if (G.M.edificioEn(q.x, q.y, 1.8) || Math.abs(MC.angDif(a0, q.a)) > .45) return false; } return true; }; while (s0 < Math.min(240, p.L / 2) && !libre(s0)) s0 += 6;
     if (s0 > 0) { const P2 = []; for (let s = s0; s <= p.L - (cerrada ? 0 : 1); s += 6) { const q = p.punto(s); P2.push(q.x, q.y); } if (cerrada) for (let s = 0; s < s0; s += 6) { const q = p.punto(s); P2.push(q.x, q.y); } if (P2.length >= 8) return this._pistaLista(new PistaTC(P2, cerrada), cerrada, extremo, tipo, desnivel, antes); }
     return this._pistaLista(p, cerrada, extremo, tipo, desnivel, antes);
   },
@@ -14240,7 +14240,7 @@ const Modos = {
   luces() { const T = G.trafico; if (!T || !T.luces) return null; if (this._lucesDe === T) return this._lucesG; const g = new Map(); for (const L of T.luces().values()) { const k = Math.floor(L.x / 60) + ',' + Math.floor(L.y / 60); if (!g.has(k)) g.set(k, []); g.get(k).push(L); } this._lucesDe = T; return (this._lucesG = g); },
   pasoEnCicla(dt) {
     const m = this.m, C = G.cuerpo, v = Math.abs(C.v);
-    if (m.fase === 0) { if (Math.hypot(m.o.x - C.x, m.o.y - C.y) < 16 && v < 2.5) { m.esp += dt; if (m.esp > .8) { m.fase = 1; m.t = 0; C.setVeh('bici'); G.objetivo = { x: m.d.x, y: m.d.y, texto: '🚲 ' + m.d.nombre }; G.ui.aviso('🚲 ¡Cicla tomada! Llévala a ' + m.d.nombre + ' (' + this.bicis(m.d) + ' de 15): por la ciclorruta suma racha', 2800, 'modos'); } } return; }
+    if (m.fase === 0) { if (Math.hypot(m.o.x - C.x, m.o.y - C.y) < 16 && v < 2.5) { m.esp += dt; if (m.esp > .8) { m.esp = 0; m.fase = 1; m.t = 0; C.setVeh('bici'); G.objetivo = { x: m.d.x, y: m.d.y, texto: '🚲 ' + m.d.nombre }; G.ui.aviso('🚲 ¡Cicla tomada! Llévala a ' + m.d.nombre + ' (' + this.bicis(m.d) + ' de 15): por la ciclorruta suma racha', 2800, 'modos'); } } else m.esp = 0; return; }
     m.t += dt;
     /* la racha por la ciclorruta (EnCicla): cada 8 s seguidos sube el multiplicador hasta ×3 */
     if (v > 2 && G.M.esCiclovia(C.x, C.y, 4)) { m.racha += dt; m.fuera = 0; } else if ((m.fuera += dt) > 1.5) m.racha = 0;
@@ -14248,7 +14248,7 @@ const Modos = {
     /* el semáforo en rojo (EnCicla): pasar con la luz roja resta */
     const g = this.luces(); if (g && v > 3) { const k = Math.floor(C.x / 60) + ',' + Math.floor(C.y / 60); for (const L of g.get(k) || []) { if (Math.hypot(L.x - C.x, L.y - C.y) > 7) continue; const ult = m.pasados.get(L.nodo) || -99; if (G.t - ult < 20) continue; m.pasados.set(L.nodo, G.t); if (G.trafico.luz(L.nodo, C.a, G.reloj.seg) === 'rojo') { m.puntos = Math.max(0, m.puntos - 50); m.rojos++; m.racha = 0; G.ui.aviso('🚦 ¡Te volaste el semáforo en rojo! −50', 1800, 'rojo'); } } }
     if (Math.hypot(m.d.x - C.x, m.d.y - C.y) < 14 && v < 2.5) { m.esp += dt; if (m.esp < .8) return; m.esp = 0; const B = this._bicis; B.set(m.d.id || m.d.nombre, this.bicis(m.d) + 1); B.set(m.o.id || m.o.nombre, Math.max(0, this.bicis(m.o) - 1)); const bono = Math.max(0, Math.round((m.limite - m.t) * 2)) + 100; m.puntos += bono; m.vueltas++;
-      G.ui.aviso('🚲 Cicla devuelta en ' + m.d.nombre + ' · +' + bono + (m.t > m.limite ? ' (tarde)' : ''), 2400, 'modos'); if (m.vueltas < 3) { if (this.armarEnCicla(m.d) === false) this.finEnCicla(); } else this.finEnCicla(); }
+      G.ui.aviso('🚲 Cicla devuelta en ' + m.d.nombre + ' · +' + bono + (m.t > m.limite ? ' (tarde)' : ''), 2400, 'modos'); if (m.vueltas < 3) { if (this.armarEnCicla(m.d) === false) this.finEnCicla(); } else this.finEnCicla(); } else m.esp = 0;
   },
   finEnCicla() { const m = this.m, rec = this.record('encicla:' + G.id, m.puntos, false); this.terminar(null); MC.emit('modo:resultado', { id: 'encicla', puntos: m.puntos, rojos: m.rojos }); G.ui.dialogo('🚲 EnCicla', 'Rebalanceaste ' + m.vueltas + ' estaciones · <b>' + Math.round(m.puntos) + ' puntos</b>' + (m.rojos ? ' · 🚦 ' + m.rojos + ' semáforo(s) en rojo' : ' · ningún semáforo en rojo 👏') + (rec.mejor ? '<br>⭐ ¡Récord!' : ''), ['Listo']); },
 
@@ -14334,7 +14334,7 @@ const Modos = {
       if (k === 'estilo') { const i = est.findIndex(e => e.id === MC.estilo); MC.estilo = est[(i + 1) % est.length].id; if (G.vistas && G.vistas.losas) { G.vistas.losas.limpiar(); if (G.vistas.losasLejos) G.vistas.losasLejos.limpiar(); } this.laboratorio(); }
       else if (k === 'hora') { G.reloj.min = (G.reloj.min + 180) % 1440; this.laboratorio(); }
       else if (k === 'clima') { const i = climas.indexOf(G.climaForzado); G.climaForzado = i >= climas.length - 1 ? null : climas[i + 1]; G.clima.forzar(G.climaForzado); this.laboratorio(); }
-      else if (k === 'veh') { const L = TC.VEHICULOS.map(v => ({ id: 'tc:' + v.id, texto: (v.icon || '🚗') + ' ' + v.n })).concat(['mtb', 'bmx', 'ebike', 'patinete', 'skate', 'patines', 'moto', 'quad', 'jetpack', 'camion', 'buseta'].map(id => ({ id: 'mc:' + id, texto: '🧩 ' + id }))); G.ui.menu('🚗 Vehículo', L, v => { if (v.startsWith('tc:')) { if (C.veh.clase === 'pie') C.setVeh(v.slice(3)); cambiarVeh(v.slice(3)); } else C.setVeh(v.slice(3)); }); }
+      else if (k === 'veh') { const L = TC.VEHICULOS.map(v => ({ id: 'tc:' + v.id, texto: (v.icon || '🚗') + ' ' + v.n })).concat(['mtb', 'bmx', 'ebike', 'patinete', 'skate', 'patines', 'moto', 'quad', 'jetpack', 'avioneta', 'avion', 'camion', 'buseta'].map(id => ({ id: 'mc:' + id, texto: '🧩 ' + id }))); G.ui.menu('🚗 Vehículo', L, v => { if (v.startsWith('tc:')) { if (C.veh.clase === 'pie') C.setVeh(v.slice(3)); cambiarVeh(v.slice(3)); } else C.setVeh(v.slice(3)); }); }
     });
     return true;
   },
@@ -14431,6 +14431,342 @@ EXTRAS.hud.push(() => Actividades.hud()); EXTRAS.capas.push((g, pr, d) => Activi
 EXTRAS.ui.push(b => { b('jugarAqui', '▶', 'Jugar aquí', () => Actividades.jugar()); BOT.jugarAqui.hidden = true; });
 G.Actividades = Actividades;
 EXTRAS.hud.push(() => { if (typeof camaraCoherente === 'function') camaraCoherente(); });   /* 4.7: Arcade y Vuelo solo donde tienen sentido */
+
+/* =====================================================================
+   TURNO CERO · 5.0 · G5-02 · ANILLOS DE RECOGER Y ENTREGAR + CONTROLES DE VUELO
+   Módulo aditivo para Turno Cero (juegos/getaway/61-anillos.js):
+   1. Anillos proyectados en la calle (3D y 2D) para los puntos de recoger y
+      entregar en 📦 Mandados, 🚲 EnCicla y 📞 Contratos de entrega:
+      - aro exterior en perspectiva sobre el asfalto (r = 22 m en Mandados,
+        16 m / 14 m en EnCicla, 18 m en Contratos);
+      - onda concéntrica animada y 4 postes de luz vertical (z = 0.16..2.2 m)
+        para distinguir la zona detrás del tráfico;
+      - arco radial de progreso (0 % → 100 %) cuando el jugador frena dentro
+        del anillo mientras carga o entrega.
+   2. Botones táctiles 🔼 Subir (BOT.sube) y 🔽 Bajar (BOT.baja) cuando el
+      jugador lleva el jetpack, la avioneta o el avión (C.veh.clase === 'aire'
+      o C.veh.vuela), ubicados fuera de la zona libre (412×860 y 860×412)
+      y conectados a G.ctl y al empuje de despegue de aeronaves con vmin.
+   ===================================================================== */
+const AnillosVuelo = {
+  version: '5.0.0-g5-02',
+  cajaVuelo: null,
+  estado: {
+    activo: false,
+    modo: null,
+    fase: 0,
+    tipo: null,
+    x: 0,
+    y: 0,
+    radio: 0,
+    dist: 0,
+    dentro: false,
+    progreso: 0,
+    verticesProyectados: 0,
+    color: null,
+    vueloVisible: false,
+    subiendo: false,
+    bajando: false,
+    altitud: 0
+  },
+
+  /* Determina si el vehículo actual del jugador vuela (jetpack, avioneta, avión) */
+  enVuelo() {
+    const C = G.cuerpo;
+    return !!(C && C.veh && (C.veh.clase === 'aire' || C.veh.vuela) && !G.viaje && !G.dron && !G.controlExterno);
+  },
+
+  /* Devuelve el objetivo activo de recoger/entregar en Mandados, EnCicla o Contratos */
+  objetivoActivo() {
+    const m = G.Modos && G.Modos.m, C = G.cuerpo;
+    if (!C) return null;
+    if (m && m.id === 'mandados') {
+      const P = m.fase === 0 ? m.o : m.d;
+      if (!P) return null;
+      return {
+        modo: 'mandados',
+        fase: m.fase,
+        tipo: m.fase === 0 ? 'recoger' : 'entregar',
+        x: P.x,
+        y: P.y,
+        nombre: P.nombre || '',
+        radio: 22,
+        dur: 1.2,
+        esp: m.esp || 0,
+        color: m.fase === 0 ? '#ffc23a' : '#3fae5a',
+        rgba: m.fase === 0 ? '255,194,58' : '63,174,90',
+        icono: '📦'
+      };
+    }
+    if (m && m.id === 'encicla') {
+      const P = m.fase === 0 ? m.o : m.d;
+      if (!P) return null;
+      return {
+        modo: 'encicla',
+        fase: m.fase,
+        tipo: m.fase === 0 ? 'recoger' : 'entregar',
+        x: P.x,
+        y: P.y,
+        nombre: P.nombre || '',
+        radio: m.fase === 0 ? 16 : 14,
+        dur: .8,
+        esp: m.esp || 0,
+        color: m.fase === 0 ? '#3fae5a' : '#2dd4bf',
+        rgba: m.fase === 0 ? '63,174,90' : '45,212,191',
+        icono: '🚲'
+      };
+    }
+    if (!m && G.contrato && G.contrato.c && G.contrato.c.tipo !== 'cobro' && !G.contrato.carrera) {
+      const K = G.contrato, P = K.fase === 0 ? K.o : K.d;
+      if (!P) return null;
+      return {
+        modo: 'contrato',
+        fase: K.fase,
+        tipo: K.fase === 0 ? 'recoger' : 'entregar',
+        x: P.x,
+        y: P.y,
+        nombre: K.fase === 0 ? 'Recoger' : 'Entregar',
+        radio: 18,
+        dur: K.fase === 0 ? 1.5 : .1,
+        esp: K.esp || 0,
+        color: K.fase === 0 ? '#dba65f' : '#3fae5a',
+        rgba: K.fase === 0 ? '219,166,95' : '63,174,90',
+        icono: '📦'
+      };
+    }
+    return null;
+  },
+
+  /* Proyecta un polígono circular de radio r (en metros) a altura z sobre (cx, cy) */
+  _anilloPuntos(pr, cx, cy, r, z, n = 28, a0 = 0, a1 = TAU) {
+    const pts = [];
+    for (let i = 0; i <= n; i++) {
+      const a = a0 + (a1 - a0) * (i / n);
+      const p = pr(cx + Math.cos(a) * r, cy + Math.sin(a) * r, z);
+      if (p && Number.isFinite(p[0]) && Number.isFinite(p[1])) pts.push(p);
+    }
+    return pts;
+  },
+
+  /* Dibuja el anillo de recoger o entregar encima del mundo (3D y 2D) */
+  dibujarCapas(g, pr, d = 1, t = 0) {
+    const info = this.objetivoActivo(), C = G.cuerpo;
+    if (!info || !C) {
+      this.estado.activo = false;
+      this.estado.modo = null;
+      this.estado.verticesProyectados = 0;
+      this.estado.progreso = 0;
+      this.estado.dentro = false;
+      return;
+    }
+
+    const dist = Math.hypot(info.x - C.x, info.y - C.y);
+    const dentro = dist < info.radio;
+    const prog = clamp(info.esp / Math.max(.05, info.dur), 0, 1);
+    const ptsBase = this._anilloPuntos(pr, info.x, info.y, info.radio, .18, 28);
+
+    this.estado.activo = true;
+    this.estado.modo = info.modo;
+    this.estado.fase = info.fase;
+    this.estado.tipo = info.tipo;
+    this.estado.x = info.x;
+    this.estado.y = info.y;
+    this.estado.radio = info.radio;
+    this.estado.dist = +dist.toFixed(2);
+    this.estado.dentro = dentro;
+    this.estado.progreso = +prog.toFixed(3);
+    this.estado.verticesProyectados = ptsBase.length;
+    this.estado.color = info.color;
+
+    if (ptsBase.length < 6) return;
+
+    g.save();
+    /* 1. Relleno translúcido sobre el pavimento */
+    g.fillStyle = 'rgba(' + info.rgba + ',' + (dentro ? '.24' : '.13') + ')';
+    g.beginPath();
+    g.moveTo(ptsBase[0][0], ptsBase[0][1]);
+    for (let i = 1; i < ptsBase.length; i++) g.lineTo(ptsBase[i][0], ptsBase[i][1]);
+    g.closePath();
+    g.fill();
+
+    /* 2. Borde exterior oscuro de alto contraste + aro principal luminoso */
+    g.lineJoin = 'round';
+    g.lineCap = 'round';
+    g.strokeStyle = 'rgba(12,14,20,.86)';
+    g.lineWidth = (dentro ? 5.6 : 4.4) * d;
+    g.stroke();
+
+    g.strokeStyle = info.color;
+    g.lineWidth = (dentro ? 3.4 : 2.6) * d;
+    g.stroke();
+
+    /* 3. Onda concéntrica interior (contrae al recoger, expande al entregar) */
+    const faseOnda = (t * .85) % 1;
+    const fOnda = info.fase === 0 ? (1 - faseOnda * .72) : (.28 + faseOnda * .72);
+    const ptsOnda = this._anilloPuntos(pr, info.x, info.y, info.radio * fOnda, .22, 24);
+    if (ptsOnda.length >= 6) {
+      g.strokeStyle = 'rgba(' + info.rgba + ',' + ((1 - faseOnda) * .75 + .15).toFixed(2) + ')';
+      g.lineWidth = 2 * d;
+      g.beginPath();
+      g.moveTo(ptsOnda[0][0], ptsOnda[0][1]);
+      for (let i = 1; i < ptsOnda.length; i++) g.lineTo(ptsOnda[i][0], ptsOnda[i][1]);
+      g.closePath();
+      g.stroke();
+    }
+
+    /* 4. Postes verticales de luz y aro elevado para verse detrás del tráfico en 3D */
+    if (dist < 260) {
+      g.strokeStyle = 'rgba(' + info.rgba + ',.52)';
+      g.lineWidth = 1.8 * d;
+      for (let k = 0; k < 4; k++) {
+        const a = k * Math.PI / 2 + t * .45;
+        const p0 = pr(info.x + Math.cos(a) * info.radio, info.y + Math.sin(a) * info.radio, .18);
+        const p1 = pr(info.x + Math.cos(a) * info.radio, info.y + Math.sin(a) * info.radio, 2.1);
+        if (p0 && p1) {
+          g.beginPath();
+          g.moveTo(p0[0], p0[1]);
+          g.lineTo(p1[0], p1[1]);
+          g.stroke();
+        }
+      }
+    }
+
+    /* 5. Arco radial de progreso (0 % → 100 %) cuando el jugador espera dentro del anillo */
+    if (prog > .01) {
+      const ptsProg = this._anilloPuntos(pr, info.x, info.y, info.radio * .88, .35, Math.max(8, Math.round(28 * prog)), -Math.PI / 2, -Math.PI / 2 + prog * TAU);
+      if (ptsProg.length >= 2) {
+        g.strokeStyle = '#ffffff';
+        g.lineWidth = 4.6 * d;
+        g.beginPath();
+        g.moveTo(ptsProg[0][0], ptsProg[0][1]);
+        for (let i = 1; i < ptsProg.length; i++) g.lineTo(ptsProg[i][0], ptsProg[i][1]);
+        g.stroke();
+      }
+    }
+
+    /* 6. Etiqueta flotante sobre el centro del anillo cuando está cerca */
+    if (dist < 140) {
+      const pc = pr(info.x, info.y, 2.5);
+      if (pc) {
+        const txt = info.icono + ' ' + (prog > .02 ? Math.min(100, Math.round(prog * 100)) + ' %' : (info.fase === 0 ? 'RECOGER' : 'ENTREGAR'));
+        g.font = '800 ' + Math.round(12 * d) + 'px system-ui, sans-serif';
+        g.textAlign = 'center';
+        g.lineWidth = 3.5 * d;
+        g.strokeStyle = 'rgba(12,14,20,.9)';
+        g.strokeText(txt, pc[0], pc[1]);
+        g.fillStyle = prog > .02 ? '#ffffff' : info.color;
+        g.fillText(txt, pc[0], pc[1]);
+      }
+    }
+    g.restore();
+  },
+
+  /* Crea los botones táctiles 🔼 Subir y 🔽 Bajar para jetpack, avioneta y avión */
+  iniciarUI() {
+    if (!G.ui || !G.ui.capa || this.cajaVuelo) return;
+    if (!document.getElementById('mc-vuelo-css')) {
+      const st = document.createElement('style');
+      st.id = 'mc-vuelo-css';
+      st.textContent =
+        '.mcui .vuelo-ctl{position:absolute;right:8px;top:454px;display:flex;flex-direction:column;gap:6px;width:clamp(48px,calc(20vw - 10px),66px);pointer-events:auto;z-index:22}' +
+        '.mcui .vuelo-ctl[hidden]{display:none!important}' +
+        '.mcui .vuelo-ctl button{box-sizing:border-box;width:100%;min-width:48px;min-height:48px;padding:4px 2px;border-radius:var(--r,6px);border:1px solid var(--b,rgba(236,230,218,.22));background:var(--f,rgba(12,12,14,.86));color:var(--t,#ece6da);font:700 18px/1 system-ui,sans-serif;cursor:pointer;touch-action:none}' +
+        '.mcui .vuelo-ctl button.on{background:var(--a,#e8a33c);color:#0c0e14;border-color:#fff}' +
+        '.mcui .vuelo-ctl button small{display:block;font-size:10px;opacity:.9;margin-top:2px}' +
+        '.mc-zurdo .mcui .vuelo-ctl{right:auto;left:8px}' +
+        '@media (orientation:landscape){.mcui .vuelo-ctl{top:auto;right:242px;bottom:max(14px,env(safe-area-inset-bottom));flex-direction:row;width:auto}.mcui .vuelo-ctl button{width:54px;height:54px}.mc-zurdo .mcui .vuelo-ctl{left:242px;right:auto}}';
+      document.head.appendChild(st);
+    }
+
+    const box = document.createElement('div');
+    box.className = 'vuelo-ctl p';
+    box.hidden = true;
+
+    const crearBtn = (id, icono, texto) => {
+      const btn = document.createElement('button');
+      btn.id = 'b' + id[0].toUpperCase() + id.slice(1);
+      btn.className = 'p';
+      btn.dataset.vuelo = id;
+      btn.setAttribute('aria-label', texto);
+      btn.title = texto;
+      btn.innerHTML = icono + '<small>' + texto + '</small>';
+      const encender = e => {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        btn.classList.add('on');
+        if (G.ctl) G.ctl.boton(id, true);
+      };
+      const apagar = () => {
+        btn.classList.remove('on');
+        if (G.ctl) G.ctl.boton(id, false);
+      };
+      btn.addEventListener('pointerdown', encender);
+      for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) {
+        btn.addEventListener(ev, apagar);
+      }
+      box.appendChild(btn);
+      BOT[id] = btn;
+      return btn;
+    };
+
+    crearBtn('sube', '🔼', 'Subir');
+    crearBtn('baja', '🔽', 'Bajar');
+    G.ui.capa.appendChild(box);
+    this.cajaVuelo = box;
+  },
+
+  /* Actualiza la visibilidad de los botones 🔼 Subir y 🔽 Bajar en el HUD */
+  actualizarHUD() {
+    if (!this.cajaVuelo) this.iniciarUI();
+    const volando = this.enVuelo();
+    if (this.cajaVuelo) this.cajaVuelo.hidden = !volando;
+    if (BOT.sube) BOT.sube.hidden = !volando;
+    if (BOT.baja) BOT.baja.hidden = !volando;
+    if (!volando && G.ctl) {
+      if (G.ctl.botones.has('sube')) G.ctl.boton('sube', false);
+      if (G.ctl.botones.has('baja')) G.ctl.boton('baja', false);
+    }
+    this.estado.vueloVisible = volando;
+    this.estado.altitud = G.cuerpo ? +(G.cuerpo.z || 0).toFixed(2) : 0;
+  },
+
+  /* Inyecta las señales de ascenso/descenso y el empuje de despegue antes de C.actualizar */
+  aplicarEntrada(e, ent) {
+    const C = G.cuerpo;
+    if (!C || !C.veh || !(C.veh.clase === 'aire' || C.veh.vuela)) {
+      this.estado.subiendo = false;
+      this.estado.bajando = false;
+      return;
+    }
+    const sube = !!(ent && ent.sube) || !!(G.ctl && G.ctl.botones.has('sube'));
+    const baja = !!(ent && ent.baja) || !!(G.ctl && G.ctl.botones.has('baja'));
+    e.sube = sube;
+    e.baja = baja;
+    this.estado.subiendo = sube;
+    this.estado.bajando = baja;
+
+    /* Evitar que la barra espaciadora (Space = sube) active el freno de mano del carro */
+    if (sube && G.ctl && !G.ctl.botones.has('freno') && (e.acel || 0) < 0) {
+      e.acel = (ent && ent.acel > 0) ? ent.acel : 0;
+    }
+
+    /* En avioneta o avión (con velocidad de pérdida vmin), mantener 🔼 Subir da empuje de despegue */
+    if (C.veh.vmin && sube) {
+      e.acel = 1;
+      e.turbo = true;
+      const vDespegue = C.veh.vmin * 1.4;
+      if (C.v < vDespegue) {
+        C.v = Math.min(C.veh.vmax || vDespegue, Math.max(C.v + (C.veh.acc || 8) * 3.2 * (C._dt || 1 / 60), C.veh.vmin * 1.28));
+      }
+    }
+    this.estado.altitud = +(C.z || 0).toFixed(2);
+  }
+};
+
+EXTRAS.ui.push(() => AnillosVuelo.iniciarUI());
+EXTRAS.hud.push(() => AnillosVuelo.actualizarHUD());
+EXTRAS.entrada.push((e, ent) => AnillosVuelo.aplicarEntrada(e, ent));
+EXTRAS.capas.push((g, pr, d, t) => AnillosVuelo.dibujarCapas(g, pr, d, t));
+G.AnillosVuelo = AnillosVuelo;
 
 /* =====================================================================
    TURNO CERO · 4.8 · RESCATE, «🚀 IR» EN EL MAPA, UN SOLO MAPA Y PANTALLA EN MITADES
