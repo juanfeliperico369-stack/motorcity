@@ -1,0 +1,427 @@
+{
+  "nombre": "Motor City V4 — Paisajes Paralaje por Bioma para MC.Arcade",
+  "autor": "Gemini Antigravity — Motor City V4",
+  "version": "4.9.0-v4",
+  "dimensiones": [
+    1024,
+    256
+  ],
+  "formato": "image/webp (RGBA lossless)",
+  "velocidades": {
+    "lejos": 0.12,
+    "medio": 0.35,
+    "cerca": 0.7
+  },
+  "biomas": [
+    "costa",
+    "desierto",
+    "bosque",
+    "montana",
+    "nieve",
+    "lagos"
+  ],
+  "fallback_biomas": [
+    "llanura"
+  ],
+  "total_texturas": 18,
+  "total_bytes": 343848,
+  "total_kb": 335.79,
+  "texturas": {
+    "costa_lejos": {
+      "id": "costa_lejos",
+      "bioma": "costa",
+      "capa": "lejos",
+      "ruta": "arte/arcade/biomas/costa_lejos.webp",
+      "ancho": 1024,
+      "alto": 256,
+      "alpha": true,
+      "transparencia_pct": 39.4,
+      "opacidad_pct": 60.6,
+      "costura_mae": 0.0,
+      "velocidad": 0.12,
+      "bytes": 11298,
+      "kb": 11.03,
+      "sha256_16": "24cd36fc1acb511e",
+      "color_medio_rgb": [
+        79,
+        128,
+        152
+      ],
+      "licencia": "CC0-1.0 / Original Motor City V4 (Gemini Antigravity, sala limpia)"
+    },
+    "costa_medio": {
+      "id": "costa_medio",
+      "bioma": "costa",
+      "capa": "medio",
+      "ruta": "arte/arcade/biomas/costa_medio.webp",
+      "ancho": 1024,
+      "alto": 256,
+      "alpha": true,
+      "transparencia_pct": 57.9,
+      "opacidad_pct": 42.1,
+      "costura_mae": 0.0,
+      "velocidad": 0.35,
+      "bytes": 25702,
+      "kb": 25.1,
+      "sha256_16": "86fd10f6b1a5c886",
+      "color_medio_rgb": [
+        96,
+        129,
+        87
+      ],
+      "licencia": "CC0-1.0 / Original Motor City V4 (Gemini Antigravity, sala limpia)"
+    },
+    "costa_cerca": {
+      "id": "costa_cerca",
+      "bioma": "costa",
+      "capa": "cerca",
+      "ruta": "arte/arcade/biomas/costa_cerca.webp",
+      "ancho": 1024,
+      "alto": 256,
+      "alpha": true,
+      "transparencia_pct": 73.9,
+      "opacidad_pct": 26.1,
+      "costura_mae": 0.0,
+      "velocidad": 0.7,
+      "bytes": 37168,
+      "kb": 36.3,
+      "sha256_16": "148af54cea1b0f5f",
+      "color_medio_rgb": [
+        132,
+        138,
+        95
+      ],
+      "licencia": "CC0-1.0 / Original Motor City V4 (Gemini Antigravity, sala limpia)"
+    },
+    "desierto_lejos": {
+      "id": "desierto_lejos",
+      "bioma": "desierto",
+      "capa": "lejos",
+      "ruta": "arte/arcade/biomas/desierto_lejos.webp",
+      "ancho": 1024,
+      "alto": 256,
+      "alpha": true,
+      "transparencia_pct": 38.8,
+      "opacidad_pct": 61.2,
+      "costura_mae": 0.0,
+      "velocidad": 0.12,
+      "bytes": 12878,
+      "kb": 12.58,
+      "sha256_16": "eeb1cec260c03d30",
+      "color_medio_rgb": [
+        168,
+        120,
+        88
+      ],
+      "licencia": "CC0-1.0 / Original Motor City V4 (Gemini Antigravity, sala limpia)"
+    },
+    "desierto_medio": {
+      "id": "desierto_medio",
+      "bioma": "desierto",
+      "capa": "medio",
+      "ruta": "arte/arcade/biomas/desierto_medio.webp",
+      "ancho": 1024,
+      "alto": 256,
+      "alpha": true,
+      "transparencia_pct": 55.9,
+      "opacidad_pct": 44.1,
+      "costura_mae": 0.0,
+      "velocidad": 0.35,
+      "bytes": 17726,
+      "kb": 17.31,
+      "sha256_16": "e8dd96c01830a13f",
+      "color_medio_rgb": [
+        188,
+        138,
+        86
+      ],
+      "licencia": "CC0-1.0 / Original Motor City V4 (Gemini Antigravity, sala limpia)"
+    },
+    "desierto_cerca": {
+      "id": "desierto_cerca",
+      "bioma": "desierto",
+      "capa": "cerca",
+      "ruta": "arte/arcade/biomas/desierto_cerca.webp",
+      "ancho": 1024,
+      "alto": 256,
+      "alpha": true,
+      "transparencia_pct": 78.7,
+      "opacidad_pct": 21.3,
+      "costura_mae": 0.0,
+      "velocidad": 0.7,
+      "bytes": 12942,
+      "kb": 12.64,
+      "sha256_16": "be7a36db3093d0fc",
+      "color_medio_rgb": [
+        153,
+        120,
+        73
+      ],
+      "licencia": "CC0-1.0 / Original Motor City V4 (Gemini Antigravity, sala limpia)"
+    },
+    "bosque_lejos": {
+      "id": "bosque_lejos",
+      "bioma": "bosque",
+      "capa": "lejos",
+      "ruta": "arte/arcade/biomas/bosque_lejos.webp",
+      "ancho": 1024,
+      "alto": 256,
+      "alpha": true,
+      "transparencia_pct": 31.8,
+      "opacidad_pct": 68.2,
+      "costura_mae": 0.0,
+      "velocidad": 0.12,
+      "bytes": 13350,
+      "kb": 13.04,
+      "sha256_16": "2ce8e81c83f67cd9",
+      "color_medio_rgb": [
+        66,
+        108,
+        95
+      ],
+      "licencia": "CC0-1.0 / Original Motor City V4 (Gemini Antigravity, sala limpia)"
+    },
+    "bosque_medio": {
+      "id": "bosque_medio",
+      "bioma": "bosque",
+      "capa": "medio",
+      "ruta": "arte/arcade/biomas/bosque_medio.webp",
+      "ancho": 1024,
+      "alto": 256,
+      "alpha": true,
+      "transparencia_pct": 56.9,
+      "opacidad_pct": 43.1,
+      "costura_mae": 0.0,
+      "velocidad": 0.35,
+      "bytes": 21418,
+      "kb": 20.92,
+      "sha256_16": "24f9479f877724b4",
+      "color_medio_rgb": [
+        54,
+        100,
+        61
+      ],
+      "licencia": "CC0-1.0 / Original Motor City V4 (Gemini Antigravity, sala limpia)"
+    },
+    "bosque_cerca": {
+      "id": "bosque_cerca",
+      "bioma": "bosque",
+      "capa": "cerca",
+      "ruta": "arte/arcade/biomas/bosque_cerca.webp",
+      "ancho": 1024,
+      "alto": 256,
+      "alpha": true,
+      "transparencia_pct": 74.2,
+      "opacidad_pct": 25.8,
+      "costura_mae": 0.0,
+      "velocidad": 0.7,
+      "bytes": 18808,
+      "kb": 18.37,
+      "sha256_16": "b75ce2c2961f2b53",
+      "color_medio_rgb": [
+        51,
+        91,
+        50
+      ],
+      "licencia": "CC0-1.0 / Original Motor City V4 (Gemini Antigravity, sala limpia)"
+    },
+    "montana_lejos": {
+      "id": "montana_lejos",
+      "bioma": "montana",
+      "capa": "lejos",
+      "ruta": "arte/arcade/biomas/montana_lejos.webp",
+      "ancho": 1024,
+      "alto": 256,
+      "alpha": true,
+      "transparencia_pct": 26.2,
+      "opacidad_pct": 73.8,
+      "costura_mae": 0.0,
+      "velocidad": 0.12,
+      "bytes": 17020,
+      "kb": 16.62,
+      "sha256_16": "88585a9d35c11462",
+      "color_medio_rgb": [
+        91,
+        102,
+        115
+      ],
+      "licencia": "CC0-1.0 / Original Motor City V4 (Gemini Antigravity, sala limpia)"
+    },
+    "montana_medio": {
+      "id": "montana_medio",
+      "bioma": "montana",
+      "capa": "medio",
+      "ruta": "arte/arcade/biomas/montana_medio.webp",
+      "ancho": 1024,
+      "alto": 256,
+      "alpha": true,
+      "transparencia_pct": 52.5,
+      "opacidad_pct": 47.5,
+      "costura_mae": 0.0,
+      "velocidad": 0.35,
+      "bytes": 18888,
+      "kb": 18.45,
+      "sha256_16": "493156a5b57aff99",
+      "color_medio_rgb": [
+        89,
+        104,
+        76
+      ],
+      "licencia": "CC0-1.0 / Original Motor City V4 (Gemini Antigravity, sala limpia)"
+    },
+    "montana_cerca": {
+      "id": "montana_cerca",
+      "bioma": "montana",
+      "capa": "cerca",
+      "ruta": "arte/arcade/biomas/montana_cerca.webp",
+      "ancho": 1024,
+      "alto": 256,
+      "alpha": true,
+      "transparencia_pct": 77.6,
+      "opacidad_pct": 22.4,
+      "costura_mae": 0.0,
+      "velocidad": 0.7,
+      "bytes": 18594,
+      "kb": 18.16,
+      "sha256_16": "d0edbefdd4a682e0",
+      "color_medio_rgb": [
+        86,
+        99,
+        68
+      ],
+      "licencia": "CC0-1.0 / Original Motor City V4 (Gemini Antigravity, sala limpia)"
+    },
+    "nieve_lejos": {
+      "id": "nieve_lejos",
+      "bioma": "nieve",
+      "capa": "lejos",
+      "ruta": "arte/arcade/biomas/nieve_lejos.webp",
+      "ancho": 1024,
+      "alto": 256,
+      "alpha": true,
+      "transparencia_pct": 25.4,
+      "opacidad_pct": 74.6,
+      "costura_mae": 0.0,
+      "velocidad": 0.12,
+      "bytes": 18738,
+      "kb": 18.3,
+      "sha256_16": "635f189c1726bd80",
+      "color_medio_rgb": [
+        183,
+        196,
+        214
+      ],
+      "licencia": "CC0-1.0 / Original Motor City V4 (Gemini Antigravity, sala limpia)"
+    },
+    "nieve_medio": {
+      "id": "nieve_medio",
+      "bioma": "nieve",
+      "capa": "medio",
+      "ruta": "arte/arcade/biomas/nieve_medio.webp",
+      "ancho": 1024,
+      "alto": 256,
+      "alpha": true,
+      "transparencia_pct": 58.6,
+      "opacidad_pct": 41.4,
+      "costura_mae": 0.0,
+      "velocidad": 0.35,
+      "bytes": 25008,
+      "kb": 24.42,
+      "sha256_16": "8cac0fb41923c7c4",
+      "color_medio_rgb": [
+        184,
+        196,
+        208
+      ],
+      "licencia": "CC0-1.0 / Original Motor City V4 (Gemini Antigravity, sala limpia)"
+    },
+    "nieve_cerca": {
+      "id": "nieve_cerca",
+      "bioma": "nieve",
+      "capa": "cerca",
+      "ruta": "arte/arcade/biomas/nieve_cerca.webp",
+      "ancho": 1024,
+      "alto": 256,
+      "alpha": true,
+      "transparencia_pct": 79.6,
+      "opacidad_pct": 20.4,
+      "costura_mae": 0.0,
+      "velocidad": 0.7,
+      "bytes": 24572,
+      "kb": 24.0,
+      "sha256_16": "5671d9b49b036079",
+      "color_medio_rgb": [
+        182,
+        193,
+        202
+      ],
+      "licencia": "CC0-1.0 / Original Motor City V4 (Gemini Antigravity, sala limpia)"
+    },
+    "lagos_lejos": {
+      "id": "lagos_lejos",
+      "bioma": "lagos",
+      "capa": "lejos",
+      "ruta": "arte/arcade/biomas/lagos_lejos.webp",
+      "ancho": 1024,
+      "alto": 256,
+      "alpha": true,
+      "transparencia_pct": 35.0,
+      "opacidad_pct": 65.0,
+      "costura_mae": 0.0,
+      "velocidad": 0.12,
+      "bytes": 12458,
+      "kb": 12.17,
+      "sha256_16": "e2500e84450dcdd8",
+      "color_medio_rgb": [
+        76,
+        115,
+        117
+      ],
+      "licencia": "CC0-1.0 / Original Motor City V4 (Gemini Antigravity, sala limpia)"
+    },
+    "lagos_medio": {
+      "id": "lagos_medio",
+      "bioma": "lagos",
+      "capa": "medio",
+      "ruta": "arte/arcade/biomas/lagos_medio.webp",
+      "ancho": 1024,
+      "alto": 256,
+      "alpha": true,
+      "transparencia_pct": 61.2,
+      "opacidad_pct": 38.8,
+      "costura_mae": 0.0,
+      "velocidad": 0.35,
+      "bytes": 18436,
+      "kb": 18.0,
+      "sha256_16": "1660e0bb42ea6e45",
+      "color_medio_rgb": [
+        77,
+        125,
+        77
+      ],
+      "licencia": "CC0-1.0 / Original Motor City V4 (Gemini Antigravity, sala limpia)"
+    },
+    "lagos_cerca": {
+      "id": "lagos_cerca",
+      "bioma": "lagos",
+      "capa": "cerca",
+      "ruta": "arte/arcade/biomas/lagos_cerca.webp",
+      "ancho": 1024,
+      "alto": 256,
+      "alpha": true,
+      "transparencia_pct": 78.2,
+      "opacidad_pct": 21.8,
+      "costura_mae": 0.0,
+      "velocidad": 0.7,
+      "bytes": 18844,
+      "kb": 18.4,
+      "sha256_16": "2801f69101206b62",
+      "color_medio_rgb": [
+        67,
+        108,
+        63
+      ],
+      "licencia": "CC0-1.0 / Original Motor City V4 (Gemini Antigravity, sala limpia)"
+    }
+  }
+}
