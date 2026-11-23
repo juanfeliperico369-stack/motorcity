@@ -41,3 +41,5 @@ Fuentes consultadas:
 ## Para la siguiente IA
 
 Leer CONTEXTO-RELEVO.md, docs/PEDIDOS-CHATGPT-4.9.md y este informe. Continuar R4 y R3 con datos verificables y pruebas de compatibilidad. Antes de cerrar, escribir su propio documento de contexto con plan completo, trabajo, pruebas y pendientes, actualizar el relevo y pedir lo mismo a quien siga. La rama R1 es para revisión y no debe fusionarse sin autorización.
+
+Seguimiento de CI. La ejecución 45093739302 aprobó el núcleo y las pruebas de la vista realista. En la prueba posterior de los tres mundos, la expectativa de 16 sectores correspondía a la caché anterior a 4.8. La prueba ahora comprueba el máximo configurado y un presupuesto independiente de 4.000.000 bytes por capa. Pasó en Chromium a 412 × 860 para Guatapé, Medellín y Nueva York.
