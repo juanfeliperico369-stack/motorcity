@@ -1,5 +1,15 @@
 # Bitácora de Motor City
 
+## 24-nov-2026 · Decisiones del autor, el prompt de relevo en `main` y la misión y la visión
+- **El autor decidió las cinco preguntas** de la Fase 0:
+  1. el ancho **real** de las vías (con las ciclorrutas);
+  2. trozos de **160 m**;
+  3. EnCicla: **solo el modo libre**;
+  4. El Metro: **Ciudad Libre y Bus**;
+  5. «**la opción que pruebe que la ciudad será bien craqueada**»: rehacer desde las fuentes originales, con la prueba de craqueo (geometría exacta, ≥ 97 % del área construida, fidelidad contra OSM sin bajar de la auditoría del 17‑nov, conflictos y capturas).
+- **`docs/PROMPT-RELEVO.md`** ya trae las decisiones (§ 3 y § 4) y la tabla de misión y visión. El autor pidió subirlo a `main`.
+- **`docs/VISION-Y-MISION.md`:** la misión y la visión del motor, del Motor del Valle y de cada juego, sacadas de lo que el autor ya había escrito y puestas al día con estas decisiones.
+
 ## 24-nov-2026 · Fase 0 del «renacimiento cenital» · auditoría y línea base, sin cambiar los juegos
 - **El autor:** «Ponte al día, atiende el prompt de relevo y el de skills, y continúa con estos archivos». Compartió tres cosas:
   - el *Master Prompt* (fases 0 a 5: saneamiento GIS, motor cenital 2.5D, integración y carreras pseudo‑3D en Turno Cero);

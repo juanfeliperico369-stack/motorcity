@@ -313,6 +313,15 @@ Recomiendo **rehacer desde Overture** con `motor.mjs fuentes` (unos 190 MB, alca
 
 ## 7. Decisiones que necesito del autor
 
+> **✅ Respondidas por el autor el 24‑nov‑2026:**
+> 1. el ancho **real** (regla A, con las ciclorrutas incluidas);
+> 2. trozos de **160 m**;
+> 3. EnCicla: **solo el modo libre**;
+> 4. El Metro: **Ciudad Libre y Bus**;
+> 5. «**la opción que pruebe que la ciudad será bien craqueada**»: rehacer desde las fuentes originales, con la prueba de craqueo (geometría exacta, área conservada, fidelidad contra OSM, conflictos y capturas).
+>
+> El detalle está en el § 3 y el § 4 de `docs/PROMPT-RELEVO.md`. Lo que sigue es el texto original de las preguntas.
+
 1. **Regla de anchos:**
    - A, la vía real + andén (la de hoy): toca a 18,8 % de las casas;
    - B, los anchos jugables del prompt: 23,7 %, y borra 24.983 casas;

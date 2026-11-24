@@ -100,6 +100,8 @@ Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (
 **Juegos hermanos:** por decisión del autor siguen con su propio Motor del Valle; reciben el motor en `motor-city/` como referencia y un informe detallado en `docs/INFORME-MOTOR-CITY-4.6.md` (y el de la 4.5) (qué se cambió, qué mejoró, qué falta auditar, qué les toca y cómo usar el motor sin dejar el suyo).
 
 ## 1. La misión
+> **Misión y visión al día (24‑nov‑2026), del motor y de cada juego:** `docs/VISION-Y-MISION.md`. Solo el autor las cambia.
+
 **Motor City** es un motor de mundo abierto en **un solo HTML, sin internet ni librerías**. Convierte lugares reales (datos abiertos) o inventados en mundos jugables con leyes reales:
 - **Juegos encima:**
   - **Juega EnCicla** (`BicicletasUno`, todo público);
@@ -177,7 +179,7 @@ Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (
 | 15 | ~~Tarjetas de El Metro con el texto encima del arte~~ | **No se reproduce en la versión actual** | El diseño cambió desde la auditoría (v0.2.0). |
 | 16 | **Sentir el manejo nuevo (4.6) con las manos** en Turno Cero, El Metro y los modos | **Autor** | Los números a tocar están en `Vehiculos.ARCADE` (motor; El Metro tiene los suyos desde su 3.1.0): `accK`, `brkK`, `w0`, `w1`, `tw`. Ver `docs/INVESTIGACION-MANEJO.md` § 0. |
 | 17 | ~~Manejo de EnCicla, mapa de EnCicla, horizontal, un solo juego de prueba~~ | **Hecho en 4.6 (Claude)** | `js/32-fisica.js`, `js/70-mapa.js`, `juegos/getaway/60-modos.js`. El Metro lo hizo su propia sesión en la 3.1.0 «Fluido» (rama `ccr-2a67f935-oat714`). |
-| 18 | **Renacimiento cenital** (pedido del autor, 24‑nov: *master prompt*, investigación técnica y entrega de GPT‑6 en `docs/referencias/renacimiento-cenital-2026/`): saneamiento GIS en `motor-valle/`, cenital 2.5D, integración en El Metro y EnCicla, y carreras pseudo‑3D en Turno Cero | **Fase 0 hecha (Claude). La Fase 1 espera cinco decisiones del autor** | `docs/AUDITORIA-FASE0-CENITAL.md`: el § 6 tiene el plan por archivo y el § 7, las decisiones. La evidencia está en `reportes/2026-11-24-claude-fase0-cenital.md`. Cada fase se detiene y pide el OK. |
+| 18 | **Renacimiento cenital** (pedido del autor, 24‑nov: *master prompt*, investigación técnica y entrega de GPT‑6 en `docs/referencias/renacimiento-cenital-2026/`): saneamiento GIS en `motor-valle/`, cenital 2.5D, integración en El Metro y EnCicla, y carreras pseudo‑3D en Turno Cero | **Fase 0 hecha (Claude). El autor ya decidió (24‑nov): la Fase 1 puede empezar** | `docs/AUDITORIA-FASE0-CENITAL.md`: el § 6 tiene el plan por archivo y el § 7, las decisiones. La evidencia está en `reportes/2026-11-24-claude-fase0-cenital.md`. Cada fase se detiene y pide el OK. |
 
 ## 6. Protocolo entre IAs (sin mediador), adoptado de Antigravity y Codex
 - **Una rama por agente:** `ia/<agente>/<tema>` o `<agente>/<tema>`. Nunca `push --force` sobre la rama de otro, ni sobre `main` ni sobre `gh-pages`.
@@ -1051,6 +1053,24 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
   El aviso está arriba en `CLAUDE.md`, `AGENTS.md` y `GEMINI.md`.
 - **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
 
+### Claude · 24‑nov‑2026 · decisiones del autor para el renacimiento cenital y el prompt de relevo en `main`
+- **El autor respondió las cinco preguntas** (§ 7 de `docs/AUDITORIA-FASE0-CENITAL.md`):
+  1. **el ancho real** (regla A: la vía real + 1,3 m en las de carros; + 0,3 m en peatonales, escalas y ciclorrutas);
+  2. **trozos de 160 m**;
+  3. **EnCicla: solo en el modo libre**;
+  4. **El Metro: Ciudad Libre y Bus**;
+  5. **«la opción que pruebe que la ciudad será bien craqueada»**: rehacer desde las fuentes originales (Overture, las capas oficiales y SRTM), con la prueba de craqueo. La prueba exige:
+     - geometría exacta;
+     - el 97 % o más del área construida;
+     - la fidelidad contra OSM, sin bajar de la auditoría del 17‑nov de El Metro;
+     - los conflictos en GeoJSON;
+     - capturas en 6 zonas piloto.
+  - **Turno Cero, solo en `motorcity`** (es regla).
+- **El prompt de relevo, con las decisiones:** `docs/PROMPT-RELEVO.md`, § 3 y § 4. **El autor autorizó subirlo a `main`** (avance rápido, solo documentos).
+- **Misión y visión, al día:** `docs/VISION-Y-MISION.md` (el § 1 de este documento apunta ahí).
+- **Sigue:** la **Fase 1** en `BicicletasUno/motor-valle/`, con el plan del § 4 del prompt. Avisa en `coord/buzon/` antes de tocar `motor-valle/` o los datos de El Metro.
+- **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
+
 # MOTOR CITY · Documento único
 
 > **Para el autor (OneZero) y para todas las IAs:** Gemini (Antigravity y Nano Banana), ChatGPT (Codex), Claude y las IAs de Juega EnCicla, El Metro y Run Scooter.
@@ -1665,7 +1685,9 @@ No hace falta conectar ninguna aplicación.
 
 > **24‑nov‑2026 · el «renacimiento cenital».** Es un pedido nuevo del autor: sanear el mapa del Valle, un cenital 2.5D en El Metro y EnCicla, y carreras pseudo‑3D en Turno Cero.
 > - La Fase 0 está hecha: `docs/AUDITORIA-FASE0-CENITAL.md`.
-> - **La Fase 1 espera cinco decisiones del autor** (§ 7). Nadie la empieza sin ellas.
+> - **El autor ya decidió (24‑nov)**: el ancho real, trozos de 160 m, el modo libre en EnCicla, Ciudad Libre y Bus en El Metro, y rehacer desde las fuentes con la prueba de craqueo.
+> - **La Fase 1 puede empezar:** sigue `docs/PROMPT-RELEVO.md`.
+> - La misión y la visión de cada juego están en `docs/VISION-Y-MISION.md`.
 > - Si vas a tocar `motor-valle/` o los datos de El Metro, avisa antes en `coord/buzon/`.
 
 > **5.0 (23‑nov‑2026), decisión del autor: Gemini vuelve.** El plan está en **`docs/PLAN-5.0.md`**.
@@ -4629,6 +4651,16 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 24-nov-2026 · Decisiones del autor, el prompt de relevo en `main` y la misión y la visión
+- **El autor decidió las cinco preguntas** de la Fase 0:
+  1. el ancho **real** de las vías (con las ciclorrutas);
+  2. trozos de **160 m**;
+  3. EnCicla: **solo el modo libre**;
+  4. El Metro: **Ciudad Libre y Bus**;
+  5. «**la opción que pruebe que la ciudad será bien craqueada**»: rehacer desde las fuentes originales, con la prueba de craqueo (geometría exacta, ≥ 97 % del área construida, fidelidad contra OSM sin bajar de la auditoría del 17‑nov, conflictos y capturas).
+- **`docs/PROMPT-RELEVO.md`** ya trae las decisiones (§ 3 y § 4) y la tabla de misión y visión. El autor pidió subirlo a `main`.
+- **`docs/VISION-Y-MISION.md`:** la misión y la visión del motor, del Motor del Valle y de cada juego, sacadas de lo que el autor ya había escrito y puestas al día con estas decisiones.
 
 ### 24-nov-2026 · Fase 0 del «renacimiento cenital» · auditoría y línea base, sin cambiar los juegos
 - **El autor:** «Ponte al día, atiende el prompt de relevo y el de skills, y continúa con estos archivos». Compartió tres cosas:

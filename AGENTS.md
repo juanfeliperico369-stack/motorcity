@@ -1,6 +1,6 @@
 # Instrucciones para agentes (Codex, Gemini, Claude, Cursor…)
 
-> **Relevo vigente (24‑nov‑2026): `docs/PROMPT-RELEVO.md`.** Lo primero es el **«renacimiento cenital»**: sanear el mapa del Valle, un cenital 2.5D en El Metro y EnCicla, y carreras pseudo‑3D en Turno Cero. Va fase por fase y con el OK del autor. La Fase 0 está en `docs/AUDITORIA-FASE0-CENITAL.md`; la Fase 1 empieza por las decisiones del autor (§ 3 del prompt).
+> **Relevo vigente (24‑nov‑2026): `docs/PROMPT-RELEVO.md`.** Lo primero es el **«renacimiento cenital»**: sanear el mapa del Valle, un cenital 2.5D en El Metro y EnCicla, y carreras pseudo‑3D en Turno Cero. Va fase por fase y con el OK del autor. La Fase 0 está en `docs/AUDITORIA-FASE0-CENITAL.md`, y el autor ya tomó las decisiones (§ 3 del prompt): la Fase 1 puede empezar. La misión y la visión están en `docs/VISION-Y-MISION.md`.
 
 > **5.0 · El plan es `docs/PLAN-5.0.md`.** ChatGPT y Codex (lo fuerte): **`docs/PEDIDOS-CHATGPT-5.0.md`**. Gemini y Antigravity (lo fácil y mediano): **`docs/PEDIDOS-GEMINI-5.0.md`**.
 > **Primero lee `CONTEXTO-RELEVO.md`:** el relevo entre IAs (plan, lo hecho, lo que falta y el protocolo `coord/`). Al terminar tu turno, **deja tu entrada en su § 8** y tu ficha en `coord/agentes/`. Pídele lo mismo a la IA que siga.

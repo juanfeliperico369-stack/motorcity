@@ -1,4 +1,4 @@
-# Prompt de relevo · «Renacimiento cenital», fases 1 a 5 (24‑nov‑2026)
+# Prompt de relevo · «Renacimiento cenital», fases 1 a 5, con las decisiones del autor (24‑nov‑2026)
 
 > **Cópialo entero a la IA que siga:** otra sesión de Claude, ChatGPT/Codex, Gemini/Antigravity, Cursor o cualquier otra.
 > Lo escribió Claude al cerrar la Fase 0. El detalle está en:
@@ -17,12 +17,26 @@ Vas a continuar **Motor City**: un motor de juegos en un solo HTML, sin internet
 - un cenital 2.5D/3D bello y legible en El Metro y en Juega EnCicla;
 - un modo de carreras retro pseudo‑3D en Turno Cero.
 
-La Fase 0 (auditoría y línea base) ya está hecha. Siguen las fases 1 a 5. **Cada fase termina con pruebas en verde y se detiene a pedir el OK del autor.** Nada de lo que ya funciona se puede romper.
+La Fase 0 (auditoría y línea base) ya está hecha, y **el autor ya tomó las decisiones (§ 3): empieza por la Fase 1.** Siguen las fases 1 a 5. **Cada fase termina con pruebas en verde y se detiene a pedir el OK del autor.** Nada de lo que ya funciona se puede romper.
+
+## La misión y la visión (no se distorsionan)
+Están completas en `docs/VISION-Y-MISION.md`. **Solo el autor las cambia.**
+
+| Qué | Misión | Visión |
+|---|---|---|
+| **Motor City** | Convertir cualquier lugar real o inventado en un mundo jugable con leyes reales, en un solo HTML y sin internet | Que se sienta como los grandes mundos abiertos por su contenido, su sensación y sus herramientas, no por los polígonos. Separa la verdad geográfica, la física y la visual; un solo mundo y muchas cámaras; la cenital es la principal del mundo libre. |
+| **Motor del Valle** | Ser la única tubería del mapa real del Valle para EnCicla y El Metro | Un Valle **bien craqueado y demostrado**: ninguna casa sobre la calle ni sobre el agua, laderas con zócalo, vías con su pendiente y su nivel, trozos de 160 m |
+| **Juega EnCicla** (familia) | Que todas las edades conozcan y quieran EnCicla jugando el trabajo de su gente: 9 oficios, 27 turnos y revista pixel | Un modo libre donde se sienten las lomas y se leen las ciclorrutas, con el cenital nuevo **solo ahí** |
+| **El Metro** (familia) | Que cualquier persona conozca, use y quiera el Metro y la ciudad de Medellín jugando, con la «Cultura Metro» | El gran mundo abierto sobre Medellín y su Metro: una ciudad fiel y viva, sin internet. El cenital nuevo va **solo en Ciudad Libre y Bus**. |
+| **Turno Cero** (18+) | El juego de prueba con todo el motor: un *thriller* de conducción en un planeta (Nueva York, el Valle y Guatapé) | Un gran arcade de conducción en cápsulas (mundo abierto cenital, carreras retro pseudo‑3D, garaje, motos y aire). Solo en `motorcity`. |
+| **Run Scooter** (familia) | Un corredor sin fin por la ciclovía, con la estética de EMSAY | Sigue como juego propio y como «Run en la ciclovía». No entra en este trabajo. |
 
 ## 0. Dónde está el trabajo
-- **La Fase 0 está en la rama `ccr-408a25e1-xz3rl6` de `motorcity`.** Si `main` todavía no tiene `docs/AUDITORIA-FASE0-CENITAL.md`, parte de esa rama:
+- **La Fase 0, las decisiones y este prompt están en `main` de `motorcity`.** También están en la rama `ccr-408a25e1-xz3rl6`.
+  - Haz `git pull` antes de empezar.
+  - Si tu copia de `main` no tiene `docs/AUDITORIA-FASE0-CENITAL.md`, parte de esa rama:
 
-  `git fetch origin ccr-408a25e1-xz3rl6 && git checkout -b <tu-rama> origin/ccr-408a25e1-xz3rl6`
+    `git fetch origin ccr-408a25e1-xz3rl6 && git checkout -b <tu-rama> origin/ccr-408a25e1-xz3rl6`
 - **Trabaja en tu rama** en cada repositorio que toques: `ia/<tu-agente>/renacimiento-faseN`, o la que te asigne tu entorno.
   - A `main`, solo en avance rápido, con las pruebas en verde **y con el OK del autor**.
   - Nunca `push --force`.
@@ -71,20 +85,17 @@ La Fase 0 (auditoría y línea base) ya está hecha. Siguen las fases 1 a 5. **C
 
    Deja la línea «4) Verificación» en tu informe.
 
-## 3. Primero: las decisiones del autor (bloquean la Fase 1)
-- **Hazle las seis preguntas en un solo mensaje.**
-- Si ya respondió, sus respuestas están en `CONTEXTO-RELEVO.md` § 8 o en `coord/buzon/`.
-- Si dice «lo recomendado», usa la última columna.
-- **Anota las respuestas en el § 8 antes de programar.**
+## 3. Las decisiones del autor (tomadas el 24‑nov; no las vuelvas a preguntar)
+Están anotadas en `CONTEXTO-RELEVO.md` § 8 y en el § 7 de la auditoría.
 
-| # | Decisión | Opciones | Lo recomendado |
+| # | Decisión | Lo que decidió el autor | Qué significa en la práctica |
 |---|---|---|---|
-| 1 | Ancho de los corredores viales (lo que se le recorta a cada casa) | **A**, real + andén (lo de hoy): toca al 18,8 % de las casas · **B**, «jugable» del prompt: 23,7 %, y borra 24.983 casas · **C**, híbrida por bioma | **C**: en laderas, real + 0,5 m; en la ciudad plana, la A; en avenidas y autopistas, la B |
-| 2 | Tamaño de los trozos | 160 m · 250 m | **160 m**: es el de los tres cachés (El Metro, EnCicla y Motor City); 250 no es múltiplo de la casilla de 20 m |
-| 3 | EnCicla: ¿dónde va el render nuevo? | Solo en el modo libre · también en los cinco oficios cenitales (Usuario, Apoyo, Técnico, Balance y Supervisor) | **Solo en el modo libre, con bandera.** Los oficios, cuando pase la compuerta y el autor lo vea. |
-| 4 | El Metro: ¿dónde va el render nuevo? | Solo en Ciudad Libre y Bus · también en los modos protegidos que dibujan la ciudad | **Solo en Ciudad Libre y Bus, con bandera** |
-| 5 | Fuente de la Fase 1 | Rehacer desde Overture · sanear lo ya exportado | **Rehacer desde Overture:** recorta los polígonos originales y no los rectángulos guardados |
-| 6 | ¿Turno Cero solo en `motorcity`? | — | **Sí, es regla:** es 18+ y no se mezcla con los juegos de familia |
+| 1 | Ancho de los corredores viales | **El real** (regla A) | La vía con su ancho real (el de la malla vial oficial, o su clase si no lo tiene) + 1,3 m en las de carros y + 0,3 m en peatonales, escalas **y ciclorrutas**. Hoy el juego no despeja las ciclorrutas; en EnCicla eso importa. Las reglas B («jugable») y C (híbrida) quedan escritas en `anchos.json`, pero **apagadas**. |
+| 2 | Tamaño de los trozos | **160 m** | El mismo de los tres cachés, con la clave `"cx,cy"` y `c = ⌊x/160⌋`. |
+| 3 | EnCicla: ¿dónde va el render nuevo? | **Solo en el modo libre** | Va con bandera. Los 9 oficios (incluidos los cenitales: Usuario, Apoyo, Técnico, Balance y Supervisor), los turnos y los minijuegos siguen con el render de hoy. |
+| 4 | El Metro: ¿dónde va el render nuevo? | **En Ciudad Libre y Bus** | Va con bandera. Los demás modos que dibujan la misma ciudad (Conducir, Volante, Carrera, Metrocable, el mapa y el álbum) se quedan como están. |
+| 5 | Fuente de la Fase 1 | **«La opción que pruebe que la ciudad será bien craqueada»** | **Rehacer desde las fuentes originales** (Overture, las capas oficiales y SRTM, con `motor.mjs fuentes`) y **demostrarlo con la prueba de craqueo** de la Fase 1. Es la única opción que se puede comprobar contra los polígonos de origen. |
+| 6 | ¿Turno Cero solo en `motorcity`? | **Sí** (es regla) | Es 18+ y nunca entra a los juegos de familia. |
 
 ## 4. Lo que debes hacer, fase por fase
 **En cada fase:**
@@ -101,8 +112,8 @@ La Fase 0 (auditoría y línea base) ya está hecha. Siguen las fases 1 a 5. **C
 
 | # | Archivo | Qué hace |
 |---|---|---|
-| 1 | `motor-valle/geo/anchos.json` | Las reglas A, B y C por tipo de vía y por bioma. Tipos: 1 calle, 2 avenida, 3 autopista, 4 carrera, 5 ciclorruta, 6 peatonal y 7 escalas.<ul><li>**A:** la vía real + 1,3 m en las de carros, y + 0,3 m en peatonales y escalas.</li><li>**B** (ancho + andén): autopista 22 + 3, avenida 15 + 2,5, carrera 11 + 2, calle 8,5 + 1,5, ciclorruta 3,5 + 0,8, viaducto 10 + 2. Nunca más angosta que la real.</li><li>**C:** la decisión 1.</li></ul>Se ajusta sin tocar código. |
-| 2 | `motor-valle/geo/sanear.py` | La ley de soberanía vial, en pasos:<ol><li>`M_vial`: la unión de buffers de extremos redondos (`w/2 + andén`), **solo de capa 0** (los túneles y los puentes no recortan lo de otro nivel);</li><li>`M_agua`: el río Medellín y las quebradas;</li><li>el recorte: `B_limpio = B \ (M_vial ∪ M_agua)`, con `shapely` 2 y `STRtree`;</li><li>quita los pedazos de menos de 16 m² y simplifica con Douglas‑Peucker a ε = 0,6 m;</li><li>si lo recortado sigue siendo un rectángulo (IoU ≥ 0,92), lo guarda otra vez como rectángulo, para no inflar el peso;</li><li>saca `zMin` y `zMax` bajo los vértices y `zBase = zMin − 6 m`;</li><li>asigna el bioma por celda (`centro`, `ladera_ladrillo`, `residencial_verde`, `industrial_rio` y `rural_montana`; en Turno Cero, también `costa`), con la tabla de zonas de El Metro (`VC.ZC` y `VC.ZM`), el uso del suelo y la altura;</li><li>indexa por trozos (decisión 2) con la clave `"cx,cy"`;</li><li>escribe **`geometry-conflicts.geojson`**: cuando una casa confiable (un polígono de OSM o del Catastro) choca con una calle menor, **no la recorta: la marca para revisar**, con su fuente y su severidad (< 0,3, de 0,3 a 2 o > 2 m²; si tapa una vía crítica o la entrada de una estación, es crítica).</li></ol> |
+| 1 | `motor-valle/geo/anchos.json` | **La regla activa es la A, «el real»** (decisión 1): la vía real + 1,3 m en las de carros, y + 0,3 m en peatonales, escalas y ciclorrutas. Tipos: 1 calle, 2 avenida, 3 autopista, 4 carrera, 5 ciclorruta, 6 peatonal y 7 escalas.<br>Quedan escritas, pero apagadas:<ul><li>**B**, la jugable (ancho + andén): autopista 22 + 3, avenida 15 + 2,5, carrera 11 + 2, calle 8,5 + 1,5, ciclorruta 3,5 + 0,8, viaducto 10 + 2;</li><li>**C**, la híbrida.</li></ul>Se ajusta sin tocar código. |
+| 2 | `motor-valle/geo/sanear.py` | La ley de soberanía vial, en pasos:<ol><li>`M_vial`: la unión de buffers de extremos redondos (`w/2 + andén`), **solo de capa 0** (los túneles y los puentes no recortan lo de otro nivel);</li><li>`M_agua`: el río Medellín y las quebradas;</li><li>el recorte: `B_limpio = B \ (M_vial ∪ M_agua)`, con `shapely` 2 y `STRtree`;</li><li>quita los pedazos de menos de 16 m² y simplifica con Douglas‑Peucker a ε = 0,6 m;</li><li>si lo recortado sigue siendo un rectángulo (IoU ≥ 0,92), lo guarda otra vez como rectángulo, para no inflar el peso;</li><li>saca `zMin` y `zMax` bajo los vértices y `zBase = zMin − 6 m`;</li><li>asigna el bioma por celda (`centro`, `ladera_ladrillo`, `residencial_verde`, `industrial_rio` y `rural_montana`; en Turno Cero, también `costa`), con la tabla de zonas de El Metro (`VC.ZC` y `VC.ZM`), el uso del suelo y la altura;</li><li>indexa por trozos de **160 m** (decisión 2) con la clave `"cx,cy"`;</li><li>escribe **`geometry-conflicts.geojson`**: cuando una casa confiable (un polígono de OSM o del Catastro) choca con una calle menor, **no la recorta: la marca para revisar**, con su fuente y su severidad (< 0,3, de 0,3 a 2 o > 2 m²; si tapa una vía crítica o la entrada de una estación, es crítica).</li></ol> |
 | 3 | `motor-valle/geo/rasante.py` | La cota de las vías:<ol><li>muestrea el relieve cada 5 m;</li><li>lo suaviza a lo largo de cada vía (gaussiano, σ ≈ 25 m);</li><li>pone una sola cota en cada nodo (el promedio de las vías que llegan) y vuelve a suavizar con los nodos fijos;</li><li>calcula la pendiente `g` de cada tramo, con un tope por clase;</li><li>toma la capa (−1, 0, 1 o 2) y las rampas de `alturas.py` y `pasos.py`, que ya existen.</li></ol> |
 | 4 | `motor-valle/pruebas/geometria.mjs` | Prueba en Node, sin dependencias. Parte de `motorcity/reportes/fase0-cenital/medir-conflictos-elmetro.mjs`, que ya decodifica los datos como el juego. Comprueba:<ul><li>0 edificios de capa 0 que pisen un corredor de capa 0 (> 0,05 m²);</li><li>0 fragmentos de menos de 16 m²;</li><li>0 casas en el agua;</li><li>el peso: `edificios.js` ≤ 4,6 MB y el HTML de El Metro ≤ 9,5 MB.</li></ul> |
 | 5 | `motor-valle/pruebas/geometria.py` | La misma prueba, exacta con polígonos (`shapely`) |
@@ -120,18 +131,28 @@ La Fase 0 (auditoría y línea base) ya está hecha. Siguen las fases 1 a 5. **C
 
 **Hecho cuando…**
 - `geometria.mjs` da 0 solapes y el peso queda dentro del presupuesto;
-- `medir-conflictos-elmetro.mjs` pasa de 120.187 edificios a casi 0 con la regla elegida;
+- `medir-conflictos-elmetro.mjs` pasa de 120.187 edificios a casi 0 con la regla A;
 - `node tools/build.mjs && node tools/test.mjs 100` da 0 errores en El Metro, y `node tools/build.js && node tests/run.js` queda en verde en EnCicla;
 - una prueba con Playwright (que no cambia el juego) muestra que `VC.recorta` **corta 0 edificios** en 50 regiones de muestra (tras `VC.region`, cuenta los `b.cut === 1` y los `b.rec === false`);
 - las dos copias del Motor del Valle quedan iguales;
-- hay un informe antes y después, con las mismas cifras de la Fase 0.
+- hay un informe antes y después, con las mismas cifras de la Fase 0;
+- y pasa la **prueba de craqueo** (decisión 5), con los datos rehechos desde las fuentes originales:
+
+  | # | Prueba | Qué exige |
+  |---|---|---|
+  | a | **Geometría exacta** | `geometria.py` sobre los polígonos de origen: 0 solapes de capa 0 |
+  | b | **Geometría en el juego** | `geometria.mjs` sobre lo exportado, leído como lo lee el juego: también 0 solapes |
+  | c | **Se conserva la ciudad** | Queda al menos el 97 % del área construida (hoy la regla A invade el 2,6 %). Se informa cuántas casas desaparecen: solo los restos de menos de 16 m², muchas menos que las 12.267 que hoy borra el juego en tiempo real. |
+  | d | **Fidelidad contra OSM** | Se repite la auditoría del 17‑nov de El Metro (`tools/osm_comparar.py` y `tools/auditoria-mapa.mjs`, en las mismas zonas). Nada baja de lo que había:<ul><li>Centro · San Antonio: 100 % de las calles de OSM a ≤ 20 m, 99,9 % de las vías del juego en OSM y 214 de 214 tramos con nombre;</li><li>Niquía: 98 %, 99,6 % y 62 de 62;</li><li>Santo Domingo Savio: 100 %, 99,5 % y 181 de 181.</li></ul> |
+  | e | **Conflictos revisados** | `geometry-conflicts.geojson` con cada caso dudoso, sin recortar las casas confiables |
+  | f | **Capturas** | Antes y después en 6 zonas piloto: Centro/La Candelaria, Laureles, El Poblado, ladera nororiental, corredor del río y viaducto, y una zona rural |
 
 ### Fase 2 · Render cenital (El Metro y EnCicla con bandera por modo; Motor City)
 ⚠️ **En El Metro, el render compartido también dibuja modos protegidos:**
 - `MAP.drawTop` lo usan Conducir (vista superior), Volante, Carrera, el mapa y el álbum;
 - `G3.draw` lo usan Conducir, Volante, Carrera y el viaje en Metrocable.
 
-En EnCicla, el cenital de `75-graficos.js` es el de cinco oficios. **Todo va detrás de una bandera que se enciende solo en los modos decididos (decisiones 3 y 4)**, en archivos aditivos que envuelven las funciones (el patrón de los dos juegos). Por ejemplo, `MetroZero/src/js/97d-cenital.js` y `BicicletasUno/src/js/99y-cenital.js`; esos nombres hoy están libres.
+En EnCicla, el cenital de `75-graficos.js` es el de cinco oficios. **Todo va detrás de una bandera que se enciende solo en el modo libre de EnCicla y en Ciudad Libre y Bus de El Metro (decisiones 3 y 4)**, en archivos aditivos que envuelven las funciones (el patrón de los dos juegos). Por ejemplo, `MetroZero/src/js/97d-cenital.js` y `BicicletasUno/src/js/99y-cenital.js`; esos nombres hoy están libres.
 
 **En El Metro y en EnCicla:**
 1. ***Occluder fade*.** En las capturas de la Fase 0 (Acevedo y San Antonio), el techo de la estación tapa por completo al jugador. Lo que lo tape baja a una opacidad de 0,30, o se dibuja su silueta encima.
@@ -158,7 +179,7 @@ En EnCicla, el cenital de `75-graficos.js` es el de cinco oficios. **Todo va det
 ### Fase 3 · Integración y regresión
 1. **Encender la bandera:**
    - en El Metro, en Ciudad Libre y Bus;
-   - en EnCicla, en el modo libre (y en los oficios, si el autor lo decidió).
+   - en EnCicla, **solo en el modo libre** (los oficios siguen con el render de hoy).
 2. **EnCicla:** cambiar los lotes inventados por las huellas reales **solo si la compuerta no empeora** (mide A/B con `tests/benchmark-2km-gpt6.mjs --cpu=4`). Si empeora, los lotes se quedan detrás de la bandera.
    - Hoy da p95 de 103,7 ms en la Carrera 43A y 61,2 ms en Las Palmas; la meta es menos de 50. **No cambies ni saltes la compuerta sin el autor.**
 3. **Regresión:**
@@ -313,7 +334,7 @@ Repartan por zonas y reclámenlas en `coord/agentes/<tu-id>.json`:
 
 ## 9. Si eres un chat sin terminal (ChatGPT o Gemini en la web)
 No puedes correr las fases. Lee en GitHub `docs/AUDITORIA-FASE0-CENITAL.md` y el *master prompt*. Puedes ayudar:
-- a decidir las seis preguntas del § 3;
+- a revisar el plan y los resultados de cada fase;
 - con el arte del modo retro y del parallax, siguiendo `motor-city-arte` y `el-metro-arte`;
 - con revisiones.
 

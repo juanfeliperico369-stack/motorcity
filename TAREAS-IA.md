@@ -2,7 +2,9 @@
 
 > **24‑nov‑2026 · el «renacimiento cenital».** Es un pedido nuevo del autor: sanear el mapa del Valle, un cenital 2.5D en El Metro y EnCicla, y carreras pseudo‑3D en Turno Cero.
 > - La Fase 0 está hecha: `docs/AUDITORIA-FASE0-CENITAL.md`.
-> - **La Fase 1 espera cinco decisiones del autor** (§ 7). Nadie la empieza sin ellas.
+> - **El autor ya decidió (24‑nov)**: el ancho real, trozos de 160 m, el modo libre en EnCicla, Ciudad Libre y Bus en El Metro, y rehacer desde las fuentes con la prueba de craqueo.
+> - **La Fase 1 puede empezar:** sigue `docs/PROMPT-RELEVO.md`.
+> - La misión y la visión de cada juego están en `docs/VISION-Y-MISION.md`.
 > - Si vas a tocar `motor-valle/` o los datos de El Metro, avisa antes en `coord/buzon/`.
 
 > **5.0 (23‑nov‑2026), decisión del autor: Gemini vuelve.** El plan está en **`docs/PLAN-5.0.md`**.
