@@ -1,5 +1,31 @@
 # Bitácora de Motor City
 
+## 24-nov-2026 · Fase 1 del renacimiento cenital · el Valle saneado (Motor del Valle 1.3.0; motor 5.3.1 sin cambios)
+- **Lo que pide el prompt de relevo, Fase 1:** sanear el mapa del Valle en `motor-valle/` (BicicletasUno, copiado a MetroZero), sin tocar ningún render, con las decisiones del autor (regla A, trozos de 160 m, rehacer desde las fuentes originales y la prueba de craqueo).
+- **Hecho:**
+  - **la ley de soberanía vial** (`sanear.py`), la rasante (`rasante.py`), las capas de puentes y túneles (`niveles.py`), los anchos (`anchos.json`) y las pruebas `geometria.py` y `geometria.mjs`;
+  - **El Metro:** `edificios.js` v2 con una guarda contra su recorte en tiempo real, y la cota al final de `vias.js`;
+  - **EnCicla:** `edificios.bin` y `vias-cota.bin`, sin conectar.
+- **La prueba de craqueo, en verde:**
+  1. geometría exacta: 0 solapes sin marca;
+  2. en el juego: 0 solapes, y el recorte de El Metro corta 0 de 622.086 (antes 107.546 y quitaba 17.190);
+  3. se conserva el 98,45 % del área;
+  4. la fidelidad contra OSM no baja (las casillas son idénticas);
+  5. hay 44.538 conflictos en el GeoJSON;
+  6. hay capturas en 6 zonas.
+- **Probado:**
+  - El Metro: 100 partidas con 0 errores;
+  - EnCicla: 177 ✓ (HTML idéntico);
+  - las dos copias del Motor del Valle, iguales.
+
+  Motor City no cambió de código.
+- **El informe:** `reportes/2026-11-24-claude-fase1-cenital.md`; la evidencia está en `reportes/fase1-cenital/` y las capturas en `reportes/img/claude-fase1/`.
+- **Esperan al autor:**
+  - el OK de la Fase 2;
+  - las casas confiables de OSM en El Metro (su andén de 1,3 m);
+  - las vías precisas en El Metro (+230 KB);
+  - el ancho por fachadas (apagado).
+
 ## 24-nov-2026 · Decisiones del autor, el prompt de relevo en `main` y la misión y la visión
 - **El autor decidió las cinco preguntas** de la Fase 0:
   1. el ancho **real** de las vías (con las ciclorrutas);
