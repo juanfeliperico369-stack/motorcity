@@ -1,5 +1,10 @@
 # Tareas de cada IA · Motor City 4.0
 
+> **24‑nov‑2026 · el «renacimiento cenital».** Es un pedido nuevo del autor: sanear el mapa del Valle, un cenital 2.5D en El Metro y EnCicla, y carreras pseudo‑3D en Turno Cero.
+> - La Fase 0 está hecha: `docs/AUDITORIA-FASE0-CENITAL.md`.
+> - **La Fase 1 espera cinco decisiones del autor** (§ 7). Nadie la empieza sin ellas.
+> - Si vas a tocar `motor-valle/` o los datos de El Metro, avisa antes en `coord/buzon/`.
+
 > **5.0 (23‑nov‑2026), decisión del autor: Gemini vuelve.** El plan está en **`docs/PLAN-5.0.md`**.
 > - **ChatGPT y Codex** (lo fuerte: datos, render, física, IA y modelos): **`docs/PEDIDOS-CHATGPT-5.0.md`**.
 > - **Gemini y Antigravity** (lo fácil y mediano: interfaz, cámara, textos, arte y modos): **`docs/PEDIDOS-GEMINI-5.0.md`**.

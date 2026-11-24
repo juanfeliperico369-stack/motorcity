@@ -1,13 +1,13 @@
-# Prompt de relevo · Motor City 5.3.0 (23‑nov‑2026)
+# Prompt de relevo · Motor City 5.3.1 + «renacimiento cenital», Fase 0 (24‑nov‑2026)
 
 > Cópialo entero a la IA que siga: otra sesión de Claude, ChatGPT/Codex, Gemini/Antigravity o cualquier otra.
-> Lo escribió Claude al cerrar la 5.3.0. El estado al detalle está en `CONTEXTO-RELEVO.md` (§ 0 y § 8).
+> Lo escribió Claude al cerrar la Fase 0 del renacimiento cenital (antes: 5.3.0 y 5.3.1). El estado al detalle está en `CONTEXTO-RELEVO.md` (§ 0, § 5 fila 18 y § 8) y en `docs/AUDITORIA-FASE0-CENITAL.md`.
 
 ---
 
 Vas a continuar el proyecto **Motor City**, un motor de juegos en un solo HTML, sin internet, con mapas reales de Medellín, Nueva York y Guatapé, y sus juegos. Toma el relevo de Claude sin romper nada de lo que ya funciona.
 
-## 1. Los cuatro repositorios (rama de trabajo de Claude: `claude/motor-city-engine-xu7p4y`)
+## 1. Los cuatro repositorios (ramas de Claude: `claude/motor-city-engine-xu7p4y` y, desde el 24‑nov, `ccr-408a25e1-xz3rl6`)
 | Repositorio | Qué es | Versión | Compilar | Probar |
 |---|---|---|---|---|
 | `juanfeliperico369-stack/motorcity` | El motor y **Turno Cero** (18+), el juego de prueba con todo | **5.3.1** | `node herramientas/construir.mjs` | `node pruebas/prueba.mjs --navegador` y las de `pruebas/` (la lista está en `.github/workflows/motor-city-qa.yml`) |
@@ -25,6 +25,20 @@ Los juegos hermanos llevan una copia de referencia del motor en `motor-city/` y 
 5. **Antes de trabajar, integra las skills** siguiendo `docs/PROMPT-SKILLS.md`: `node motor.mjs skills --integrar --agente <tu-agente>`. Deja la línea «4) Verificación» en tu informe.
 
 ## 3. Qué sigue, por prioridad
+0. **El renacimiento cenital (pedido del autor del 24‑nov).**
+   - Léelo en `docs/referencias/renacimiento-cenital-2026/MASTER-PROMPT-VALLE-CITY-TURNO-CERO.md`, con la especificación en `docs/investigacion_tecnica_motor_valle.md`.
+   - La **Fase 0 está hecha:** `docs/AUDITORIA-FASE0-CENITAL.md` y `reportes/2026-11-24-claude-fase0-cenital.md`.
+   - **No empieces la Fase 1 sin las cinco decisiones del autor** (§ 7 de la auditoría):
+     1. la regla de anchos (A, B o C híbrida);
+     2. los trozos de 160 o 250 m;
+     3. los oficios de EnCicla;
+     4. los modos protegidos de El Metro;
+     5. la fuente de datos.
+   - Con ellas, sigue el plan por archivo del § 6 en `BicicletasUno/motor-valle/`, la fuente de verdad del mapa, y sincroniza a MetroZero.
+   - **Cada fase se detiene y pide el OK del autor.**
+   - Recuerda:
+     - Turno Cero (18+) va solo en `motorcity`;
+     - todo cambio de render en El Metro o EnCicla va **con bandera por modo**, porque el render compartido también dibuja modos protegidos.
 1. **Fase 4 del plan («contenido en serie»):**
    - un lenguaje de misiones con pasos, fallas y reintentos;
    - repeticiones exactas: grabar la entrada y reproducirla con la misma simulación;

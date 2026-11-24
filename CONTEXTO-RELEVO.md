@@ -122,6 +122,7 @@ Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (
 | 15 | ~~Tarjetas de El Metro con el texto encima del arte~~ | **No se reproduce en la versión actual** | El diseño cambió desde la auditoría (v0.2.0). |
 | 16 | **Sentir el manejo nuevo (4.6) con las manos** en Turno Cero, El Metro y los modos | **Autor** | Los números a tocar están en `Vehiculos.ARCADE` (motor; El Metro tiene los suyos desde su 3.1.0): `accK`, `brkK`, `w0`, `w1`, `tw`. Ver `docs/INVESTIGACION-MANEJO.md` § 0. |
 | 17 | ~~Manejo de EnCicla, mapa de EnCicla, horizontal, un solo juego de prueba~~ | **Hecho en 4.6 (Claude)** | `js/32-fisica.js`, `js/70-mapa.js`, `juegos/getaway/60-modos.js`. El Metro lo hizo su propia sesión en la 3.1.0 «Fluido» (rama `ccr-2a67f935-oat714`). |
+| 18 | **Renacimiento cenital** (pedido del autor, 24‑nov: *master prompt*, investigación técnica y entrega de GPT‑6 en `docs/referencias/renacimiento-cenital-2026/`): saneamiento GIS en `motor-valle/`, cenital 2.5D, integración en El Metro y EnCicla, y carreras pseudo‑3D en Turno Cero | **Fase 0 hecha (Claude). La Fase 1 espera cinco decisiones del autor** | `docs/AUDITORIA-FASE0-CENITAL.md`: el § 6 tiene el plan por archivo y el § 7, las decisiones. La evidencia está en `reportes/2026-11-24-claude-fase0-cenital.md`. Cada fase se detiene y pide el OK. |
 
 ## 6. Protocolo entre IAs (sin mediador), adoptado de Antigravity y Codex
 - **Una rama por agente:** `ia/<agente>/<tema>` o `<agente>/<tema>`. Nunca `push --force` sobre la rama de otro, ni sobre `main` ni sobre `gh-pages`.
@@ -952,3 +953,38 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 - **El prompt:** `docs/PROMPT-SKILLS.md`.
 - **Riesgo que dejo:** si una IA edita una skill solo en `.agents/skills/`, `--sincronizar` lo detecta como distinta y no pisa nada. Hay que elegir con `--desde`.
 - **Para quien siga:** antes de trabajar, corre el comando con tu agente y deja la línea «4) Verificación» en tu informe.
+
+### Claude · 24‑nov‑2026 · Fase 0 del «renacimiento cenital» (auditoría y línea base; motor 5.3.1 sin cambios)
+- **Pedido del autor:** ponerse al día, atender los prompts de relevo y de skills, y continuar con tres archivos. Están guardados en `docs/investigacion_tecnica_motor_valle.md` y `docs/referencias/renacimiento-cenital-2026/`.
+- **Skills:** `node motor.mjs skills --integrar --agente claude-code` terminó con «4) Verificación: ✓ todo en orden». En El Metro, EnCicla y Run, `--verificar` sale con 0.
+- **Hecho (solo lectura en los juegos):**
+  - `docs/AUDITORIA-FASE0-CENITAL.md`, con:
+    - el mapa real de qué dibuja el mapa, cómo se generan los datos y cómo se compila cada HTML;
+    - los modos protegidos;
+    - las correcciones a los prompts;
+    - el plan de la Fase 1 por archivo.
+  - La evidencia: `reportes/2026-11-24-claude-fase0-cenital.md` y `reportes/fase0-cenital/` (la herramienta `medir-conflictos-elmetro.mjs`, `conflictos-elmetro.json` y `linea-base.json`), más 4 capturas.
+- **Probado:**
+
+  | Repositorio | Resultado |
+  |---|---|
+  | Motor City | 158 bien |
+  | El Metro | `tools/test.mjs 100`: 0 errores |
+  | EnCicla | `tests/run.js`: 170 bien |
+  | Compuerta de EnCicla (CPU ×4) | p95 de 103,7 y 61,2 ms: sigue sin cumplirse |
+- **Hallazgo central:**
+  - el 18,8 % de los 638.303 edificios de El Metro pisa la vía, aun con la regla angosta del juego;
+  - ninguno de los tres motores lo corrige en los datos: El Metro recorta en tiempo real, EnCicla inventa lotes y Motor City tolera 1 m en la colisión.
+- **Ojo, para quien siga:**
+  - Turno Cero no va en MetroZero (18+).
+  - El render compartido de El Metro también dibuja modos protegidos (`MAP.drawTop` y `G3.draw`), y el cenital de EnCicla es el de cinco oficios: cualquier cambio de render necesita **bandera por modo**.
+- **Esperan al autor (§ 7 de la auditoría):**
+  1. la regla de anchos (A, B o C híbrida);
+  2. los trozos de 160 o 250 m;
+  3. los oficios de EnCicla;
+  4. los modos protegidos de El Metro;
+  5. la fuente de datos (Overture u otra).
+
+  Siguen pendientes también la licencia del catastro y el LiDAR, y medir en un celular.
+- **Riesgo que dejo:** ninguno en el juego, porque no se cambió. Si alguien empieza la Fase 1 sin las decisiones, la regla B borra 24.983 casas en laderas.
+- **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe. El prompt de relevo actualizado está en `docs/PROMPT-RELEVO.md`.

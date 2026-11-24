@@ -1,5 +1,34 @@
 # Bitácora de Motor City
 
+## 24-nov-2026 · Fase 0 del «renacimiento cenital» · auditoría y línea base, sin cambiar los juegos
+- **El autor:** «Ponte al día, atiende el prompt de relevo y el de skills, y continúa con estos archivos». Compartió tres cosas:
+  - el *Master Prompt* (fases 0 a 5: saneamiento GIS, motor cenital 2.5D, integración y carreras pseudo‑3D en Turno Cero);
+  - la *Investigación técnica*;
+  - el ZIP de GPT‑6 «Eón», con su informe maestro y su prompt maestro.
+- **Relevo y skills:**
+  - `node motor.mjs skills --integrar --agente claude-code` terminó con «4) Verificación: ✓ todo en orden»;
+  - con `--verificar` quedan en orden los cuatro repositorios.
+- **Lo que pide el prompt, Fase 0 (solo lectura):** el mapa técnico real y el plan de la Fase 1, en `docs/AUDITORIA-FASE0-CENITAL.md`. La evidencia está en `reportes/2026-11-24-claude-fase0-cenital.md` y `reportes/fase0-cenital/`.
+- **Línea base de hoy:**
+
+  | Repositorio | Resultado |
+  |---|---|
+  | Motor City | 158 bien |
+  | El Metro | 100 partidas, 0 errores |
+  | EnCicla | 170 bien |
+  | Compuerta de EnCicla | Sigue en rojo: p95 de 103,7 ms en la Carrera 43A y 61,2 ms en Las Palmas (meta < 50) |
+- **Medido:** en los datos de El Metro, **120.187 de 638.303 edificios (18,8 %) pisan la vía** con la regla que ya usa el juego, y 151.055 (23,7 %) con los anchos del prompt.
+  - Hoy cada motor lo tapa en tiempo real: El Metro recorta al cargar, EnCicla inventa lotes y Motor City tolera 1 m en la colisión.
+  - **Lo poco conocido:** el 73 % de las huellas sale de modelos sobre imágenes de satélite (Google y Microsoft), corridas de 1 a 3 m frente a los ejes de OSM; además, el 95 % se guarda como rectángulo.
+- **Correcciones a los documentos:**
+  - Turno Cero no está en MetroZero, ni puede estar (18+).
+  - `motor-city/` en los hermanos es solo de consulta; lo compartido es `motor-valle/`.
+  - El Metro y EnCicla ya tienen un mundo 3D con cenital.
+  - `MC.Arcade` no usa la curva acumulada: proyecta la calle real y las lomas tapan bien. Lo que le falta son las pistas diseñadas, el nitro, el rebufo y un FOV ancho (hoy, de 58° a 71°).
+  - Los trozos de 250 m no se alinean con los cachés de 160 m.
+- **Los cinco videos del autor,** identificados: Reckless Getaway 2, Super Arcade Racing, GTA Chinatown Wars, GTA 2 y GTA 1.
+- **Sin cambios en los juegos ni en el motor:** solo documentos y evidencia. La Fase 1 (saneamiento en `motor-valle/`) **espera cinco decisiones del autor** (§ 7 de la auditoría).
+
 ## 23-nov-2026 · 5.3.1 «Skills para todas las IA» · la lista, un comando que las integra y el prompt para compartir
 - **El autor:** «dame la lista de skills y plugins que tenemos y cómo integrarlos, con un prompt para compartir entre IA y que las integren automáticamente».
 - **La lista:**
