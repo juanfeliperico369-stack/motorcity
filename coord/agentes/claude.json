@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "agente": "claude",
-  "rama": "claude/motor-city-engine-xu7p4y",
+  "rama": "ccr-4f6eeea5-yulqk1",
   "rol": "IA del motor e integradora: motor Motor City (js/, herramientas/, pruebas/) y el juego Turno Cero (juegos/getaway/, salvo arte3d/ y turno-cero-accion-3d.html de Codex)",
-  "fase_actual": "24-nov-2026 · Fase 0 del «renacimiento cenital» (master prompt del autor): auditoría y línea base en docs/AUDITORIA-FASE0-CENITAL.md; la evidencia está en reportes/2026-11-24-claude-fase0-cenital.md. La Fase 1 (saneamiento GIS en motor-valle/) espera 5 decisiones del autor (§ 7). Antes: 5.3.1 «Skills para todas las IA».",
-  "estado": "decisiones del autor recibidas: la Fase 1 lista para empezar",
-  "ultima_actualizacion_utc": "2026-11-24T05:45:00Z",
+  "fase_actual": "24-nov-2026 · Fase 1 del «renacimiento cenital» hecha: Motor del Valle 1.3.0 (el Valle saneado; reportes/2026-11-24-claude-fase1-cenital.md), en la rama ccr-4f6eeea5-yulqk1 de los tres repositorios. Espera el OK del autor para la Fase 2.",
+  "estado": "Fase 1 en verde; detenida a pedir el OK de la Fase 2",
+  "ultima_actualizacion_utc": "2026-11-24T17:00:00Z",
   "zonas_reclamadas": [
     "js/",
     "herramientas/",
@@ -41,12 +41,18 @@
     "docs/PROMPT-SKILLS.md",
     "docs/AUDITORIA-FASE0-CENITAL.md",
     "docs/referencias/renacimiento-cenital-2026/",
-    "reportes/fase0-cenital/"
+    "reportes/fase0-cenital/",
+    "reportes/fase1-cenital/",
+    "reportes/2026-11-24-claude-fase1-cenital.md",
+    "BicicletasUno/motor-valle/ (1.3.0: geo/sanear.py, rasante.py, niveles.py, huellas.py, anchos.json, pruebas/)",
+    "MetroZero/tools/edificios_datos.py, vias_datos.mjs, corredores.mjs, prueba-recorte.mjs",
+    "MetroZero/src/data/edificios.js y vias.js (v2)",
+    "BicicletasUno/src/data/edificios.bin, edificios.json y vias-cota.bin"
   ],
   "no_toco": [
-    "src/ de BicicletasUno, MetroZero y RunRunZero (zonas de Antigravity y Codex)",
     "juegos/getaway/arte3d/",
-    "juegos/getaway/turno-cero-accion-3d.html"
+    "juegos/getaway/turno-cero-accion-3d.html",
+    "src/js/ de BicicletasUno y MetroZero (en la Fase 1 no se tocó ningún render)"
   ],
   "simbolos_exportados": [
     "MC.Planeta",

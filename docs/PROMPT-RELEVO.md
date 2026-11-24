@@ -1,9 +1,10 @@
-# Prompt de relevo · «Renacimiento cenital», fases 1 a 5, con las decisiones del autor (24‑nov‑2026)
+# Prompt de relevo · «Renacimiento cenital»: la Fase 1 está hecha; siguen las fases 2 a 5 (24‑nov‑2026)
 
 > **Cópialo entero a la IA que siga:** otra sesión de Claude, ChatGPT/Codex, Gemini/Antigravity, Cursor o cualquier otra.
-> Lo escribió Claude al cerrar la Fase 0. El detalle está en:
+> Lo escribió Claude al cerrar la Fase 0 y lo puso al día al cerrar la **Fase 1** (24‑nov). El detalle está en:
 > - `docs/AUDITORIA-FASE0-CENITAL.md` (la auditoría y el plan por archivo);
-> - `reportes/2026-11-24-claude-fase0-cenital.md` (la evidencia);
+> - **`reportes/2026-11-24-claude-fase1-cenital.md` (la Fase 1: qué se hizo, la prueba de craqueo y las decisiones que esperan al autor)**;
+> - `reportes/2026-11-24-claude-fase0-cenital.md` (la línea base);
 > - `CONTEXTO-RELEVO.md` (§ 5, fila 18, y § 8).
 >
 > El prompt anterior (5.3.0) queda en la historia de git.
@@ -17,7 +18,7 @@ Vas a continuar **Motor City**: un motor de juegos en un solo HTML, sin internet
 - un cenital 2.5D/3D bello y legible en El Metro y en Juega EnCicla;
 - un modo de carreras retro pseudo‑3D en Turno Cero.
 
-La Fase 0 (auditoría y línea base) ya está hecha, y **el autor ya tomó las decisiones (§ 3): empieza por la Fase 1.** Siguen las fases 1 a 5. **Cada fase termina con pruebas en verde y se detiene a pedir el OK del autor.** Nada de lo que ya funciona se puede romper.
+La Fase 0 (auditoría y línea base) y la **Fase 1 (el Valle saneado, Motor del Valle 1.3.0)** ya están hechas. **La Fase 1 espera el OK del autor:** si ya lo dio, empieza por la Fase 2. Si no, no avances. **Cada fase termina con pruebas en verde y se detiene a pedir el OK del autor.** Nada de lo que ya funciona se puede romper.
 
 ## La misión y la visión (no se distorsionan)
 Están completas en `docs/VISION-Y-MISION.md`. **Solo el autor las cambia.**
@@ -32,11 +33,12 @@ Están completas en `docs/VISION-Y-MISION.md`. **Solo el autor las cambia.**
 | **Run Scooter** (familia) | Un corredor sin fin por la ciclovía, con la estética de EMSAY | Sigue como juego propio y como «Run en la ciclovía». No entra en este trabajo. |
 
 ## 0. Dónde está el trabajo
-- **La Fase 0, las decisiones y este prompt están en `main` de `motorcity`.** También están en la rama `ccr-408a25e1-xz3rl6`.
-  - Haz `git pull` antes de empezar.
-  - Si tu copia de `main` no tiene `docs/AUDITORIA-FASE0-CENITAL.md`, parte de esa rama:
+- **La Fase 0, las decisiones y la primera versión de este prompt están en `main` de `motorcity`.**
+- **La Fase 1 está en la rama `ccr-4f6eeea5-yulqk1` de `BicicletasUno`, `MetroZero` y `motorcity`** (la de este prompt). Pasa a `main` solo con el OK del autor.
+  - Si el autor ya la unió, haz `git pull` en `main`.
+  - Si no, parte de esa rama en los tres repositorios:
 
-    `git fetch origin ccr-408a25e1-xz3rl6 && git checkout -b <tu-rama> origin/ccr-408a25e1-xz3rl6`
+    `git fetch origin ccr-4f6eeea5-yulqk1 && git checkout -b <tu-rama> origin/ccr-4f6eeea5-yulqk1`
 - **Trabaja en tu rama** en cada repositorio que toques: `ia/<tu-agente>/renacimiento-faseN`, o la que te asigne tu entorno.
   - A `main`, solo en avance rápido, con las pruebas en verde **y con el OK del autor**.
   - Nunca `push --force`.
@@ -97,13 +99,54 @@ Están anotadas en `CONTEXTO-RELEVO.md` § 8 y en el § 7 de la auditoría.
 | 5 | Fuente de la Fase 1 | **«La opción que pruebe que la ciudad será bien craqueada»** | **Rehacer desde las fuentes originales** (Overture, las capas oficiales y SRTM, con `motor.mjs fuentes`) y **demostrarlo con la prueba de craqueo** de la Fase 1. Es la única opción que se puede comprobar contra los polígonos de origen. |
 | 6 | ¿Turno Cero solo en `motorcity`? | **Sí** (es regla) | Es 18+ y nunca entra a los juegos de familia. |
 
+### Decisiones nuevas que esperan al autor (salieron de medir en la Fase 1; detalle en el informe de la Fase 1)
+| # | Pregunta | Lo que se midió |
+|---|---|---|
+| 7 | **Las casas confiables en El Metro.** La verdad compartida conserva las 44.538 casas de OSM que chocan con calles menores (decisión: no se recortan), pero el recorte en tiempo real de El Metro exige 1,3 m de andén. Su exportación las recorta (38.761) o las quita (4.038) para que el juego no corte nada. | Propuesta: en la Fase 2, con la bandera de Ciudad Libre y Bus, que el juego respete las marcadas («andén angosto») y re‑exportar sin recortarlas. |
+| 8 | **¿Vías precisas en El Metro?** `vias.js` sigue con los ejes redondeados a 2,5 m: se corren hasta ~3 m del eje real. | Con ejes de 1 m, unos +230 KB; se salvarían unas 3.283 casas que la guarda hoy quita. |
+| 9 | **El ancho por fachadas** (`anchos.json` · `ancho_por_fachadas`, apagado) | Angosta 4.079 calles menores sin ancho oficial; las casas marcadas bajan de 42.979 a 34.132. |
+| 10 | **La cota dentro de `vias.js`** (+366 KB, como pedía el prompt) **o aparte** (como en EnCicla) | Al HTML de El Metro le quedan 146 KB hasta 9,5 MB. |
+| 11 | **Refrescar el mapa base** con la descarga de hoy | Cambian los bordes (0,96 % de las casillas, en Caldas y Barbosa). |
+
+**No las decidas tú:** pregúntalas en tu informe si tu fase las necesita.
+
 ## 4. Lo que debes hacer, fase por fase
 **En cada fase:**
 1. corre la batería;
 2. deja el informe con el formato de lote (§ 8);
 3. **detente a pedir el OK** antes de seguir.
 
-### Fase 1 · Saneamiento GIS en `motor-valle/` (solo datos; no se toca ningún render)
+### ✅ Fase 1 · Saneamiento GIS en `motor-valle/` · HECHA (Claude, 24‑nov; espera el OK del autor)
+**Resultado:** todo en verde. Detalle en `reportes/2026-11-24-claude-fase1-cenital.md`.
+
+| Qué | Antes | Después |
+|---|---|---|
+| Recorte en tiempo real de El Metro (4.731 regiones) | 107.546 recortados y 17.190 quitados | **0 y 0** |
+| Herramienta de la Fase 0 (regla A) | 120.187 edificios pisan la vía | 5 (de menos de 0,3 m² cada uno) |
+
+- **Verdad compartida:**
+  - el 98,45 % del área construida;
+  - 9.864 casas desaparecen;
+  - 44.538 conflictos en GeoJSON.
+- **Pesos:** `edificios.js` de 4.572.134 bytes y HTML de El Metro de 9.353.904 bytes.
+- **Juegos:**
+  - El Metro: 100 partidas, 0 errores;
+  - EnCicla: 177 ✓, con su HTML idéntico.
+
+**Lo que dejó y cómo se usa:**
+
+| Herramienta | Para qué |
+|---|---|
+| `node motor-valle/motor.mjs fuentes` y luego `sanear` | Rehace la verdad compartida en `motor-valle/salida/sanear/`: `huellas.parquet`, `agua.*`, `geometry-conflicts.geojson`, `biomas.json`, `trozos.json`, `vias_m.bin`, `rasante.bin` e `informe.json`. Termina con `pruebas/geometria.py`. |
+| `geo/anchos.json` | La regla (A activa) y todos sus números |
+| `geo/sanear.py`, `geo/niveles.py`, `geo/rasante.py` y `geo/huellas.py` | El saneamiento, las capas, la cota y la exportación a EnCicla |
+| En El Metro: `node tools/build.mjs && node tools/corredores.mjs` | Los corredores que despeja el juego |
+| `python3 tools/edificios_datos.py tools/cache/edificios --saneadas ../BicicletasUno/motor-valle/salida/sanear` (antes, `--descargar tools/cache/edificios`) | `edificios.js` v2, con la guarda |
+| `python3 motor-valle/geo/rasante.py --elmetro ../MetroZero` y `node tools/vias_datos.mjs --cota …/cota-elmetro.bin` | La cota |
+| `node tools/prueba-recorte.mjs [--todas]` | Lo que recorta el juego: debe ser 0 y 0 |
+| `node ../BicicletasUno/motor-valle/pruebas/geometria.mjs --elmetro .` | Los datos como los lee el juego, con el peso |
+
+**Lo que pedía (queda como referencia):**
 - **Dónde:** en `BicicletasUno/motor-valle/` y, con `sincronizar.mjs`, en `MetroZero/motor-valle/`.
 - **Versión:** del Motor del Valle 1.2.0 a la 1.3.0.
 - **Antes de tocar `motor-valle/`, `MetroZero/tools/edificios_datos.py` o `MetroZero/src/data/`, avisa en `coord/buzon/`.**
@@ -148,6 +191,14 @@ Están anotadas en `CONTEXTO-RELEVO.md` § 8 y en el § 7 de la auditoría.
   | f | **Capturas** | Antes y después en 6 zonas piloto: Centro/La Candelaria, Laureles, El Poblado, ladera nororiental, corredor del río y viaducto, y una zona rural |
 
 ### Fase 2 · Render cenital (El Metro y EnCicla con bandera por modo; Motor City)
+**Lo que dejó la Fase 1 para esta fase:**
+- **Zócalos:** el suelo de cada esquina se mide con el relieve del juego (`elevM` en El Metro); `zBase = suelo del centro − max(6 m, lo que baja)`. El flujo `zb` de `edificios.js` v2 solo trae los 4.766 edificios donde el suelo baja más de 4 m desde el centro.
+- **Banderas en los datos:** en El Metro, el bit 128 del byte de uso (recortada). En EnCicla, el flujo `marca` (casa confiable y bioma) de `edificios.bin`. El bioma por trozo de 160 m está en `salida/sanear/biomas.json`.
+- **Terreno facetado:** la rasante real se aparta del suelo de 80 m entre −7 y +7,4 m (p10 a p90). Si las vías se dibujan con su cota, el terreno debe ajustarse a la rasante (flujo `COTA`), no al revés.
+- **Si cambias un corredor** que despeja El Metro (vías, Metroplús, tranvía o hitos), repite `corredores.mjs`, `edificios_datos.py --saneadas` y `prueba-recorte.mjs --todas`. Debe dar 0 y 0.
+- **Presupuesto:** al HTML de El Metro le quedan 146 KB hasta 9,5 MB.
+- **Pendiente de decisión (7):** si la bandera de Ciudad Libre y Bus deja de recortar las casas marcadas, se re‑exporta sin cortarlas (`edificios_datos.py` tendría que saltarlas en la guarda solo para esos modos: hablarlo con el autor).
+
 ⚠️ **En El Metro, el render compartido también dibuja modos protegidos:**
 - `MAP.drawTop` lo usan Conducir (vista superior), Volante, Carrera, el mapa y el álbum;
 - `G3.draw` lo usan Conducir, Volante, Carrera y el viaje en Metrocable.
@@ -269,21 +320,28 @@ Repartan por zonas y reclámenlas en `coord/agentes/<tu-id>.json`:
 3. **Pendientes de ChatGPT/Codex:** R8 (SSAO, faroles y agua), C5‑05 (policía con tácticas), C5‑06 (multitudes), C5‑02 (modelos más finos de los sitios) y R6‑b (medir en un celular).
 4. **Pendientes de Gemini:** G5‑09 a G5‑15.
 
-## 6. Datos para comparar (línea base del 24‑nov)
+## 6. Datos para comparar (línea base del 24‑nov; la columna «después de la Fase 1» es la nueva base)
 
-| Qué | Hoy |
-|---|---|
-| Motor City | `prueba.mjs --navegador`: **158 bien** |
-| El Metro | **100 partidas, 0 errores**; HTML de 8.749 KB |
-| EnCicla | **170 bien**; HTML de 5.641 KB |
-| Turno Cero | `getaway.html`: 28.839 KB |
-| Compuerta de EnCicla (CPU ×4) | p95 de **103,7 ms** (Carrera 43A) y **61,2 ms** (Las Palmas); meta < 50 |
-| Edificios de El Metro que pisan la vía | Regla A: **120.187 de 638.303** (18,8 %), 12.267 con el centro en la vía · Regla B: **151.055** (23,7 %), 24.983 con el centro en la vía |
-| Cajas de relleno del anillo lejano sobre vías | **76.585 de 515.666** |
-| Origen de las huellas | Google 52,6 %, OSM 26,8 % y Microsoft 20,6 %; solo 30.088 polígonos (el resto, rectángulos) |
+| Qué | Fase 0 | Después de la Fase 1 |
+|---|---|---|
+| Motor City | `prueba.mjs --navegador`: **158 bien** | sin cambios de código |
+| El Metro | **100 partidas, 0 errores**; HTML de 8.749 KB (8.965.591 bytes) | 100 partidas, 0 errores; HTML de 9.128 KB (**9.353.904 bytes**; tope 9.500.000) |
+| El Metro · `edificios.js` | 4.549.632 bytes | **4.572.134 bytes** (tope 4.600.000) |
+| EnCicla | **170 bien**; HTML de 5.641 KB (3.7.0) | 177 ✓ (3.8.0, ya en `main`); HTML de 5.670 KB, idéntico antes y después de la Fase 1 |
+| Turno Cero | `getaway.html`: 28.839 KB | igual |
+| Compuerta de EnCicla (CPU ×4) | p95 de **103,7 ms** (Carrera 43A) y **61,2 ms** (Las Palmas); meta < 50 | la 3.8.0 ya pasa (en el servidor, 37,4 y 31,9 ms); la Fase 1 no la movió |
+| Edificios de El Metro que pisan la vía | Regla A: **120.187 de 638.303** (18,8 %), 12.267 con el centro en la vía · Regla B: **151.055** (23,7 %), 24.983 con el centro en la vía | Regla A: **5** (de menos de 0,3 m²), 0 con el centro · Regla B: 109.257 |
+| Recorte en tiempo real de El Metro (todas las regiones) | 107.546 recortados y **17.190 quitados** | **0 y 0** |
+| Cajas de relleno del anillo lejano sobre vías | **76.585 de 515.666** | igual (es del render: Fase 2) |
+| Origen de las huellas | Google 52,6 %, OSM 26,8 % y Microsoft 20,6 %; solo 30.088 polígonos (el resto, rectángulos) | las mismas fuentes; 45.428 polígonos |
 
 **Herramientas y trucos:**
 - **Medir los conflictos:** `node reportes/fase0-cenital/medir-conflictos-elmetro.mjs ../MetroZero` (34 s, desde `motorcity`).
+- **Fase 1:**
+  - lo que recorta el juego: `node tools/prueba-recorte.mjs --todas` en El Metro (unos 10 s dentro del navegador);
+  - la lámina de datos: `python3 reportes/fase1-cenital/datos-antes-despues.py`;
+  - las capturas de las 6 zonas: `node reportes/fase1-cenital/capturas-elmetro.mjs ../MetroZero SALIDA antes|despues`.
+- **El Metro comprime `edificios.js` con zopfli** si está (`pip install zopfli`); es el mismo deflate, un 4 % más chico. Sin zopfli, pesa unos 150 KB más y se pasa del tope.
 - **Capturas:** en El Metro, `node tools/test.mjs 2 --shots <carpeta>`; en EnCicla, `node tests/run.js --shots --n=4` (quedan en `tests/out/`).
 - **La compuerta de EnCicla** importa `playwright` como módulo ES. Si no lo encuentra, haz como la CI: `npm install --no-save --no-package-lock playwright`.
 - **Al compilar EnCicla** se reescribe `dist/ENCICLA-TODO.md` con la fecha. Restáuralo si no publicas.

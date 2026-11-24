@@ -124,7 +124,7 @@ Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (
 | 15 | ~~Tarjetas de El Metro con el texto encima del arte~~ | **No se reproduce en la versión actual** | El diseño cambió desde la auditoría (v0.2.0). |
 | 16 | **Sentir el manejo nuevo (4.6) con las manos** en Turno Cero, El Metro y los modos | **Autor** | Los números a tocar están en `Vehiculos.ARCADE` (motor; El Metro tiene los suyos desde su 3.1.0): `accK`, `brkK`, `w0`, `w1`, `tw`. Ver `docs/INVESTIGACION-MANEJO.md` § 0. |
 | 17 | ~~Manejo de EnCicla, mapa de EnCicla, horizontal, un solo juego de prueba~~ | **Hecho en 4.6 (Claude)** | `js/32-fisica.js`, `js/70-mapa.js`, `juegos/getaway/60-modos.js`. El Metro lo hizo su propia sesión en la 3.1.0 «Fluido» (rama `ccr-2a67f935-oat714`). |
-| 18 | **Renacimiento cenital** (pedido del autor, 24‑nov: *master prompt*, investigación técnica y entrega de GPT‑6 en `docs/referencias/renacimiento-cenital-2026/`): saneamiento GIS en `motor-valle/`, cenital 2.5D, integración en El Metro y EnCicla, y carreras pseudo‑3D en Turno Cero | **Fase 0 hecha (Claude). El autor ya decidió (24‑nov): la Fase 1 puede empezar** | `docs/AUDITORIA-FASE0-CENITAL.md`: el § 6 tiene el plan por archivo y el § 7, las decisiones. La evidencia está en `reportes/2026-11-24-claude-fase0-cenital.md`. Cada fase se detiene y pide el OK. |
+| 18 | **Renacimiento cenital** (pedido del autor, 24‑nov: *master prompt*, investigación técnica y entrega de GPT‑6 en `docs/referencias/renacimiento-cenital-2026/`): saneamiento GIS en `motor-valle/`, cenital 2.5D, integración en El Metro y EnCicla, y carreras pseudo‑3D en Turno Cero | **Fases 0 y 1 hechas (Claude). La Fase 1 espera el OK del autor para seguir con la Fase 2** | Fase 0: `docs/AUDITORIA-FASE0-CENITAL.md`. **Fase 1** (Motor del Valle 1.3.0, el Valle saneado): `reportes/2026-11-24-claude-fase1-cenital.md`. Está en la rama `ccr-4f6eeea5-yulqk1` de los tres repositorios, no en `main`. Prueba de craqueo en verde; El Metro ya no recorta nada en tiempo real. Cada fase se detiene y pide el OK. |
 
 ## 6. Protocolo entre IAs (sin mediador), adoptado de Antigravity y Codex
 - **Una rama por agente:** `ia/<agente>/<tema>` o `<agente>/<tema>`. Nunca `push --force` sobre la rama de otro, ni sobre `main` ni sobre `gh-pages`.
@@ -1014,4 +1014,49 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 - **El prompt de relevo, con las decisiones:** `docs/PROMPT-RELEVO.md`, § 3 y § 4. **El autor autorizó subirlo a `main`** (avance rápido, solo documentos).
 - **Misión y visión, al día:** `docs/VISION-Y-MISION.md` (el § 1 de este documento apunta ahí).
 - **Sigue:** la **Fase 1** en `BicicletasUno/motor-valle/`, con el plan del § 4 del prompt. Avisa en `coord/buzon/` antes de tocar `motor-valle/` o los datos de El Metro.
+- **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
+
+### Claude · 24‑nov‑2026 · Fase 1 del renacimiento cenital: el Valle saneado (Motor del Valle 1.3.0; motor 5.3.1 sin cambios)
+- **Pedido del autor:** «Continúa con el trabajo de desarrollar y mejorar el motor y los videojuegos» con el prompt de relevo. La Fase 1 sigue el § 4 del prompt y las decisiones del § 3.
+- **Hecho** (rama `ccr-4f6eeea5-yulqk1` en BicicletasUno, MetroZero y motorcity; **nada en `main`**):
+  - **Motor del Valle 1.3.0**, en `BicicletasUno/motor-valle/` y sincronizado:
+    - `geo/anchos.json`, con la regla A;
+    - `geo/sanear.py`, la ley de soberanía vial;
+    - `geo/niveles.py`, puentes y túneles;
+    - `geo/rasante.py`;
+    - `geo/huellas.py`, que exporta para EnCicla;
+    - `pruebas/geometria.py` y `geometria.mjs`;
+    - el subcomando `sanear`;
+    - las fuentes `huellas` y `agua_niveles`;
+    - los ejes precisos de las vías (`VIAS_M`).
+  - **El Metro:** `edificios.js` v2, con una guarda contra su recorte en tiempo real, el bit 128 y `zb`, y `vias.js` v2 con la cota al final. Herramientas nuevas: `tools/corredores.mjs` y `tools/prueba-recorte.mjs`; `edificios_datos.py --saneadas` y `vias_datos.mjs --cota`.
+  - **EnCicla:** `edificios.bin` + `edificios.json` y `vias-cota.bin`, **sin conectar**. Su HTML no cambió.
+- **Probado (todo en verde):**
+  - prueba de craqueo:
+    1. geometría exacta, 0 solapes sin marca;
+    2. en el juego, 0;
+    3. el 98,45 % del área;
+    4. la fidelidad contra OSM no baja;
+    5. 44.538 conflictos en GeoJSON;
+    6. capturas de 6 zonas;
+  - El Metro: el recorte en tiempo real corta **0 de 622.086** en las 4.731 regiones (antes recortaba 107.546 y quitaba 17.190); `test.mjs 100` con 0 errores; HTML de 9,35 MB;
+  - EnCicla: 177 ✓;
+  - la herramienta de la Fase 0: de 120.187 a 5.
+- **Lo poco conocido que salió de medir:**
+  - las vías de los dos juegos están redondeadas a 2,5 m: se corren hasta ~3 m de su eje;
+  - las casas de OSM (a mano) chocan con el corredor más que las de satélite: el andén de 1,3 m y el ancho de clase no existen en las laderas;
+  - la rasante real se aparta ±7 m del suelo de 80 m de los juegos;
+  - hoy el juego quitaba 17.190 casas, no 12.267;
+  - Overture no trae `min_height` en el Valle.
+- **Esperan al autor:**
+  1. el OK de la Fase 2;
+  2. las casas confiables en El Metro (su andén de 1,3 m las recorta en la exportación: 38.761, y quita 4.038);
+  3. las vías precisas en El Metro (+230 KB);
+  4. el ancho por fachadas (apagado);
+  5. la cota dentro de `vias.js` (+366 KB) o aparte;
+  6. refrescar el mapa base.
+- **Riesgo que dejo:**
+  - al HTML de El Metro le quedan 146 KB hasta el tope de 9,5 MB;
+  - si cambian los corredores del juego, hay que repetir `corredores.mjs` + `edificios_datos.py --saneadas` + `prueba-recorte.mjs --todas`.
+- **Prompt de relevo:** `docs/PROMPT-RELEVO.md`, puesto al día para la Fase 2.
 - **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
