@@ -1042,7 +1042,14 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 
   Siguen pendientes también la licencia del catastro y el LiDAR, y medir en un celular.
 - **Riesgo que dejo:** ninguno en el juego, porque no se cambió. Si alguien empieza la Fase 1 sin las decisiones, la regla B borra 24.983 casas en laderas.
-- **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe. El prompt de relevo actualizado está en `docs/PROMPT-RELEVO.md`.
+- **Prompt de relevo** (lo pidió el autor: «con todo lo nuevo que debe hacer la otra IA»): `docs/PROMPT-RELEVO.md`. Trae:
+  - las seis decisiones del autor, con lo recomendado;
+  - las fases 1 a 5, con archivos, comandos y criterios de «hecho»;
+  - la línea base para comparar;
+  - las reglas y el cierre.
+
+  El aviso está arriba en `CLAUDE.md`, `AGENTS.md` y `GEMINI.md`.
+- **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
 
 # MOTOR CITY · Documento único
 
@@ -4651,6 +4658,7 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
   - Los trozos de 250 m no se alinean con los cachés de 160 m.
 - **Los cinco videos del autor,** identificados: Reckless Getaway 2, Super Arcade Racing, GTA Chinatown Wars, GTA 2 y GTA 1.
 - **Sin cambios en los juegos ni en el motor:** solo documentos y evidencia. La Fase 1 (saneamiento en `motor-valle/`) **espera cinco decisiones del autor** (§ 7 de la auditoría).
+- **Prompt de relevo:** `docs/PROMPT-RELEVO.md`. Trae las fases 1 a 5 completas, las seis decisiones del autor con lo recomendado, los comandos, los criterios de «hecho» y la línea base. El aviso está arriba en `CLAUDE.md`, `AGENTS.md` y `GEMINI.md`.
 
 ### 23-nov-2026 · 5.3.1 «Skills para todas las IA» · la lista, un comando que las integra y el prompt para compartir
 - **El autor:** «dame la lista de skills y plugins que tenemos y cómo integrarlos, con un prompt para compartir entre IA y que las integren automáticamente».

@@ -987,4 +987,11 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 
   Siguen pendientes también la licencia del catastro y el LiDAR, y medir en un celular.
 - **Riesgo que dejo:** ninguno en el juego, porque no se cambió. Si alguien empieza la Fase 1 sin las decisiones, la regla B borra 24.983 casas en laderas.
-- **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe. El prompt de relevo actualizado está en `docs/PROMPT-RELEVO.md`.
+- **Prompt de relevo** (lo pidió el autor: «con todo lo nuevo que debe hacer la otra IA»): `docs/PROMPT-RELEVO.md`. Trae:
+  - las seis decisiones del autor, con lo recomendado;
+  - las fases 1 a 5, con archivos, comandos y criterios de «hecho»;
+  - la línea base para comparar;
+  - las reglas y el cierre.
+
+  El aviso está arriba en `CLAUDE.md`, `AGENTS.md` y `GEMINI.md`.
+- **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.

@@ -5,7 +5,7 @@
   "rol": "IA del motor e integradora: motor Motor City (js/, herramientas/, pruebas/) y el juego Turno Cero (juegos/getaway/, salvo arte3d/ y turno-cero-accion-3d.html de Codex)",
   "fase_actual": "24-nov-2026 · Fase 0 del «renacimiento cenital» (master prompt del autor): auditoría y línea base en docs/AUDITORIA-FASE0-CENITAL.md; la evidencia está en reportes/2026-11-24-claude-fase0-cenital.md. La Fase 1 (saneamiento GIS en motor-valle/) espera 5 decisiones del autor (§ 7). Antes: 5.3.1 «Skills para todas las IA».",
   "estado": "esperando al autor (decisiones de la Fase 1)",
-  "ultima_actualizacion_utc": "2026-11-24T01:15:00Z",
+  "ultima_actualizacion_utc": "2026-11-24T01:13:00Z",
   "zonas_reclamadas": [
     "js/",
     "herramientas/",
@@ -113,6 +113,7 @@
       "BicicletasUno/motor-valle/ (avisar en coord/ antes)",
       "MetroZero/tools/edificios_datos.py",
       "MetroZero/src/data/edificios.js y vias.js (solo datos)"
-    ]
+    ],
+    "prompt_relevo": "docs/PROMPT-RELEVO.md: las fases 1 a 5 del renacimiento cenital, con las decisiones del autor, los comandos, los criterios de «hecho» y las reglas (aviso en CLAUDE.md, AGENTS.md y GEMINI.md)"
   }
 }

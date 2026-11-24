@@ -28,6 +28,7 @@
   - Los trozos de 250 m no se alinean con los cachés de 160 m.
 - **Los cinco videos del autor,** identificados: Reckless Getaway 2, Super Arcade Racing, GTA Chinatown Wars, GTA 2 y GTA 1.
 - **Sin cambios en los juegos ni en el motor:** solo documentos y evidencia. La Fase 1 (saneamiento en `motor-valle/`) **espera cinco decisiones del autor** (§ 7 de la auditoría).
+- **Prompt de relevo:** `docs/PROMPT-RELEVO.md`. Trae las fases 1 a 5 completas, las seis decisiones del autor con lo recomendado, los comandos, los criterios de «hecho» y la línea base. El aviso está arriba en `CLAUDE.md`, `AGENTS.md` y `GEMINI.md`.
 
 ## 23-nov-2026 · 5.3.1 «Skills para todas las IA» · la lista, un comando que las integra y el prompt para compartir
 - **El autor:** «dame la lista de skills y plugins que tenemos y cómo integrarlos, con un prompt para compartir entre IA y que las integren automáticamente».
