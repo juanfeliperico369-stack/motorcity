@@ -3,9 +3,9 @@
   "agente": "claude",
   "rama": "ccr-4f6eeea5-yulqk1",
   "rol": "IA del motor e integradora: motor Motor City (js/, herramientas/, pruebas/) y el juego Turno Cero (juegos/getaway/, salvo arte3d/ y turno-cero-accion-3d.html de Codex)",
-  "fase_actual": "24/25-nov-2026 · Fase 2 del «renacimiento cenital» hecha: el cenital nuevo con bandera (apagada) en El Metro (Ciudad Libre y Bus) y EnCicla (modo libre), y Motor City 5.3.2 con los mundos saneados y sin la tolerancia de 1 m (reportes/2026-11-24-claude-fase2-cenital.md). Rama ccr-4f6eeea5-yulqk1 de los tres repositorios. Sigue la Fase 3 (encender la bandera, regresión y versiones).",
-  "estado": "Fase 2 en verde; sigue la Fase 3 (el autor pidió continuar con las fases siguientes; publicar y main esperan su OK)",
-  "ultima_actualizacion_utc": "2026-11-25T01:00:00Z",
+  "fase_actual": "25-nov-2026 · Fase 3 del «renacimiento cenital» hecha: la bandera encendida en El Metro 3.9.0 (Ciudad Libre y Bus) y EnCicla 3.9.0 (modo libre, con las huellas reales del Motor del Valle 1.3.1) (reportes/2026-11-25-claude-fase3-cenital.md). Rama ccr-4f6eeea5-yulqk1 de los tres repositorios. Sigue la Fase 4 (MC.Pista: carreras retro pseudo-3D en Turno Cero, Motor City 5.4.0).",
+  "estado": "Fase 3 en verde; trabajando en la Fase 4 (el autor pidió continuar; publicar y main esperan su OK)",
+  "ultima_actualizacion_utc": "2026-11-25T08:00:00Z",
   "zonas_reclamadas": [
     "js/",
     "herramientas/",
@@ -47,7 +47,10 @@
     "BicicletasUno/motor-valle/ (1.3.0: geo/sanear.py, rasante.py, niveles.py, huellas.py, anchos.json, pruebas/)",
     "MetroZero/tools/edificios_datos.py, vias_datos.mjs, corredores.mjs, prueba-recorte.mjs",
     "MetroZero/src/data/edificios.js y vias.js (v2)",
-    "BicicletasUno/src/data/edificios.bin, edificios.json y vias-cota.bin"
+    "BicicletasUno/src/data/edificios.bin, edificios.json y vias-cota.bin",
+    "js/47-pista.js",
+    "juegos/getaway/70-retro.js",
+    "pruebas/pista-retro.mjs"
   ],
   "no_toco": [
     "juegos/getaway/arte3d/",

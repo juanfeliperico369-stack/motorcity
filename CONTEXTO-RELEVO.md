@@ -124,7 +124,7 @@ Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (
 | 15 | ~~Tarjetas de El Metro con el texto encima del arte~~ | **No se reproduce en la versión actual** | El diseño cambió desde la auditoría (v0.2.0). |
 | 16 | **Sentir el manejo nuevo (4.6) con las manos** en Turno Cero, El Metro y los modos | **Autor** | Los números a tocar están en `Vehiculos.ARCADE` (motor; El Metro tiene los suyos desde su 3.1.0): `accK`, `brkK`, `w0`, `w1`, `tw`. Ver `docs/INVESTIGACION-MANEJO.md` § 0. |
 | 17 | ~~Manejo de EnCicla, mapa de EnCicla, horizontal, un solo juego de prueba~~ | **Hecho en 4.6 (Claude)** | `js/32-fisica.js`, `js/70-mapa.js`, `juegos/getaway/60-modos.js`. El Metro lo hizo su propia sesión en la 3.1.0 «Fluido» (rama `ccr-2a67f935-oat714`). |
-| 18 | **Renacimiento cenital** (pedido del autor, 24‑nov: *master prompt*, investigación técnica y entrega de GPT‑6 en `docs/referencias/renacimiento-cenital-2026/`): saneamiento GIS en `motor-valle/`, cenital 2.5D, integración en El Metro y EnCicla, y carreras pseudo‑3D en Turno Cero | **Fases 0, 1 y 2 hechas (Claude). La 1 está aprobada; sigue la Fase 3 (encender la bandera)** | Fase 0: `docs/AUDITORIA-FASE0-CENITAL.md`. Fase 1 (Motor del Valle 1.3.0, el Valle saneado): `reportes/2026-11-24-claude-fase1-cenital.md`. **Fase 2** (el cenital nuevo con bandera en El Metro y EnCicla; Motor City 5.3.2 con los mundos saneados y sin la tolerancia de 1 m): `reportes/2026-11-24-claude-fase2-cenital.md`. Todo en la rama `ccr-4f6eeea5-yulqk1` de los tres repositorios, no en `main`. Publicar y pasar a `main` esperan el OK del autor. |
+| 18 | **Renacimiento cenital** (pedido del autor, 24‑nov: *master prompt*, investigación técnica y entrega de GPT‑6 en `docs/referencias/renacimiento-cenital-2026/`): saneamiento GIS en `motor-valle/`, cenital 2.5D, integración en El Metro y EnCicla, y carreras pseudo‑3D en Turno Cero | **Fases 0 a 3 hechas (Claude). La 1 está aprobada; sigue la Fase 4 (carreras retro en Turno Cero)** | Fase 0: `docs/AUDITORIA-FASE0-CENITAL.md`. Fase 1 (Motor del Valle 1.3.0, el Valle saneado): `reportes/2026-11-24-claude-fase1-cenital.md`. **Fase 2** (el cenital nuevo con bandera en El Metro y EnCicla; Motor City 5.3.2 con los mundos saneados y sin la tolerancia de 1 m): `reportes/2026-11-24-claude-fase2-cenital.md`. **Fase 3** (la bandera encendida; El Metro 3.9.0 y EnCicla 3.9.0, con las huellas reales en su modo libre; Motor del Valle 1.3.1): `reportes/2026-11-25-claude-fase3-cenital.md`. Todo en la rama `ccr-4f6eeea5-yulqk1` de los tres repositorios, no en `main`. Publicar y pasar a `main` esperan el OK del autor. |
 
 ## 6. Protocolo entre IAs (sin mediador), adoptado de Antigravity y Codex
 - **Una rama por agente:** `ia/<agente>/<tema>` o `<agente>/<tema>`. Nunca `push --force` sobre la rama de otro, ni sobre `main` ni sobre `gh-pages`.
@@ -1083,4 +1083,21 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
   - Motor City: `prueba --navegador` 158 bien y toda la lista de `motor-city-qa.yml` (ver el informe).
 - **Esperan al autor:** el OK de la Fase 2 y de la Fase 3 (la Fase 3 enciende la bandera); la decisión 7 (se dejó como en la Fase 1); si las huellas reales de EnCicla valen +5,5 MB de HTML (la compuerta decide si se puede).
 - **Prompt de relevo:** `docs/PROMPT-RELEVO.md`, puesto al día para la Fase 3.
+- **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
+
+### Claude · 25‑nov‑2026 · Fase 3 del renacimiento cenital: la bandera encendida y las huellas reales en EnCicla (El Metro 3.9.0, EnCicla 3.9.0, Motor del Valle 1.3.1)
+- **Pedido del autor:** seguir con las fases siguientes y, tras dos reinicios, «Retoma, y continua» y «retoma y sigue».
+- **Hecho** (rama `ccr-4f6eeea5-yulqk1`; **nada en `main`** y nada publicado):
+  - **El Metro 3.9.0** (versionCode 37): la bandera encendida en Ciudad Libre y Bus, y `tools/capturas-protegidos.mjs` para comparar los 13 modos protegidos píxel a píxel.
+  - **EnCicla 3.9.0** (versionCode 30900): la bandera encendida en el modo libre y `src/js/99z-huellas.js`, que cambia los lotes inventados del paseo libre por las 625.880 huellas reales. Tienen la forma de un lote, se arman por región de 160 m y cada trozo dibuja las de sus vecinos, así que no quedan costuras.
+  - **Motor del Valle 1.3.1** (`geo/huellas.py`): `edificios-ligero.bin` lleva uno o dos rectángulos adentro de cada polígono, cada 0,25 m, y ninguno toca un corredor. Se sincronizó a MetroZero; El Metro da el mismo md5.
+- **Probado:**
+  - El Metro: `test.mjs 100` con 0 errores; los modos protegidos no cambian; rutas A\* 0 de 61.332.
+  - EnCicla: `tests/run.js` 177 ✓; `cenital-libre` BIEN; `geometria.mjs --ligero` BIEN.
+  - La compuerta: con las huellas cumple la meta en 3 de 3 rondas; con los lotes, en 1 de 3.
+- **Esperan al autor:**
+  - publicar las dos 3.9.0 (APK y páginas) y pasar a `main`;
+  - si el HTML de EnCicla puede pesar 9,99 MB: con las constantes de `huellas.py` baja a unos 9,3 MB, pero tapa menos.
+- **Riesgo que dejo:** «mundo 3D único» (EnCicla) falla si la batería corre al mismo tiempo que otra prueba pesada (espera un tiempo fijo).
+- **Prompt de relevo:** `docs/PROMPT-RELEVO.md`, puesto al día para la Fase 4.
 - **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
