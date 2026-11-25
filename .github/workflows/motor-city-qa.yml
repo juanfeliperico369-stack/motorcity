@@ -126,7 +126,7 @@ jobs:
           node pruebas/minijuegos.mjs
           node pruebas/guia-cine.mjs
           node pruebas/quimica-mundo.mjs
-      - name: 5.3 · R6-b (ChatGPT): datos compactos y Worker con respaldo (apagado por defecto; ?r6b)
+      - name: "5.3 · R6-b (ChatGPT): datos compactos y Worker con respaldo (apagado por defecto; ?r6b)"
         run: |
           node pruebas/r6b-datos.mjs
           node pruebas/r6b-browser.mjs
