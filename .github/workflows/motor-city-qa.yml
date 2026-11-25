@@ -101,6 +101,8 @@ jobs:
         run: node pruebas/paralaje-biomas.mjs
       - name: 5.4 · 🏎️ Carreras retro pseudo‑3D (MC.Pista) y su cápsula en Turno Cero
         run: node pruebas/pista-retro.mjs
+      - name: 5.4.1 · 🧰 Cápsulas de Turno Cero (garaje sin cargar el núcleo, paso con el mismo estado y 📏 en las carreras retro)
+        run: node pruebas/capsulas.mjs
       - name: 5.1 · 💍 Anillos de recoger y entregar, y vuelo (Gemini G5-02)
         run: node pruebas/anillos.mjs
       - name: 5.2 · 🗣️ Ciudad viva (eventos, reacciones, escenas, frases y despacho)
