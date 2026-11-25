@@ -135,7 +135,15 @@ PRUEBAS (comando · código de salida · resultado):
 | 3D cenital, CPU ×4 | 99,9 ms | 100 ms | 133,3 ms | 133,3 ms | 1.933 ms | 1.783 ms |
 | 2D, CPU ×4 | 116,7 ms | 116,7 ms | 216,6 ms | 200 ms | 533 ms | 217 ms |
 
-**Compuerta de EnCicla** (`tests/benchmark-2km-gpt6.mjs --cpu=4`, sin cambiarla: se compiló cada variante; 3 rondas intercaladas con la máquina libre): PENDIENTE_GATE
+**Compuerta de EnCicla** (`tests/benchmark-2km-gpt6.mjs --cpu=4`, sin cambiarla). Se compiló cada variante y se corrieron 3 rondas intercaladas con la máquina libre (p95; la meta es menos de 50 ms):
+
+| Variante | Carrera 43A | Avenida de Las Palmas |
+|---|---|---|
+| A · bandera apagada (la de hoy) | 38,0 / 38,4 / 38,0 · **media 38,1 ms** | 35,2 / 33,3 / 34,8 · **media 34,4 ms** |
+| B · bandera encendida | 40,2 / 35,2 / 37,7 · **media 37,7 ms** | 32,2 / 33,9 / 33,2 · **media 33,1 ms** |
+| C · encendida sin bruma | 38,6 / 39,5 / 41,2 · media 39,8 ms | 34,0 / 33,6 / 36,0 · media 34,5 ms |
+
+**La bandera no empeora la compuerta**, y las tres variantes cumplen la meta. Una primera medición había dado unos 3 a 5 ms más con la bandera, pero corrió mientras se regeneraban y horneaban los mundos de Motor City (la CPU ocupada). Por eso se repitió con la máquina libre.
 
 ## 5. Decisiones
 
