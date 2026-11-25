@@ -1,5 +1,48 @@
 # Bitácora de Motor City
 
+## 25-nov-2026 · 5.4.0 «Carreras retro» · Fase 4 del renacimiento cenital (Claude)
+- **Lo que pide el prompt de relevo, Fase 4:**
+  - `MC.Pista`, con la técnica clásica de segmentos, escrita desde cero (sala limpia), aparte de `MC.Arcade`, que se queda para la calle real;
+  - dos circuitos;
+  - «🏎️ Carreras retro» en Turno Cero;
+  - una prueba con la cresta, la curva continua, el bot, el p95 y 0 errores;
+  - la 5.4.0.
+- **Hecho:**
+  - **`js/47-pista.js` (`MC.Pista`):**
+    - **la pista:** segmentos de 200 de largo con `p1` y `p2` (mundo, cámara y pantalla), curva, banda de color cada 3 segmentos, objetos y carros; colinas cosenoidales y curvas acumuladas, con fuerza centrífuga;
+    - **la proyección:** la clásica (`d = 1/tan(FOV/2)`, 280 segmentos a la vista). En vertical se usa la misma escala en los dos ejes y el horizonte un poco más arriba: con `H/2` en el eje vertical, la imagen saldría estirada al doble.
+    - **pasada 1, de cerca a lejos con `maxY`:** recorta cada segmento contra lo ya pintado, guarda `seg.clip` y pone niebla (6 niveles) en los últimos 45 segmentos. Las franjas de pasto, berma, pianos, asfalto, líneas y la baranda se juntan por color y nivel de niebla: **unos 40 rellenos por cuadro**.
+    - **pasada 2, de lejos a cerca:** los objetos y los rivales de todos los segmentos frente a la cámara, recortados contra `seg.clip`. Un carro detrás de una cresta asoma el techo y nunca se pinta debajo de ella.
+    - **lo demás:**
+      - paralaje de 3 capas (cielo, montañas del Valle y la ciudad o las lomas con pinos), que se mueve con la curva, la velocidad y la altura;
+      - el carro con 6 estados (recto, giro suave y brusco, en plano y en subida), vibración en la berma, chispas y humo al derrapar;
+      - rebufo a menos de 15 segmentos y nitro (FOV de 100° a 116°, líneas de velocidad y una sacudida);
+      - rivales que cambian de carril sin saltos y con un poco de goma;
+      - HUD con posición, vuelta, tiempo, velocidad, nitro y minimapa, y controles táctiles en las esquinas (en vertical, el carro va encima de la fila de botones);
+    - **los dos circuitos** (1,6 km cada uno):
+      - «Subida a Las Palmas»: subida larga, curvas encadenadas, una horquilla, lomas con cresta, la bajada por Escobero, pinos y baranda continua;
+      - «Autopista Regional nocturna»: alta velocidad, puentes y arcos sobre la vía, postes con luz y la silueta de la ciudad;
+    - **sin pantalla, para las pruebas:** `carrera`, `paso` (paso fijo de 1/120 s), `bot`, `simular`, `perfil`, `crearDe` y `cieloDe`.
+  - **Turno Cero, `juegos/getaway/70-retro.js` (aditivo):** «🏎️ Carreras retro» en 🎮 Modos, con los dos circuitos a 2 vueltas contra 5 rivales.
+    - El mundo abierto se pausa mientras corres, y al salir vuelves al mismo punto, con el mismo carro.
+    - Corres con el color de tu carro, y el cielo de Las Palmas sale de la hora y el clima del mundo (`cieloRetro`): de noche, la pista se oscurece y se prenden los faros.
+    - Premio de 💵 500, 250 y 100 por puesto, y récord por circuito.
+  - **Prueba nueva, `pruebas/pista-retro.mjs`** (en `motor-city-qa.yml`).
+- **Probado:**
+  - `node pruebas/pista-retro.mjs`: ✓
+    - la cresta: 0 píxeles debajo con el recorte, 280 sin él; el carro asoma el techo;
+    - la curva continua, con un salto de 0,25 como máximo, y la altura cierra la vuelta;
+    - el bot gana los dos circuitos: 101,3 s y 76,3 s a 2 vueltas;
+    - el paso y el dibujo dan un p95 de 5,2 a 5,9 ms en vertical y en horizontal (el intervalo entre cuadros, 16,7 ms: 60 fps);
+    - Turno Cero: pausa, premio, récord, vuelta al mismo punto y salida con ✕;
+    - 0 errores;
+  - `node motor.mjs prueba` y `node motor.mjs skills --verificar`: en verde;
+  - `node motor.mjs prueba --navegador`: **158 bien**;
+  - `node pruebas/getaway-contenido.mjs`: ✓;
+  - `node pruebas/modos.mjs`: ✓. Una corrida falló solo en el umbral del ⏫ acelerador fijo (8,7 m/s contra más de 10): depende de los cuadros reales de SwiftShader, como advierte la misma prueba, y en las dos corridas siguientes pasó.
+- **Peso:** `js/47-pista.js` pesa unos 52 KB y `70-retro.js` 4 KB (la meta del módulo retro era unos 150 KB).
+- **Falta:** la APK (`apk-juegos.yml`) y pasar a `main`, con el OK del autor; la Fase 5 (cápsulas y celular).
+
 ## 24-nov-2026 · 5.3.2 «Mundos saneados» · Fase 2 del renacimiento cenital (Claude)
 - **Lo que pide el prompt de relevo, Fase 2 (Motor City):** el mismo saneamiento en `geo/territorio.py`, regenerar los mundos MC4 y, con los datos limpios, quitar la tolerancia de 1 m de la colisión (`js/32-fisica.js`).
 - **Hecho:**

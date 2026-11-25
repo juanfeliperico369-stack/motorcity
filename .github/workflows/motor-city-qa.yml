@@ -99,6 +99,8 @@ jobs:
         run: node pruebas/historieta.mjs
       - name: 5.1 · 🏔️ Paralaje por biomas en 🏁 Arcade (Gemini V4)
         run: node pruebas/paralaje-biomas.mjs
+      - name: 5.4 · 🏎️ Carreras retro pseudo‑3D (MC.Pista) y su cápsula en Turno Cero
+        run: node pruebas/pista-retro.mjs
       - name: 5.1 · 💍 Anillos de recoger y entregar, y vuelo (Gemini G5-02)
         run: node pruebas/anillos.mjs
       - name: 5.2 · 🗣️ Ciudad viva (eventos, reacciones, escenas, frases y despacho)

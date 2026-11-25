@@ -1,11 +1,12 @@
-# Prompt de relevo · «Renacimiento cenital»: las fases 1, 2 y 3 están hechas; siguen las fases 4 y 5 (24/25‑nov‑2026)
+# Prompt de relevo · «Renacimiento cenital»: las fases 1 a 4 están hechas; sigue la Fase 5 (24/25‑nov‑2026)
 
 > **Cópialo entero a la IA que siga:** otra sesión de Claude, ChatGPT/Codex, Gemini/Antigravity, Cursor o cualquier otra.
-> Lo escribió Claude al cerrar la Fase 0 y lo puso al día al cerrar las fases 1, 2 y **3** (24/25‑nov). El detalle está en:
+> Lo escribió Claude al cerrar la Fase 0 y lo puso al día al cerrar las fases 1, 2, 3 y **4** (24/25‑nov). El detalle está en:
 > - `docs/AUDITORIA-FASE0-CENITAL.md` (la auditoría y el plan por archivo);
 > - `reportes/2026-11-24-claude-fase1-cenital.md` (la Fase 1: qué se hizo, la prueba de craqueo y las decisiones que esperan al autor);
 > - `reportes/2026-11-24-claude-fase2-cenital.md` (la Fase 2: el cenital con bandera en El Metro y EnCicla, y los mundos saneados de Motor City 5.3.2);
-> - **`reportes/2026-11-25-claude-fase3-cenital.md` (la Fase 3: la bandera encendida, El Metro 3.9.0, EnCicla 3.9.0 con las huellas reales y el Motor del Valle 1.3.1)**;
+> - `reportes/2026-11-25-claude-fase3-cenital.md` (la Fase 3: la bandera encendida, El Metro 3.9.0, EnCicla 3.9.0 con las huellas reales y el Motor del Valle 1.3.1);
+> - **`reportes/2026-11-25-claude-fase4-pista.md` (la Fase 4: `MC.Pista`, las carreras retro pseudo‑3D, y «🏎️ Carreras retro» en Turno Cero; Motor City 5.4.0)**;
 > - `reportes/2026-11-24-claude-fase0-cenital.md` (la línea base);
 > - `CONTEXTO-RELEVO.md` (§ 5, fila 18, y § 8).
 >
@@ -20,7 +21,7 @@ Vas a continuar **Motor City**: un motor de juegos en un solo HTML, sin internet
 - un cenital 2.5D/3D bello y legible en El Metro y en Juega EnCicla;
 - un modo de carreras retro pseudo‑3D en Turno Cero.
 
-La Fase 0 (auditoría y línea base), la **Fase 1 (el Valle saneado, Motor del Valle 1.3.0)** y la **Fase 2 (el cenital nuevo con bandera en El Metro y EnCicla; Motor City 5.3.2 con los mundos saneados)** ya están hechas, y también la **Fase 3** (la bandera encendida: El Metro 3.9.0 en Ciudad Libre y Bus, y EnCicla 3.9.0 en el modo libre, con las huellas reales del Motor del Valle 1.3.1). El autor aprobó la Fase 1 («ok, aprobado, haz lo mejor, inicia») y pidió seguir con las fases siguientes. **Sigue la Fase 4 (las carreras retro en Turno Cero).** Cada fase termina con pruebas en verde; publicar (APK y páginas) y pasar a `main` siguen esperando el OK del autor. Nada de lo que ya funciona se puede romper.
+La Fase 0 (auditoría y línea base), la **Fase 1 (el Valle saneado, Motor del Valle 1.3.0)** y la **Fase 2 (el cenital nuevo con bandera en El Metro y EnCicla; Motor City 5.3.2 con los mundos saneados)** ya están hechas, y también la **Fase 3** (la bandera encendida: El Metro 3.9.0 en Ciudad Libre y Bus, y EnCicla 3.9.0 en el modo libre, con las huellas reales del Motor del Valle 1.3.1). El autor aprobó la Fase 1 («ok, aprobado, haz lo mejor, inicia») y pidió seguir con las fases siguientes. La **Fase 4** también está hecha (`MC.Pista` en `js/47-pista.js` y «🏎️ Carreras retro» en Turno Cero; Motor City 5.4.0). **Sigue la Fase 5 (Turno Cero en cápsulas y en el celular).** Cada fase termina con pruebas en verde; publicar (APK y páginas) y pasar a `main` siguen esperando el OK del autor. Nada de lo que ya funciona se puede romper.
 
 ## La misión y la visión (no se distorsionan)
 Están completas en `docs/VISION-Y-MISION.md`. **Solo el autor las cambia.**
@@ -36,7 +37,7 @@ Están completas en `docs/VISION-Y-MISION.md`. **Solo el autor las cambia.**
 
 ## 0. Dónde está el trabajo
 - **La Fase 0, las decisiones y la primera versión de este prompt están en `main` de `motorcity`.**
-- **Las fases 1, 2 y 3 están en la rama `ccr-4f6eeea5-yulqk1` de `BicicletasUno`, `MetroZero` y `motorcity`** (la de este prompt; la Fase 1 de `motorcity` ya se unió a `main` con el PR #31). Pasan a `main` solo con el OK del autor.
+- **Las fases 1 a 4 están en la rama `ccr-4f6eeea5-yulqk1` de `BicicletasUno`, `MetroZero` y `motorcity`** (la de este prompt; la Fase 1 de `motorcity` ya se unió a `main` con el PR #31). Pasan a `main` solo con el OK del autor.
   - Si el autor ya la unió, haz `git pull` en `main`.
   - Si no, parte de esa rama en los tres repositorios:
 
@@ -354,6 +355,10 @@ Repartan por zonas y reclámenlas en `coord/agentes/<tu-id>.json`:
 - **El Metro 3.9.0:** 9.375.904 bytes y 100 partidas con 0 errores; los 13 modos protegidos no cambian (`tools/capturas-protegidos.mjs`); las rutas A\* no tocan ninguna casa (0 de 61.332 puntos).
 - **EnCicla 3.9.0:** 9.990 KB (con las huellas reales, 4,3 MB en base64) y 177 ✓. En la compuerta, con la bandera, las huellas dan p95 de 46,3 ms en la Carrera 43A y 41,3 ms en Las Palmas y cumplen la meta en 3 de 3 rondas; los lotes la cumplían en 1 de 3. Ese día la máquina estaba más lenta: compara siempre en la misma sesión.
 - **Motor del Valle 1.3.1:** `edificios-ligero.bin` tiene 667.644 rectángulos y ninguno toca un corredor (`geometria.mjs --ligero`).
+
+**Después de la Fase 4** (25‑nov):
+- **Motor City 5.4.0:** `pruebas/pista-retro.mjs` ✓ (paso y dibujo con p95 de 5,2 a 5,9 ms, 37 a 44 rellenos por cuadro); `prueba` 146 bien; `prueba --navegador` 158 bien.
+- El nombre del módulo es **`js/47-pista.js`**, no `47b`: `construir.mjs` solo toma `NN-*.js`.
 
 **Trucos de la Fase 3:**
 - `python3 motor-valle/geo/huellas.py --encicla src/data` rehace `edificios.bin` (idéntico) y la versión ligera en unos 5,5 min.

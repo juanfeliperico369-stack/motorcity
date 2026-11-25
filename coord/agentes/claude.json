@@ -3,9 +3,9 @@
   "agente": "claude",
   "rama": "ccr-4f6eeea5-yulqk1",
   "rol": "IA del motor e integradora: motor Motor City (js/, herramientas/, pruebas/) y el juego Turno Cero (juegos/getaway/, salvo arte3d/ y turno-cero-accion-3d.html de Codex)",
-  "fase_actual": "25-nov-2026 · Fase 3 del «renacimiento cenital» hecha: la bandera encendida en El Metro 3.9.0 (Ciudad Libre y Bus) y EnCicla 3.9.0 (modo libre, con las huellas reales del Motor del Valle 1.3.1) (reportes/2026-11-25-claude-fase3-cenital.md). Rama ccr-4f6eeea5-yulqk1 de los tres repositorios. Sigue la Fase 4 (MC.Pista: carreras retro pseudo-3D en Turno Cero, Motor City 5.4.0).",
-  "estado": "Fase 3 en verde; trabajando en la Fase 4 (el autor pidió continuar; publicar y main esperan su OK)",
-  "ultima_actualizacion_utc": "2026-11-25T08:00:00Z",
+  "fase_actual": "25-nov-2026 · Fase 4 del «renacimiento cenital» hecha: MC.Pista (js/47-pista.js), las carreras retro pseudo-3D, y «🏎️ Carreras retro» en Turno Cero (juegos/getaway/70-retro.js); Motor City 5.4.0 (reportes/2026-11-25-claude-fase4-pista.md). Rama ccr-4f6eeea5-yulqk1. Sigue la Fase 5 (Turno Cero en cápsulas y en el celular).",
+  "estado": "Fase 4 en verde; sigue la Fase 5 (publicar, la APK y main esperan el OK del autor)",
+  "ultima_actualizacion_utc": "2026-11-25T09:30:00Z",
   "zonas_reclamadas": [
     "js/",
     "herramientas/",
