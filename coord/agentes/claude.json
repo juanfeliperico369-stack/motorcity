@@ -3,9 +3,9 @@
   "agente": "claude",
   "rama": "ccr-4f6eeea5-yulqk1",
   "rol": "IA del motor e integradora: motor Motor City (js/, herramientas/, pruebas/) y el juego Turno Cero (juegos/getaway/, salvo arte3d/ y turno-cero-accion-3d.html de Codex)",
-  "fase_actual": "24-nov-2026 · Fase 1 del «renacimiento cenital» hecha: Motor del Valle 1.3.0 (el Valle saneado; reportes/2026-11-24-claude-fase1-cenital.md), en la rama ccr-4f6eeea5-yulqk1 de los tres repositorios. Espera el OK del autor para la Fase 2.",
-  "estado": "Fase 1 en verde; detenida a pedir el OK de la Fase 2",
-  "ultima_actualizacion_utc": "2026-11-24T17:00:00Z",
+  "fase_actual": "25-nov-2026 · las cinco fases del «renacimiento cenital» hechas; la última, la Fase 5: las cápsulas de Turno Cero, 🧰 el garaje (71-garaje.js) y 📏 de las carreras retro; Motor City 5.4.1 (reportes/2026-11-25-claude-fase5-capsulas.md). Rama ccr-4f6eeea5-yulqk1 en motorcity, BicicletasUno, MetroZero y RunRunZero.",
+  "estado": "Renacimiento cenital terminado y en verde; publicar (páginas y APK) y pasar a main esperan el OK del autor",
+  "ultima_actualizacion_utc": "2026-11-25T10:30:00Z",
   "zonas_reclamadas": [
     "js/",
     "herramientas/",
@@ -47,7 +47,12 @@
     "BicicletasUno/motor-valle/ (1.3.0: geo/sanear.py, rasante.py, niveles.py, huellas.py, anchos.json, pruebas/)",
     "MetroZero/tools/edificios_datos.py, vias_datos.mjs, corredores.mjs, prueba-recorte.mjs",
     "MetroZero/src/data/edificios.js y vias.js (v2)",
-    "BicicletasUno/src/data/edificios.bin, edificios.json y vias-cota.bin"
+    "BicicletasUno/src/data/edificios.bin, edificios.json y vias-cota.bin",
+    "js/47-pista.js",
+    "juegos/getaway/70-retro.js",
+    "pruebas/pista-retro.mjs",
+    "juegos/getaway/71-garaje.js",
+    "pruebas/capsulas.mjs"
   ],
   "no_toco": [
     "juegos/getaway/arte3d/",
@@ -80,9 +85,9 @@
     "TURNO.Abierto"
   ],
   "pruebas_verificadas": {
-    "motor": "node motor.mjs prueba --navegador (4.0.3)",
-    "encicla": "tests/run.js en verde",
-    "el_metro": "node tools/test.mjs 100: 0 errores",
+    "motor": "node motor.mjs prueba --navegador (5.3.2): 158 bien; la lista de motor-city-qa.yml",
+    "encicla": "tests/run.js 177 ✓ (bandera apagada y encendida); tests/cenital-libre.mjs BIEN",
+    "el_metro": "node tools/test.mjs 100: 0 errores (bandera apagada y encendida); tools/prueba-cenital.mjs BIEN; tools/prueba-rutas.mjs 0",
     "getaway_contenido": "node pruebas/getaway-contenido.mjs: todo OK"
   },
   "pendiente_para_compañeras": "Leer CONTEXTO-RELEVO.md § 5 (qué falta y a quién le toca) y dejar su entrada en § 8 al terminar.",
@@ -130,5 +135,10 @@
       "fuente": "rehacer desde las fuentes originales, con la prueba de craqueo",
       "turno_cero": "solo en motorcity"
     }
-  }
+  },
+  "reclama_para_fase_2": [
+    "MetroZero/src/js/97d-cenital.js y 22-gl.js (partido en funciones)",
+    "BicicletasUno/src/js/99y-cenital.js",
+    "motorcity/geo/territorio.py, js/32-fisica.js, js/10-mundo.js, datos/*"
+  ]
 }

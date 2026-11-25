@@ -44,6 +44,8 @@ jobs:
         run: node pruebas/getaway-contenido.mjs
       - name: 4.5 · PVS horneado sin fugas (Guatapé y Manhattan)
         run: node pruebas/pvs.mjs
+      - name: 5.3.2 · calles libres (ninguna huella sobre el asfalto en los tres mundos saneados)
+        run: node pruebas/calles-libres.mjs
       - name: Revisar arte Gemini
         run: node motor.mjs revisar-arte arte/gemini
       - name: Revisar arte ChatGPT
@@ -97,6 +99,10 @@ jobs:
         run: node pruebas/historieta.mjs
       - name: 5.1 · 🏔️ Paralaje por biomas en 🏁 Arcade (Gemini V4)
         run: node pruebas/paralaje-biomas.mjs
+      - name: 5.4 · 🏎️ Carreras retro pseudo‑3D (MC.Pista) y su cápsula en Turno Cero
+        run: node pruebas/pista-retro.mjs
+      - name: 5.4.1 · 🧰 Cápsulas de Turno Cero (garaje sin cargar el núcleo, paso con el mismo estado y 📏 en las carreras retro)
+        run: node pruebas/capsulas.mjs
       - name: 5.1 · 💍 Anillos de recoger y entregar, y vuelo (Gemini G5-02)
         run: node pruebas/anillos.mjs
       - name: 5.2 · 🗣️ Ciudad viva (eventos, reacciones, escenas, frases y despacho)

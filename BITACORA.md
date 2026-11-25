@@ -1,5 +1,110 @@
 # Bitácora de Motor City
 
+## 25-nov-2026 · 5.4.1 «Cápsulas» · Fase 5 del renacimiento cenital (Claude)
+- **Lo que pide el prompt de relevo, Fase 5:**
+  - comprobar que el paso entre el mundo abierto cenital y las Carreras retro conserve el estado;
+  - la cápsula 3, solo la interfaz: el garaje y la colección en 2D pixel con las fichas de `MC.Taller`, el perfil de moto de `MC.Dinamica` y los ganchos de la capa aérea, todo sin cargar el núcleo;
+  - los controles táctiles para el WebView de Android, midiendo 60 cuadros por segundo con 📏.
+- **Hecho:**
+  - **🧰 Garaje y colección** (`juegos/getaway/71-garaje.js`, aditivo):
+    - cada vehículo va en una ficha con su dibujo de lado en pixel art (procedural, 64 × 28, agrandado sin suavizar) y las cifras de `MC.Taller.disenar`: velocidad máxima, 0–100, frenada desde 100, potencia por peso y consumo, con su ficha real;
+    - la moto trae su perfil de `MC.Dinamica` (reparto del peso, centro de masa, agarre y marchas; se inclina en las curvas);
+    - la pestaña «Capa aérea» trae lo que vuela (capa 2: jetpack, avioneta y avión), con su techo y su velocidad mínima. Solo cifras del motor: sin una ficha con alas reales no se inventa la pérdida. `G.Garaje.capaAerea()` es el gancho para la cápsula del aire;
+    - **sin cargar el núcleo:** se abre desde la portada (🧰) sin cargar ninguna ciudad, y el carro que eliges ahí es con el que empieza el mundo abierto;
+    - en el mundo abierto se abre desde 🎮 Modos, pausa el mundo y cambia el carro;
+    - la colección cuenta los kilómetros de cada vehículo mientras manejas (`turnocero` guarda `km`).
+  - **📏 de las carreras retro:** `G.Retro.medir()` o `?medir=retro` hacen correr al bot en Las Palmas, y Medir cuenta cada cuadro y el tiempo de dibujo de la pista (`MC.Pista.entrar` da `ultimoMs`), con el mismo panel y 📋. El `?medir` de siempre (las tres cámaras) no cambia.
+  - **En el celular:** vibración corta al chocar y con el nitro (`navigator.vibrate`, que el WebView de Android tiene); los controles táctiles de la 5.4.0 en las esquinas.
+  - **Arreglo de raíz en `68-medir.js`:** el sello de tiempo del cuadro (`requestAnimationFrame`) puede ser anterior al inicio de la medición; entonces daba `i = −1` y `TRAMOS[−1][0]` rompía. Era la carrera intermitente de `pruebas/medir.mjs` («Cannot read properties of undefined (reading '0')»), que se veía también en `main`.
+  - **Prueba nueva, `pruebas/capsulas.mjs`** (en `motor-city-qa.yml`).
+- **Probado:**
+  - `node pruebas/capsulas.mjs`: ✓ en 3 de 3 corridas:
+    - el garaje en la portada, sin ciudad: 6 fichas con dibujo, cifras y la moto, y 3 en la capa aérea;
+    - el mundo empieza en el carro elegido; el garaje en el mundo pausa y cambia el carro; los kilómetros suben;
+    - de ida y vuelta a las carreras, la posición, el rumbo, el carro, la plata, la búsqueda, el clima, la cámara y el modo quedan iguales, y el reloj no avanza mientras se corre;
+    - 📏 de las carreras: 60 fps y dibujo con p95 de unos 6 ms;
+    - el módulo retro y el garaje pesan juntos 71 KB (la meta era menos de 150);
+  - `node pruebas/medir.mjs`: ✓ en 3 de 3;
+  - `node pruebas/pista-retro.mjs`, `modos.mjs` y `getaway-contenido.mjs`: ✓;
+  - `node motor.mjs prueba` y `prueba --navegador` (**158 bien**): en verde.
+- **Falta:** la APK y pasar a `main`, con el OK del autor; medir en el celular del autor (📏 → «Carreras retro»).
+
+## 25-nov-2026 · 5.4.0 «Carreras retro» · Fase 4 del renacimiento cenital (Claude)
+- **Lo que pide el prompt de relevo, Fase 4:**
+  - `MC.Pista`, con la técnica clásica de segmentos, escrita desde cero (sala limpia), aparte de `MC.Arcade`, que se queda para la calle real;
+  - dos circuitos;
+  - «🏎️ Carreras retro» en Turno Cero;
+  - una prueba con la cresta, la curva continua, el bot, el p95 y 0 errores;
+  - la 5.4.0.
+- **Hecho:**
+  - **`js/47-pista.js` (`MC.Pista`):**
+    - **la pista:** segmentos de 200 de largo con `p1` y `p2` (mundo, cámara y pantalla), curva, banda de color cada 3 segmentos, objetos y carros; colinas cosenoidales y curvas acumuladas, con fuerza centrífuga;
+    - **la proyección:** la clásica (`d = 1/tan(FOV/2)`, 280 segmentos a la vista). En vertical se usa la misma escala en los dos ejes y el horizonte un poco más arriba: con `H/2` en el eje vertical, la imagen saldría estirada al doble.
+    - **pasada 1, de cerca a lejos con `maxY`:** recorta cada segmento contra lo ya pintado, guarda `seg.clip` y pone niebla (6 niveles) en los últimos 45 segmentos. Las franjas de pasto, berma, pianos, asfalto, líneas y la baranda se juntan por color y nivel de niebla: **unos 40 rellenos por cuadro**.
+    - **pasada 2, de lejos a cerca:** los objetos y los rivales de todos los segmentos frente a la cámara, recortados contra `seg.clip`. Un carro detrás de una cresta asoma el techo y nunca se pinta debajo de ella.
+    - **lo demás:**
+      - paralaje de 3 capas (cielo, montañas del Valle y la ciudad o las lomas con pinos), que se mueve con la curva, la velocidad y la altura;
+      - el carro con 6 estados (recto, giro suave y brusco, en plano y en subida), vibración en la berma, chispas y humo al derrapar;
+      - rebufo a menos de 15 segmentos y nitro (FOV de 100° a 116°, líneas de velocidad y una sacudida);
+      - rivales que cambian de carril sin saltos y con un poco de goma;
+      - HUD con posición, vuelta, tiempo, velocidad, nitro y minimapa, y controles táctiles en las esquinas (en vertical, el carro va encima de la fila de botones);
+    - **los dos circuitos** (1,6 km cada uno):
+      - «Subida a Las Palmas»: subida larga, curvas encadenadas, una horquilla, lomas con cresta, la bajada por Escobero, pinos y baranda continua;
+      - «Autopista Regional nocturna»: alta velocidad, puentes y arcos sobre la vía, postes con luz y la silueta de la ciudad;
+    - **sin pantalla, para las pruebas:** `carrera`, `paso` (paso fijo de 1/120 s), `bot`, `simular`, `perfil`, `crearDe` y `cieloDe`.
+  - **Turno Cero, `juegos/getaway/70-retro.js` (aditivo):** «🏎️ Carreras retro» en 🎮 Modos, con los dos circuitos a 2 vueltas contra 5 rivales.
+    - El mundo abierto se pausa mientras corres, y al salir vuelves al mismo punto, con el mismo carro.
+    - Corres con el color de tu carro, y el cielo de Las Palmas sale de la hora y el clima del mundo (`cieloRetro`): de noche, la pista se oscurece y se prenden los faros.
+    - Premio de 💵 500, 250 y 100 por puesto, y récord por circuito.
+  - **Prueba nueva, `pruebas/pista-retro.mjs`** (en `motor-city-qa.yml`).
+- **Probado:**
+  - `node pruebas/pista-retro.mjs`: ✓
+    - la cresta: 0 píxeles debajo con el recorte, 280 sin él; el carro asoma el techo;
+    - la curva continua, con un salto de 0,25 como máximo, y la altura cierra la vuelta;
+    - el bot gana los dos circuitos: 101,3 s y 76,3 s a 2 vueltas;
+    - el paso y el dibujo dan un p95 de 5,2 a 5,9 ms en vertical y en horizontal (el intervalo entre cuadros, 16,7 ms: 60 fps);
+    - Turno Cero: pausa, premio, récord, vuelta al mismo punto y salida con ✕;
+    - 0 errores;
+  - `node motor.mjs prueba` y `node motor.mjs skills --verificar`: en verde;
+  - `node motor.mjs prueba --navegador`: **158 bien**;
+  - `node pruebas/getaway-contenido.mjs`: ✓;
+  - `node pruebas/modos.mjs`: ✓. Una corrida falló solo en el umbral del ⏫ acelerador fijo (8,7 m/s contra más de 10): depende de los cuadros reales de SwiftShader, como advierte la misma prueba, y en las dos corridas siguientes pasó.
+- **Peso:** `js/47-pista.js` pesa unos 52 KB y `70-retro.js` 4 KB (la meta del módulo retro era unos 150 KB).
+- **Falta:** la APK (`apk-juegos.yml`) y pasar a `main`, con el OK del autor; la Fase 5 (cápsulas y celular).
+
+## 24-nov-2026 · 5.3.2 «Mundos saneados» · Fase 2 del renacimiento cenital (Claude)
+- **Lo que pide el prompt de relevo, Fase 2 (Motor City):** el mismo saneamiento en `geo/territorio.py`, regenerar los mundos MC4 y, con los datos limpios, quitar la tolerancia de 1 m de la colisión (`js/32-fisica.js`).
+- **Hecho:**
+  - **`geo/territorio.py`:** la ley de soberanía vial del Motor del Valle 1.3 (regla A del autor): a cada huella se le quita el corredor de cada vía a nivel (ancho / 2 + 1,3 m en las de carros; + 0,3 m en peatonales, escalas, senderos y ciclorrutas; las aceras y cebras van dentro de su calle) y el agua; las casas de OSM conservan el andén de las calles menores, pero no el asfalto (en un juego ningún carro puede chocar con una casa pintada sobre la calle); los restos de menos de 16 m² se van, salvo que conserven el 90 % y 12 m². Los puentes, túneles y vías cubiertas o interiores no despejan nada y quedan con su nivel en `VIASJ` (`[5]`: 1 o −1; el cargador lo lee como `via.nivel`). Las huellas traen su fuente (`sources[1].dataset`).
+  - **Los tres mundos, regenerados** (con su agua de `precalcular-agua.mjs` y su PVS de `pvs.mjs`):
+
+    | Mundo | Huellas | Tocan | Recortadas | Se van | Marcadas (OSM) | Área que queda |
+    |---|---|---|---|---|---|---|
+    | Medellín (`fusionar.mjs`, de El Metro) | 639.457 → 622.086 | — | — | — | — | 98,45 % (Motor del Valle 1.3) |
+    | Guatapé (`territorio.py`) | 2.661 | 524 | 430 | 93 | 48 | 94,7 % |
+    | Nueva York (`territorio.py`) | 163.875 | 9.890 | 9.371 | 365 | 14.968 | 98,9 % |
+
+    En Guatapé, las que se van son casi todas huellas automáticas (Google y Microsoft) de 28 m² de mediana sobre el embalse o sobre la calle: 2 de OSM.
+  - **`js/32-fisica.js`:** la colisión con los edificios usa el mismo radio en la calle y fuera de ella (antes, sobre la calle, solo chocaba si uno se metía más de 1 m en la huella).
+  - **Prueba nueva, `pruebas/calles-libres.mjs`** (en `motor-city-qa.yml`): recorre el eje de las calles de carros a nivel cada 2 m y pregunta lo mismo que la colisión: ¿un carro de radio 0,4 m chocaría con una casa?
+
+    | Mundo | Antes (mundo viejo, sin la tolerancia) | Ahora |
+    |---|---|---|
+    | Medellín | 45.689 de 2.727.587 puntos (1,675 %) | 15 (0,001 %) |
+    | Guatapé | 90 de 33.976 (0,265 %) | 0 |
+    | Nueva York | 25.729 de 1.887.050 (1,363 %; con túneles y puentes) | ver el informe (0,074 % sin túneles ni puentes) |
+  - `pruebas/prueba.mjs` ya no exige 639.457 huellas: exige las del mundo (622.086).
+  - **Pruebas que elegían su escenario en el mapa** (la física no cambió):
+    - manejo 4.5: el punto de partida debe ser calle;
+    - el ruido: busca su edificio en 400 m;
+    - el ladeo de la moto: compara con la teoría hasta su tope de 45°;
+    - ciudad viva: mira el calor de la búsqueda (una llamada suma 8; el nivel 1 pide 15).
+  - **Mejora de Turno Cero:** la ambulancia prueba otros puntos de partida si el primero no tiene ruta (`66-ciudad-viva.js`).
+  - **R6‑b** (`precocinar-sectores.mjs`) acepta el ED1 v2 de El Metro.
+  - `pruebas/medir.mjs` es intermitente también en `main` (una carrera en el arranque de `?medir`); queda anotado.
+- **Probado:** ver `reportes/2026-11-24-claude-fase2-cenital.md`.
+- **Las copias de los juegos** (`<juego>/motor-city/`) siguen en la 5.3.1: la 5.4.0 se copia una sola vez al cerrar la Fase 4 (cada copia mueve unos 70 MB de mundos y HTML).
+
 ## 24-nov-2026 · Fase 1 del renacimiento cenital · el Valle saneado (Motor del Valle 1.3.0; motor 5.3.1 sin cambios)
 - **Lo que pide el prompt de relevo, Fase 1:** sanear el mapa del Valle en `motor-valle/` (BicicletasUno, copiado a MetroZero), sin tocar ningún render, con las decisiones del autor (regla A, trozos de 160 m, rehacer desde las fuentes originales y la prueba de craqueo).
 - **Hecho:**

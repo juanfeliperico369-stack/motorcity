@@ -1,16 +1,26 @@
 {
  "ciudad": "nueva_york",
- "bytes": 10212604,
+ "bytes": 10459900,
  "casillas": [
   1686,
   3410
  ],
  "tile": 6.0,
  "vias": 83556,
- "edificios": 163875,
+ "edificios": 164001,
  "lugares": 400,
  "relieve": [
   -12,
   113
- ]
+ ],
+ "saneamiento": {
+  "huellas": 163875,
+  "tocan": 9890,
+  "recortadas": 9371,
+  "quitadas": 365,
+  "marcadas": 14968,
+  "area0": 47628583,
+  "area1": 47112302,
+  "conserva_area_pct": 98.916
+ }
 }
