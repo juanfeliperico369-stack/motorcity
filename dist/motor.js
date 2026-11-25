@@ -1,4 +1,4 @@
-/* Motor City 5.4.1 · 2026-11-25 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 5.4.2 · 2026-11-25 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin internet; trae three.js 0.170 (MIT, © three.js authors) para el 3D realista.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -30,7 +30,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '5.4.1',
+  version: '5.4.2',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -171,6 +171,58 @@ async function inflar(u8, size) {
   return inflarSync(u8, size);
 }
 Object.assign(MC, { inflarCrudo, inflarSync, inflar, deB64 });
+
+/* ---- js/01-sonido-guardian.js ---- */
+/* =====================================================================
+   GUARDIÁN DEL SONIDO (Motor City 5.4.2 · Claude, 25‑nov‑2026)
+   El autor: «cuando se sale de la app aún sigue sonando la música» (El Metro, EnCicla y Turno Cero).
+   Al salir de la app (o cambiar de pestaña, bloquear la pantalla o cerrar), todo el sonido se calla de una, en cualquier
+   pantalla del juego:
+   - cada AudioContext que se cree queda registrado (una subclase) y se suspende: la música, los efectos, el paisaje sonoro y
+     los motores paran al instante, también las notas que ya estaban programadas;
+   - los <audio> y <video> que suenan se pausan y la voz de los anuncios se corta;
+   - mientras la app está afuera, nada vuelve a sonar aunque el juego lo pida (resume() y play() esperan);
+   - al volver, sigue solo lo que sonaba.
+   Avisos que escucha: visibilitychange, pagehide y pageshow, freeze y resume (el ciclo de vida de la página), pause y resume en
+   document (Capacitor los da en la APK cuando la actividad se pausa, aunque el WebView siga «visible») y app:pausa y app:sigue
+   (los manda la actividad nativa).
+   La misma pieza va en EnCicla (src/js/00b-sonido-guardian.js) y en El Metro (src/js/00b-sonido-guardian.js).
+   Estado para las pruebas: window.guardianSonido (fuera, veces, contextos).
+   ===================================================================== */
+(function () {
+  if (typeof window === 'undefined' || typeof document === 'undefined' || window.guardianSonido) return;
+  const W = window, AC = W.AudioContext || W.webkitAudioContext, ctxs = new Set(), medios = new Set(), dormidos = new Set(), pausados = new Set();
+  let fuera = false, veces = 0;
+  const G = W.guardianSonido = { get fuera() { return fuera; }, get veces() { return veces; }, get contextos() { return ctxs.size; }, callar, volver };
+  if (typeof MC !== 'undefined' && MC) MC.GuardianSonido = G;
+  if (AC) {
+    const Guardado = class extends AC {
+      constructor(...a) { super(...a); ctxs.add(this); if (fuera) { dormidos.add(this); super.suspend().catch(() => { }); } }
+      resume() { if (fuera) { dormidos.add(this); return Promise.resolve(); } return super.resume(); }
+    };
+    try { W.AudioContext = Guardado; if (W.webkitAudioContext) W.webkitAudioContext = Guardado; } catch (e) { /* sin reemplazo: quedan los medios */ }
+  }
+  const MP = W.HTMLMediaElement && W.HTMLMediaElement.prototype, play0 = MP && MP.play;
+  if (play0) MP.play = function () { medios.add(this); if (fuera) { pausados.add(this); return Promise.resolve(); } return play0.apply(this, arguments); };
+  function callar() {
+    if (fuera) return; fuera = true; veces++;
+    for (const c of ctxs) if (c.state === 'running') { dormidos.add(c); c.suspend().catch(() => { }); }
+    for (const m of medios) if (!m.paused) { pausados.add(m); try { m.pause(); } catch (e) { /* nada */ } }
+    try { if (W.speechSynthesis) W.speechSynthesis.cancel(); } catch (e) { /* sin voz */ }
+  }
+  function volver() {
+    if (!fuera || document.hidden) return; fuera = false;
+    for (const c of dormidos) if (c.state !== 'closed') c.resume().catch(() => { });
+    dormidos.clear();
+    for (const m of pausados) { try { const p = play0.call(m); if (p && p.catch) p.catch(() => { }); } catch (e) { /* nada */ } }
+    pausados.clear();
+  }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) callar(); else volver(); });
+  W.addEventListener('pagehide', callar); W.addEventListener('pageshow', volver);
+  document.addEventListener('freeze', callar); document.addEventListener('resume', volver);
+  document.addEventListener('pause', callar);
+  W.addEventListener('app:pausa', callar); W.addEventListener('app:sigue', volver);
+})();
 
 /* ---- js/02-ciencia.js ---- */
 /* =====================================================================
@@ -12163,7 +12215,7 @@ const Publico = {
 };
 MC.Publico = Publico;
 
-MC.archivos = ["00-nucleo.js","01-inflate.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-raster-sector.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","26-vida-ciudad.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","32-rotos.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-dinamica.js","37-flexibilidad.js","37-manejo.js","38-sprites.js","38-vuelcos.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","45-pvs.js","45-tres.js","45-y-sitios.js","45-z-r6b.js","46-vistas.js","47-clasicos.js","47-colormap.js","47-historieta.js","47-paralaje-biomas.js","47-pista.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","70-mapa.js","71-rostros.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-efectos.js","88-vida.js","89-exportar.js","89-quimica-mundo.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
+MC.archivos = ["00-nucleo.js","01-inflate.js","01-sonido-guardian.js","02-ciencia.js","03-economia.js","04-escala.js","05-gpu.js","10-mundo.js","10-raster-sector.js","10-sectores.js","11-red.js","12-generador.js","13-cosmos.js","13-globo-gpu.js","13-planeta.js","14-ondas.js","15-terreno.js","16-estilos.js","20-tiempo.js","21-trafico.js","22-transporte.js","24-ambiente.js","25-ia.js","26-urbe.js","26-vida-ciudad.js","27-mobiliario.js","28-accion-pie.js","28-busqueda.js","28-naturaleza.js","28-persecucion.js","29-arboleda.js","30-personaje.js","31-vehiculos.js","32-fisica.js","32-objetos.js","32-piezas.js","32-rotos.js","33-controles.js","34-camara.js","35-seres.js","36-taller.js","37-dinamica.js","37-flexibilidad.js","37-manejo.js","38-sprites.js","38-vuelcos.js","39-sombras.js","40-dibujo.js","41-vista2d.js","42-vehiculos-lado.js","43-panoramica.js","44-raster.js","45-gl.js","45-gl3d.js","45-glb.js","45-pvs.js","45-tres.js","45-y-sitios.js","45-z-r6b.js","46-vistas.js","47-clasicos.js","47-colormap.js","47-historieta.js","47-paralaje-biomas.js","47-pista.js","47-seguir.js","48-interiores.js","49-hogar.js","50-run.js","60-musica.js","61-sonido.js","70-interfaz.js","70-mapa.js","71-rostros.js","80-mecanicas.js","82-lugares.js","85-historias.js","86-necesidades.js","87-pieles.js","88-efectos.js","88-vida.js","89-exportar.js","89-quimica-mundo.js","90-telemetria.js","90-three.js","91-contratos.js","92-guardado.js","92-publico.js"];
 root.MC = MC;
 if (!root.Valle) root.Valle = MC.ValleCompat;
 if (!root.MotorValle) root.MotorValle = MC.ValleCompat;
