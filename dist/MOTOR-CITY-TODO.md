@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 5.3.1 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 5.3.2 · no se edita a mano: edita los documentos de origen -->
 
 # Contexto y entrega de Codex · Motor City y Turno Cero
 
@@ -179,7 +179,7 @@ Las APK de los juegos del motor las compila `.github/workflows/apk-juegos.yml` (
 | 15 | ~~Tarjetas de El Metro con el texto encima del arte~~ | **No se reproduce en la versión actual** | El diseño cambió desde la auditoría (v0.2.0). |
 | 16 | **Sentir el manejo nuevo (4.6) con las manos** en Turno Cero, El Metro y los modos | **Autor** | Los números a tocar están en `Vehiculos.ARCADE` (motor; El Metro tiene los suyos desde su 3.1.0): `accK`, `brkK`, `w0`, `w1`, `tw`. Ver `docs/INVESTIGACION-MANEJO.md` § 0. |
 | 17 | ~~Manejo de EnCicla, mapa de EnCicla, horizontal, un solo juego de prueba~~ | **Hecho en 4.6 (Claude)** | `js/32-fisica.js`, `js/70-mapa.js`, `juegos/getaway/60-modos.js`. El Metro lo hizo su propia sesión en la 3.1.0 «Fluido» (rama `ccr-2a67f935-oat714`). |
-| 18 | **Renacimiento cenital** (pedido del autor, 24‑nov: *master prompt*, investigación técnica y entrega de GPT‑6 en `docs/referencias/renacimiento-cenital-2026/`): saneamiento GIS en `motor-valle/`, cenital 2.5D, integración en El Metro y EnCicla, y carreras pseudo‑3D en Turno Cero | **Fases 0 y 1 hechas (Claude). La Fase 1 espera el OK del autor para seguir con la Fase 2** | Fase 0: `docs/AUDITORIA-FASE0-CENITAL.md`. **Fase 1** (Motor del Valle 1.3.0, el Valle saneado): `reportes/2026-11-24-claude-fase1-cenital.md`. Está en la rama `ccr-4f6eeea5-yulqk1` de los tres repositorios, no en `main`. Prueba de craqueo en verde; El Metro ya no recorta nada en tiempo real. Cada fase se detiene y pide el OK. |
+| 18 | **Renacimiento cenital** (pedido del autor, 24‑nov: *master prompt*, investigación técnica y entrega de GPT‑6 en `docs/referencias/renacimiento-cenital-2026/`): saneamiento GIS en `motor-valle/`, cenital 2.5D, integración en El Metro y EnCicla, y carreras pseudo‑3D en Turno Cero | **Fases 0, 1 y 2 hechas (Claude). La 1 está aprobada; sigue la Fase 3 (encender la bandera)** | Fase 0: `docs/AUDITORIA-FASE0-CENITAL.md`. Fase 1 (Motor del Valle 1.3.0, el Valle saneado): `reportes/2026-11-24-claude-fase1-cenital.md`. **Fase 2** (el cenital nuevo con bandera en El Metro y EnCicla; Motor City 5.3.2 con los mundos saneados y sin la tolerancia de 1 m): `reportes/2026-11-24-claude-fase2-cenital.md`. Todo en la rama `ccr-4f6eeea5-yulqk1` de los tres repositorios, no en `main`. Publicar y pasar a `main` esperan el OK del autor. |
 
 ## 6. Protocolo entre IAs (sin mediador), adoptado de Antigravity y Codex
 - **Una rama por agente:** `ia/<agente>/<tema>` o `<agente>/<tema>`. Nunca `push --force` sobre la rama de otro, ni sobre `main` ni sobre `gh-pages`.
@@ -1114,6 +1114,30 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
   - al HTML de El Metro le quedan 146 KB hasta el tope de 9,5 MB;
   - si cambian los corredores del juego, hay que repetir `corredores.mjs` + `edificios_datos.py --saneadas` + `prueba-recorte.mjs --todas`.
 - **Prompt de relevo:** `docs/PROMPT-RELEVO.md`, puesto al día para la Fase 2.
+- **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
+
+### Claude · 24/25‑nov‑2026 · Fase 2 del renacimiento cenital: el cenital con bandera y los mundos saneados (motor 5.3.2)
+- **Pedido del autor:** «Retoma y continúa con las siguientes fases, ok, aprobado, haz lo mejor, inicia» (aprobó la Fase 1) y, tras un reinicio, «Retoma, y continúa».
+- **Hecho** (rama `ccr-4f6eeea5-yulqk1`; **nada en `main`**):
+  - **El Metro** (`src/js/97d-cenital.js`, aditivo; la bandera vive solo mientras dibujan Ciudad Libre o Bus):
+    - *occluder fade* a 0,30 con tramado, techos de estación que se abren y la silueta del jugador bajo los tableros (que nunca se esconden);
+    - el anillo lejano con edificios reales: 0 cajas de relleno;
+    - zócalos hasta `zBase`, terreno facetado con bandas de cota, sombras de contacto en 2D y 3D, bruma CSS y cámara `1 − e^(−k·dt)`;
+    - `22-gl.js` partido en funciones sin cambiar lo que dibuja: con la bandera apagada, las mallas son idénticas a las de antes.
+  - **EnCicla** (`src/js/99y-cenital.js`, solo `mode.free`): silueta y sombras de contacto en 3D, bruma CSS y la cámara 3D exponencial. Lo demás ya lo tenía, o no aplica: su piso 3D es plano.
+  - **Motor City 5.3.2:**
+    - `geo/territorio.py` con la ley de soberanía vial;
+    - Medellín, Guatapé y Nueva York regenerados (con su agua y su PVS);
+    - `js/32-fisica.js` sin la tolerancia de 1 m;
+    - `pruebas/calles-libres.mjs`: en Medellín, de 45.689 puntos de calle con choque a 15; en Nueva York, de 25.729 a 1.234 (0,074 %);
+    - cuatro pruebas que elegían su escenario en el mapa se ajustaron (manejo, ruido, ladeo de la moto y ciudad viva); la ambulancia de Turno Cero ahora prueba otros puntos de partida si el primero no tiene ruta;
+    - `pruebas/medir.mjs` es intermitente también en `main`: hay una carrera en el arranque de `?medir`, pendiente para quien siga.
+- **Probado:**
+  - El Metro: `test.mjs 100` con 0 errores, con la bandera apagada y encendida; `prueba-cenital` BIEN (jugador visible en San Antonio, Acevedo y el Centro); p95 igual; rutas A\* 0 de 61.332.
+  - EnCicla: `tests/run.js` 177 ✓, con la bandera apagada y encendida por defecto; regresión 0; `cenital-libre` BIEN.
+  - Motor City: `prueba --navegador` 158 bien y toda la lista de `motor-city-qa.yml` (ver el informe).
+- **Esperan al autor:** el OK de la Fase 2 y de la Fase 3 (la Fase 3 enciende la bandera); la decisión 7 (se dejó como en la Fase 1); si las huellas reales de EnCicla valen +5,5 MB de HTML (la compuerta decide si se puede).
+- **Prompt de relevo:** `docs/PROMPT-RELEVO.md`, puesto al día para la Fase 3.
 - **Instrucción para quien siga:** escribe tu propio documento de contexto, deja tu entrada aquí y pásale la misma instrucción a la IA que continúe.
 
 # MOTOR CITY · Documento único
@@ -2996,6 +3020,7 @@ Técnicas de motores viejos, livianos y potentes, rehechas desde cero (sala limp
 | **2.2.0** | 19‑nov‑2026 | GPU virtual (perfil, resolución dinámica, bucle de paso fijo y raster 3D por software). Física de niveles por superficies. Cámara con resortes, brazo con choque, FOV por velocidad y trauma. **Vista lateral.** Manejo (curvas, esquemas y asistencias), sprites, escala real, interfaz por zonas, interiores con 8 estilos y catálogo, **Mi casa** desde la dirección, lugares jugables y desgaste, historias con director, ocurrencias y cosmos. 103 pruebas. |
 | **2.1.0** | 19‑nov‑2026 | Nombre: solo «Motor City» (carpeta `motor-city/`). Ciencia, economía, generador de mundos, territorios (`geo/territorio.py`), clima global, seres, taller, IA y población, interiores, música, interfaz y mecánicas. Minijuego Mandados, plantillas, reportes y skills. 80 pruebas. |
 | **2.0.0** | 19‑nov‑2026 | **Motor City.** La fuente de verdad pasa a `motorcity`.<br>• Mundo 2.0 en un solo archivo (MC4), con todas las huellas, sitios, pasos con nivel, transporte, lugares y tráfico.<br>• El motor en el navegador: personaje, vehículos, física, controles, cámara, 8 vistas más pixel, panorámica de perfil, WebGL, reglas del mundo y Run en la ciclovía.<br>• Banco de pruebas jugable y 54 pruebas.<br>• La tubería 1.x sigue igual (y ya lee cualquier ventana de ciudad). |
+| **5.3.2** | 24‑nov‑2026 | **Mundos saneados** (renacimiento cenital, Fase 2): `geo/territorio.py` con la ley de soberanía vial del Motor del Valle 1.3 (regla A; las casas de OSM conservan el andén de las calles menores, no el asfalto; puentes, túneles y vías cubiertas con su nivel en `VIASJ[5]`, que el cargador lee como `via.nivel`); Medellín, Guatapé y Nueva York regenerados con su agua y su PVS; la colisión con edificios sin la tolerancia de 1 m sobre la calle (`js/32-fisica.js`); prueba `pruebas/calles-libres.mjs`. |
 
 
 ---
@@ -4696,6 +4721,39 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 24-nov-2026 · 5.3.2 «Mundos saneados» · Fase 2 del renacimiento cenital (Claude)
+- **Lo que pide el prompt de relevo, Fase 2 (Motor City):** el mismo saneamiento en `geo/territorio.py`, regenerar los mundos MC4 y, con los datos limpios, quitar la tolerancia de 1 m de la colisión (`js/32-fisica.js`).
+- **Hecho:**
+  - **`geo/territorio.py`:** la ley de soberanía vial del Motor del Valle 1.3 (regla A del autor): a cada huella se le quita el corredor de cada vía a nivel (ancho / 2 + 1,3 m en las de carros; + 0,3 m en peatonales, escalas, senderos y ciclorrutas; las aceras y cebras van dentro de su calle) y el agua; las casas de OSM conservan el andén de las calles menores, pero no el asfalto (en un juego ningún carro puede chocar con una casa pintada sobre la calle); los restos de menos de 16 m² se van, salvo que conserven el 90 % y 12 m². Los puentes, túneles y vías cubiertas o interiores no despejan nada y quedan con su nivel en `VIASJ` (`[5]`: 1 o −1; el cargador lo lee como `via.nivel`). Las huellas traen su fuente (`sources[1].dataset`).
+  - **Los tres mundos, regenerados** (con su agua de `precalcular-agua.mjs` y su PVS de `pvs.mjs`):
+
+    | Mundo | Huellas | Tocan | Recortadas | Se van | Marcadas (OSM) | Área que queda |
+    |---|---|---|---|---|---|---|
+    | Medellín (`fusionar.mjs`, de El Metro) | 639.457 → 622.086 | — | — | — | — | 98,45 % (Motor del Valle 1.3) |
+    | Guatapé (`territorio.py`) | 2.661 | 524 | 430 | 93 | 48 | 94,7 % |
+    | Nueva York (`territorio.py`) | 163.875 | 9.890 | 9.371 | 365 | 14.968 | 98,9 % |
+
+    En Guatapé, las que se van son casi todas huellas automáticas (Google y Microsoft) de 28 m² de mediana sobre el embalse o sobre la calle: 2 de OSM.
+  - **`js/32-fisica.js`:** la colisión con los edificios usa el mismo radio en la calle y fuera de ella (antes, sobre la calle, solo chocaba si uno se metía más de 1 m en la huella).
+  - **Prueba nueva, `pruebas/calles-libres.mjs`** (en `motor-city-qa.yml`): recorre el eje de las calles de carros a nivel cada 2 m y pregunta lo mismo que la colisión: ¿un carro de radio 0,4 m chocaría con una casa?
+
+    | Mundo | Antes (mundo viejo, sin la tolerancia) | Ahora |
+    |---|---|---|
+    | Medellín | 45.689 de 2.727.587 puntos (1,675 %) | 15 (0,001 %) |
+    | Guatapé | 90 de 33.976 (0,265 %) | 0 |
+    | Nueva York | 25.729 de 1.887.050 (1,363 %; con túneles y puentes) | ver el informe (0,074 % sin túneles ni puentes) |
+  - `pruebas/prueba.mjs` ya no exige 639.457 huellas: exige las del mundo (622.086).
+  - **Pruebas que elegían su escenario en el mapa** (la física no cambió):
+    - manejo 4.5: el punto de partida debe ser calle;
+    - el ruido: busca su edificio en 400 m;
+    - el ladeo de la moto: compara con la teoría hasta su tope de 45°;
+    - ciudad viva: mira el calor de la búsqueda (una llamada suma 8; el nivel 1 pide 15).
+  - **Mejora de Turno Cero:** la ambulancia prueba otros puntos de partida si el primero no tiene ruta (`66-ciudad-viva.js`).
+  - **R6‑b** (`precocinar-sectores.mjs`) acepta el ED1 v2 de El Metro.
+  - `pruebas/medir.mjs` es intermitente también en `main` (una carrera en el arranque de `?medir`); queda anotado.
+- **Probado:** ver `reportes/2026-11-24-claude-fase2-cenital.md`.
+- **Las copias de los juegos** (`<juego>/motor-city/`) siguen en la 5.3.1: la 5.4.0 se copia una sola vez al cerrar la Fase 4 (cada copia mueve unos 70 MB de mundos y HTML).
 
 ### 24-nov-2026 · Fase 1 del renacimiento cenital · el Valle saneado (Motor del Valle 1.3.0; motor 5.3.1 sin cambios)
 - **Lo que pide el prompt de relevo, Fase 1:** sanear el mapa del Valle en `motor-valle/` (BicicletasUno, copiado a MetroZero), sin tocar ningún render, con las decisiones del autor (regla A, trozos de 160 m, rehacer desde las fuentes originales y la prueba de craqueo).

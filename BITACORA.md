@@ -1,5 +1,38 @@
 # Bitácora de Motor City
 
+## 24-nov-2026 · 5.3.2 «Mundos saneados» · Fase 2 del renacimiento cenital (Claude)
+- **Lo que pide el prompt de relevo, Fase 2 (Motor City):** el mismo saneamiento en `geo/territorio.py`, regenerar los mundos MC4 y, con los datos limpios, quitar la tolerancia de 1 m de la colisión (`js/32-fisica.js`).
+- **Hecho:**
+  - **`geo/territorio.py`:** la ley de soberanía vial del Motor del Valle 1.3 (regla A del autor): a cada huella se le quita el corredor de cada vía a nivel (ancho / 2 + 1,3 m en las de carros; + 0,3 m en peatonales, escalas, senderos y ciclorrutas; las aceras y cebras van dentro de su calle) y el agua; las casas de OSM conservan el andén de las calles menores, pero no el asfalto (en un juego ningún carro puede chocar con una casa pintada sobre la calle); los restos de menos de 16 m² se van, salvo que conserven el 90 % y 12 m². Los puentes, túneles y vías cubiertas o interiores no despejan nada y quedan con su nivel en `VIASJ` (`[5]`: 1 o −1; el cargador lo lee como `via.nivel`). Las huellas traen su fuente (`sources[1].dataset`).
+  - **Los tres mundos, regenerados** (con su agua de `precalcular-agua.mjs` y su PVS de `pvs.mjs`):
+
+    | Mundo | Huellas | Tocan | Recortadas | Se van | Marcadas (OSM) | Área que queda |
+    |---|---|---|---|---|---|---|
+    | Medellín (`fusionar.mjs`, de El Metro) | 639.457 → 622.086 | — | — | — | — | 98,45 % (Motor del Valle 1.3) |
+    | Guatapé (`territorio.py`) | 2.661 | 524 | 430 | 93 | 48 | 94,7 % |
+    | Nueva York (`territorio.py`) | 163.875 | 9.890 | 9.371 | 365 | 14.968 | 98,9 % |
+
+    En Guatapé, las que se van son casi todas huellas automáticas (Google y Microsoft) de 28 m² de mediana sobre el embalse o sobre la calle: 2 de OSM.
+  - **`js/32-fisica.js`:** la colisión con los edificios usa el mismo radio en la calle y fuera de ella (antes, sobre la calle, solo chocaba si uno se metía más de 1 m en la huella).
+  - **Prueba nueva, `pruebas/calles-libres.mjs`** (en `motor-city-qa.yml`): recorre el eje de las calles de carros a nivel cada 2 m y pregunta lo mismo que la colisión: ¿un carro de radio 0,4 m chocaría con una casa?
+
+    | Mundo | Antes (mundo viejo, sin la tolerancia) | Ahora |
+    |---|---|---|
+    | Medellín | 45.689 de 2.727.587 puntos (1,675 %) | 15 (0,001 %) |
+    | Guatapé | 90 de 33.976 (0,265 %) | 0 |
+    | Nueva York | 25.729 de 1.887.050 (1,363 %; con túneles y puentes) | ver el informe (0,074 % sin túneles ni puentes) |
+  - `pruebas/prueba.mjs` ya no exige 639.457 huellas: exige las del mundo (622.086).
+  - **Pruebas que elegían su escenario en el mapa** (la física no cambió):
+    - manejo 4.5: el punto de partida debe ser calle;
+    - el ruido: busca su edificio en 400 m;
+    - el ladeo de la moto: compara con la teoría hasta su tope de 45°;
+    - ciudad viva: mira el calor de la búsqueda (una llamada suma 8; el nivel 1 pide 15).
+  - **Mejora de Turno Cero:** la ambulancia prueba otros puntos de partida si el primero no tiene ruta (`66-ciudad-viva.js`).
+  - **R6‑b** (`precocinar-sectores.mjs`) acepta el ED1 v2 de El Metro.
+  - `pruebas/medir.mjs` es intermitente también en `main` (una carrera en el arranque de `?medir`); queda anotado.
+- **Probado:** ver `reportes/2026-11-24-claude-fase2-cenital.md`.
+- **Las copias de los juegos** (`<juego>/motor-city/`) siguen en la 5.3.1: la 5.4.0 se copia una sola vez al cerrar la Fase 4 (cada copia mueve unos 70 MB de mundos y HTML).
+
 ## 24-nov-2026 · Fase 1 del renacimiento cenital · el Valle saneado (Motor del Valle 1.3.0; motor 5.3.1 sin cambios)
 - **Lo que pide el prompt de relevo, Fase 1:** sanear el mapa del Valle en `motor-valle/` (BicicletasUno, copiado a MetroZero), sin tocar ningún render, con las decisiones del autor (regla A, trozos de 160 m, rehacer desde las fuentes originales y la prueba de craqueo).
 - **Hecho:**

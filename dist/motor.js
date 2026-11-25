@@ -1,4 +1,4 @@
-/* Motor City 5.3.1 · 2026-11-23 · https://github.com/juanfeliperico369-stack/motorcity
+/* Motor City 5.3.2 · 2026-11-24 · https://github.com/juanfeliperico369-stack/motorcity
    Un solo motor de mundo abierto para Juega EnCicla, El Metro y los juegos que vienen. Sin internet; trae three.js 0.170 (MIT, © three.js authors) para el 3D realista.
    Datos del mundo: © colaboradores de OpenStreetMap (ODbL) vía Overture Maps; capas oficiales de Medellín; relieve SRTM/NASA. */
 (function (root) {
@@ -30,7 +30,7 @@ if (!Array.prototype.toSorted) Object.defineProperty(Array.prototype, 'toSorted'
 if (!Array.prototype.toReversed) Object.defineProperty(Array.prototype, 'toReversed', { value() { return this.slice().reverse(); }, writable: true, configurable: true });
 if (!Promise.withResolvers) Promise.withResolvers = function () { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 const MC = {
-  version: '5.3.1',
+  version: '5.3.2',
   nombre: 'Motor City',
   errores: [],
   juego: 'motorcity',          // quién usa el motor: 'encicla', 'elmetro', 'runscooter', 'motorcity'…
@@ -762,7 +762,7 @@ class Mundo {
   /* ---------- vías con nombre (vectores) ---------- */
   vias() {
     if (this._vias) return this._vias;
-    if (this.capaInfo('vias').formato === 'VIASJ') return (this._vias = this.capa('vias').map((v, i) => ({ i, k: v[0], nombre: v[1] || '', nom: '', ancho: v[2] || VIA_ANCHO[v[0]] || 6, p: Float32Array.from(v[3]) })));   // [tipo, nombre, ancho, [x,y,…] metros]
+    if (this.capaInfo('vias').formato === 'VIASJ') return (this._vias = this.capa('vias').map((v, i) => ({ i, k: v[0], nombre: v[1] || '', nom: '', ancho: v[2] || VIA_ANCHO[v[0]] || 6, p: Float32Array.from(v[3]), nivel: v[4] || 0 })));   // [tipo, nombre, ancho, [x,y,…] metros, nivel] (5.4: nivel 1 puente, −1 túnel o cubierta; sin él, a ras)
     const c = this.capaInfo('vias'), u8 = this.capa('vias'), dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), n = dv.getUint32(0, true), L = new Array(n), v3 = (c.v || 3) >= 3, K = this.tile / (c.vq || 4), NOM = this.capa('info').calles;
     let o = 4;
     for (let i = 0; i < n; i++) {
@@ -3963,10 +3963,11 @@ class Cuerpo {
     /* terreno (2.4): agua y su profundidad, material, pendiente y barrancos, borde del mundo (MC.Terreno.paso) */
     const T = Terreno.paso(this, x, y); if (!T.ok && !(this.ia && !T.agua && BORDE_IA.has(this.mundo.suelo(x, y)) && !this.mundo.edificioEn(x, y, .3))) { if (T.agua) this.bloqueoAgua = true; return this._bloquea(T.motivo); }   /* 4.2: las casillas del borde de la calle (ladrillo o edificio sin edificio real encima) no traban a la IA; la huella de verdad se revisa abajo */
     if (this.chocaEdificios && V.clase !== 'agua') {
-      /* edificios: siempre (sobre la calle solo si se mete más de 1 m en la huella: los datos se solapan un poco con la vía),
-         y también los edificios de los sitios y las partes bajas de los emblemáticos */
+      /* edificios: siempre, con el mismo radio en la calle y fuera de ella. 5.4 · renacimiento cenital (Fase 2): los mundos están
+         saneados (ninguna huella sobre la calle ni el agua: Motor del Valle 1.3 y geo/territorio.py), así que se quitó la tolerancia
+         de 1 m que dejaba meterse en la huella sobre la vía. También los edificios de los sitios y las partes bajas de los emblemáticos */
       const tt = this.mundo.suelo(x, y), enVia = VIA_TT.has(tt), r = V.clase === 'pie' ? .2 : .4;
-      if (this.mundo.edificioEn(x, y, enVia ? -1 : r)) return this._bloquea('un edificio');
+      if (this.mundo.edificioEn(x, y, r)) return this._bloquea('un edificio');
       if (!enVia && Terreno.sitioEn(this.mundo, x, y)) return this._bloquea('un edificio');
       /* árboles, postes, bancas, rocas, palmas… y lo que el juego diga (tráfico, gente). 4.0.2: los carros de la IA (this.ia) sobre la calle no chocan con lo menor del andén y el separador */
       /* 4.2: y en el andén, los carros de la IA tampoco se trancan con lo menor (poste, banca, paradero, caneca, hidrante): lo atropellan como en GTA; árboles y rocas sí los paran */
