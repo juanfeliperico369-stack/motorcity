@@ -34,7 +34,7 @@ const s = await p.evaluate(async () => {   /* el guardián del sonido (00b-sonid
   A.close(); return o;
 });
 if (!(s.antes === 'running' && s.pausa === 'suspended' && s.fuera && s.pideSonar === 'suspended' && s.vuelve === 'running' && s.appPausa === 'suspended' && s.appSigue === 'running')) fallas.push('al salir de la app: ' + JSON.stringify(s));
-const propio = await p.evaluate(async () => { const e = ms => new Promise(r => setTimeout(r, ms)); window.dispatchEvent(new Event('app:pausa')); await e(200);   /* la música del propio juego (MC.Musica) 
+const propio = await p.evaluate(async () => { const e = ms => new Promise(r => setTimeout(r, ms)); window.dispatchEvent(new Event('app:pausa')); await e(200);   /* la música del propio juego (MC.Musica) */
   const C = [MC.Musica && MC.Musica.ctx].filter(Boolean); const antes = C.map(c => c.state); window.dispatchEvent(new Event('app:sigue')); await e(300); return { antes, despues: C.map(c => c.state) }; });
 if (propio.antes.some(x => x !== 'suspended')) fallas.push('la música del juego siguió con la app afuera: ' + JSON.stringify(propio));
 errs.push(...await p.evaluate(() => (MC.errores || []).map(e => String(e.msg || e))));

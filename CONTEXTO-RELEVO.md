@@ -1163,3 +1163,17 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 | Turno Cero, Motor City 5.4.1 | https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html (Mandados: `…/mandados.html`; el banco: `…/dist/motor-city.html`) | https://github.com/juanfeliperico369-stack/motorcity/releases/tag/v5.4.1 |
 | Run Scooter 2.5.0 (no cambió) | https://juanfeliperico369-stack.github.io/RunRunZero/ | https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk |
 - **Falta:** medir en el celular del autor con 📏 («Carreras retro» y las tres cámaras).
+
+### Claude · 25‑nov‑2026 · el pedido del autor después de jugar: la cámara única, la música, la portada y el escalafón
+- **Lo que pidió el autor:** está palabra por palabra en **`docs/PEDIDO-DEL-AUTOR-2026-11-25.md`**, que manda sobre lo demás. Pide:
+  - el mundo enteramente 3D en vista cenital, con **una sola cámara**: centrada, que se mueve, se acerca y se aleja hasta «un poco» de tercera persona, y que se eliminen las demás;
+  - **que nada quede pintado en el suelo**, y el 2D y el pixel solo en los modos ya establecidos;
+  - la carga del mundo y la fluidez, la música que seguía sonando al salir de la app y la portada de EnCicla sin su animación;
+  - controles personalizables con recomendaciones según se juegue en vertical o en horizontal;
+  - el escalafón en la portada de EnCicla.
+- **Hecho (en la rama `ccr-4f6eeea5-yulqk1` de cada repo; nada en `main`):**
+  - **el guardián del sonido** en los tres juegos: Motor City 5.4.2, EnCicla 3.9.1 y El Metro 3.10.1, con el aviso nativo en las APK;
+  - **la portada viva** de EnCicla: la animación sale a ~1,9 s en vez de ~10 s en blanco con el CPU 4×;
+  - **🏆 Escalafón** en la portada de EnCicla;
+  - **la cámara única**: EnCicla 3.10.0, El Metro 3.11.0, y Turno Cero en Motor City 5.5.0 (`MC.Camara`, perfil `cenital` con `tercio`).
+- **Falta, con el OK del autor:** las fases A–E de `docs/PEDIDO-DEL-AUTOR-2026-11-25.md` § 4 (la carga sin huecos, la fluidez, los controles a gusto, nada pintado en el suelo y un solo mundo 3D), y publicar.
