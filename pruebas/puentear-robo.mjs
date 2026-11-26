@@ -20,7 +20,7 @@ const robar = async () => p.evaluate(async () => { const G = TURNO, C = G.cuerpo
   if (C.veh.clase !== 'pie') C.bajarse('prueba'); C.estacionado = null; Object.assign(C, { x: a.x + 2, y: a.y, v: 0 }); a.v = 0;
   const calor0 = G.busq.heat, bt = document.querySelector('.mcui button[aria-label="Robar"]'); bt.click(); await espera(150);
   return { veh: C.veh.id, clase: C.veh.clase, chip: !!document.querySelector('.mcui .mc-chip'), subio: Math.round((G.busq.heat - calor0) * 10) / 10 }; });
-const r1 = await robar(); await p.waitForTimeout(6800);
+const r1 = await robar(); await p.waitForTimeout(6800); await p.waitForFunction(() => !document.querySelector('.mcui .mc-chip'), null, { timeout: 20000 }).catch(() => {});   /* 5.5.1: en la CI lenta el reloj del juego va más despacio que el de la pared; el aviso se va solo, se le da hasta 20 s más */
 const seFue = await p.evaluate(() => !document.querySelector('.mcui .mc-chip'));
 const r2 = await robar();
 const gana = await p.evaluate(async () => { const G = TURNO, espera = ms => new Promise(q => setTimeout(q, ms)), calor1 = G.busq.heat;

@@ -103,6 +103,8 @@ jobs:
         run: node pruebas/pista-retro.mjs
       - name: 5.4.1 · 🧰 Cápsulas de Turno Cero (garaje sin cargar el núcleo, paso con el mismo estado y 📏 en las carreras retro)
         run: node pruebas/capsulas.mjs
+      - name: 5.4.2 · 🔇 Guardián del sonido (Turno Cero calla al salir de la app)
+        run: node pruebas/sonido-guardian.mjs
       - name: 5.1 · 💍 Anillos de recoger y entregar, y vuelo (Gemini G5-02)
         run: node pruebas/anillos.mjs
       - name: 5.2 · 🗣️ Ciudad viva (eventos, reacciones, escenas, frases y despacho)
@@ -124,7 +126,7 @@ jobs:
           node pruebas/minijuegos.mjs
           node pruebas/guia-cine.mjs
           node pruebas/quimica-mundo.mjs
-      - name: 5.3 · R6-b (ChatGPT): datos compactos y Worker con respaldo (apagado por defecto; ?r6b)
+      - name: "5.3 · R6-b (ChatGPT): datos compactos y Worker con respaldo (apagado por defecto; ?r6b)"
         run: |
           node pruebas/r6b-datos.mjs
           node pruebas/r6b-browser.mjs

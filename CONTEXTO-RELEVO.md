@@ -1163,3 +1163,51 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 | Turno Cero, Motor City 5.4.1 | https://juanfeliperico369-stack.github.io/motorcity/dist/juegos/getaway.html (Mandados: `…/mandados.html`; el banco: `…/dist/motor-city.html`) | https://github.com/juanfeliperico369-stack/motorcity/releases/tag/v5.4.1 |
 | Run Scooter 2.5.0 (no cambió) | https://juanfeliperico369-stack.github.io/RunRunZero/ | https://juanfeliperico369-stack.github.io/RunRunZero/RunScooter.apk |
 - **Falta:** medir en el celular del autor con 📏 («Carreras retro» y las tres cámaras).
+
+### Claude · 25‑nov‑2026 · el pedido del autor después de jugar: la cámara única, la música, la portada y el escalafón
+- **Lo que pidió el autor:** está palabra por palabra en **`docs/PEDIDO-DEL-AUTOR-2026-11-25.md`**, que manda sobre lo demás. Pide:
+  - el mundo enteramente 3D en vista cenital, con **una sola cámara**: centrada, que se mueve, se acerca y se aleja hasta «un poco» de tercera persona, y que se eliminen las demás;
+  - **que nada quede pintado en el suelo**, y el 2D y el pixel solo en los modos ya establecidos;
+  - la carga del mundo y la fluidez, la música que seguía sonando al salir de la app y la portada de EnCicla sin su animación;
+  - controles personalizables con recomendaciones según se juegue en vertical o en horizontal;
+  - el escalafón en la portada de EnCicla.
+- **Hecho (en la rama `ccr-4f6eeea5-yulqk1` de cada repo; nada en `main`):**
+  - **el guardián del sonido** en los tres juegos: Motor City 5.4.2, EnCicla 3.9.1 y El Metro 3.10.1, con el aviso nativo en las APK;
+  - **la portada viva** de EnCicla: la animación sale a ~1,9 s en vez de ~10 s en blanco con el CPU 4×;
+  - **🏆 Escalafón** en la portada de EnCicla;
+  - **la cámara única**: EnCicla 3.10.0, El Metro 3.11.0, y Turno Cero en Motor City 5.5.0 (`MC.Camara`, perfil `cenital` con `tercio`).
+- **Falta, con el OK del autor:** las fases A–E de `docs/PEDIDO-DEL-AUTOR-2026-11-25.md` § 4 (la carga sin huecos, la fluidez, los controles a gusto, nada pintado en el suelo y un solo mundo 3D), y publicar.
+
+### Claude · 25‑nov‑2026 (noche) · publicado lo primero, fase A y la fase F del autor
+- **Publicado y verificado:**
+  - EnCicla 3.10.0: página, release v3.10.0 y `descargas/`;
+  - El Metro 3.11.0: página, release v3.11.0 y `verify-pages`.
+- **El autor aprobó el plan:** «Sí, hazlo, publica y el plan está bien, ya veremos sobre la marcha». Después pidió «Haz lo de la imagen al final del plan»: es la fase F de `docs/PEDIDO-DEL-AUTOR-2026-11-25.md`, la lámina de la apertura y el cierre de estaciones de EnCicla, que está en `BicicletasUno/docs/referencias/`.
+- **Fase A, la carga del mundo:**
+  - **EnCicla 3.10.1:** lo cercano primero, de a uno y con boceto en baja resolución. En la compuerta de 2 km pasó de 0 a 14 y 20 trozos terminados, con p95 de 43 y 35 ms;
+  - **El Metro 3.11.1:** la ventana se arma por partes. El peor cuadro bajó de 1808 a ~440 ms con el CPU 4×, y el regulador ya no borra la ventana;
+  - **Turno Cero:** medido sin congelones (p95 de 27–30 ms con el CPU 4×; picos sueltos de hasta 312 ms, que van para la fase B).
+- **Motor City 5.5.1:**
+  - la cámara de persecución de cerca (lente de 55°, 40°);
+  - la QA de GitHub vuelve a correr: un nombre con «: » rompía el YAML. Al correr de nuevo salieron pruebas inestables por tiempos en el runner lento (`retos-semaforo` arreglada; `anillos` en observación).
+- **Sigue:** la fase B (la fluidez: el cambio de ventana de El Metro, ~0,2–0,4 s, y los picos de Turno Cero) y después C, D, E y F.
+
+### Claude · 26‑nov‑2026 · 🧭 modo turismo, propiedad intelectual y el relevo para las muestras
+- **Lo que pidió el autor** (cuarto mensaje, en `docs/PEDIDO-DEL-AUTOR-2026-11-25.md` § 1):
+  - la lámina de la apertura y el cierre queda **pendiente, solo como plan**;
+  - un **modo turismo** en El Metro y EnCicla;
+  - el prompt de relevo;
+  - los documentos de derechos de autor para la DNDA, con lo que es suyo y sin las marcas ajenas, y «amarrarse» antes de presentar el proyecto;
+  - los negocios y sus derechos;
+  - la visión y la misión al día;
+  - los juegos listos para sus muestras, en dos días.
+- **Hecho y publicado:**
+  - **Juega EnCicla 3.11.0** (`src/js/99zz2-turismo.js`): «🧭 Turismo por el valle» en la portada, con 12 sitios, la estación EnCicla más cercana, el minimapa y «🚲 Ir en bici». La página está publicada por `publicar.yml` en verde, y la APK v3.11.0 está en `descargas/`.
+  - **El Metro 3.12.0** (`src/js/97f-turismo.js`): la tarjeta del menú con su ícono, el sistema integrado y 12 sitios con la estación más cercana de toda la red y «🚶 Ir ahí». `test.mjs 100` dio 0 errores; la página está en `gh-pages`, con caché `el-metro-v3.12.0-125458fa` y la APK 43.
+  - **Motor City:**
+    - `docs/propiedad-intelectual/`: el inventario de obras, la guía DNDA y de protección, los modelos de confidencialidad, carta, acta y declaración, los negocios y los derechos, y las huellas SHA‑256;
+    - `AVISO-LEGAL.md` en los cuatro repositorios;
+    - `docs/VISION-Y-MISION.md` al 26‑nov;
+    - el pedido con P13, la tabla de estado y el plan de la fase F;
+    - **el `docs/PROMPT-RELEVO.md` nuevo**; el anterior quedó en `docs/relevos/`.
+- **Sigue:** lo del § 5 del prompt de relevo, que pone primero pulir para las muestras y después las fases B–E. La fase F solo con el OK del autor.
