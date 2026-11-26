@@ -79,6 +79,11 @@ Habla y escribe en **español de Colombia**.
    Arregla **solo** lo que se rompa o se vea mal: textos cortados, botones encimados o pantallas en blanco.
 2. **Las APK:** instálalas en un Android 7 o en un emulador. Comprueba que abren sin internet, que el sonido calla al salir y que el guardado se conserva.
 3. **Nada de fases grandes antes de la muestra,** salvo que el autor lo pida.
+4. **Que la QA de Motor City aguante una máquina lenta.**
+   - **El problema:** en la CI de GitHub (WebGL por software), Turno Cero va a ~6 cuadros por segundo. Las pruebas con tiempos fijos fallan a ratos aunque en local pasen.
+   - **Ya arreglado en 5.5.1:** `medir`, `puentear-robo`, `historieta` y `retos-semaforo` esperan por estado.
+   - **Falta:** `anillos.mjs`, donde la avioneta no alcanza a despegar a ~6 fps. Hay que esperar por estado (velocidad o altura) o escalar el tiempo con los cuadros por segundo.
+   - **La regla:** no se bajan las exigencias de lo que se prueba; solo se espera mejor.
 
 ### 5.1 Fase B · La fluidez (P7). Ya empezó en El Metro
 - **Paso fijo con interpolación del dibujo** en El Metro y Turno Cero: la física a 60 Hz y el dibujo interpolado. Usa la sensación de EnCicla como vara.
@@ -146,7 +151,7 @@ Habla y escribe en **español de Colombia**.
 |---|---|
 | **EnCicla** | `node tools/build.js`; `node tests/run.js` (sin correr pruebas pesadas al tiempo); `node tests/benchmark-2km-gpt6.mjs` (la compuerta) |
 | **El Metro** | `node tools/build.mjs`; `node tools/test.mjs 100` (0 errores); `node tools/todo.mjs` |
-| **Motor City** | `node motor.mjs construir`; `node motor.mjs prueba --navegador`; `node pruebas/medir.mjs` (en la CI lenta puede necesitar un segundo intento) |
+| **Motor City** | `node motor.mjs construir`; `node motor.mjs prueba --navegador`; los pasos de `motor-city-qa.yml` (todos en verde en local el 26‑nov) |
 | **Run Scooter** | `node tools/build.mjs`; `node tools/sim.mjs 100 240` |
 
 ## 8. Al terminar cada trabajo (obligatorio)
