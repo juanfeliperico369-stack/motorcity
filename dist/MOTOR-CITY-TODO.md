@@ -1233,6 +1233,20 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
   - **la cámara única**: EnCicla 3.10.0, El Metro 3.11.0, y Turno Cero en Motor City 5.5.0 (`MC.Camara`, perfil `cenital` con `tercio`).
 - **Falta, con el OK del autor:** las fases A–E de `docs/PEDIDO-DEL-AUTOR-2026-11-25.md` § 4 (la carga sin huecos, la fluidez, los controles a gusto, nada pintado en el suelo y un solo mundo 3D), y publicar.
 
+### Claude · 25‑nov‑2026 (noche) · publicado lo primero, fase A y la fase F del autor
+- **Publicado y verificado:**
+  - EnCicla 3.10.0: página, release v3.10.0 y `descargas/`;
+  - El Metro 3.11.0: página, release v3.11.0 y `verify-pages`.
+- **El autor aprobó el plan:** «Sí, hazlo, publica y el plan está bien, ya veremos sobre la marcha». Después pidió «Haz lo de la imagen al final del plan»: es la fase F de `docs/PEDIDO-DEL-AUTOR-2026-11-25.md`, la lámina de la apertura y el cierre de estaciones de EnCicla, que está en `BicicletasUno/docs/referencias/`.
+- **Fase A, la carga del mundo:**
+  - **EnCicla 3.10.1:** lo cercano primero, de a uno y con boceto en baja resolución. En la compuerta de 2 km pasó de 0 a 14 y 20 trozos terminados, con p95 de 43 y 35 ms;
+  - **El Metro 3.11.1:** la ventana se arma por partes. El peor cuadro bajó de 1808 a ~440 ms con el CPU 4×, y el regulador ya no borra la ventana;
+  - **Turno Cero:** medido sin congelones (p95 de 27–30 ms con el CPU 4×; picos sueltos de hasta 312 ms, que van para la fase B).
+- **Motor City 5.5.1:**
+  - la cámara de persecución de cerca (lente de 55°, 40°);
+  - la QA de GitHub vuelve a correr: un nombre con «: » rompía el YAML. Al correr de nuevo salieron pruebas inestables por tiempos en el runner lento (`retos-semaforo` arreglada; `anillos` en observación).
+- **Sigue:** la fase B (la fluidez: el cambio de ventana de El Metro, ~0,2–0,4 s, y los picos de Turno Cero) y después C, D, E y F.
+
 # MOTOR CITY · Documento único
 
 > **Para el autor (OneZero) y para todas las IAs:** Gemini (Antigravity y Nano Banana), ChatGPT (Codex), Claude y las IAs de Juega EnCicla, El Metro y Run Scooter.

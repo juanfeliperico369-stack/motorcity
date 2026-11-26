@@ -33,7 +33,7 @@ const Medir = {
   },
   cambiarTramo(i) {
     const A = this.activo; A.tramo = i; A.tramos = A.tramos || []; A.tramos[i] = { id: this.TRAMOS[i][0], n: this.TRAMOS[i][1], cuadros: [], dib: [] };
-    const Tr = this.TRAMOS[i]; G.vistaId = 'cenital'; G.vistas.usar('cenital', G.E); if (Tr[2]) G.camara.zoom = Tr[2] * (G.dEf || 1);
+    const Tr = this.TRAMOS[i]; G.vistaId = 'cenital'; G.vistas.usar('cenital', G.E); if (Tr[2]) G.camara.zoom = Math.min(Tr[2] * (G.dEf || 1), G.camara.limites.zoom[1]);
   },
   /* el reloj propio: el tiempo entre cuadros de verdad (lo que ve el jugador) y lo que tardó en dibujar la vista */
   cuadro(t) {
