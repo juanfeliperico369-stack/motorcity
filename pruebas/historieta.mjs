@@ -110,6 +110,7 @@ const resHist = await p.evaluate(async () => {
   G.vistas.motor3d = 'gl';
   for (let i = 0; i < 40; i++) G.camara.actualizar(1 / 60, G.cuerpo);
   await espera(1200);
+  for (let i = 0; i < 70 && !(MC.Historieta && MC.Historieta.metricas.activo && MC.Historieta.metricas.gpu); i++) await espera(200);   /* 5.5.1: en la CI lenta el pase de historieta tarda más en arrancar; se le da hasta 14 s más */
 
   const M = MC.Historieta ? MC.Historieta.metricas : {};
   const C = G.E.camara;
