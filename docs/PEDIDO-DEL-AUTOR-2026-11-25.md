@@ -21,6 +21,12 @@
 
 La lámina está en el repositorio de EnCicla: `docs/referencias/2026-11-25-apertura-y-cierre.jpg` (detalle en § 4, fase F).
 
+**Cuarto mensaje** (26‑nov; **cambia la fase F**):
+
+> «Lo de la imagen no lo agregues todavía, mejor al final haces un plan de cómo lo vas a agregar, y hasta que no te diga que lo agreguemos lo dejamos ahí pendiente.
+> Agrega a El Metro y EnCicla un modo turismo de la ciudad y las estaciones para todos aquellos que no conozcan los sistemas del Valle de Aburrá.
+> También cuando termines las fases o antes de eso hazme el prompt de relevo, y hazme los documentos de derechos de autor para hacerlos validar en el derechos de autor de Colombia […] También patenta el motor. […] Al terminar necesito los videojuegos bastante funcionales y profesionales para las muestras, será esto en dos días […]»
+
 ## 2. Lo que pide, punto por punto
 
 | # | Pedido | En los juegos |
@@ -36,7 +42,8 @@ La lámina está en el repositorio de EnCicla: `docs/referencias/2026-11-25-aper
 | P9 | **La portada de EnCicla**: el panel de la animación no cargaba. | EnCicla |
 | P10 | **Controles**: mejor sensibilidad, más formas de control, personalizables, con recomendaciones según se juegue en vertical o en horizontal. | todos |
 | P11 | **El escalafón como botón en la portada de EnCicla** (antes había que entrar al mundo abierto y salir). | EnCicla |
-| P12 | **La apertura y el cierre de estaciones** de la lámina «Un día en EnCicla», dentro del juego. **Va al final del plan**, después de las fases A–E. | EnCicla |
+| P12 | **La apertura y el cierre de estaciones** de la lámina «Un día en EnCicla». **PENDIENTE, solo como plan** (§ 4, fase F): no se agrega hasta que el autor diga. | EnCicla |
+| P13 | **Un modo turismo** de la ciudad y las estaciones, para quien no conoce los sistemas del Valle de Aburrá. | EnCicla y El Metro |
 
 ## 3. Lo que ya quedó (25‑nov‑2026, Claude)
 
@@ -48,6 +55,8 @@ La lámina está en el repositorio de EnCicla: `docs/referencias/2026-11-25-aper
 | P11 | **🏆 Escalafón** en la portada de EnCicla, directo a su pestaña. | EnCicla 3.9.1 (`src/js/98n-abierto.js`) |
 | P6 (fase A, EnCicla) | **La carga sin huecos.** Lo cercano y lo de adelante primero, de a uno hasta terminarlo; el caché cuenta la vista girada. Mientras se arma, el trozo se ve en baja resolución con los colores del suelo. En la compuerta de 2 km pasó de 0 trozos terminados a 14 y 20, con p95 de 43 y 35 ms. | EnCicla 3.10.1 (`src/js/99w-chunks-progresivos.js`) |
 | P2 (afinada) | **La cámara de persecución de cerca:** en Turno Cero, el último tramo abre el lente de 35° a 55° y baja a 40° (con el lente estrecho, inclinar solo daba un teleobjetivo). En El Metro, de cerca la cámara queda a unos 40°, con el ojo a 8 m o más. | Motor City 5.5.1, El Metro 3.11.1 |
+| P6 y P7 (fases A y B, El Metro) | **La ventana por partes**: el piso en 16 baldosas, los edificios y lo lejano se arman antes de llegar al borde. Con el CPU 4×, el peor cuadro pasó de 1808 a ~440 ms (3.11.1), y el cambio de ventana bajó a ~70 ms (3.11.2). | El Metro 3.11.1 y 3.11.2 (`src/js/97e-ventana-por-partes.js`, `src/js/22-gl.js`) |
+| P13 | **🧭 Turismo por el valle**, con 12 sitios para conocer y el dato de cada uno, la estación más cercana con la distancia a pie y el minimapa, y un botón para ir ahí en el mundo abierto. En El Metro trae también las líneas del sistema integrado, con su color y su apertura; en EnCicla, cómo funciona el préstamo. | EnCicla 3.11.0 (`src/js/99zz2-turismo.js`), El Metro 3.12.0 (`src/js/97f-turismo.js`) |
 
 **Siguen como modos propios** (no son cámaras del mundo):
 - en Turno Cero, las 🏎️ Carreras retro (pseudo‑3D) y el 🧰 garaje (fichas pixel);
@@ -82,28 +91,60 @@ Cada fase tiene su informe, sus pruebas y su 📏 en el celular.
    - El mundo de EnCicla hoy es un lienzo 2.5D. Esta fase lo pasa al 3D de verdad (WebGL, como El Metro y Motor City), con el 2D solo de respaldo para equipos sin WebGL.
    - Es la fase más grande, y su orden lo decide el autor.
 
-6. **Fase F · «Un día en EnCicla»: la apertura y el cierre de estaciones (P12, de la lámina del autor).** Va al final del plan, como lo pidió. Todo lo de la lámina entra al juego:
-   - **Los horarios:**
-     - apertura de 5:00 a 5:30 a. m.;
-     - cierre de 10:00 a 10:30 p. m.
-   - **Los pasos de la apertura y el cierre:**
-     1. antes de enviar el formulario, revisar y verificar los números de todas las bicicletas;
-     2. comprobar que **no** quede ningún préstamo activo en la estación;
-     3. en las bicicletas **mecánicas** cuyo número empieza por 0, escribir **B** al principio (0123 → B0123);
-     4. en el formulario de la estación **manual**, escribir las bicicletas y, si hay dañadas, poner la palabra **MALA** y debajo sus números;
-     5. en las estaciones **automáticas**, revisar que ninguna bicicleta esté mal anclada (así se evita perderlas);
-     6. usar siempre el **casco**, y practicar el autocuidado y la inteligencia vial.
-   - **Los personajes:** Buen Servicio Gómez, Linda Amable Palacio y Jorge Descuido (el que se equivoca, para aprender de él).
-   - **Los lemas:**
-     - «Cada encuentro cuenta»;
-     - «¡Que no se nos escape ningún detalle!»;
-     - «Apertura y cierre: verificar también es cuidar»;
-     - «¡De nuestro compromiso depende que EnCicla siga rodando!».
-   - **Cómo entra (propuesta, se ajusta con el autor):**
-     - un turno de apertura y otro de cierre en las estaciones manuales y automáticas;
-     - un formulario táctil donde se verifican los números, se escribe B0123 y MALA, se confirma que no queden préstamos y se revisan los anclajes;
-     - un recuento con los errores de Jorge Descuido;
-     - las fichas de la lámina en Más › La historia.
+6. **Fase F · «Un día en EnCicla»: la apertura y el cierre de estaciones (P12). ⏸ PENDIENTE: SOLO PLAN.** El autor lo dijo el 26‑nov: «no lo agregues todavía… hasta que no te diga que lo agreguemos lo dejamos ahí pendiente». **No se programa nada de esta fase sin su OK.**
+   - **Lo que trae la lámina** (`BicicletasUno/docs/referencias/2026-11-25-apertura-y-cierre.jpg`):
+     - **los horarios:** apertura de 5:00 a 5:30 a. m. y cierre de 10:00 a 10:30 p. m.;
+     - **los seis pasos:**
+       1. revisar los números de todas las bicicletas antes de enviar el formulario;
+       2. comprobar que no quede ningún préstamo activo;
+       3. en las mecánicas cuyo número empieza por 0, escribir **B** al principio (0123 → B0123);
+       4. en la estación manual, escribir las bicicletas y, si hay dañadas, la palabra **MALA** y debajo sus números;
+       5. en las automáticas, revisar que ninguna esté mal anclada;
+       6. el casco siempre, el autocuidado y la inteligencia vial;
+     - **los personajes:** Buen Servicio Gómez, Linda Amable Palacio y Jorge Descuido;
+     - **los lemas:** «Cada encuentro cuenta», «¡Que no se nos escape ningún detalle!», «Apertura y cierre: verificar también es cuidar» y «¡De nuestro compromiso depende que EnCicla siga rodando!».
+   - **Antes de empezar:**
+     - la lámina y sus personajes parecen material de EnCicla o de su operador, así que se necesita el **permiso escrito** de su titular (ver `docs/propiedad-intelectual/01-INVENTARIO-DE-OBRAS.md`, § 1.4);
+     - sin ese permiso, se hace con personajes y textos propios que enseñen lo mismo.
+   - **El plan de cómo se agrega, cuando el autor diga** (EnCicla 3.12 o la que siga):
+     1. **Un módulo aditivo:** `src/js/99zz3-un-dia.js`, que envuelve `UI.init` como el modo turismo y no toca los oficios.
+        - Entra como **dos turnos nuevos** del Operador y del Supervisor: «Apertura (5:00–5:30)» y «Cierre (10:00–10:30)».
+        - Cada turno tiene dos variantes: la estación **manual** y la **automática**.
+     2. **El formulario táctil** de la estación: la lista de las bicicletas ancladas, con su número.
+        - El jugador **verifica cada número** contra el anclaje.
+        - Corrige los que empiezan por 0 con la **B** (0123 → B0123).
+        - Marca las dañadas con **MALA**.
+        - Confirma «0 préstamos activos».
+        - En la automática, revisa los anclajes (un toque por anclaje; los mal anclados parpadean).
+     3. **Los errores de Jorge Descuido.** En cada turno, Jorge deja 2 o 3 errores sembrados al azar con una semilla fija, para que la prueba sea repetible:
+        - un número sin la B;
+        - una MALA sin anotar;
+        - un préstamo abierto;
+        - una bici mal anclada.
+
+        El recuento final los muestra uno por uno, con el paso de la lámina que los evita.
+     4. **El reloj:** el turno se juega contra el horario (30 min de juego, comprimidos en unos 3 min reales), con la luz del amanecer o de la noche del mundo.
+     5. **El puntaje y el guardado:**
+        - el puntaje de «verificar también es cuidar» va en el escalafón (🏆) como un oficio más;
+        - el guardado suma campos sin borrar ninguno (`unDia: {mejor, turnos}`).
+     6. **En Más › La historia:** las fichas de los seis pasos y los lemas, con la lámina en pequeño si hay permiso.
+     7. **Las pruebas:**
+        - un recorrido de prueba en `tests/run.js`: abre el turno, siembra los errores, el bot los corrige y el recuento da 0 pendientes;
+        - la K‑1, para no romper los oficios;
+        - la compuerta de 2 km sin cambios.
+   - **Tamaño estimado:** un módulo de unas 400 líneas, sin arte nuevo obligatorio. Los íconos son vectoriales, y las ilustraciones solo con permiso.
+
+### Estado de las fases (26‑nov‑2026)
+
+| Fase | Estado | Qué falta |
+|---|---|---|
+| A · La carga | ✅ EnCicla 3.10.1 y El Metro 3.11.1 · ⏳ Turno Cero | En Turno Cero, la misma cola por prioridad para las casillas del mundo abierto; medir con 📏 en el celular. |
+| B · La fluidez | 🟡 Empezada: El Metro 3.11.2 (lo lejano por partes) | El paso fijo con interpolación en los tres juegos; los picos de Turno Cero (p95 ≤ 20 ms); los resortes de la cámara. |
+| C · Los controles | ⏳ Pendiente | Toda la fase (§ 4, punto 3). |
+| D · Nada pintado en el suelo | ⏳ Pendiente | Toda la fase (§ 4, punto 4). |
+| E · Un solo mundo 3D | ⏳ Pendiente; **su orden lo decide el autor** | Toda la fase (§ 4, punto 5). |
+| F · «Un día en EnCicla» | ⏸ **Solo plan, hasta que el autor diga** | Su OK y el permiso de la lámina. |
+| P13 · Turismo | ✅ EnCicla 3.11.0 y El Metro 3.12.0 | Más sitios y rutas sugeridas, si el autor quiere. |
 
 ## 5. Reglas para quien siga
 
@@ -112,4 +153,5 @@ Cada fase tiene su informe, sus pruebas y su 📏 en el celular.
   - Si una prueba necesita otra vista del motor para medir un dibujo, la pone a mano; el jugador no la ve.
 - **Nada pintado en el suelo** que deba tener altura.
 - **2D y pixel solo en los modos ya establecidos.**
-- El orden de las fases de § 4 lo aprobó el autor («el plan está bien, ya veremos sobre la marcha»); la fase F (la lámina de la apertura y el cierre) va al final, como lo pidió.
+- El orden de las fases de § 4 lo aprobó el autor («el plan está bien, ya veremos sobre la marcha»).
+- **La fase F (la lámina de la apertura y el cierre) no se programa hasta que el autor diga**: por ahora es solo el plan del § 4.

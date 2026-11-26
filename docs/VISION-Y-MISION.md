@@ -1,4 +1,4 @@
-# Misión y visión · el motor y cada juego (al día: 24‑nov‑2026)
+# Misión y visión · el motor y cada juego (al día: 26‑nov‑2026)
 
 > **De dónde sale.** Reúne lo que el autor ya dejó escrito en cada repositorio y le suma sus decisiones del 24‑nov (el «renacimiento cenital»):
 > - `README.md` y `CONTEXTO-RELEVO.md` § 1 del motor;
@@ -7,6 +7,8 @@
 > - en EnCicla, el § 1 de `docs/GUIA.md`;
 > - el `README.md` de Run Scooter;
 > - `docs/referencias/renacimiento-cenital-2026/`.
+>
+> - y los pedidos del 25 y el 26‑nov, palabra por palabra en `docs/PEDIDO-DEL-AUTOR-2026-11-25.md`: el mundo 3D cenital con **una sola cámara**, nada pintado en el suelo y el modo turismo.
 >
 > **Solo el autor las cambia.** Las IA ajustan *cómo* trabajan, nunca la misión ni la visión.
 
@@ -23,14 +25,19 @@ Un solo universo de juegos sobre lugares reales —empezando por Medellín y el 
     - la geográfica: qué existe y dónde, saneada en los datos;
     - la física: qué se toca y por dónde se pasa;
     - la visual: cómo lo ve cada cámara.
-  - **Un solo mundo y muchas cámaras.** La cenital 2.5D/3D es la principal del mundo libre.
+  - **Un solo mundo 3D y una sola cámara** (pedido del 25‑nov):
+    - la cámara es la cenital, centrada, que se mueve, se acerca y se aleja; de cerca llega a «casi tercera persona»;
+    - se eliminaron las demás cámaras del mundo: la maqueta, la panorámica 2D, la tercera y la primera persona;
+    - **nada pintado en el suelo:** lo que tiene altura es 3D de verdad;
+    - el 2D y el pixel quedan solo en los modos ya establecidos.
   - **Otros paisajes:** admite montañas, ríos, lagos, costa, mar y más ciudades del planeta.
 - **Lo que no negocia:**
   - un solo HTML, sin internet ni librerías nuevas;
   - español de Colombia;
   - los guardados se conservan;
   - sala limpia: las ideas de otros juegos sí, su código y su arte no;
-  - datos abiertos con atribución.
+  - datos abiertos con atribución;
+  - la fluidez de EnCicla es la vara para todos.
 
 ## Motor del Valle · el mapa compartido
 - **Misión:** ser la única tubería del mapa real del Valle de Aburrá, de Caldas a Barbosa, para EnCicla y El Metro. Es el mismo mapa: EnCicla lo usa en casillas de 10 m y El Metro en casillas de 20 m. **El mapa solo se cambia ahí.**
@@ -53,7 +60,10 @@ Un solo universo de juegos sobre lugares reales —empezando por Medellín y el 
   - las ciclorrutas se leen claras;
   - la ciudad se ve bonita desde arriba.
 
-  El cenital nuevo va **solo en el modo libre** (decisión del 24‑nov). Los oficios, los turnos, los minijuegos y la revista se quedan como están. La página pública se pone al día cuando el juego pase su compuerta de rendimiento.
+  - El cenital nuevo va **solo en el modo libre** (decisión del 24‑nov), con la cámara única. Los oficios, los turnos, los minijuegos y la revista se quedan como están.
+  - **🏆 Escalafón** está en la portada.
+  - **🧭 Turismo por el valle** (26‑nov): 12 sitios con la estación EnCicla más cercana, para quien no conoce el valle.
+  - Pendiente, solo como plan: «Un día en EnCicla», la apertura y el cierre de estaciones.
 - **Para todo público y sin violencia.**
 
 ## El Metro · `MetroZero`
@@ -61,7 +71,11 @@ Un solo universo de juegos sobre lugares reales —empezando por Medellín y el 
 - **Visión (del autor):** «ser el gran juego de mundo abierto sobre Medellín y su Metro. Una ciudad fiel (relieve, río, barrios, estaciones y estructuras), con arte propio de calidad y viva de día y de noche. Que funcione sin internet en celulares modestos y se juegue en familia y en red local. Más adelante, crecer a otras redes de metro y trenes del mundo».
 - **Desde el 24‑nov:**
   - **Ciudad Libre y Bus** estrenan el cenital nuevo: el viaducto va por encima, el río se ve encajonado y las rutas nunca cruzan una casa;
-  - no se tocan la cabina, la panorámica, el Metrocable, la guía ni la historia de Rosalba.
+  - no se tocan la cabina, la panorámica, el Metrocable, la guía ni la historia de Rosalba;
+- **Desde el 25 y el 26‑nov:**
+  - la cámara única en la Ciudad Libre;
+  - la ventana del mundo se arma por partes, sin congelones;
+  - **🧭 Turismo por el valle**: el sistema integrado, sus líneas y colores, y 12 sitios con la estación más cercana de toda la red.
 - **Valores:** Cultura Metro, todo público, fidelidad a la ciudad, ligereza y arte original.
 
 ## Turno Cero · `motorcity/juegos/getaway/` (18+)
@@ -83,3 +97,9 @@ Un solo universo de juegos sobre lugares reales —empezando por Medellín y el 
   - con 9 vehículos y la estética de la revista EMSAY;
   - la historia es repartir las revistas de EMSAY por Orbe, «la ciudad donde caben todas las ciudades».
 - **Visión:** seguir como juego propio y vivir también dentro del motor como «Run en la ciclovía», que también está en Turno Cero. **No entra en el renacimiento cenital.**
+
+## La propiedad intelectual (26‑nov)
+- **Las obras son del autor:** Motor City, Motor del Valle, Juega EnCicla, El Metro, Turno Cero y Run Scooter, con su código, sus textos y su diseño.
+- **Las marcas no son del autor:** EnCicla, Metro de Medellín y sus signos son de sus titulares.
+- **Cómo se protegen:** con el registro en la DNDA, la marca propia en la SIC y acuerdos de confidencialidad. Todo está en `docs/propiedad-intelectual/`.
+- **Para las IA:** respetan el `AVISO-LEGAL.md` y no meten en los juegos material ajeno sin permiso, como la lámina de la apertura y el cierre.

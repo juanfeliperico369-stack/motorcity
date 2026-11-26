@@ -1247,6 +1247,26 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
   - la QA de GitHub vuelve a correr: un nombre con «: » rompía el YAML. Al correr de nuevo salieron pruebas inestables por tiempos en el runner lento (`retos-semaforo` arreglada; `anillos` en observación).
 - **Sigue:** la fase B (la fluidez: el cambio de ventana de El Metro, ~0,2–0,4 s, y los picos de Turno Cero) y después C, D, E y F.
 
+### Claude · 26‑nov‑2026 · 🧭 modo turismo, propiedad intelectual y el relevo para las muestras
+- **Lo que pidió el autor** (cuarto mensaje, en `docs/PEDIDO-DEL-AUTOR-2026-11-25.md` § 1):
+  - la lámina de la apertura y el cierre queda **pendiente, solo como plan**;
+  - un **modo turismo** en El Metro y EnCicla;
+  - el prompt de relevo;
+  - los documentos de derechos de autor para la DNDA, con lo que es suyo y sin las marcas ajenas, y «amarrarse» antes de presentar el proyecto;
+  - los negocios y sus derechos;
+  - la visión y la misión al día;
+  - los juegos listos para sus muestras, en dos días.
+- **Hecho y publicado:**
+  - **Juega EnCicla 3.11.0** (`src/js/99zz2-turismo.js`): «🧭 Turismo por el valle» en la portada, con 12 sitios, la estación EnCicla más cercana, el minimapa y «🚲 Ir en bici». La página está publicada por `publicar.yml` en verde, y la APK v3.11.0 está en `descargas/`.
+  - **El Metro 3.12.0** (`src/js/97f-turismo.js`): la tarjeta del menú con su ícono, el sistema integrado y 12 sitios con la estación más cercana de toda la red y «🚶 Ir ahí». `test.mjs 100` dio 0 errores; la página está en `gh-pages`, con caché `el-metro-v3.12.0-125458fa` y la APK 43.
+  - **Motor City:**
+    - `docs/propiedad-intelectual/`: el inventario de obras, la guía DNDA y de protección, los modelos de confidencialidad, carta, acta y declaración, los negocios y los derechos, y las huellas SHA‑256;
+    - `AVISO-LEGAL.md` en los cuatro repositorios;
+    - `docs/VISION-Y-MISION.md` al 26‑nov;
+    - el pedido con P13, la tabla de estado y el plan de la fase F;
+    - **el `docs/PROMPT-RELEVO.md` nuevo**; el anterior quedó en `docs/relevos/`.
+- **Sigue:** lo del § 5 del prompt de relevo, que pone primero pulir para las muestras y después las fases B–E. La fase F solo con el OK del autor.
+
 # MOTOR CITY · Documento único
 
 > **Para el autor (OneZero) y para todas las IAs:** Gemini (Antigravity y Nano Banana), ChatGPT (Codex), Claude y las IAs de Juega EnCicla, El Metro y Run Scooter.
@@ -4845,6 +4865,18 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 26-nov-2026 · Documentos: propiedad intelectual, relevo y visión (Claude)
+- **`docs/propiedad-intelectual/`** (nuevo):
+  - el inventario de obras: lo que es del autor, lo que no, y las descripciones para la DNDA;
+  - la guía del registro en la DNDA (en línea y gratis), la marca en la SIC y por qué no hay patente de software (Decisión 486, art. 15);
+  - cómo «amarrarse» antes de presentar el proyecto, y los modelos de acuerdo de confidencialidad, carta para radicar, acta y declaración;
+  - los negocios y los derechos;
+  - las huellas SHA‑256 de las versiones publicadas.
+- **`AVISO-LEGAL.md`:** todos los derechos reservados; las marcas ajenas son de sus titulares.
+- **`docs/PROMPT-RELEVO.md` nuevo**, para las muestras y las fases B–E. El anterior quedó en `docs/relevos/`.
+- **`docs/PEDIDO-DEL-AUTOR-2026-11-25.md`:** el cuarto mensaje, P13 (turismo), la fase F como plan solamente y la tabla de estado.
+- **`docs/VISION-Y-MISION.md`** al 26‑nov: una sola cámara y nada pintado en el suelo.
 
 ### 25-nov-2026 · 5.5.1 «La cámara de persecución» y la QA que vuelve a correr (Claude)
 - **Por qué:**

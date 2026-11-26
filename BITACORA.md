@@ -1,5 +1,17 @@
 # Bitácora de Motor City
 
+## 26-nov-2026 · Documentos: propiedad intelectual, relevo y visión (Claude)
+- **`docs/propiedad-intelectual/`** (nuevo):
+  - el inventario de obras: lo que es del autor, lo que no, y las descripciones para la DNDA;
+  - la guía del registro en la DNDA (en línea y gratis), la marca en la SIC y por qué no hay patente de software (Decisión 486, art. 15);
+  - cómo «amarrarse» antes de presentar el proyecto, y los modelos de acuerdo de confidencialidad, carta para radicar, acta y declaración;
+  - los negocios y los derechos;
+  - las huellas SHA‑256 de las versiones publicadas.
+- **`AVISO-LEGAL.md`:** todos los derechos reservados; las marcas ajenas son de sus titulares.
+- **`docs/PROMPT-RELEVO.md` nuevo**, para las muestras y las fases B–E. El anterior quedó en `docs/relevos/`.
+- **`docs/PEDIDO-DEL-AUTOR-2026-11-25.md`:** el cuarto mensaje, P13 (turismo), la fase F como plan solamente y la tabla de estado.
+- **`docs/VISION-Y-MISION.md`** al 26‑nov: una sola cámara y nada pintado en el suelo.
+
 ## 25-nov-2026 · 5.5.1 «La cámara de persecución» y la QA que vuelve a correr (Claude)
 - **Por qué:**
   - en Turno Cero, «casi tercera persona» a 52 px/m con el lente de 35° dejaba el carro llenando la pantalla: era un teleobjetivo inclinado y no daba sensación de tercera persona;
