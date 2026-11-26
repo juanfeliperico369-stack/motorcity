@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /* 5.2 · G5-12 · 📏 Medir el rendimiento (Turno Cero ?medir), en Chromium a 860 × 412.
-   - ?medir=4 abre el mundo abierto solo y el bot maneja 4 s en cada acercamiento de la cámara única (de lejos, de cerca y casi tercera persona; 5.5.0);
+   - ?medir=8 abre el mundo abierto solo y el bot maneja 8 s en cada acercamiento de la cámara única (de lejos, de cerca y casi tercera persona; 5.5.0).
+     En 5.5.1 pasó de 4 a 8 s: en la CI lenta (WebGL por software), los primeros segundos del mundo dejaban menos de 20 cuadros por tramo;
    - al final: el panel con fps, p50/p95/p99, tirones, memoria y GPU; el bot se movió de verdad;
    - «📋 Copiar resultados» deja el texto y el JSON en el portapapeles;
    - también está en ⏸ Menú → 📏 Medir el rendimiento.
@@ -10,7 +11,7 @@ const RAIZ = path.join(path.dirname(fileURLToPath(import.meta.url)), '..'), requ
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }), ctx = await b.newContext({ viewport: { width: 860, height: 412 } }), p = await ctx.newPage(), errs = [];
 await ctx.grantPermissions(['clipboard-read', 'clipboard-write']).catch(() => {});
 p.on('pageerror', e => errs.push(e.message));
-await p.goto(pathToFileURL(path.join(RAIZ, 'dist/juegos/getaway.html')).href + '?medir=4');
+await p.goto(pathToFileURL(path.join(RAIZ, 'dist/juegos/getaway.html')).href + '?medir=8');
 await p.waitForFunction(() => window.TURNO && TURNO.Medir && TURNO.Medir.res, null, { timeout: 180000 });
 const R = await p.evaluate(() => TURNO.Medir.res), dlg = await p.evaluate(() => [...document.querySelectorAll('.mcui .dialogo')].map(d => d.textContent).find(t => /Resultados de la medición/.test(t)) || '');
 await p.screenshot({ path: path.join(RAIZ, 'reportes/medir-5.2.jpg'), type: 'jpeg', quality: 78 });
