@@ -3,7 +3,7 @@
 # Las APK son las de las releases de GitHub (el digest de GitHub coincide).
 
 ## Commits publicados (main)
-motorcity  e8f5b15bb407435a59e5ee23bef04a60a7cc036b  2026-11-25T11:37:14-05:00
+motorcity  dd75047b2f84d12be35bc02099a0fd807f75ea60  2026-11-25T23:23:00-05:00 (5.5.1, PR #34)
 BicicletasUno  43f433771ea0247796304308f65ee64b5cc2d490  2026-11-25T21:41:25-05:00
 MetroZero  afbeac1b7803c30bffdc30231a2ee9ec9faa4cb5  2026-11-25T21:40:17-05:00
 RunRunZero  55c6b30064e2b5e12b8309cc57b84e86cd656095  2026-11-25T18:32:46-05:00
@@ -11,10 +11,11 @@ RunRunZero  55c6b30064e2b5e12b8309cc57b84e86cd656095  2026-11-25T18:32:46-05:00
 ## Páginas (HTML de un solo archivo)
 b6b1a0a1c1ae619c202b8917d7d852027fd44b77c3ef7d4eeab157606215e397  Juega EnCicla 3.11.0 · dist/juega-encicla.html
 7c92cee37ac4bc9e40d717e6d0821e7a2f876864dfc54b4f38f93cce3e77c6e1  El Metro 3.12.0 · dist/index.html
-1b044fed5f874fcbb8ad51f21fb2f1a14012abf990ad9c2676a33c8fd0b9bb56  Turno Cero (Motor City main) · dist/juegos/getaway.html
+236ec9748b8d8f740e1dbbc6133d2b2df9afae68e1b34fc18683639f3fde2c7b  Turno Cero 5.5.1 · dist/juegos/getaway.html
 6fd2ddff23af3af7d7113d230f8d058ae66542aeb154cec5531780447f646289  Run Scooter · index.html (gh-pages)
 
 ## APK
 eb0025b48f43b32a01490edbf5b956feb3b725a88164e4b060115dab43d007e9  JuegaEnCicla-3.11.0.apk
 e31b00468aa95475436a08c5d322487a36e5c7c4da33347e0df23a75c63e2a26  el-metro-3.12.0.apk
 82224f4f0163f8b9c488df0d26500c4c012a5cac467547dc09a5531fdd9c8c7c  RunScooter.apk (gh-pages)
+69417408e567f25997e9e1cb78242d2cc00aedbe7ec6587a8df8c70fc118dc5e  TurnoCero-MotorCity-5.5.1.apk (release v5.5.1)
