@@ -1,5 +1,14 @@
 # Bitácora de Motor City
 
+## 27-nov-2026 · Plan de Reconstrucción 3D v6 («Efecto GTA») y bases del nuevo código, datos y arte (`motor-v6/`)
+- **Pedido del autor:** rehacer el mundo 3D desde cero con texturas detalladas, topografía y relieve real, cámara cenital que gira gradualmente hacia donde mira y se mueve el jugador, arquitectura híbrida «Efecto GTA» (zonas emblemáticas con medidas exactas + resto del valle genérico), skateparks 3D reales para trucos y paradas, parkour fluido y escala SI real (persona vs. bici, moto, carro, bus y Metro).
+- **Planes publicados en los 4 repositorios:** `motorcity/docs/PLAN-RECONSTRUCCION-3D-V6.md`, `BicicletasUno/docs/PLAN-RECONSTRUCCION-3D-V6.md`, `MetroZero/docs/PLAN-RECONSTRUCCION-3D-V6.md` y `RunRunZero/docs/PLAN-RECONSTRUCCION-3D-V6.md`.
+- **Bases creadas en `motor-v6/` (código limpio ES modular, sin tocar el motor viejo):**
+  - `src/` (8 módulos ES: `escala.js`, `texturas.js`, `terreno.js`, `camara.js`, `skatepark.js`, `personaje.js`, `mundo.js`, `main.js`) + `demo.html` jugable (bucle fijo 60 Hz, auto-seguimiento gradual de cámara, zoom `72° → 34°`, *spring-arm*, desvanecimiento por edificio, Parkour/Skate/EnCicla y 3 Paradas de Trucos).
+  - `datos/`: `zonas-hero-medellin.json` (**12 Zonas Hero + 5 Skateparks**, 5.407 edificaciones reales y 760 vías medidas sobre DEM SRTM de 1.454 a 1.860 msnm) y `hero-4sur.json` (**16,7 KB**, 90 edificios reales + 31 vías + DEM 33×33).
+  - `arte/`: 4 láminas de diseño (`disenos/*.webp`), 9 texturas PBR sin costuras de Medellín (`texturas/*.webp`, **114 KB total**) y 4 capturas reales verificadas en Chrome (`capturas/*.webp`).
+- **Probado:** `node motor-v6/tests/verificar.mjs` (`RESULTADO MOTOR-V6: OK`) y Chrome Playwright en `1280 × 720` y móvil `412 × 860` (`0` errores de consola/página, `0` solapamientos de HUD, giro automático de cámara y combo de trucos verificados).
+
 ## 27-nov-2026 · Auditoría crítica y forense completa del ecosistema (solo documentación)
 - **Pedido del autor:** evaluar sin filtros por qué Motor City, Turno Cero, Juega EnCicla, El Metro y Run Scooter son malos juegos hoy, verificar si sus pedidos están bien o mal implementados, y publicar los hallazgos en los repositorios.
 - **Publicado:** `docs/AUDITORIA-CRITICA-2026-11-27.md` y 12 capturas reales (`412 × 860`) en `docs/img/auditoria-2026-11-27/` (más informes dedicados en `BicicletasUno`, `MetroZero` y `RunRunZero`).

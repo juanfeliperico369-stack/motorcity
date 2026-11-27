@@ -1224,3 +1224,14 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
   - **Run Scooter:** 100 % de las vallas tapadas por su respaldo (`models.js:121-123`), montañas de 30 m mecidas por viento (`engine.js:119`), trampa mortal de truco incompleto al pre-saltar (`game.js:448,606`), hielo silencioso (`game.js:440`), sin guardián de sonido (P8) y 50 MB muertos de `motor-city/`.
 - **Recomendación antes de seguir agregando fases:** ejecutar la cirugía del § 4 del informe (arreglar los bugs críticos de 1 hora, podar modos de relleno y copias muertas, arreglar el rendimiento base y reemplazar las pruebas complacientes) antes de sumar más parches.
 
+### Reconstrucción 3D v6 · 27‑nov‑2026 · Plan «Efecto GTA» en los 4 repos y base ejecutable `motor-v6/`
+- **Pedido del autor:** tras la auditoría, iniciar desde cero un mundo 100 % 3D texturizado con relieve real, cámara cenital única que gira gradualmente hacia donde se mueve el jugador, arquitectura híbrida «Efecto GTA» (zonas icónicas de Medellín con medidas reales exactas + resto del valle genérico), skateparks 3D para trucos y paradas, parkour mejorado y escala SI real persona vs. vehículos; publicar el plan en los repositorios y generar las bases de código, diseños y arte.
+- **Hecho:**
+  - Plan maestro en `docs/PLAN-RECONSTRUCCION-3D-V6.md` + planes dedicados en `BicicletasUno`, `MetroZero` y `RunRunZero`.
+  - Nuevo núcleo modular limpio `motor-v6/` (8 módulos ES sin *monkey-patching* + `demo.html` jugable): Biblia SI (`src/escala.js`), banco PBR (`src/texturas.js`), relieve SRTM (`src/terreno.js`), cámara cenital única con auto-seguimiento gradual + *spring-arm* + alfa por edificio (`src/camara.js`), Skatepark 4 Sur 3D con *quarter-pipes*, *funbox*, barandas de *grind* y 3 Paradas (`src/skatepark.js`), personaje 1,72 m Parkour/Skate/EnCicla (`src/personaje.js`) y mundo híbrido Hero OSM + genérico `InstancedMesh` (`src/mundo.js`).
+  - Datos reales extraídos (`motor-v6/datos/`): `zonas-hero-medellin.json` (12 Zonas Hero, 5 Skateparks, 5.407 edificios reales, 760 vías, 406 m de relieve) y `hero-4sur.json` (16,7 KB).
+  - Arte (`motor-v6/arte/`): 4 láminas de concepto/escala/PBR + 9 texturas Medellín 256×256 WebP (114 KB total) + 4 capturas verificadas en Chrome.
+- **Cómo se probó:** `node motor-v6/tests/verificar.mjs` en verde + Playwright en Chrome (`1280 × 720` y móvil `412 × 860`): `0` errores de consola/página, `0` solapamientos de HUD, auto-seguimiento de cámara y combo de trucos verificados. Código legado de v5 sin tocar.
+- **Sigue (Fase 1 del plan):** empaquetador de las 12 Zonas Hero (`~20–45 KB` c/u), *streaming* por proximidad + PWA offline sin copias muertas de 50 MB y módulo de tráfico/conducción física SI (`vehiculos.js`) + Guardián de Sonido (P8).
+
+

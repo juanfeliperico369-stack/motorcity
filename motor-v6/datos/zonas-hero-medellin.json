@@ -1,0 +1,1142 @@
+{
+  "version": "6.0.0-alpha",
+  "fuentes": "OpenStreetMap (ODbL) via Overture Maps, Catastro de Medellín (3DCon), SRTM/NASA DEM",
+  "escala": "1 unidad = 1 metro (SI)",
+  "total_zonas_hero": 12,
+  "total_skateparks": 5,
+  "zonas": [
+    {
+      "id": "centro_botero",
+      "nombre": "Centro Histórico · Plaza Botero y San Antonio",
+      "comuna": "La Candelaria",
+      "lat": 6.2518,
+      "lon": -75.5681,
+      "radio_m": 320,
+      "bioma": "centro",
+      "turismo": "Esculturas de Botero, Palacio de la Cultura, Parque Berrío, Torre Coltejer y nodo Metro San Antonio.",
+      "hitos": [
+        "Plaza Botero",
+        "Palacio de la Cultura",
+        "Museo de Antioquia",
+        "Estación Parque Berrío",
+        "Edificio Coltejer"
+      ],
+      "centro_mc4_m": {
+        "x": 14596.2,
+        "y": 23021.5
+      },
+      "topografia_real": {
+        "cota_min_msnm": 1471.3,
+        "cota_prom_msnm": 1486.8,
+        "cota_max_msnm": 1502.7,
+        "desnivel_m": 31.4,
+        "pendiente_max_pct": 6.2
+      },
+      "edificaciones_reales": {
+        "total": 550,
+        "casas": 281,
+        "edificios": 269,
+        "altura_prom_m": 13.3,
+        "altura_max_m": 95.1,
+        "pisos_max": 31
+      },
+      "vias_reales": {
+        "total_segmentos": 60,
+        "por_tipo": {
+          "calle": {
+            "n": 16,
+            "min_m": 6.0,
+            "prom_m": 7.9,
+            "max_m": 16.0
+          },
+          "avenida": {
+            "n": 16,
+            "min_m": 10.0,
+            "prom_m": 14.3,
+            "max_m": 21.0
+          },
+          "carrera": {
+            "n": 7,
+            "min_m": 7.0,
+            "prom_m": 8.8,
+            "max_m": 10.0
+          },
+          "ciclorruta": {
+            "n": 3,
+            "min_m": 2.5,
+            "prom_m": 2.5,
+            "max_m": 2.5
+          },
+          "peatonal": {
+            "n": 14,
+            "min_m": 5.0,
+            "prom_m": 5.0,
+            "max_m": 5.0
+          },
+          "escalas": {
+            "n": 4,
+            "min_m": 3.0,
+            "prom_m": 3.0,
+            "max_m": 3.0
+          }
+        },
+        "nombres_clave": [
+          "Calle 37D",
+          "Calle 47A",
+          "Calle 48A",
+          "Calle 49",
+          "Calle 51B",
+          "Calle 52A",
+          "Calle 56",
+          "Calle 57AA",
+          "Carrera 26",
+          "Carrera 27",
+          "Carrera 39",
+          "Carrera 43"
+        ]
+      },
+      "estaciones_metro": [
+        "La Playa (MP2)",
+        "Parque Berrío (A)",
+        "Parque Berrío (AL-C6-010)",
+        "San Antonio (A)",
+        "San Antonio (B)",
+        "San Antonio (T)",
+        "San José (T)"
+      ],
+      "estaciones_encicla": [
+        "Museo de Antioquia",
+        "Parque Berrío"
+      ]
+    },
+    {
+      "id": "alpujarra_luces",
+      "nombre": "Eje Cívico · Parque de las Luces, Alpujarra y Pies Descalzos",
+      "comuna": "La Candelaria",
+      "lat": 6.2452,
+      "lon": -75.5735,
+      "radio_m": 320,
+      "bioma": "centro",
+      "turismo": "300 postes luminosos de Plaza Cisneros, Biblioteca EPM, Edificios Vásquez y Carré, Estación Cisneros y Pies Descalzos.",
+      "hitos": [
+        "Parque de las Luces",
+        "Biblioteca EPM",
+        "Edificios Vásquez y Carré",
+        "Parque de los Pies Descalzos",
+        "La Alpujarra"
+      ],
+      "centro_mc4_m": {
+        "x": 13998.6,
+        "y": 23751.3
+      },
+      "topografia_real": {
+        "cota_min_msnm": 1466.0,
+        "cota_prom_msnm": 1473.7,
+        "cota_max_msnm": 1482.2,
+        "desnivel_m": 16.2,
+        "pendiente_max_pct": 4.9
+      },
+      "edificaciones_reales": {
+        "total": 137,
+        "casas": 58,
+        "edificios": 79,
+        "altura_prom_m": 14.5,
+        "altura_max_m": 73.8,
+        "pisos_max": 24
+      },
+      "vias_reales": {
+        "total_segmentos": 95,
+        "por_tipo": {
+          "calle": {
+            "n": 17,
+            "min_m": 5.0,
+            "prom_m": 8.3,
+            "max_m": 14.5
+          },
+          "avenida": {
+            "n": 36,
+            "min_m": 7.0,
+            "prom_m": 13.1,
+            "max_m": 21.5
+          },
+          "carrera": {
+            "n": 23,
+            "min_m": 7.0,
+            "prom_m": 10.2,
+            "max_m": 18.0
+          },
+          "ciclorruta": {
+            "n": 7,
+            "min_m": 2.5,
+            "prom_m": 2.5,
+            "max_m": 2.5
+          },
+          "peatonal": {
+            "n": 1,
+            "min_m": 5.0,
+            "prom_m": 5.0,
+            "max_m": 5.0
+          },
+          "escalas": {
+            "n": 11,
+            "min_m": 3.0,
+            "prom_m": 3.0,
+            "max_m": 3.0
+          }
+        },
+        "nombres_clave": [
+          "Avenida 80-81",
+          "Avenida Ferrocarril",
+          "Avenida del Ferrocarril",
+          "Calle 37D",
+          "Calle 38A",
+          "Calle 41 (Avenida Los Huesos)",
+          "Calle 45",
+          "Calle 47A",
+          "Calle 48A",
+          "Calle 57C",
+          "Carrera 25B",
+          "Carrera 31"
+        ]
+      },
+      "estaciones_metro": [
+        "Alpujarra (A)",
+        "Cisneros (B)",
+        "Plaza Mayor (MP1)",
+        "San Antonio (A)",
+        "San Antonio (B)",
+        "San Antonio (T)"
+      ],
+      "estaciones_encicla": [
+        "La Alpujarra",
+        "Plaza Cisneros",
+        "Plaza Mayor",
+        "San Antonio"
+      ]
+    },
+    {
+      "id": "parques_del_rio",
+      "nombre": "Parques del Río · Corredor Vial y Skate/Parkour",
+      "comuna": "Laureles / Conquistadores",
+      "lat": 6.2458,
+      "lon": -75.5789,
+      "radio_m": 280,
+      "bioma": "parque_rio",
+      "turismo": "Puente peatonal de madera, soterrado del río Medellín, terrazas urbanas y zona de skate y parkour.",
+      "hitos": [
+        "Parques del Río",
+        "Puente Peatonal de Madera",
+        "Río Medellín",
+        "Zona Skate & Parkour"
+      ],
+      "skatepark": true,
+      "centro_mc4_m": {
+        "x": 13401.0,
+        "y": 23685.0
+      },
+      "topografia_real": {
+        "cota_min_msnm": 1466.0,
+        "cota_prom_msnm": 1473.9,
+        "cota_max_msnm": 1482.9,
+        "desnivel_m": 16.9,
+        "pendiente_max_pct": 10.7
+      },
+      "edificaciones_reales": {
+        "total": 98,
+        "casas": 45,
+        "edificios": 53,
+        "altura_prom_m": 10.9,
+        "altura_max_m": 37.2,
+        "pisos_max": 12
+      },
+      "vias_reales": {
+        "total_segmentos": 79,
+        "por_tipo": {
+          "calle": {
+            "n": 19,
+            "min_m": 7.0,
+            "prom_m": 7.7,
+            "max_m": 11.5
+          },
+          "avenida": {
+            "n": 9,
+            "min_m": 10.5,
+            "prom_m": 16.3,
+            "max_m": 21.5
+          },
+          "autopista": {
+            "n": 8,
+            "min_m": 9.0,
+            "prom_m": 10.2,
+            "max_m": 11.5
+          },
+          "carrera": {
+            "n": 22,
+            "min_m": 6.5,
+            "prom_m": 8.4,
+            "max_m": 15.0
+          },
+          "ciclorruta": {
+            "n": 6,
+            "min_m": 2.5,
+            "prom_m": 2.5,
+            "max_m": 2.5
+          },
+          "escalas": {
+            "n": 15,
+            "min_m": 3.0,
+            "prom_m": 3.0,
+            "max_m": 3.0
+          }
+        },
+        "nombres_clave": [
+          "Avenida Carrera 64",
+          "Avenida Ferrocarril",
+          "Calle 41",
+          "Calle 42C +",
+          "Calle 42C -",
+          "Calle 44 +",
+          "Calle 44 + 39",
+          "Calle 44 -",
+          "Calle 57C",
+          "Calle 62",
+          "Calle 62A",
+          "Calle 63B"
+        ]
+      },
+      "estaciones_metro": [
+        "Plaza Mayor (MP1)"
+      ],
+      "estaciones_encicla": [
+        "Avenida San Juan",
+        "Plaza Mayor"
+      ]
+    },
+    {
+      "id": "estadio_atanasio",
+      "nombre": "Unidad Deportiva Atanasio Girardot · Estadio",
+      "comuna": "Laureles-Estadio",
+      "lat": 6.2568,
+      "lon": -75.5902,
+      "radio_m": 340,
+      "bioma": "laureles",
+      "turismo": "Estadio Atanasio Girardot, pista de patinaje, ciclovías arboladas de Laureles y Skatepark Estadio.",
+      "hitos": [
+        "Estadio Atanasio Girardot",
+        "Estación Estadio",
+        "Skatepark Estadio",
+        "Obelisco"
+      ],
+      "skatepark": true,
+      "centro_mc4_m": {
+        "x": 12150.6,
+        "y": 22468.6
+      },
+      "topografia_real": {
+        "cota_min_msnm": 1479.7,
+        "cota_prom_msnm": 1486.2,
+        "cota_max_msnm": 1491.0,
+        "desnivel_m": 11.2,
+        "pendiente_max_pct": 4.5
+      },
+      "edificaciones_reales": {
+        "total": 305,
+        "casas": 208,
+        "edificios": 97,
+        "altura_prom_m": 9.5,
+        "altura_max_m": 55.5,
+        "pisos_max": 18
+      },
+      "vias_reales": {
+        "total_segmentos": 42,
+        "por_tipo": {
+          "calle": {
+            "n": 17,
+            "min_m": 6.0,
+            "prom_m": 6.5,
+            "max_m": 9.0
+          },
+          "avenida": {
+            "n": 7,
+            "min_m": 7.0,
+            "prom_m": 11.9,
+            "max_m": 15.0
+          },
+          "carrera": {
+            "n": 3,
+            "min_m": 7.5,
+            "prom_m": 8.8,
+            "max_m": 10.0
+          },
+          "ciclorruta": {
+            "n": 6,
+            "min_m": 2.5,
+            "prom_m": 2.5,
+            "max_m": 2.5
+          },
+          "peatonal": {
+            "n": 8,
+            "min_m": 5.0,
+            "prom_m": 5.0,
+            "max_m": 5.0
+          },
+          "escalas": {
+            "n": 1,
+            "min_m": 3.0,
+            "prom_m": 3.0,
+            "max_m": 3.0
+          }
+        },
+        "nombres_clave": [
+          "Calle 107 A",
+          "Calle 111",
+          "Calle 21",
+          "Calle 46A",
+          "Calle 47",
+          "Calle 48B",
+          "Calle 49",
+          "Calle 5",
+          "Calle 52A",
+          "Calle 57B -",
+          "Calle 84B",
+          "Carrera 109"
+        ]
+      },
+      "estaciones_metro": [
+        "Estadio (B)"
+      ],
+      "estaciones_encicla": [
+        "Estadio",
+        "Unidad Deportiva"
+      ]
+    },
+    {
+      "id": "distrito_norte",
+      "nombre": "Distrito Cultural Norte · Parque Explora, Botánico y Deseos",
+      "comuna": "Aranjuez",
+      "lat": 6.2704,
+      "lon": -75.5656,
+      "radio_m": 340,
+      "bioma": "cultural_norte",
+      "turismo": "Cuatro cubos rojos del Parque Explora, Orquideorama del Jardín Botánico, Planetario, Parque de los Deseos y Estación Universidad.",
+      "hitos": [
+        "Parque Explora",
+        "Jardín Botánico",
+        "Planetario",
+        "Parque de los Deseos",
+        "Estación Universidad"
+      ],
+      "skatepark": true,
+      "centro_mc4_m": {
+        "x": 14872.8,
+        "y": 20964.8
+      },
+      "topografia_real": {
+        "cota_min_msnm": 1454.0,
+        "cota_prom_msnm": 1464.6,
+        "cota_max_msnm": 1484.4,
+        "desnivel_m": 30.4,
+        "pendiente_max_pct": 6.9
+      },
+      "edificaciones_reales": {
+        "total": 256,
+        "casas": 151,
+        "edificios": 105,
+        "altura_prom_m": 9.2,
+        "altura_max_m": 55.5,
+        "pisos_max": 18
+      },
+      "vias_reales": {
+        "total_segmentos": 78,
+        "por_tipo": {
+          "calle": {
+            "n": 12,
+            "min_m": 6.0,
+            "prom_m": 7.3,
+            "max_m": 9.0
+          },
+          "avenida": {
+            "n": 13,
+            "min_m": 14.0,
+            "prom_m": 14.7,
+            "max_m": 15.0
+          },
+          "carrera": {
+            "n": 10,
+            "min_m": 7.0,
+            "prom_m": 9.8,
+            "max_m": 11.5
+          },
+          "ciclorruta": {
+            "n": 5,
+            "min_m": 2.5,
+            "prom_m": 2.5,
+            "max_m": 2.5
+          },
+          "peatonal": {
+            "n": 1,
+            "min_m": 5.0,
+            "prom_m": 5.0,
+            "max_m": 5.0
+          },
+          "escalas": {
+            "n": 37,
+            "min_m": 3.0,
+            "prom_m": 3.0,
+            "max_m": 3.0
+          }
+        },
+        "nombres_clave": [
+          "Calle 44A",
+          "Calle 47A",
+          "Calle 51B",
+          "Calle 73",
+          "Calle 75",
+          "Calle 77EE",
+          "Carrera 49A",
+          "Carrera 51CC",
+          "Carrera 51D",
+          "Carrera 51E",
+          "Carrera 58",
+          "Ciclorruta Carabobo"
+        ]
+      },
+      "estaciones_metro": [
+        "Universidad (A)",
+        "Universidad (AL-C6-020)"
+      ],
+      "estaciones_encicla": [
+        "Estación Universidad",
+        "Jardín Botánico",
+        "Parque Explora"
+      ]
+    },
+    {
+      "id": "ciudad_del_rio",
+      "nombre": "Ciudad del Río · MAMM y Skatepark",
+      "comuna": "El Poblado / Industriales",
+      "lat": 6.2238,
+      "lon": -75.5747,
+      "radio_m": 280,
+      "bioma": "moderno_rio",
+      "turismo": "Museo de Arte Moderno de Medellín (MAMM), antiguas bodegas de ladrillo, plazoleta y Skatepark Ciudad del Río.",
+      "hitos": [
+        "MAMM",
+        "Parque Ciudad del Río",
+        "Skatepark Ciudad del Río",
+        "Estación Industriales"
+      ],
+      "skatepark": true,
+      "centro_mc4_m": {
+        "x": 13865.8,
+        "y": 26117.6
+      },
+      "topografia_real": {
+        "cota_min_msnm": 1480.0,
+        "cota_prom_msnm": 1485.5,
+        "cota_max_msnm": 1489.8,
+        "desnivel_m": 9.8,
+        "pendiente_max_pct": 6.0
+      },
+      "edificaciones_reales": {
+        "total": 162,
+        "casas": 89,
+        "edificios": 73,
+        "altura_prom_m": 20.9,
+        "altura_max_m": 98.2,
+        "pisos_max": 32
+      },
+      "vias_reales": {
+        "total_segmentos": 30,
+        "por_tipo": {
+          "calle": {
+            "n": 12,
+            "min_m": 5.5,
+            "prom_m": 6.8,
+            "max_m": 7.5
+          },
+          "avenida": {
+            "n": 4,
+            "min_m": 14.5,
+            "prom_m": 14.8,
+            "max_m": 15.0
+          },
+          "autopista": {
+            "n": 2,
+            "min_m": 10.0,
+            "prom_m": 10.2,
+            "max_m": 10.5
+          },
+          "carrera": {
+            "n": 7,
+            "min_m": 8.0,
+            "prom_m": 9.5,
+            "max_m": 11.0
+          },
+          "ciclorruta": {
+            "n": 2,
+            "min_m": 2.5,
+            "prom_m": 2.5,
+            "max_m": 2.5
+          },
+          "peatonal": {
+            "n": 2,
+            "min_m": 5.0,
+            "prom_m": 5.0,
+            "max_m": 5.0
+          },
+          "escalas": {
+            "n": 1,
+            "min_m": 3.0,
+            "prom_m": 3.0,
+            "max_m": 3.0
+          }
+        },
+        "nombres_clave": [
+          "Calle 118",
+          "Calle 16 B",
+          "Calle 20A",
+          "Calle 25B",
+          "Calle 47B",
+          "Calle 53",
+          "Carrera 13",
+          "Carrera 14",
+          "Carrera 19C",
+          "Carrera 26",
+          "Carrera 38 -",
+          "Carrera 43 F"
+        ]
+      },
+      "estaciones_metro": [],
+      "estaciones_encicla": [
+        "Ciudad del Río"
+      ]
+    },
+    {
+      "id": "puente_4sur",
+      "nombre": "Puente de la 4 Sur · Skatepark 4 Sur y Río Medellín",
+      "comuna": "El Poblado / Guayabal",
+      "lat": 6.2055,
+      "lon": -75.5778,
+      "radio_m": 300,
+      "bioma": "puente_4sur",
+      "turismo": "El puente atirantado más emblemático de Medellín y el Skatepark 4 Sur bajo sus arcos y pilones blancos.",
+      "hitos": [
+        "Puente Gilberto Echeverri (4 Sur)",
+        "Skatepark 4 Sur",
+        "Río Medellín",
+        "Estación Poblado / Aguacatala"
+      ],
+      "skatepark": true,
+      "centro_mc4_m": {
+        "x": 13522.8,
+        "y": 28141.1
+      },
+      "topografia_real": {
+        "cota_min_msnm": 1496.0,
+        "cota_prom_msnm": 1501.8,
+        "cota_max_msnm": 1520.2,
+        "desnivel_m": 24.1,
+        "pendiente_max_pct": 8.1
+      },
+      "edificaciones_reales": {
+        "total": 196,
+        "casas": 56,
+        "edificios": 140,
+        "altura_prom_m": 13.1,
+        "altura_max_m": 55.5,
+        "pisos_max": 18
+      },
+      "vias_reales": {
+        "total_segmentos": 79,
+        "por_tipo": {
+          "calle": {
+            "n": 21,
+            "min_m": 6.0,
+            "prom_m": 7.0,
+            "max_m": 9.0
+          },
+          "avenida": {
+            "n": 20,
+            "min_m": 5.5,
+            "prom_m": 10.6,
+            "max_m": 24.5
+          },
+          "autopista": {
+            "n": 18,
+            "min_m": 5.5,
+            "prom_m": 9.9,
+            "max_m": 14.0
+          },
+          "carrera": {
+            "n": 6,
+            "min_m": 6.0,
+            "prom_m": 8.3,
+            "max_m": 10.0
+          },
+          "ciclorruta": {
+            "n": 10,
+            "min_m": 2.5,
+            "prom_m": 2.5,
+            "max_m": 2.5
+          },
+          "escalas": {
+            "n": 4,
+            "min_m": 3.0,
+            "prom_m": 3.0,
+            "max_m": 3.0
+          }
+        },
+        "nombres_clave": [
+          "Avenida Carrera 42",
+          "Calle 1 C",
+          "Calle 11D Sur",
+          "Calle 123A",
+          "Calle 12C Sur",
+          "Calle 3SUR",
+          "Calle 4 Sur +",
+          "Calle 4 Sur + +",
+          "Calle 4 Sur -",
+          "Calle 6 Sur",
+          "Calle 6a",
+          "Carrera 26"
+        ]
+      },
+      "estaciones_metro": [],
+      "estaciones_encicla": [
+        "Calle 10",
+        "Santa María de los Ángeles"
+      ]
+    },
+    {
+      "id": "lleras_provenza",
+      "nombre": "El Poblado · Parque Lleras y Provenza",
+      "comuna": "El Poblado",
+      "lat": 6.209,
+      "lon": -75.5677,
+      "radio_m": 280,
+      "bioma": "poblado",
+      "turismo": "Calles arborizadas en pendiente real, bulevar de Provenza, torres de ladrillo entre bosque y Parque Lleras.",
+      "hitos": [
+        "Parque Lleras",
+        "Calle Provenza",
+        "Parque El Poblado"
+      ],
+      "centro_mc4_m": {
+        "x": 14640.4,
+        "y": 27754.1
+      },
+      "topografia_real": {
+        "cota_min_msnm": 1533.6,
+        "cota_prom_msnm": 1554.6,
+        "cota_max_msnm": 1582.8,
+        "desnivel_m": 49.3,
+        "pendiente_max_pct": 11.1
+      },
+      "edificaciones_reales": {
+        "total": 476,
+        "casas": 267,
+        "edificios": 209,
+        "altura_prom_m": 14.1,
+        "altura_max_m": 95.1,
+        "pisos_max": 31
+      },
+      "vias_reales": {
+        "total_segmentos": 48,
+        "por_tipo": {
+          "calle": {
+            "n": 30,
+            "min_m": 4.0,
+            "prom_m": 6.8,
+            "max_m": 8.5
+          },
+          "avenida": {
+            "n": 6,
+            "min_m": 7.0,
+            "prom_m": 11.3,
+            "max_m": 17.0
+          },
+          "carrera": {
+            "n": 4,
+            "min_m": 7.0,
+            "prom_m": 7.1,
+            "max_m": 7.5
+          },
+          "peatonal": {
+            "n": 7,
+            "min_m": 5.0,
+            "prom_m": 5.0,
+            "max_m": 5.0
+          },
+          "escalas": {
+            "n": 1,
+            "min_m": 3.0,
+            "prom_m": 3.0,
+            "max_m": 3.0
+          }
+        },
+        "nombres_clave": [
+          "Calle 10",
+          "Calle 107AA",
+          "Calle 11",
+          "Calle 126A",
+          "Calle 13A",
+          "Calle 22D",
+          "Calle 49B",
+          "Calle 5 G",
+          "Calle 9",
+          "Carrera 11",
+          "Carrera 23",
+          "Carrera 30"
+        ]
+      },
+      "estaciones_metro": [],
+      "estaciones_encicla": [
+        "Parque Lleras",
+        "Parque del Poblado",
+        "Provenza"
+      ]
+    },
+    {
+      "id": "cerro_nutibara",
+      "nombre": "Cerro Nutibara y Pueblito Paisa",
+      "comuna": "Belén / Guayabal",
+      "lat": 6.2361,
+      "lon": -75.58,
+      "radio_m": 300,
+      "bioma": "cerro",
+      "turismo": "Cerro tutelar de 80 m sobre el valle con vía serpenteante, Pueblito Paisa en la cima y mirador 360°.",
+      "hitos": [
+        "Pueblito Paisa",
+        "Mirador 360°",
+        "Teatro Carlos Vieco"
+      ],
+      "centro_mc4_m": {
+        "x": 13279.3,
+        "y": 24757.5
+      },
+      "topografia_real": {
+        "cota_min_msnm": 1477.0,
+        "cota_prom_msnm": 1505.0,
+        "cota_max_msnm": 1547.0,
+        "desnivel_m": 70.0,
+        "pendiente_max_pct": 26.8
+      },
+      "edificaciones_reales": {
+        "total": 99,
+        "casas": 59,
+        "edificios": 40,
+        "altura_prom_m": 11.2,
+        "altura_max_m": 37.2,
+        "pisos_max": 12
+      },
+      "vias_reales": {
+        "total_segmentos": 47,
+        "por_tipo": {
+          "calle": {
+            "n": 27,
+            "min_m": 4.0,
+            "prom_m": 6.9,
+            "max_m": 14.5
+          },
+          "avenida": {
+            "n": 5,
+            "min_m": 7.5,
+            "prom_m": 13.3,
+            "max_m": 15.0
+          },
+          "autopista": {
+            "n": 2,
+            "min_m": 7.5,
+            "prom_m": 8.0,
+            "max_m": 8.5
+          },
+          "ciclorruta": {
+            "n": 2,
+            "min_m": 2.5,
+            "prom_m": 2.5,
+            "max_m": 2.5
+          },
+          "escalas": {
+            "n": 11,
+            "min_m": 3.0,
+            "prom_m": 3.0,
+            "max_m": 3.0
+          }
+        },
+        "nombres_clave": [
+          "Avenida 36C",
+          "Calle 29B",
+          "Calle 32B",
+          "Calle 32EE",
+          "Calle 33 -",
+          "Calle 5 Sur -",
+          "Calle 62",
+          "Calle 62A",
+          "Calle 80",
+          "Carrera 43 A",
+          "Carrera 43A-",
+          "Carrera 43C"
+        ]
+      },
+      "estaciones_metro": [
+        "Nutibara (MP1)",
+        "Nutibara (MP2)"
+      ],
+      "estaciones_encicla": [
+        "Parques del Río"
+      ]
+    },
+    {
+      "id": "comuna13_escaleras",
+      "nombre": "Comuna 13 · Escaleras Eléctricas y San Javier",
+      "comuna": "San Javier",
+      "lat": 6.2478,
+      "lon": -75.6194,
+      "radio_m": 280,
+      "bioma": "ladera",
+      "turismo": "Casas de ladrillo en ladera empinada, escaleras eléctricas techadas, miradores, arte urbano y conexión a Metrocable Línea J.",
+      "hitos": [
+        "Escaleras Eléctricas Comuna 13",
+        "Viaducto Media Ladera",
+        "Estación San Javier"
+      ],
+      "centro_mc4_m": {
+        "x": 8919.3,
+        "y": 23463.8
+      },
+      "topografia_real": {
+        "cota_min_msnm": 1590.1,
+        "cota_prom_msnm": 1621.2,
+        "cota_max_msnm": 1660.1,
+        "desnivel_m": 70.0,
+        "pendiente_max_pct": 22.4
+      },
+      "edificaciones_reales": {
+        "total": 933,
+        "casas": 848,
+        "edificios": 85,
+        "altura_prom_m": 7.2,
+        "altura_max_m": 28.1,
+        "pisos_max": 9
+      },
+      "vias_reales": {
+        "total_segmentos": 64,
+        "por_tipo": {
+          "calle": {
+            "n": 54,
+            "min_m": 4.0,
+            "prom_m": 6.5,
+            "max_m": 8.0
+          },
+          "peatonal": {
+            "n": 3,
+            "min_m": 5.0,
+            "prom_m": 5.0,
+            "max_m": 5.0
+          },
+          "escalas": {
+            "n": 7,
+            "min_m": 3.0,
+            "prom_m": 3.0,
+            "max_m": 3.0
+          }
+        },
+        "nombres_clave": [
+          "Calle 16D",
+          "Calle 32C",
+          "Calle 34AD",
+          "Calle 34BB",
+          "Calle 34D",
+          "Calle 34E",
+          "Calle 34F",
+          "Calle 35B",
+          "Calle 35C",
+          "Calle 35CC",
+          "Calle 36",
+          "Calle 37"
+        ]
+      },
+      "estaciones_metro": [
+        "Las Independencias I (base) (ESC13)",
+        "Las Independencias I (parte alta) (ESC13)"
+      ],
+      "estaciones_encicla": []
+    },
+    {
+      "id": "ayacucho_tranvia",
+      "nombre": "Corredor Tranvía de Ayacucho y Casa de la Memoria",
+      "comuna": "Buenos Aires",
+      "lat": 6.2465,
+      "lon": -75.5578,
+      "radio_m": 280,
+      "bioma": "mixto_ladera",
+      "turismo": "Calle peatonal compartida con el Tranvía en subida hacia Miraflores, Parque Bicentenario y Museo Casa de la Memoria.",
+      "hitos": [
+        "Tranvía de Ayacucho",
+        "Museo Casa de la Memoria",
+        "Parque Bicentenario",
+        "Estación Pabellón del Agua"
+      ],
+      "centro_mc4_m": {
+        "x": 15736.0,
+        "y": 23607.5
+      },
+      "topografia_real": {
+        "cota_min_msnm": 1505.6,
+        "cota_prom_msnm": 1515.9,
+        "cota_max_msnm": 1532.8,
+        "desnivel_m": 27.2,
+        "pendiente_max_pct": 9.6
+      },
+      "edificaciones_reales": {
+        "total": 645,
+        "casas": 403,
+        "edificios": 242,
+        "altura_prom_m": 10.8,
+        "altura_max_m": 86.0,
+        "pisos_max": 28
+      },
+      "vias_reales": {
+        "total_segmentos": 40,
+        "por_tipo": {
+          "calle": {
+            "n": 18,
+            "min_m": 6.0,
+            "prom_m": 7.0,
+            "max_m": 11.5
+          },
+          "avenida": {
+            "n": 2,
+            "min_m": 9.0,
+            "prom_m": 11.8,
+            "max_m": 14.5
+          },
+          "carrera": {
+            "n": 13,
+            "min_m": 7.0,
+            "prom_m": 8.2,
+            "max_m": 10.0
+          },
+          "ciclorruta": {
+            "n": 3,
+            "min_m": 2.5,
+            "prom_m": 2.5,
+            "max_m": 2.5
+          },
+          "peatonal": {
+            "n": 3,
+            "min_m": 5.0,
+            "prom_m": 5.0,
+            "max_m": 5.0
+          },
+          "escalas": {
+            "n": 1,
+            "min_m": 3.0,
+            "prom_m": 3.0,
+            "max_m": 3.0
+          }
+        },
+        "nombres_clave": [
+          "Calle 107E",
+          "Calle 126A",
+          "Calle 35C -",
+          "Calle 47",
+          "Calle 49",
+          "Calle 52A",
+          "Calle 55B",
+          "Calle 56",
+          "Calle 58",
+          "Carrera 27",
+          "Carrera 30",
+          "Carrera 33D"
+        ]
+      },
+      "estaciones_metro": [
+        "Bicentenario (T)",
+        "Cl. 58 con Cra. 36A (AL-C6-008)",
+        "Cra. 36A con Cl. 51 (AL-C6-010)",
+        "Pabellón del Agua (T)"
+      ],
+      "estaciones_encicla": [
+        "Ayacucho",
+        "Bomboná"
+      ]
+    },
+    {
+      "id": "santo_domingo_cable",
+      "nombre": "Santo Domingo Savio · Metrocable Línea K y Laderas",
+      "comuna": "Popular",
+      "lat": 6.2989,
+      "lon": -75.5441,
+      "radio_m": 280,
+      "bioma": "ladera_alta",
+      "turismo": "Subida vertiginosa por Metrocable +450 m sobre el río, arquitectura de ladera real y vista completa del Valle de Aburrá.",
+      "hitos": [
+        "Estación Metrocable Santo Domingo",
+        "Parque Biblioteca",
+        "Mirador Nororiental"
+      ],
+      "centro_mc4_m": {
+        "x": 17252.0,
+        "y": 17813.5
+      },
+      "topografia_real": {
+        "cota_min_msnm": 1669.5,
+        "cota_prom_msnm": 1762.4,
+        "cota_max_msnm": 1859.5,
+        "desnivel_m": 190.0,
+        "pendiente_max_pct": 47.3
+      },
+      "edificaciones_reales": {
+        "total": 1550,
+        "casas": 1434,
+        "edificios": 116,
+        "altura_prom_m": 7.0,
+        "altura_max_m": 18.9,
+        "pisos_max": 6
+      },
+      "vias_reales": {
+        "total_segmentos": 60,
+        "por_tipo": {
+          "calle": {
+            "n": 51,
+            "min_m": 3.0,
+            "prom_m": 5.8,
+            "max_m": 7.5
+          },
+          "carrera": {
+            "n": 5,
+            "min_m": 7.0,
+            "prom_m": 8.0,
+            "max_m": 10.0
+          },
+          "escalas": {
+            "n": 4,
+            "min_m": 3.0,
+            "prom_m": 3.0,
+            "max_m": 3.0
+          }
+        },
+        "nombres_clave": [
+          "Avenida 42",
+          "Calle 104AA",
+          "Calle 106C",
+          "Calle 107CC",
+          "Calle 107F",
+          "Calle 109 -",
+          "Calle 110BB",
+          "Calle 111A",
+          "Calle 114",
+          "Carrera 28",
+          "Carrera 28F",
+          "Carrera 29A"
+        ]
+      },
+      "estaciones_metro": [
+        "Popular No. 1 (AL-C6-013)"
+      ],
+      "estaciones_encicla": []
+    }
+  ]
+}

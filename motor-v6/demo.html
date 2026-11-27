@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Motor 3D v6 · Efecto GTA Medellín (Puente 4 Sur + Skatepark + Escala SI)</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f1b2b'/%3E%3Cpath d='M6 23 L16 7 L26 23 Z' fill='%239bd341'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #0f1b2b;
+    --panel: rgba(15, 27, 43, 0.78);
+    --borde: rgba(255, 255, 255, 0.16);
+    --texto: #f4f6f8;
+    --acento: #9bd341;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: system-ui, -apple-system, sans-serif; color: var(--texto); }
+  #cv { display: block; width: 100%; height: 100%; touch-action: none; }
+
+  /* HUD superior minimalista (cero solapamientos) */
+  .top {
+    position: fixed; top: max(10px, env(safe-area-inset-top)); left: 10px; right: 10px;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    pointer-events: none; z-index: 10;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    background: var(--panel); border: 1px solid var(--borde); backdrop-filter: blur(8px);
+    padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  .topBtns { display: flex; gap: 6px; pointer-events: auto; }
+  .btn {
+    min-width: 44px; min-height: 44px; padding: 0 12px; border-radius: 12px;
+    border: 1px solid var(--borde); background: var(--panel); color: var(--texto);
+    font-size: 13px; font-weight: 700; cursor: pointer; backdrop-filter: blur(8px);
+    display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  }
+  .btn:active { transform: scale(0.95); background: rgba(155, 211, 65, 0.25); }
+  .btn.pri { background: var(--acento); color: #0b1c2e; border-color: transparent; }
+
+  /* Aviso único (cola limpia, nunca tapa el centro ni el HUD) */
+  #aviso {
+    position: fixed; top: max(62px, calc(env(safe-area-inset-top) + 54px)); left: 50%;
+    transform: translateX(-50%) translateY(-8px); opacity: 0; pointer-events: none;
+    background: rgba(12, 22, 36, 0.9); border: 1px solid rgba(155, 211, 65, 0.45);
+    padding: 7px 14px; border-radius: 10px; font-size: 13px; font-weight: 600;
+    text-align: center; max-width: min(90vw, 440px); transition: opacity .2s, transform .2s; z-index: 12;
+  }
+  #aviso.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+  @media (max-width: 600px) {
+    #aviso { top: max(88px, calc(env(safe-area-inset-top) + 82px)); font-size: 12px; }
+  }
+
+  /* Controles inferiores limpios */
+  #joy {
+    position: fixed; left: max(18px, env(safe-area-inset-left)); bottom: max(22px, env(safe-area-inset-bottom));
+    width: 112px; height: 112px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08); border: 2px solid rgba(255, 255, 255, 0.28);
+    display: flex; align-items: center; justify-content: center; touch-action: none; z-index: 10;
+  }
+  #joyKnob {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: rgba(155, 211, 65, 0.88); box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+  }
+  .acciones {
+    position: fixed; right: max(18px, env(safe-area-inset-right)); bottom: max(22px, env(safe-area-inset-bottom));
+    display: flex; gap: 10px; z-index: 10;
+  }
+  .actBtn {
+    width: 64px; height: 64px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.28); background: var(--panel); color: var(--texto);
+    font-size: 12px; font-weight: 800; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(8px);
+  }
+  .actBtn.salto { background: rgba(155, 211, 65, 0.92); color: #0b1c2e; border-color: #d8f5a2; }
+  .actBtn:active { transform: scale(0.93); }
+
+  body.horiz #joy { width: 104px; height: 104px; left: 26px; bottom: 20px; }
+  body.horiz .acciones { right: 26px; bottom: 20px; }
+</style>
+</head>
+<body>
+  <canvas id="cv"></canvas>
+
+  <div class="top">
+    <div class="chips">
+      <div class="chip" id="chipVel">0 km/h · 1500 msnm</div>
+      <div class="chip" id="chipPts">★ 0 · Paradas 0/3</div>
+    </div>
+    <div class="topBtns">
+      <button class="btn" id="bModo" title="Cambiar Skate / Parkour / EnCicla (Tab)">🛹 Skate</button>
+      <button class="btn" id="bZoom" title="Acercar / alejar cámara única (C)">🔍</button>
+      <button class="btn" id="bEscala" title="Ir a la fila de escala SI 1:1">📏</button>
+    </div>
+  </div>
+
+  <div id="aviso"></div>
+
+  <div id="joy" aria-label="Palanca de movimiento"><div id="joyKnob"></div></div>
+  <div class="acciones">
+    <button class="actBtn" id="bTruco" aria-label="Truco o deslizar"><span>★</span><span>TRUCO</span></button>
+    <button class="actBtn salto" id="bSalto" aria-label="Saltar"><span>▲</span><span>SALTO</span></button>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
