@@ -1,4 +1,4 @@
-<!-- Generado por node motor.mjs documento · Motor City 5.5.1 · no se edita a mano: edita los documentos de origen -->
+<!-- Generado por node motor.mjs documento · Motor City 5.5.2 · no se edita a mano: edita los documentos de origen -->
 
 # Contexto y entrega de Codex · Motor City y Turno Cero
 
@@ -1266,6 +1266,30 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
     - el pedido con P13, la tabla de estado y el plan de la fase F;
     - **el `docs/PROMPT-RELEVO.md` nuevo**; el anterior quedó en `docs/relevos/`.
 - **Sigue:** lo del § 5 del prompt de relevo, que pone primero pulir para las muestras y después las fases B–E. La fase F solo con el OK del autor.
+
+### Auditoría crítica · 27‑nov‑2026 · Diagnóstico forense del motor y los cuatro juegos (solo documentación)
+- **Pedido del autor:** crítica y auditoría completa sin filtros de por qué Motor City, Turno Cero, Juega EnCicla, El Metro y Run Scooter son malos juegos, comprobando en código y en ejecución real si sus pedidos (P1–P13 y planes previos) se implementaron bien o mal, y publicando los hallazgos en los repositorios.
+- **Publicado (sin tocar código de los juegos):**
+  - informe maestro en `motorcity/docs/AUDITORIA-CRITICA-2026-11-27.md` (+ 12 capturas WebP reales en `docs/img/auditoria-2026-11-27/`);
+  - informes dedicados con evidencia visual en `BicicletasUno/docs/AUDITORIA-CRITICA-2026-11-27.md`, `MetroZero/docs/AUDITORIA-CRITICA-2026-11-27.md` y `RunRunZero/docs/AUDITORIA-CRITICA-2026-11-27.md`.
+- **Bloqueadores críticos descubiertos en código y ejecución (`412 × 860`):**
+  - **El Metro:** Pausa 100 % rota (`25-game.js:28`), caminar medio comentado (`36-libre.js:210`), cooperativo 100 % roto (`80-multi.js:109`), pellizco bloqueado en `3.2 < 3.6` (`96g:210`), respaldo 2D y `medir()` falsos (`36-libre.js:43`), 276,5 MB de heap JS y tramado ajedrezado tapando el inicio en San Antonio.
+  - **Juega EnCicla:** 28 parches cargando después de `99-boot.js`, `Ride.update` parcheado 16 veces, 4+ reflows DOM por cuadro (`60-ui.js:430-442`), mundo 100 % 2D plano con estación sobre cancha de fútbol, 13 botones zombis de cámara en `Más`, y pruebas (`revolucion-encicla.js:456`) que prohíben simplificar la interfaz.
+  - **Motor City / Turno Cero:** `dist/motor.js` (4,54 MB) no lo usa ningún juego hermano (150 MB en copias muertas); `getaway.html` pesa 30,12 MB (1,1 % código del juego); mobiliario invisible con colisión (`15-terreno.js:109`); `45-tres.js:242` achica carga a 140 m en zoom cercano; pruebas que teletransportan; portada expone «Codex» y 16 botones + avisos recortados en HUD.
+  - **Run Scooter:** 100 % de las vallas tapadas por su respaldo (`models.js:121-123`), montañas de 30 m mecidas por viento (`engine.js:119`), trampa mortal de truco incompleto al pre-saltar (`game.js:448,606`), hielo silencioso (`game.js:440`), sin guardián de sonido (P8) y 50 MB muertos de `motor-city/`.
+- **Recomendación antes de seguir agregando fases:** ejecutar la cirugía del § 4 del informe (arreglar los bugs críticos de 1 hora, podar modos de relleno y copias muertas, arreglar el rendimiento base y reemplazar las pruebas complacientes) antes de sumar más parches.
+
+### Reconstrucción 3D v6 · 27‑nov‑2026 · Plan «Efecto GTA» en los 4 repos y base ejecutable `motor-v6/`
+- **Pedido del autor:** tras la auditoría, iniciar desde cero un mundo 100 % 3D texturizado con relieve real, cámara cenital única que gira gradualmente hacia donde se mueve el jugador, arquitectura híbrida «Efecto GTA» (zonas icónicas de Medellín con medidas reales exactas + resto del valle genérico), skateparks 3D para trucos y paradas, parkour mejorado y escala SI real persona vs. vehículos; publicar el plan en los repositorios y generar las bases de código, diseños y arte.
+- **Hecho:**
+  - Plan maestro en `docs/PLAN-RECONSTRUCCION-3D-V6.md` + planes dedicados en `BicicletasUno`, `MetroZero` y `RunRunZero`.
+  - Nuevo núcleo modular limpio `motor-v6/` (8 módulos ES sin *monkey-patching* + `demo.html` jugable): Biblia SI (`src/escala.js`), banco PBR (`src/texturas.js`), relieve SRTM (`src/terreno.js`), cámara cenital única con auto-seguimiento gradual + *spring-arm* + alfa por edificio (`src/camara.js`), Skatepark 4 Sur 3D con *quarter-pipes*, *funbox*, barandas de *grind* y 3 Paradas (`src/skatepark.js`), personaje 1,72 m Parkour/Skate/EnCicla (`src/personaje.js`) y mundo híbrido Hero OSM + genérico `InstancedMesh` (`src/mundo.js`).
+  - Datos reales extraídos (`motor-v6/datos/`): `zonas-hero-medellin.json` (12 Zonas Hero, 5 Skateparks, 5.407 edificios reales, 760 vías, 406 m de relieve) y `hero-4sur.json` (16,7 KB).
+  - Arte (`motor-v6/arte/`): 4 láminas de concepto/escala/PBR + 9 texturas Medellín 256×256 WebP (114 KB total) + 4 capturas verificadas en Chrome.
+- **Cómo se probó:** `node motor-v6/tests/verificar.mjs` en verde + Playwright en Chrome (`1280 × 720` y móvil `412 × 860`): `0` errores de consola/página, `0` solapamientos de HUD, auto-seguimiento de cámara y combo de trucos verificados. Código legado de v5 sin tocar.
+- **Sigue (Fase 1 del plan):** empaquetador de las 12 Zonas Hero (`~20–45 KB` c/u), *streaming* por proximidad + PWA offline sin copias muertas de 50 MB y módulo de tráfico/conducción física SI (`vehiculos.js`) + Guardián de Sonido (P8).
+
+
 
 # MOTOR CITY · Documento único
 
@@ -3164,6 +3188,7 @@ Técnicas de motores viejos, livianos y potentes, rehechas desde cero (sala limp
 | **5.4.1** | 25‑nov‑2026 | **Cápsulas** (renacimiento cenital, Fase 5): en Turno Cero, 🧰 Garaje y colección (`juegos/getaway/71-garaje.js`: fichas en 2D pixel con `MC.Taller`, la moto con `MC.Dinamica` y la capa aérea; se abre desde la portada sin cargar ninguna ciudad); 📏 de las carreras retro (`G.Retro.medir()`, `?medir=retro`); `MC.Pista.entrar` da `ultimoMs`; arreglo de la carrera intermitente de 📏 (`68-medir.js`). Prueba `pruebas/capsulas.mjs`. |
 | **5.4.2** | 25‑nov‑2026 | **Guardián del sonido** (`js/01-sonido-guardian.js`, `MC.GuardianSonido`): al salir de la app todo calla al instante, y al volver sigue lo que sonaba. Cada AudioContext queda registrado (una subclase) y se suspende; se pausan los medios y se corta la voz. Escucha `visibilitychange`, `pagehide`, `freeze` y el `pause`/`resume` que Capacitor da en `document`. Prueba: `pruebas/sonido-guardian.mjs`. |
 | **5.5.0** | 25‑nov‑2026 | **La cámara única** (el autor: «Hay que eliminar las cámaras, la de maqueta, la de panorámica 2D, etc.»; `docs/PEDIDO-DEL-AUTOR-2026-11-25.md`). En el perfil `cenital` de `MC.Camara`, el último tercio del zoom (`tercio`) baja de 66° a 36° (`pitchTercera`) y gira detrás del rumbo (`giraTercera`), moviendo la misma yaw que leen los controles. Lo prende el juego con `camara.tercio = true`. En Turno Cero el mundo abierto se ve solo en la cenital 3D: el 🔍 (y la tecla C) pasan por cuatro acercamientos (de lejos, cenital, de cerca y casi tercera persona; zoom de 2,4 a 60 px/m). Se fueron la ciudad 3D, la tercera y la primera persona, el dron, la maqueta, Arcade y Vuelo como cámaras, y 📏 mide la cámara única de lejos, de cerca y casi en tercera persona. |
+| **5.5.2** | 27‑nov‑2026 | **Lo que ve el jugador, sin nombres de IA:** la portada de Turno Cero ya no dice «de Codex» ni «(Codex)». Las pruebas lentas de la CI esperan por estado (5.5.1). |
 | **5.5.1** | 25‑nov‑2026 | **La cámara de persecución de cerca:** en el perfil `cenital` de `MC.Camara`, el tramo de casi tercera persona abre el lente de 35° a 55° (`fovTercera`) y baja a 40° (`pitchTercera`). Con el lente estrecho, inclinar solo daba un teleobjetivo y el carro llenaba la pantalla. En Turno Cero el zoom va de 2,4 a 30 px/m, con los acercamientos de lejos 4, cenital 9, de cerca 15 y casi tercera persona 30. La QA (`motor-city-qa.yml`) vuelve a correr: un nombre con «: » sin comillas la tenía rota desde la 5.4.0. `retos-semaforo.mjs` espera a que el rival arranque en vez de 6,5 s fijos. |
 
 
@@ -4865,6 +4890,21 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 27-nov-2026 · Plan de Reconstrucción 3D v6 («Efecto GTA») y bases del nuevo código, datos y arte (`motor-v6/`)
+- **Pedido del autor:** rehacer el mundo 3D desde cero con texturas detalladas, topografía y relieve real, cámara cenital que gira gradualmente hacia donde mira y se mueve el jugador, arquitectura híbrida «Efecto GTA» (zonas emblemáticas con medidas exactas + resto del valle genérico), skateparks 3D reales para trucos y paradas, parkour fluido y escala SI real (persona vs. bici, moto, carro, bus y Metro).
+- **Planes publicados en los 4 repositorios:** `motorcity/docs/PLAN-RECONSTRUCCION-3D-V6.md`, `BicicletasUno/docs/PLAN-RECONSTRUCCION-3D-V6.md`, `MetroZero/docs/PLAN-RECONSTRUCCION-3D-V6.md` y `RunRunZero/docs/PLAN-RECONSTRUCCION-3D-V6.md`.
+- **Bases creadas en `motor-v6/` (código limpio ES modular, sin tocar el motor viejo):**
+  - `src/` (8 módulos ES: `escala.js`, `texturas.js`, `terreno.js`, `camara.js`, `skatepark.js`, `personaje.js`, `mundo.js`, `main.js`) + `demo.html` jugable (bucle fijo 60 Hz, auto-seguimiento gradual de cámara, zoom `72° → 34°`, *spring-arm*, desvanecimiento por edificio, Parkour/Skate/EnCicla y 3 Paradas de Trucos).
+  - `datos/`: `zonas-hero-medellin.json` (**12 Zonas Hero + 5 Skateparks**, 5.407 edificaciones reales y 760 vías medidas sobre DEM SRTM de 1.454 a 1.860 msnm) y `hero-4sur.json` (**16,7 KB**, 90 edificios reales + 31 vías + DEM 33×33).
+  - `arte/`: 4 láminas de diseño (`disenos/*.webp`), 9 texturas PBR sin costuras de Medellín (`texturas/*.webp`, **114 KB total**) y 4 capturas reales verificadas en Chrome (`capturas/*.webp`).
+- **Probado:** `node motor-v6/tests/verificar.mjs` (`RESULTADO MOTOR-V6: OK`) y Chrome Playwright en `1280 × 720` y móvil `412 × 860` (`0` errores de consola/página, `0` solapamientos de HUD, giro automático de cámara y combo de trucos verificados).
+
+### 27-nov-2026 · Auditoría crítica y forense completa del ecosistema (solo documentación)
+- **Pedido del autor:** evaluar sin filtros por qué Motor City, Turno Cero, Juega EnCicla, El Metro y Run Scooter son malos juegos hoy, verificar si sus pedidos están bien o mal implementados, y publicar los hallazgos en los repositorios.
+- **Publicado:** `docs/AUDITORIA-CRITICA-2026-11-27.md` y 12 capturas reales (`412 × 860`) en `docs/img/auditoria-2026-11-27/` (más informes dedicados en `BicicletasUno`, `MetroZero` y `RunRunZero`).
+- **Hallazgos principales:** ningún juego hermano ejecuta `dist/motor.js` (150 MB en copias muertas); `getaway.html` pesa 30,12 MB (solo 1,1 % es código del juego); 8 renderizadores y 4 físicas en conflicto; mobiliario (`27-mobiliario.js`) invisible en 3D con colisión activa (`15-terreno.js:109`); `45-tres.js:242` encoge el radio de carga a 140 m al acercar; pruebas E2E que teletransportan y `medir.mjs` sin techo de FPS; portada y HUD saturados/recortados con nombres internos (`Codex`).
+- **Código tocado:** ninguno (auditoría de solo lectura + documentación).
 
 ### 26-nov-2026 · Documentos: propiedad intelectual, relevo y visión (Claude)
 - **`docs/propiedad-intelectual/`** (nuevo):
