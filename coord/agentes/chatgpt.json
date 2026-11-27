@@ -3,9 +3,9 @@
   "agente": "chatgpt",
   "rama": "ia/chatgpt/c5-01-vuelcos-20261123",
   "rol": "Motor City 5.2 · C5-01 vuelcos y daños laterales, continuidad de Codex",
-  "fase_actual": "Entrega C5-01: vuelcos y autoenderezado; R6-b sigue prioritario",
-  "estado": "PR por revisar: CI dedicada y general pendientes",
-  "ultima_actualizacion_utc": "2026-11-23",
+  "fase_actual": "Plan y bases del nuevo mundo 3D",
+  "estado": "en revisión",
+  "ultima_actualizacion_utc": "2026-11-27",
   "zonas_reclamadas": [
     "js/38-vuelcos.js",
     "js/45-gl.js",
@@ -20,5 +20,6 @@
   ],
   "pendiente_para_compañeras": "R6-b (precocinado en VistaTres + Worker Blob y p95); R4-b techos con geometría, C5-01 revisión visual, R8 SSAO/agua y faroles. R3/R5 bloqueados por licencia.",
   "entrega_r1": "reportes/2026-11-22-codex-integracion-arte-chatgpt-r1.md",
-  "entrega_actual": "reportes/2026-11-23-chatgpt-c5-vuelcos.md"
+  "entrega_actual": "reportes/2026-11-23-chatgpt-c5-vuelcos.md",
+  "plan_nuevo_mundo": "docs/PLAN-NUEVO-MUNDO-3D.md"
 }
