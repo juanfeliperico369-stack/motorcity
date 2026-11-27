@@ -4715,12 +4715,14 @@ const CAM_PERFIL = {
 class Camara {
   constructor(op = {}) {
     this.x = op.x || 0; this.y = op.y || 0; this.zoom = op.zoom || 3; this.yaw = 0; this.pitch = .55; this.modo = 'sigue'; this.adelanto = 0;
+    this.seguirRumbo = !!op.seguirRumbo; this._pausaRumbo = 0;
     this.perfil = 'tercera'; this.d = Object.assign({}, CAM_PERFIL.tercera); this.mira = 0; this.mirarV = 0; this.ojo = [0, 0, 0]; this.blanco = [0, 0, 0]; this.fov = 1; this.orbita = 0;
     this.limites = { zoom: [.08, 14], pitch: [0, 1.45] }; this.tr = null; this.sacudida = 0; this.trauma = 0; this.mundo = op.mundo || null;
     this.yawObj = null; this.pitchObj = null; this._vy = { v: 0 }; this._vp = { v: 0 }; this._vx = { v: 0 }; this._vy2 = { v: 0 }; this._vb = { v: 0 }; this._ve = [{ v: 0 }, { v: 0 }, { v: 0 }]; this.brazo = 1; this.zonaMuerta = op.zonaMuerta ?? 18; this.offPantalla = [0, 0];
   }
   /* gesto de la pantalla (de Controles) */
   gesto(g) {
+    if (g.tipo === 'girar' || g.tipo === 'mirar') this._pausaRumbo = 2;
     if (g.tipo === 'zoom') { const z0 = this.zoom * g.k; this.zoom = clamp(z0, ...this.limites.zoom); if (z0 < this.limites.zoom[0] * .98) MC.emit('zoomTope', 'lejos'); else if (z0 > this.limites.zoom[1] * 1.02) MC.emit('zoomTope', 'cerca'); if (this.perfil === 'tercera' && g.k < 1 && this.d.dist / g.k > 15) MC.emit('zoomTope', 'lejos3p'); this.d.dist = clamp(this.d.dist / g.k, this.perfil === 'primera' ? 0 : 2.5, 2500); }
     else if (g.tipo === 'girar') { this.yawObj = null; this.yaw -= g.da; this.mira -= g.da; }
     else if (g.tipo === 'inclinar') { this.pitchObj = null; this.pitch = clamp(this.pitch + g.dy * .006, ...this.limites.pitch); this.d.pitch = clamp(this.d.pitch + g.dy * .004, -.4, 1.4); }
@@ -4736,7 +4738,7 @@ class Camara {
   sacudir(k = .4) { k *= MC.opciones ? MC.opciones.sacudida ?? 1 : 1; this.trauma = clamp((this.trauma || 0) + k, 0, 1); return this; }   // 2.8: se puede bajar o apagar (accesibilidad)
   /* objetivo: { x, y, z (altura de los pies en m), a (rumbo), v, zPaso, mundo } · dt en s */
   actualizar(dt, o) {
-    dt = Math.min(dt || 0, .1); this._t = (this._t || 0) + dt;
+    dt = Math.min(dt || 0, .1); this._t = (this._t || 0) + dt; this._pausaRumbo = Math.max(0, this._pausaRumbo - dt);
     if (this.yawObj != null) { this.yaw = resorteAng(this.yaw, this.yawObj, this._vy, .16, dt); if (Math.abs(angDif(this.yaw, this.yawObj)) < 1e-3) { this.yaw = this.yawObj; this.yawObj = null; this._vy.v = 0; } }
     if (this.pitchObj != null) { this.pitch = resorte(this.pitch, this.pitchObj, this._vp, .2, dt); if (Math.abs(this.pitch - this.pitchObj) < 1e-3) { this.pitch = this.pitchObj; this.pitchObj = null; this._vp.v = 0; } }
     if (this.modo === 'sigue' && o) {
@@ -4800,9 +4802,18 @@ class Camara {
     this._vel = lerp(this._vel || 0, vel, Math.min(1, dt * 1.2)); this._per = lerp(this._per || 0, per, Math.min(1, dt * 1.5));
     const pitch = lerp(lerp(P.pitch, P.pitchCerca ?? P.pitch, t), P.pitchTercera ?? P.pitch, tc) - this._vel * .07 * (1 - tc) - this._per * .05;
     const fov = lerp(P.fov, P.fovTercera ?? P.fov, tc), D = Hp / 2 / Math.max(.05, this.zoom) / Math.tan(fov / 2) * (1 + this._vel * (P.alejaVel ?? .2) + this._per * .22) * (MC.opciones.camDist || 1);   /* 4.7: la cenital se aleja con la velocidad como GTA 2 (hasta +75 % a 30 m/s): se ve venir la calle */
+    /* Seguimiento optativo de la cámara del mundo: la interacción manual tiene prioridad.
+       El juego debe resolver la referencia de la palanca antes de activarlo. */
+    const sigueRumbo = this.perfil === 'cenital' && this.seguirRumbo && this.modo === 'sigue' &&
+      Number.isFinite(o.a) && Math.abs(o.v || 0) > .35 && !this._pausaRumbo &&
+      this.yawObj == null && !this._fija && !(this._mirando > 0);
+    if (sigueRumbo) {
+      const rumbo = o.a + (o.v < 0 ? Math.PI : 0);
+      this.yaw = resorteAng(this.yaw, -(rumbo + Math.PI / 2), this._vy, .8, dt);
+    }
     /* 5.5.0 · de cerca, la cámara se va detrás del rumbo (un poco de tercera persona). Mueve la misma yaw que leen los controles
        (la palanca va hacia donde se ve); de lejos manda el giro con dos dedos, como siempre */
-    if (P.giraTercera && o.a != null && tc > .02 && this.yawObj == null && !this._fija && !(this._mirando > 0) && (Math.abs(o.v || 0) > .35 || tc > .5)) this.yaw = resorteAng(this.yaw, -(o.a + Math.PI / 2), this._vy, lerp(3, .45, tc), dt);
+    if (!(this.perfil === 'cenital' && this.seguirRumbo) && P.giraTercera && o.a != null && tc > .02 && this.yawObj == null && !this._fija && !(this._mirando > 0) && (Math.abs(o.v || 0) > .35 || tc > .5)) this.yaw = resorteAng(this.yaw, -(o.a + Math.PI / 2), this._vy, lerp(3, .45, tc), dt);
     const yaw = P.yaw45 ? Math.PI / 4 + Math.round((this.yaw - Math.PI / 4) / (Math.PI / 2)) * Math.PI / 2 : this.yaw, ux = -Math.sin(yaw), uy = -Math.cos(yaw);
     const zt = (M ? M.cota(this.x, this.y) : 0) + Math.min(6, (o.z || 0) + (o.zPaso || 0)) * .6 + .8;
     let ex = this.x - ux * D * Math.cos(pitch), ey = this.y - uy * D * Math.cos(pitch); const ez = zt + D * Math.sin(pitch);

@@ -1224,3 +1224,7 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
   - **Run Scooter:** 100 % de las vallas tapadas por su respaldo (`models.js:121-123`), montañas de 30 m mecidas por viento (`engine.js:119`), trampa mortal de truco incompleto al pre-saltar (`game.js:448,606`), hielo silencioso (`game.js:440`), sin guardián de sonido (P8) y 50 MB muertos de `motor-city/`.
 - **Recomendación antes de seguir agregando fases:** ejecutar la cirugía del § 4 del informe (arreglar los bugs críticos de 1 hora, podar modos de relleno y copias muertas, arreglar el rendimiento base y reemplazar las pruebas complacientes) antes de sumar más parches.
 
+
+### Codex · 27-nov-2026 · Plan de reconstrucción del mundo 3D
+
+Plan compartido en docs/PLAN-NUEVO-MUNDO-3D.md y arte conceptual original en docs/img/nuevo-mundo-3d/. El piloto propuesto es el corredor Universidad–Planetario–Jardín Botánico. Las medidas exactas, permisos y los skateparks reales siguen por verificar. MC.Camara tiene seguimiento de rumbo optativo y prueba aislada; falta resolver el marco del joystick y validar en dispositivos antes de activarlo en los juegos. La siguiente IA debe generar su documento de contexto, actualizar este relevo y comunicar la misma obligación.

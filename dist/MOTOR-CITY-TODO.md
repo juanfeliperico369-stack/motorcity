@@ -1267,6 +1267,23 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
     - **el `docs/PROMPT-RELEVO.md` nuevo**; el anterior quedó en `docs/relevos/`.
 - **Sigue:** lo del § 5 del prompt de relevo, que pone primero pulir para las muestras y después las fases B–E. La fase F solo con el OK del autor.
 
+### Auditoría crítica · 27‑nov‑2026 · Diagnóstico forense del motor y los cuatro juegos (solo documentación)
+- **Pedido del autor:** crítica y auditoría completa sin filtros de por qué Motor City, Turno Cero, Juega EnCicla, El Metro y Run Scooter son malos juegos, comprobando en código y en ejecución real si sus pedidos (P1–P13 y planes previos) se implementaron bien o mal, y publicando los hallazgos en los repositorios.
+- **Publicado (sin tocar código de los juegos):**
+  - informe maestro en `motorcity/docs/AUDITORIA-CRITICA-2026-11-27.md` (+ 12 capturas WebP reales en `docs/img/auditoria-2026-11-27/`);
+  - informes dedicados con evidencia visual en `BicicletasUno/docs/AUDITORIA-CRITICA-2026-11-27.md`, `MetroZero/docs/AUDITORIA-CRITICA-2026-11-27.md` y `RunRunZero/docs/AUDITORIA-CRITICA-2026-11-27.md`.
+- **Bloqueadores críticos descubiertos en código y ejecución (`412 × 860`):**
+  - **El Metro:** Pausa 100 % rota (`25-game.js:28`), caminar medio comentado (`36-libre.js:210`), cooperativo 100 % roto (`80-multi.js:109`), pellizco bloqueado en `3.2 < 3.6` (`96g:210`), respaldo 2D y `medir()` falsos (`36-libre.js:43`), 276,5 MB de heap JS y tramado ajedrezado tapando el inicio en San Antonio.
+  - **Juega EnCicla:** 28 parches cargando después de `99-boot.js`, `Ride.update` parcheado 16 veces, 4+ reflows DOM por cuadro (`60-ui.js:430-442`), mundo 100 % 2D plano con estación sobre cancha de fútbol, 13 botones zombis de cámara en `Más`, y pruebas (`revolucion-encicla.js:456`) que prohíben simplificar la interfaz.
+  - **Motor City / Turno Cero:** `dist/motor.js` (4,54 MB) no lo usa ningún juego hermano (150 MB en copias muertas); `getaway.html` pesa 30,12 MB (1,1 % código del juego); mobiliario invisible con colisión (`15-terreno.js:109`); `45-tres.js:242` achica carga a 140 m en zoom cercano; pruebas que teletransportan; portada expone «Codex» y 16 botones + avisos recortados en HUD.
+  - **Run Scooter:** 100 % de las vallas tapadas por su respaldo (`models.js:121-123`), montañas de 30 m mecidas por viento (`engine.js:119`), trampa mortal de truco incompleto al pre-saltar (`game.js:448,606`), hielo silencioso (`game.js:440`), sin guardián de sonido (P8) y 50 MB muertos de `motor-city/`.
+- **Recomendación antes de seguir agregando fases:** ejecutar la cirugía del § 4 del informe (arreglar los bugs críticos de 1 hora, podar modos de relleno y copias muertas, arreglar el rendimiento base y reemplazar las pruebas complacientes) antes de sumar más parches.
+
+
+### Codex · 27-nov-2026 · Plan de reconstrucción del mundo 3D
+
+Plan compartido en docs/PLAN-NUEVO-MUNDO-3D.md y arte conceptual original en docs/img/nuevo-mundo-3d/. El piloto propuesto es el corredor Universidad–Planetario–Jardín Botánico. Las medidas exactas, permisos y los skateparks reales siguen por verificar. MC.Camara tiene seguimiento de rumbo optativo y prueba aislada; falta resolver el marco del joystick y validar en dispositivos antes de activarlo en los juegos. La siguiente IA debe generar su documento de contexto, actualizar este relevo y comunicar la misma obligación.
+
 # MOTOR CITY · Documento único
 
 > **Para el autor (OneZero) y para todas las IAs:** Gemini (Antigravity y Nano Banana), ChatGPT (Codex), Claude y las IAs de Juega EnCicla, El Metro y Run Scooter.
@@ -4865,6 +4882,12 @@ El repositorio queda **abierto para las IAs que desarrollan cada juego**: Juega 
 
 # ANEXO I. Bitácora (`BITACORA.md`)
 
+
+### 27-nov-2026 · Auditoría crítica y forense completa del ecosistema (solo documentación)
+- **Pedido del autor:** evaluar sin filtros por qué Motor City, Turno Cero, Juega EnCicla, El Metro y Run Scooter son malos juegos hoy, verificar si sus pedidos están bien o mal implementados, y publicar los hallazgos en los repositorios.
+- **Publicado:** `docs/AUDITORIA-CRITICA-2026-11-27.md` y 12 capturas reales (`412 × 860`) en `docs/img/auditoria-2026-11-27/` (más informes dedicados en `BicicletasUno`, `MetroZero` y `RunRunZero`).
+- **Hallazgos principales:** ningún juego hermano ejecuta `dist/motor.js` (150 MB en copias muertas); `getaway.html` pesa 30,12 MB (solo 1,1 % es código del juego); 8 renderizadores y 4 físicas en conflicto; mobiliario (`27-mobiliario.js`) invisible en 3D con colisión activa (`15-terreno.js:109`); `45-tres.js:242` encoge el radio de carga a 140 m al acercar; pruebas E2E que teletransportan y `medir.mjs` sin techo de FPS; portada y HUD saturados/recortados con nombres internos (`Codex`).
+- **Código tocado:** ninguno (auditoría de solo lectura + documentación).
 
 ### 26-nov-2026 · Documentos: propiedad intelectual, relevo y visión (Claude)
 - **`docs/propiedad-intelectual/`** (nuevo):

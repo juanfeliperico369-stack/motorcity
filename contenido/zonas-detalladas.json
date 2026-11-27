@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "unidades": "WGS84 y metros",
+  "ciudad": "medellin",
+  "zonas": [
+    {
+      "id": "norte-cultural",
+      "nombre": "Universidad, Planetario y Jardín Botánico",
+      "estado": "propuesta",
+      "bbox": [-75.575, 6.264, -75.561, 6.276],
+      "anclas": [
+        {
+          "id": "parque_deseos",
+          "nombre": "Parque de los Deseos",
+          "lon": -75.565850,
+          "lat": 6.268360,
+          "precision": "aproximada",
+          "fuente": "docs/sitios/parque_deseos.md"
+        }
+      ],
+      "pendiente": [
+        "Inventario georreferenciado de calles, huellas, alturas y rasantes",
+        "Comprobación de licencias y de la precisión de las mediciones",
+        "Levantamiento del entorno, transporte y accesos",
+        "Capturas comparativas y medición en dispositivos"
+      ]
+    }
+  ]
+}
