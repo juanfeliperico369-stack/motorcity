@@ -1211,3 +1211,10 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
     - el pedido con P13, la tabla de estado y el plan de la fase F;
     - **el `docs/PROMPT-RELEVO.md` nuevo**; el anterior quedó en `docs/relevos/`.
 - **Sigue:** lo del § 5 del prompt de relevo, que pone primero pulir para las muestras y después las fases B–E. La fase F solo con el OK del autor.
+
+### Codex · 27-nov-2026 · Auditoría crítica de Motor City y juegos
+
+- Auditoría de Motor City 5.5.1 y de main de Turno Cero, EnCicla 3.11, El Metro 3.12 y Run Scooter, con capturas 412 × 860, pruebas y contraste del pedido del autor.
+- Informe y pendientes: reportes/2026-11-27-codex-auditoria-integral.md. La prueba breve identificó una primera escena de Turno Cero difícil de leer y una interferencia visual en San Antonio bajo Chromium con GPU software.
+- R6-b sigue optativo y limitado a Guatapé; controles, fluidez y mundo 3D completo continúan parcialmente pendientes según el plan vigente.
+- La siguiente IA debe escribir su propio contexto, registrar evidencia y transmitir esta misma obligación a quien continúe.
