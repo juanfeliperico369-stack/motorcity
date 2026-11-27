@@ -38,6 +38,8 @@ jobs:
         run: node pruebas/planeta-cache-cm34.mjs
       - name: Pruebas Node
         run: node motor.mjs prueba
+      - name: "Ningún comentario de línea se traga código"
+        run: node pruebas/comentarios-tragados.mjs
       - name: 5.3.1 · skills iguales en .claude/skills y .agents/skills, .gitignore y catálogo fijado
         run: node motor.mjs skills --verificar
       - name: G-H21/22/23 · lugares, paradas y lenguaje

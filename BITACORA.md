@@ -15,6 +15,13 @@
 - **Hallazgos principales:** ningún juego hermano ejecuta `dist/motor.js` (150 MB en copias muertas); `getaway.html` pesa 30,12 MB (solo 1,1 % es código del juego); 8 renderizadores y 4 físicas en conflicto; mobiliario (`27-mobiliario.js`) invisible en 3D con colisión activa (`15-terreno.js:109`); `45-tres.js:242` encoge el radio de carga a 140 m al acercar; pruebas E2E que teletransportan y `medir.mjs` sin techo de FPS; portada y HUD saturados/recortados con nombres internos (`Codex`).
 - **Código tocado:** ninguno (auditoría de solo lectura + documentación).
 
+## 27-nov-2026 · 5.5.2 · Turno Cero sin nombres de IA a la vista y la revisión de comentarios que tragan código (Claude)
+- **De dónde sale:** las auditorías del 27‑nov (Gemini/Antigravity y Codex) y el OK del autor para arreglar antes de la muestra.
+- **Qué cambió:**
+  - la portada de Turno Cero ya no dice «Universo "Turno Cero" de Codex» ni «Misión de acción 3D (Codex)»;
+  - nueva prueba `pruebas/comentarios-tragados.mjs`, en la QA: busca código tragado por un comentario de línea. Así se perdieron la pausa de El Metro y los árboles de las montañas de EnCicla. En el motor no hay ninguno.
+- **Qué se probó:** `node motor.mjs prueba`: 146 bien.
+
 ## 26-nov-2026 · Documentos: propiedad intelectual, relevo y visión (Claude)
 - **`docs/propiedad-intelectual/`** (nuevo):
   - el inventario de obras: lo que es del autor, lo que no, y las descripciones para la DNDA;
