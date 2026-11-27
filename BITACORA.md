@@ -1,5 +1,11 @@
 # Bitácora de Motor City
 
+## 27-nov-2026 · Auditoría crítica y forense completa del ecosistema (solo documentación)
+- **Pedido del autor:** evaluar sin filtros por qué Motor City, Turno Cero, Juega EnCicla, El Metro y Run Scooter son malos juegos hoy, verificar si sus pedidos están bien o mal implementados, y publicar los hallazgos en los repositorios.
+- **Publicado:** `docs/AUDITORIA-CRITICA-2026-11-27.md` y 12 capturas reales (`412 × 860`) en `docs/img/auditoria-2026-11-27/` (más informes dedicados en `BicicletasUno`, `MetroZero` y `RunRunZero`).
+- **Hallazgos principales:** ningún juego hermano ejecuta `dist/motor.js` (150 MB en copias muertas); `getaway.html` pesa 30,12 MB (solo 1,1 % es código del juego); 8 renderizadores y 4 físicas en conflicto; mobiliario (`27-mobiliario.js`) invisible en 3D con colisión activa (`15-terreno.js:109`); `45-tres.js:242` encoge el radio de carga a 140 m al acercar; pruebas E2E que teletransportan y `medir.mjs` sin techo de FPS; portada y HUD saturados/recortados con nombres internos (`Codex`).
+- **Código tocado:** ninguno (auditoría de solo lectura + documentación).
+
 ## 26-nov-2026 · Documentos: propiedad intelectual, relevo y visión (Claude)
 - **`docs/propiedad-intelectual/`** (nuevo):
   - el inventario de obras: lo que es del autor, lo que no, y las descripciones para la DNDA;

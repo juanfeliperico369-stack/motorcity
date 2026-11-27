@@ -1211,3 +1211,16 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
     - el pedido con P13, la tabla de estado y el plan de la fase F;
     - **el `docs/PROMPT-RELEVO.md` nuevo**; el anterior quedó en `docs/relevos/`.
 - **Sigue:** lo del § 5 del prompt de relevo, que pone primero pulir para las muestras y después las fases B–E. La fase F solo con el OK del autor.
+
+### Auditoría crítica · 27‑nov‑2026 · Diagnóstico forense del motor y los cuatro juegos (solo documentación)
+- **Pedido del autor:** crítica y auditoría completa sin filtros de por qué Motor City, Turno Cero, Juega EnCicla, El Metro y Run Scooter son malos juegos, comprobando en código y en ejecución real si sus pedidos (P1–P13 y planes previos) se implementaron bien o mal, y publicando los hallazgos en los repositorios.
+- **Publicado (sin tocar código de los juegos):**
+  - informe maestro en `motorcity/docs/AUDITORIA-CRITICA-2026-11-27.md` (+ 12 capturas WebP reales en `docs/img/auditoria-2026-11-27/`);
+  - informes dedicados con evidencia visual en `BicicletasUno/docs/AUDITORIA-CRITICA-2026-11-27.md`, `MetroZero/docs/AUDITORIA-CRITICA-2026-11-27.md` y `RunRunZero/docs/AUDITORIA-CRITICA-2026-11-27.md`.
+- **Bloqueadores críticos descubiertos en código y ejecución (`412 × 860`):**
+  - **El Metro:** Pausa 100 % rota (`25-game.js:28`), caminar medio comentado (`36-libre.js:210`), cooperativo 100 % roto (`80-multi.js:109`), pellizco bloqueado en `3.2 < 3.6` (`96g:210`), respaldo 2D y `medir()` falsos (`36-libre.js:43`), 276,5 MB de heap JS y tramado ajedrezado tapando el inicio en San Antonio.
+  - **Juega EnCicla:** 28 parches cargando después de `99-boot.js`, `Ride.update` parcheado 16 veces, 4+ reflows DOM por cuadro (`60-ui.js:430-442`), mundo 100 % 2D plano con estación sobre cancha de fútbol, 13 botones zombis de cámara en `Más`, y pruebas (`revolucion-encicla.js:456`) que prohíben simplificar la interfaz.
+  - **Motor City / Turno Cero:** `dist/motor.js` (4,54 MB) no lo usa ningún juego hermano (150 MB en copias muertas); `getaway.html` pesa 30,12 MB (1,1 % código del juego); mobiliario invisible con colisión (`15-terreno.js:109`); `45-tres.js:242` achica carga a 140 m en zoom cercano; pruebas que teletransportan; portada expone «Codex» y 16 botones + avisos recortados en HUD.
+  - **Run Scooter:** 100 % de las vallas tapadas por su respaldo (`models.js:121-123`), montañas de 30 m mecidas por viento (`engine.js:119`), trampa mortal de truco incompleto al pre-saltar (`game.js:448,606`), hielo silencioso (`game.js:440`), sin guardián de sonido (P8) y 50 MB muertos de `motor-city/`.
+- **Recomendación antes de seguir agregando fases:** ejecutar la cirugía del § 4 del informe (arreglar los bugs críticos de 1 hora, podar modos de relleno y copias muertas, arreglar el rendimiento base y reemplazar las pruebas complacientes) antes de sumar más parches.
+
