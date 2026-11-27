@@ -27,6 +27,8 @@ La lámina está en el repositorio de EnCicla: `docs/referencias/2026-11-25-aper
 > Agrega a El Metro y EnCicla un modo turismo de la ciudad y las estaciones para todos aquellos que no conozcan los sistemas del Valle de Aburrá.
 > También cuando termines las fases o antes de eso hazme el prompt de relevo, y hazme los documentos de derechos de autor para hacerlos validar en el derechos de autor de Colombia […] También patenta el motor. […] Al terminar necesito los videojuegos bastante funcionales y profesionales para las muestras, será esto en dos días […]»
 
+**Quinto mensaje** (27‑nov, después de las auditorías de Gemini y Codex): **empezar de nuevo el mapa en 3D**, con las zonas del autor detalladas, el resto genérico y todo el valle libre; una campaña de historia por juego; y **EnCicla y El Metro sobre el mismo mundo**, cambiando solo los modos y la marca. Está palabra por palabra en **`docs/valle3d/PLAN-VALLE-3D.md` § 1**, el plan que ahora manda.
+
 ## 2. Lo que pide, punto por punto
 
 | # | Pedido | En los juegos |

@@ -1235,3 +1235,19 @@ Integración en rama ia/chatgpt/r1-fachadas-medellin. Ver reportes/2026-11-22-co
 - **Sigue (Fase 1 del plan):** empaquetador de las 12 Zonas Hero (`~20–45 KB` c/u), *streaming* por proximidad + PWA offline sin copias muertas de 50 MB y módulo de tráfico/conducción física SI (`vehiculos.js`) + Guardián de Sonido (P8).
 
 
+
+### Claude · 27‑nov‑2026 · arreglos para la muestra y el plan único «Valle 3D»
+- **Arreglos publicados**, a partir de las auditorías de Gemini y Codex:
+  - **El Metro 3.12.1:** la pausa no pausaba y la caminata estaba a medias, por código tragado por comentarios; el pellizco ya llega a casi tercera persona; el cooperativo acepta acciones con forma de objeto.
+  - **EnCicla 3.11.1:** volvieron los árboles de las montañas, que estaban dentro de un comentario desde el 18‑nov, y la interfaz ya no se recalcula en cada cuadro.
+  - **Motor City 5.5.2:** Turno Cero ya no dice «Codex» en la portada.
+  - **Run Scooter 2.5.1:** las vallas se ven, las montañas no se mecen y tiene el guardián del sonido.
+  - **En los cuatro repositorios:** una revisión que falla si un comentario de línea se traga código (`comentarios-tragados.mjs`).
+- **El plan único:** `docs/valle3d/`, con el plan, los relevos de Claude (central, EnCicla y El Metro), los prompts de Gemini y Codex, y el relevo de respaldo.
+- **Esperan al autor (§ 2 del plan):**
+  - D1, el repositorio nuevo;
+  - D2, las zonas;
+  - D3, la app web sin conexión en vez del HTML único;
+  - D4, los nombres;
+  - D5, los personajes;
+  - D6, la primera zona.
