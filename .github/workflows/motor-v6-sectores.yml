@@ -1,45 +1,47 @@
-name: Motor City 6 · sectores y física
+name: Motor City 6 · sectores en navegador
 on:
   pull_request:
     paths:
-      - 'motor-v6/**'
+      - 'motor-v6/src/**'
+      - 'motor-v6/tests/**'
       - '.github/workflows/motor-v6-sectores.yml'
   push:
-    branches: ['ia/codex/**']
     paths:
-      - 'motor-v6/**'
+      - 'motor-v6/src/**'
+      - 'motor-v6/tests/**'
       - '.github/workflows/motor-v6-sectores.yml'
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  modulos:
+  worker:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - name: Bucle fijo
-        run: node motor-v6/tests/bucle.mjs
-      - name: Sectores
+        with:
+          node-version: '22'
+      - name: Pruebas de componentes
         run: |
-          node motor-v6/tests/sectores.mjs
-          node motor-v6/tests/sectores-dependencias.mjs
-      - name: Física arcade y perfiles
-        run: |
+          node motor-v6/tests/verificar.mjs
+          node motor-v6/tests/bucle.mjs
           node motor-v6/tests/fisica.mjs
-          node motor-v6/tests/perfiles-arcade.mjs
-  navegador:
-    runs-on: ubuntu-latest
-    timeout-minutes: 12
-    needs: modulos
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
-      - name: Instalar navegador de pruebas
+          node motor-v6/tests/sectores.mjs
+          node motor-v6/tests/relevo-sectores.mjs
+      - name: Instalar Playwright fuera del repositorio
+        run: npm install --prefix "$RUNNER_TEMP/pw" --no-audit --no-fund playwright@1.56.1
+      - name: Usar Chromium o Chrome del runner
+        shell: bash
         run: |
-          npm install --no-save --no-package-lock playwright
-          npx playwright install --with-deps chromium
-      - name: Worker real y estados en Chromium móvil con CPU 4x
-        run: node motor-v6/tests/sectores-browser.mjs
+          browser_path="$(command -v chromium || command -v google-chrome || command -v google-chrome-stable || true)"
+          if [ -z "$browser_path" ]; then
+            echo "No se encontró un navegador Chromium en el runner" >&2
+            exit 1
+          fi
+          "$browser_path" --version
+          echo "MC_CHROMIUM=$browser_path" >> "$GITHUB_ENV"
+      - name: Recorrido continuo y trabajador real
+        run: NODE_PATH="$RUNNER_TEMP/pw/node_modules" node motor-v6/tests/sectores-navegador.mjs
+      - name: RCS1 y respaldo JSON con Worker real (CPU 4x)
+        run: NODE_PATH="$RUNNER_TEMP/pw/node_modules" node motor-v6/tests/rcs1-navegador.mjs

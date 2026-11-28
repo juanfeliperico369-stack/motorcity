@@ -1,5 +1,10 @@
 # Bitácora de Motor City
 
+## 28-nov-2026 · Sectores y física de Motor City 6 para Run City
+- Cargador con Worker, dependencias directas por celda, caché acotada, cancelación y recuperación de errores. Física con 17 perfiles y recorridos geométricos 3D.
+- Pasan las cuatro suites Node de v6 y el ensayo HTTP/Worker real: 258,44 m a 30 km/h, espera máxima local de 16,7 ms, sin errores. Es una prueba de componente con datos sintéticos, no una escena ni un celular físico.
+- Reporte y pendientes: `reportes/2026-11-28-carga-fisica-run-city.md`. Todavía se requiere integrar Orbe y el transporte; las APK no se han validado.
+
 ## 27-nov-2026 · Plan de Reconstrucción 3D v6 («Efecto GTA») y bases del nuevo código, datos y arte (`motor-v6/`)
 - **Pedido del autor:** rehacer el mundo 3D desde cero con texturas detalladas, topografía y relieve real, cámara cenital que gira gradualmente hacia donde mira y se mueve el jugador, arquitectura híbrida «Efecto GTA» (zonas emblemáticas con medidas exactas + resto del valle genérico), skateparks 3D reales para trucos y paradas, parkour fluido y escala SI real (persona vs. bici, moto, carro, bus y Metro).
 - **Planes publicados en los 4 repositorios:** `motorcity/docs/PLAN-RECONSTRUCCION-3D-V6.md`, `BicicletasUno/docs/PLAN-RECONSTRUCCION-3D-V6.md`, `MetroZero/docs/PLAN-RECONSTRUCCION-3D-V6.md` y `RunRunZero/docs/PLAN-RECONSTRUCCION-3D-V6.md`.
@@ -1407,3 +1412,7 @@ Rama `ia/chatgpt/planeta-cache-410-20261121`, basada en `main` 4.1.0: single-fli
 - **Sin merge ni nueva versión.** ED1/vías/relieve no están fragmentados; falta medir memoria y FPS real.
 
 **Sincronización:** los cambios de Motor City 4.3.0 de Claude/Gemini se incorporaron al historial de esta rama sin reemplazar su código. Validación del commit combinado pendiente de CI.
+
+## 28-nov-2026 · Motor City 6, relevo de carga y física
+- Se reconcilia la rama de carga/física con la de dependencias; conserva recorrido 3D, cancelación, validación y cinemática saturada. Se añaden telemetría, liberación, perfiles explícitos a pie y lector RCS1 optativo con respaldo JSON.
+- Pruebas adicionales de módulo y navegador programadas en CI específica; resultado pendiente. No se toca motor 5.x ni main.
