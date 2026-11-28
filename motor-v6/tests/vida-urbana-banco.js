@@ -1,0 +1,40 @@
+/* Banco de composición: escena sectorial de Orbe real, no juego/orbe. */
+import * as THREE from '../src/render/three.js';
+import {MundoSectores} from '../src/mundo/sectores-3d.js';
+import {VidaUrbana} from '../src/mundo/vida-urbana.js';
+import {muestraVial} from '../src/fisica/trafico.js';
+import {Bucle} from '../src/nucleo/bucle.js';
+const leer=async p=>{const r=await fetch(p);if(!r.ok)throw Error(p);return r.json();};
+const [indice,topologia,inventario]=await Promise.all(['/datos/indice.json','/topologia.json','/inventario.json'].map(leer));
+const mundo=new MundoSectores({indice,opcionesCarga:{baseURL:new URL('/datos/indice.json',location.href),tope:16,concurrencia:2}});
+const vida=new VidaUrbana({topologia,inventario});
+const escena=new THREE.Scene();escena.background=new THREE.Color(0x9ebdc5);
+const renderer=new THREE.WebGLRenderer({canvas:document.querySelector('canvas'),antialias:false});
+renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(1);
+const cam=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.1,500);
+escena.add(mundo.raiz,vida.raiz,new THREE.HemisphereLight(0xffffff,0x747e65,2));
+const sol=new THREE.DirectionalLight(0xfff4d4,1.2);sol.position.set(1250,150,1150);escena.add(sol);
+const v=[...vida.red.carriles.values()].find(c=>c.hasta==='n_km0'&&c.largo>100),d=[...vida.red.carriles.values()].find(c=>c.desde==='n_km0'&&c.tramo!==v.tramo&&c.largo>100);
+const p=muestraVial(v,v.largo-35);let jugador={...p,radio:.4,alto:1.72};
+if(!vida.agregar({id:'correo',inicio:v.id,destino:d.id,s:v.largo-45,jugador}))throw Error('Alta fallida');
+const avatar=new THREE.Mesh(new THREE.CapsuleGeometry(.35,1,4,8),new THREE.MeshStandardMaterial({color:0xffcf57}));escena.add(avatar);
+const teclas=new Set();addEventListener('keydown',e=>{teclas.add(e.code);if(!e.repeat&&e.code==='KeyP')bucle.pausado?bucle.reanudar():bucle.pausar();});addEventListener('keyup',e=>teclas.delete(e.code));addEventListener('blur',()=>teclas.clear());
+let estadoMundo={listo:false},visual={},cuadros=0,choques=0;
+const bucle=new Bucle({actualizar:(dt,t)=>{
+ if(!estadoMundo.listo||!vida.adoquin)return;
+ const dx=Number(teclas.has('ArrowRight'))-Number(teclas.has('ArrowLeft')),dz=Number(teclas.has('ArrowDown'))-Number(teclas.has('ArrowUp'));
+ const q={...jugador,x:jugador.x+dx*3.5*dt,z:jugador.z+dz*3.5*dt};
+ if(vida.bloquear(jugador,q))choques++;else jugador=q;
+ vida.paso(dt,t,jugador);
+},dibujar:()=>{
+ mundo.actualizar({x:jugador.x,z:jugador.z,radio:450,radioVisible:110});
+ estadoMundo=mundo.procesar({maxLotes:3});
+ vida.sincronizarPlaza(mundo.lotes.has('suelo:'+inventario.sector)?mundo.cargador.cache.get(inventario.sector):null);
+ visual=vida.dibujar({x:jugador.x,z:jugador.z,radio:250});
+ avatar.position.set(jugador.x,jugador.y+.85,jugador.z);
+ cam.position.set(1350+25,15+78,1110-68);cam.lookAt(1350,15,1110);
+ renderer.render(escena,cam);cuadros++;
+ document.querySelector('output').textContent='Plaza · '+visual.muebles+' muebles · '+visual.senales.estados.length+' señales · '+vida.actual.cruces+' cruces';
+}});
+window.bancoVida={estado:()=>({jugador:{...jugador},eje:Math.abs(v.dx)>Math.abs(v.dz)?'z':'x',trafico:vida.actual,visual,mundo:estadoMundo,reloj:vida.reloj,choques,cuadros,pausa:bucle.pausado,drawCalls:renderer.info.render.calls,triangulos:renderer.info.render.triangles,plaza:!!vida.adoquin}),cerrar:()=>{bucle.detener();vida.cerrar();mundo.cerrar();avatar.geometry.dispose();avatar.material.dispose();avatar.removeFromParent();renderer.dispose();return {vida:vida.raiz.children.length,mundo:mundo.estado().lotes};}};
+bucle.iniciar();
