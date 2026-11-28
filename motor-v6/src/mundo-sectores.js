@@ -102,13 +102,13 @@ function soltar(g){
  * Llamar actualizar con posición global y procesar una vez por frame.
  */
 export class MundoSectores {
-  constructor({indice,origenRender=[0,0,0],maxVerticesLote=120000,opcionesCarga={}}){
+  constructor({indice,origenRender=[0,0,0],maxVerticesLote=120000,paletas=new Map(),opcionesCarga={}}){
     if(!indice||indice.version!==1||!fin(indice.tamano_m)||indice.tamano_m<250||indice.tamano_m>500||!Array.isArray(indice.sectores)||!indice.sectores.length||!Array.isArray(origenRender)||origenRender.length!==3||!origenRender.every(fin)||!Number.isInteger(maxVerticesLote)||maxVerticesLote<3)throw new RangeError('Índice u opciones de escena inválidos');
     this.indice=indice;this.origen=[...origenRender];this.maxVerticesLote=maxVerticesLote;
     this.catalogo=new Map(indice.sectores.map(s=>[s.id,s]));
     this.raiz=new THREE.Group();this.raiz.name='MundoSectoresV1';
     this.materiales={suelo:new THREE.MeshStandardMaterial({color:0x879a72,roughness:1}),vial:new THREE.MeshStandardMaterial({color:0x56585e,roughness:1}),ciclovia:new THREE.MeshStandardMaterial({color:0x398451,roughness:.9}),edificio:new THREE.MeshStandardMaterial({color:0xe4d7bc,roughness:.85})};
-    this.lotes=new Map();this.versiones=new Map();this.secuencia=0;this.visibles=[];this.cola=[];this.errores=[];this.omisiones=[];this.faltantes=[];this.sucio=true;this.cerrado=false;
+    this.paletas=paletas;this.materialesZona=new Map();this.lotes=new Map();this.versiones=new Map();this.secuencia=0;this.visibles=[];this.cola=[];this.errores=[];this.omisiones=[];this.faltantes=[];this.sucio=true;this.cerrado=false;
     const {alCargar,alExpulsar,...opts}=opcionesCarga;
     this.cargador=new CargadorSectores({...opts,catalogo:indice.sectores,alCargar:(id,s)=>{this.versiones.set(id,++this.secuencia);this.sucio=true;alCargar?.(id,s);},alExpulsar:(id,s)=>{this.versiones.delete(id);this.sucio=true;alExpulsar?.(id,s);}});
   }
@@ -138,7 +138,7 @@ export class MundoSectores {
     for(const c of validas){
       const s=datos.get(c.id);
       if(!relieveValido(s)){this.omisiones.push({id:c.id,tipo:'relieve_sin_datos'});continue;}
-      planes.set('suelo:'+s.id,{tipo:'suelo',s,firma:String(this.versiones.get(s.id))});
+      planes.set('suelo:'+s.id,{tipo:'suelo',s,zona:s.zona,firma:String(this.versiones.get(s.id))});
     }
     for(const id of propietarios){
       const s=datos.get(id),partes={vial:[],ciclovia:[],edificio:[]},firmas={vial:[],ciclovia:[],edificio:[]};
@@ -159,7 +159,7 @@ export class MundoSectores {
         if(!fin(o.altura_m)||o.altura_m<=0||!fin(o.base_m)){this.omisiones.push({id:o.id,tipo:'edificio_sin_alturas'});continue;}
         partes.edificio.push(o);firmas.edificio.push(o.id);
       }
-      for(const tipo of Object.keys(partes))if(partes[tipo].length)planes.set(tipo+':'+id,{tipo,partes:partes[tipo],firma:JSON.stringify([this.versiones.get(id),firmas[tipo]])});
+      for(const tipo of Object.keys(partes))if(partes[tipo].length)planes.set(tipo+':'+id,{tipo,zona:s.zona,partes:partes[tipo],firma:JSON.stringify([this.versiones.get(id),firmas[tipo]])});
     }
     for(const [k,l] of this.lotes)if(planes.get(k)?.firma!==l.firma){soltar(l.grupo);this.lotes.delete(k);}
     this.cola=[...planes].filter(([k])=>!this.lotes.has(k));
@@ -174,7 +174,9 @@ export class MundoSectores {
         for(const v of p.partes){if(p.tipo==='edificio')edificio(v,v.base_m,dst,this.origen,this.maxVerticesLote);else cinta(v.tramo,v.a,v.b,dst,this.origen,this.maxVerticesLote);}
         g=geometria(dst);
       }
-      const m=new THREE.Mesh(g,this.materiales[p.tipo]);m.receiveShadow=true;grupo.add(m);
+      const pz=this.paletas.get(p.zona);let material=this.materiales[p.tipo];
+      if(pz&&['suelo','edificio'].includes(p.tipo)){const key=p.zona+':'+p.tipo;if(!this.materialesZona.has(key)){const color=p.tipo==='suelo'?pz.escenario[0]:pz.escenario[3];const mat=material.clone();mat.color.set(color);this.materialesZona.set(key,mat);}material=this.materialesZona.get(key);}
+      const m=new THREE.Mesh(g,material);m.receiveShadow=true;grupo.add(m);
       const vertices=g.attributes.position.count,triangulos=(g.index?.count??vertices)/3;
       const bytes=Object.values(g.attributes).reduce((s,a)=>s+a.array.byteLength,0)+(g.index?.array.byteLength??0);
       this.raiz.add(grupo);this.lotes.set(k,{grupo,firma:p.firma,vertices,triangulos,bytes});
@@ -209,6 +211,6 @@ export class MundoSectores {
     this.cerrado=true;this.cargador.cerrar();
     for(const l of this.lotes.values())soltar(l.grupo);
     this.lotes.clear();this.cola=[];this.visibles=[];this.faltantes=[];this.omisiones=[];this.raiz.removeFromParent();
-    for(const mat of Object.values(this.materiales))mat.dispose();
+    for(const mat of [...Object.values(this.materiales),...this.materialesZona.values()])mat.dispose();this.materialesZona.clear();
   }
 }
