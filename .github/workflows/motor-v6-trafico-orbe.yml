@@ -1,0 +1,38 @@
+name: Motor City 6 · tráfico en Orbe real de diseño
+on:
+  pull_request:
+    paths:
+      - 'motor-v6/src/fisica/*trafico.js'
+      - 'motor-v6/src/render/trafico.js'
+      - 'motor-v6/tests/trafico-orbe.mjs'
+      - '.github/workflows/motor-v6-trafico-orbe.yml'
+  push:
+    paths:
+      - 'motor-v6/src/fisica/*trafico.js'
+      - 'motor-v6/src/render/trafico.js'
+      - 'motor-v6/tests/trafico-orbe.mjs'
+      - '.github/workflows/motor-v6-trafico-orbe.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  orbe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: juanfeliperico369-stack/Run-City
+          ref: a250cb2d6cafc179e7768681a4d86f62c0911f0c
+          path: _orbe
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Compilar datos G-0 y carriles validados
+        run: |
+          cd _orbe
+          python3 -B mundo/tuberia/preparar-escena-orbe.py mundo/orbe "$RUNNER_TEMP/escena-orbe" docs/orbe/ambiente-v1.json
+      - name: Probar itinerarios y capa de instancias con la topología de Orbe
+        run: node motor-v6/tests/trafico-orbe.mjs "$RUNNER_TEMP/escena-orbe"
