@@ -18,6 +18,10 @@
   - Lo pidió la revisión de los fallos de carga de Orbe (Run-City #19 y #20): el botón «Reintentar» recargaba y perdía lo no guardado. Ahora la escena reintenta en el sitio, y lo hace sola cuando vuelve la red.
 - **Probado:** `sectores.mjs` con un caso nuevo (tres sectores que fallan, nada se repite sin reintentar, primero lo visible, y no se puede con el trabajador caído ni con el cargador cerrado), `verificar`, `mundo-sectores` y `relevo-sectores`.
 
+## 28-nov-2026 · Pulso musical original para Motor City 6
+- Se añade una base procedural opcional que responde a la velocidad y al tiempo restante, con activación voluntaria, pausa y guardián.
+- Las pruebas unitarias y Web Audio en Chromium pasan. Falta integrarla al juego, escucharla y ajustar la mezcla en dispositivo; no se afirma similitud con el video de referencia.
+
 ## 28-nov-2026 · Motor City 6: lo genérico, las fachadas, el regulador de calidad y dos arreglos de robustez (Claude A)
 - **Lo genérico** (`mundo/generico.js`, plan de Run City § 13.3: «con una semilla y no se guarda»):
   - edificios que dan al frente de cada calle (con segunda fila en el centro y los barrios) y árboles en los andenes, con estilos de manzana: centro, barrio, puerto, costa, loma, campo, parque y ninguno;
