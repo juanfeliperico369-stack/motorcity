@@ -93,13 +93,15 @@ function edificio(o,base,dst,origen,max){
     triangulo(dst,pie(b),techo(a),techo(b),origen,max);
   }
 }
-/* el color de un edificio: el de los datos, o uno de la paleta de su barrio (lo genérico varía por tono) */
+/* el color de un edificio: el de los datos, o el de las fachadas de su barrio (la paleta G‑3 de Antigravity, «fachadas»: 4
+   colores calibrados); si el barrio no las trae, de su paleta de escenario. Lo genérico varía por tono. */
 const PALETA_BASE=['#3f8a4f','#5b4636','#0e6378','#e8e4c4','#ffd36b'];
 function colorEdificio(o,pz){
   if(o.color)return new THREE.Color(o.color);
-  const e=pz?.escenario||PALETA_BASE;
-  if(!o.generico)return new THREE.Color(e[3]);
-  const t=fin(o.tono)?o.tono:.5,c=new THREE.Color(t<.42?e[3]:t<.62?e[4]:t<.82?e[1]:e[2]).offsetHSL(0,0,((t*7)%1-.5)*.16);
+  const f=Array.isArray(pz?.fachadas)&&pz.fachadas.length?pz.fachadas:null,e=pz?.escenario||PALETA_BASE;
+  if(!o.generico)return new THREE.Color(f?f[0]:e[3]);
+  const t=fin(o.tono)?o.tono:.5;
+  const c=(f?new THREE.Color(f[Math.min(f.length-1,Math.floor(t*f.length))]):new THREE.Color(t<.42?e[3]:t<.62?e[4]:t<.82?e[1]:e[2])).offsetHSL(0,0,((t*7)%1-.5)*(f?.08:.16));
   /* el tono es del barrio, pero la fachada siempre se lee: ni tan oscura que se pierdan las ventanas ni tan saturada que encandile */
   const h={};c.getHSL(h);return c.setHSL(h.h,Math.min(h.s,.62),Math.max(.3,Math.min(.85,h.l)));
 }
@@ -244,13 +246,13 @@ export class MundoSectores {
     }catch(e){g?.dispose();grupo.removeFromParent();throw e;}
   }
   _crearArboles(k,p,grupo,pz){
-    const formas=formasArbol(),verdes=(pz?.escenario?[pz.escenario[0]]:['#3f8a4f']).map(c=>new THREE.Color(c)),tmp=new THREE.Object3D(),col=new THREE.Color(),hsl={};
+    const formas=formasArbol(),verdes=[pz?.follaje_arbol||pz?.escenario?.[0]||'#3f8a4f'].map(c=>new THREE.Color(c)),tmp=new THREE.Object3D(),col=new THREE.Color(),hsl={};   /* el follaje del barrio (G‑3), o su suelo */
     let n=0;
     for(const tipo of [0,1]){
       const lista=p.partes.filter(a=>a.tipo===tipo);if(!lista.length)continue;
       const im=new THREE.InstancedMesh(formas[tipo],this.materiales.arbol,lista.length);im.name='arboles-'+tipo;
       lista.forEach((a,i)=>{tmp.position.set(a.x-this.origen[0],a.y-this.origen[1],a.z-this.origen[2]);tmp.rotation.set(0,(a.x*12.9898+a.z*78.233)%6.283,0);tmp.scale.setScalar(a.escala);tmp.updateMatrix();im.setMatrixAt(i,tmp.matrix);
-        col.copy(verdes[0]).offsetHSL(((a.x*.37+a.z*.11)%1-.5)*.04,.05,((a.x*.53+a.z*.29)%1-.5)*.1-.07-(tipo?.03:0));col.getHSL(hsl);col.setHSL(hsl.h,hsl.s,Math.max(.2,hsl.l));im.setColorAt(i,col);   /* un poco más oscuro que el suelo, para que se separe, pero nunca negro */});
+        col.copy(verdes[0]).offsetHSL(((a.x*.37+a.z*.11)%1-.5)*.04,.05,((a.x*.53+a.z*.29)%1-.5)*.1-(pz?.follaje_arbol?.02:.07)-(tipo?.03:0));col.getHSL(hsl);col.setHSL(hsl.h,hsl.s,Math.max(.2,hsl.l));im.setColorAt(i,col);   /* un poco más oscuro que el suelo, para que se separe, pero nunca negro */});
       im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;im.computeBoundingSphere();
       grupo.add(im);n+=lista.length;
     }

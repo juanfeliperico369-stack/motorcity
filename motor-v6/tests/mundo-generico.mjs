@@ -63,3 +63,17 @@ console.log(`✓ lo genérico en la escena por sectores: ${n} pruebas`);
   console.log(`✓ y con la cámara de lejos lo visible cabe en la caché (${grande.visibles.length} visibles, ${req.size} con sus dependencias, ${grande.recortados} esperan)`);
   grande.cerrar();
 }
+
+/* las fachadas de la paleta G‑3: si el barrio las trae, lo genérico las usa (y el follaje, para los árboles) */
+{
+  const pal = new Map([['z', { escenario: ['#3f8a4f', '#5b4636', '#0e6378', '#e8e4c4', '#ffd36b'], fachadas: ['#e4dec8', '#d2c4a0', '#8e6f56', '#4f8696'], follaje_arbol: '#4a8f56' }]]);
+  const wf = new W(), mf = new MundoSectores({ indice: idx, paletas: pal, generico, opcionesCarga: { baseURL: 'https://example.test/indice.json', tope: 2, concurrencia: 2, trabajador: wf } });
+  mf.actualizar({ x: 250, z: 125, visibles: ['a', 'b'], radio: 0 }); wf.enviar(a); wf.enviar(b); mf.procesar({ maxLotes: 20 });
+  const geo = mf.raiz.children.find(g => g.name === 'edificio:a').children[0].geometry, col = geo.attributes.color.array;
+  const { Color } = await import('../src/render/three.js');
+  const fach = ['#e4dec8', '#d2c4a0', '#8e6f56', '#4f8696'].map(h => new Color(h)), hsl = c => { const o = {}; c.getHSL(o); return o; };
+  let fuera = 0; for (let i = 0; i < col.length; i += 3 * 30) { const c = new Color(col[i], col[i + 1], col[i + 2]), h = hsl(c); if (!fach.some(f => Math.abs(hsl(f).h - h.h) < 0.03 || hsl(f).s < 0.15 && h.s < 0.2)) fuera++; }
+  if (fuera > 0) throw new Error(`colores de fachada fuera de la paleta: ${fuera}`);
+  console.log('✓ y con la paleta G‑3, las fachadas de lo genérico salen de sus 4 colores');
+  mf.cerrar();
+}
