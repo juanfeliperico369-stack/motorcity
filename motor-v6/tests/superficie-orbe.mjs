@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {aguaRio,prepararSuperficies,superficie} from '../src/fisica/superficie-orbe.js';
+const cfg={mar:{nivel_m:0},rio:{ancho_m:20,puntos:[[0,0,1],[100,0,1]]}};
+const vias=prepararSuperficies([{nodos:[{id:'a',posicion:[50,-20],altura_m:5},{id:'b',posicion:[50,20],altura_m:5}],tramos:[{id:'puente',desde:'a',hasta:'b',puntos:[[50,-20],[50,20]],ancho_m:10,nivel:1}]}]);
+assert.equal(aguaRio(cfg,50,0),1);assert.equal(aguaRio(cfg,50,15),undefined);
+assert.equal(superficie(cfg,vias,20,0,-1,5),undefined);
+assert.equal(superficie(cfg,vias,50,0,-1,5).nivel,1);
+assert.ok(Math.abs(superficie(cfg,vias,50,0,-1,5).y-5.035)<1e-8);
+assert.equal(superficie(cfg,vias,50,0,-1,0),undefined);
+assert.equal(superficie(cfg,vias,56,0,-1,5),undefined);
+assert.equal(superficie(cfg,vias,20,20,3,3).y,3);
+assert.equal(superficie(cfg,vias,20,20,undefined,3),undefined);
+console.log('OK: agua bloqueada, puente transitable, borde y nivel sin salto vertical');
