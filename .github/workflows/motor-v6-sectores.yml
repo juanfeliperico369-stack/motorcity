@@ -29,3 +29,17 @@ jobs:
         run: |
           node motor-v6/tests/fisica.mjs
           node motor-v6/tests/perfiles-arcade.mjs
+  navegador:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    needs: modulos
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Instalar navegador de pruebas
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Worker real y estados en Chromium móvil con CPU 4x
+        run: node motor-v6/tests/sectores-browser.mjs
