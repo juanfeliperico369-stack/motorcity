@@ -52,3 +52,14 @@ try {
   fallo.cerrar();
 } finally { m.cerrar(); }
 console.log(`✓ lo genérico en la escena por sectores: ${n} pruebas`);
+
+/* con la cámara de lejos, lo visible se recorta a lo que cabe en la caché (los más lejanos esperan) en vez de romper */
+{
+  const sectores = []; for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) { const id = `s${i}${j}`, deps = [i > 0 ? `s${i - 1}${j}` : null, i < 5 ? `s${i + 1}${j}` : null].filter(Boolean); sectores.push({ id, x: i * 250 + 125, z: j * 250 + 125, url: id + '.json', dependencias: deps }); }
+  const grande = new MundoSectores({ indice: { version: 1, tamano_m: 250, sectores }, opcionesCarga: { baseURL: 'https://example.test/indice.json', tope: 8, concurrencia: 2, trabajador: new W() } });
+  let error = null; try { grande.actualizar({ x: 750, z: 500, radio: 3000, radioVisible: 3000 }); } catch (e) { error = e; }
+  const req = new Set(grande.visibles.flatMap(id => [id, ...sectores.find(s => s.id === id).dependencias]));
+  if (error || req.size > 8 || grande.recortados <= 0 || !grande.visibles.includes('s21') && !grande.visibles.includes('s31')) throw new Error('el recorte de lo visible falló: ' + (error?.message || req.size));
+  console.log(`✓ y con la cámara de lejos lo visible cabe en la caché (${grande.visibles.length} visibles, ${req.size} con sus dependencias, ${grande.recortados} esperan)`);
+  grande.cerrar();
+}

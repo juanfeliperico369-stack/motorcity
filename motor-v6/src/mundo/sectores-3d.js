@@ -144,7 +144,17 @@ export class MundoSectores {
   actualizar({x,z,rumbo=0,radio=500,radioVisible=160,visibles}){
     if(this.cerrado||![x,z,rumbo,radio,radioVisible].every(fin)||radioVisible<0)throw new RangeError('Escena cerrada o posición inválida');
     const t=this.indice.tamano_m;
-    const ids=[...new Set(visibles??this.indice.sectores.filter(s=>{const b=celda(s,t),dx=Math.max(b[0]-x,0,x-b[2]),dz=Math.max(b[1]-z,0,z-b[3]);return Math.hypot(dx,dz)<=radioVisible;}).map(s=>s.id))].sort();
+    // Lo visible, del más cercano al más lejano, mientras quepa con sus dependencias en la caché del cargador: con la cámara
+    // de lejos el radio crece, y los sectores más lejanos esperan en vez de romper la carga (this.recortados los cuenta).
+    let ids;
+    if(visibles)ids=[...new Set(visibles)].sort();
+    else{
+      const dist=s=>{const b=celda(s,t);return Math.hypot(Math.max(b[0]-x,0,x-b[2]),Math.max(b[1]-z,0,z-b[3]));};
+      const cand=this.indice.sectores.map(s=>[s,dist(s)]).filter(([,d])=>d<=radioVisible).sort((a,b)=>a[1]-b[1]||a[0].id.localeCompare(b[0].id));
+      const elegidos=new Set(),tope=this.cargador.tope;ids=[];
+      for(const [s] of cand){const nuevos=[s.id,...(s.dependencias||[])].filter(d=>!elegidos.has(d));if(elegidos.size+nuevos.length>tope)continue;for(const d of nuevos)elegidos.add(d);ids.push(s.id);}
+      this.recortados=cand.length-ids.length;ids.sort();
+    }
     this.cargador.actualizar({x,z,rumbo,radio,visibles:ids});
     if(ids.join('\0')!==this.visibles.join('\0')){this.visibles=ids;this.sucio=true;}
   }
