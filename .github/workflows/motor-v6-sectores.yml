@@ -40,6 +40,7 @@ jobs:
           node motor-v6/tests/sensacion.mjs
           node motor-v6/tests/entrada.mjs
           node motor-v6/tests/guardado-sonido.mjs
+          node motor-v6/tests/pulso.mjs
           node motor-v6/tests/generico.mjs
           node motor-v6/tests/mundo-generico.mjs
           node motor-v6/tests/calidad.mjs
@@ -62,6 +63,8 @@ jobs:
           fi
           "$browser_path" --version
           echo "MC_CHROMIUM=$browser_path" >> "$GITHUB_ENV"
+      - name: Música procedural y guardián en Web Audio
+        run: NODE_PATH="$RUNNER_TEMP/pw/node_modules" node motor-v6/tests/pulso-navegador.mjs
       - name: Recorrido continuo y trabajador real
         run: NODE_PATH="$RUNNER_TEMP/pw/node_modules" node motor-v6/tests/sectores-navegador.mjs
       - name: RCS1 y respaldo JSON con Worker real (CPU 4x)
