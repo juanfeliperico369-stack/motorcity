@@ -111,6 +111,21 @@ function girando({ error, rapidez = 6, seg = 3, antes }) {
   ok(c.carrera === 0, 'y vuelve a la panorámica en 0,8 s');
 }
 
+/* ---- el jugador nunca sale de la pantalla, aunque la vía vaya para otro lado o la cámara no siga (lo halló la CI) ---- */
+{
+  const aspecto = 412 / 860;
+  for (const giro of [Math.PI / 2, Math.PI, -2.2, 2.6]) {
+    const c = new Camara({ aspecto }); c.colocar({ x: 0, y: 0, z: 0, rumbo: 0 }); c.entrarCarrera(); let x = 0, z = 0, fuera = 0;
+    for (let i = 0; i < 120; i++) { const v = Math.min(9, i * dt * 5); x += Math.sin(giro) * v * dt; z += Math.cos(giro) * v * dt; c.paso(dt, { x, y: 0, z, rumbo: giro, rapidez: v, rumboVia: giro }); const p = proyectar(c.pose(1), { x, y: 0.9, z }, aspecto); if (!(p.prof > 0 && Math.abs(p.x) < 0.95 && Math.abs(p.y) < 0.95)) fuera++; }
+    ok(fuera === 0, `al entrar a una carrera que va a ${(giro / G).toFixed(0)}° de la cámara, el jugador sigue en la pantalla (${fuera})`);
+  }
+  for (const zoom of [0, 0.36, 1]) {
+    const c = new Camara({ aspecto }); c.fijarZoom(zoom); c.colocar({ x: 0, y: 0, z: 0, rumbo: 0 }); let x = 0, fuera = 0;
+    for (let i = 0; i < 150; i++) { x -= 12 * dt; c.paso(dt, { x, y: 0, z: 0, rumbo: -Math.PI / 2, rapidez: 12 }); if (i < 140) c.girar(0); const p = proyectar(c.pose(1), { x, y: 0.9, z: 0 }, aspecto); if (!(p.prof > 0 && Math.abs(p.x) < 0.95 && Math.abs(p.y) < 0.95)) fuera++; }
+    ok(fuera === 0, `corriendo de lado a 12 m/s sin que la cámara lo siga (zoom ${zoom}), sigue en la pantalla (${fuera})`);
+  }
+}
+
 /* ---- la velocidad se siente, sin marear ---- */
 {
   const fovA = v => { const c = new Camara(); c.colocar({ x: 0, y: 0, z: 0, rumbo: 0 }); c.paso(dt, { x: 0, y: 0, z: 0, rumbo: 0, rapidez: v }); return c; };

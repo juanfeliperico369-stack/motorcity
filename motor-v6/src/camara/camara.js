@@ -27,7 +27,7 @@ export const PERFIL_CAMARA = Object.freeze({
   /* persecución de Run Scooter: el ojo ~6,6 m detrás y ~3,4 m arriba, mirando 10 m adelante a 1,1 m, con 62° */
   carrera: Object.freeze({ distancia: 16.8, inclinacion: 8 * G, altura: 1.1, adelanto: 10, fov: 62 * G }),
   fovHorizontal: 36 * G, fovMin: 40 * G, fovMax: 62 * G, fovCerca: 6 * G,
-  adelantoSeg: 0.55, adelantoMax: 9, tAdelanto: 0.35, tAltura: 0.15,
+  adelantoSeg: 0.55, adelantoMax: 9, adelantoLado: 0.45, adelantoAtras: 0.15, tAdelanto: 0.35, tAltura: 0.15,
   rapidezMinima: 0.8, zonaMuerta: 12 * G, zonaQuieta: 1.5 * G, omega: 3.9, giroMax: 100 * G, omegaCarrera: 7,
   esperaManual: 2.5, ajusteMax: 25 * G, inclinacionMin: 15 * G, inclinacionMax: 80 * G, tZoom: 0.12,
   margen: 0.9, margenSuelo: 1.4, subirMax: 22 * G, pasosSubida: 6, tEncoger: 0.06, tEstirar: 0.7, tBajar: 0.8, tapaCerca: 0.45,
@@ -135,10 +135,15 @@ export class Camara {
     const inclinacionBase = limitar(mezclar(e.inclinacion + this.ajuste, C.inclinacion, k), P.inclinacionMin * (1 - k), P.inclinacionMax);
     const altura = mezclar(e.altura, C.altura, k);
     const fov = mezclar(this.fovBase() + P.fovCerca * e.cercania + P.velocidad.fov * kv, C.fov, k);
-    /* mira un poco adelante del rumbo (suavizado, para que un giro no dé un salto) */
-    const sR = Math.sin(obj.rumbo || 0), cR = Math.cos(obj.rumbo || 0);
+    /* mira un poco adelante del rumbo (suavizado, para que un giro no dé un salto). Pero el jugador nunca sale de la
+       pantalla: lo que se corra de lado respecto a la cámara se limita a una franja segura (en vertical la vista es
+       angosta), y en la carrera mira solo hacia donde ya mira la cámara mientras gira hacia la vía. */
+    const sR = Math.sin(obj.rumbo || 0), cR = Math.cos(obj.rumbo || 0), sG = Math.sin(this.guinada), cG = Math.cos(this.guinada);
     const largo = mezclar(Math.min(rap * P.adelantoSeg, P.adelantoMax) * limitar(e.distancia / P.justo.distancia, 0.25, 1.6), C.adelanto, k);
-    const ax = sR * largo, az = cR * largo;
+    const frente = (sR * sG + cR * cG) * largo, lado = (sR * -cG + cR * sG) * largo;
+    const ladoMax = P.adelantoLado * distancia * Math.tan(Math.atan(Math.tan(fov / 2) * this.aspecto)) * (1 - k);
+    const frenteC = Math.max(mezclar(frente, largo, k), -P.adelantoAtras * distancia), ladoC = limitar(lado, -ladoMax, ladoMax);
+    const ax = sG * frenteC - cG * ladoC, az = cG * frenteC + sG * ladoC;
     if (deUna) this.adelanto = { x: ax, z: az };
     else { this.adelanto.x = acercarExp(this.adelanto.x, ax, P.tAdelanto * (1 - k * 0.8), dt); this.adelanto.z = acercarExp(this.adelanto.z, az, P.tAdelanto * (1 - k * 0.8), dt); }
     this.alturaBlanco = deUna || this.alturaBlanco === null ? obj.y : acercarExp(this.alturaBlanco, obj.y, P.tAltura, dt);
@@ -146,7 +151,6 @@ export class Camara {
     /* el brazo. Lo que tapa cerca del JUGADOR se vuelve transparente (render/oclusion.js); lo que taparía cerca de la
        CÁMARA (una pared contra el lente) no se deja: primero sube como una grúa para pasar por encima, y si no alcanza,
        el brazo se encoge. Y el ojo nunca queda dentro de un edificio. */
-    const sG = Math.sin(this.guinada), cG = Math.cos(this.guinada);
     const ojoCon = (incl, frac) => ({ x: blanco.x - sG * Math.cos(incl) * distancia * frac, y: blanco.y + Math.sin(incl) * distancia * frac, z: blanco.z - cG * Math.cos(incl) * distancia * frac });
     const cabeza = { x: obj.x, y: obj.y + 1.5, z: obj.z };
     const bien = q => this._libre(q) && !this._tapaCerca(cabeza, q);

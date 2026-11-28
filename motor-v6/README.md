@@ -62,7 +62,7 @@ La escena de Orbe y el catálogo de los 17 vehículos de Run Scooter son del jue
 
 ```bash
 node motor-v6/tests/verificar.mjs      # sintaxis de todos los módulos, escala SI, datos y arte
-node motor-v6/tests/camara.mjs         # las promesas del § 5 (41 pruebas)
+node motor-v6/tests/camara.mjs         # las promesas del § 5 (48 pruebas)
 node motor-v6/tests/sensacion.mjs      # las cifras del § 12 para cada tipo de movimiento (1.325 medidas)
 node motor-v6/tests/entrada.mjs        # palanca, gestos, esquemas, teclado, mando, orientación y ajustes
 node motor-v6/tests/guardado-sonido.mjs

@@ -6,7 +6,7 @@
 - **La física** (`fisica/arcade.js`): `moverArcade` con el giro de EnCicla (según la marcha y con inercia); `pasoArcade` sigue igual para la carrera.
 - **El sonido y el guardado:** `sonido/guardian.js` (rescatado de `js/01-sonido-guardian.js`, sin parchear nada global) y `nucleo/guardado.js` (versiones y migraciones; no pisa una partida más nueva).
 - **La estructura del plano § 4:** `nucleo/`, `camara/`, `entrada/`, `fisica/`, `mundo/`, `render/` y `sonido/`. La escena de Orbe y el catálogo de los 17 vehículos pasan a `Run-City/juego/orbe/`.
-- **Probado:** `camara.mjs` (41), `sensacion.mjs` (1.325 medidas dentro de las metas del § 12), `entrada.mjs` (50), `guardado-sonido.mjs` (23), las de Codex con las rutas nuevas, y `banco-navegador.mjs` en Chromium móvil 412×860 con CPU 4× (34: toques reales, pellizco a los extremos, pausa, carrera, giro del celular; 45 fps de mediana con WebGL por software y 10 MB de memoria JS).
+- **Probado:** `camara.mjs` (48), `sensacion.mjs` (1.325 medidas dentro de las metas del § 12), `entrada.mjs` (50), `guardado-sonido.mjs` (23), las de Codex con las rutas nuevas, y `banco-navegador.mjs` en Chromium móvil 412×860 con CPU 4× (34: toques reales, pellizco a los extremos, pausa, carrera, giro del celular; 45 fps de mediana con WebGL por software y 10 MB de memoria JS).
 - **Falta:** pasar a la cámara única el prototipo de la 4 Sur (`demo.html`, `main.js`, `skatepark.js`) y llevarlo a Run City (F3); probar en un celular de verdad.
 
 ## 28-nov-2026 · Sectores y física de Motor City 6 para Run City
