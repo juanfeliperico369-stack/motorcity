@@ -32,7 +32,7 @@ export function bloqueaJugador(actores,desde,hasta){
 export function pasoProtegidoJugador(sim,dt,jugador,opciones={}){
  cuerpo(jugador);
  const previo=sim.estado();
- const ocupados=new Map(previo.actores.map(a=>[a.id,cuerpoVehiculo(a)]));
+ const ocupados=new Map(previo.actores.map(a=>{const b=cuerpoVehiculo(a);return [a.id,{antes:b,despues:b}];}));
  const anterior=opciones.autorizarPaso??(()=>true);
  return sim.paso(dt,{...opciones,autorizarPaso:(a,b,c)=>{
    if(!anterior(a,b,c))return false;
@@ -41,10 +41,15 @@ export function pasoProtegidoJugador(sim,dt,jugador,opciones={}){
    // Conservador entre corredores diferentes. Actualizar la ocupación
    // de cada candidato aceptado, y proteger los anteriores barridos.
    for(const [id,o] of ocupados){
-     if(id===a.id||o.carril===a.carril)continue;
-     if(choqueRelativo(p,q,o,o))return false;
+     if(id===a.id||o.antes.carril===a.carril)continue;
+     const otro=sim.red.carriles.get(o.antes.carril);
+     // En la zona recta de un mismo corredor las bandas son disjuntas
+     // por construcción; el disco circunscrito daría falsos positivos.
+     const interior=(c,b)=>b.s-b.largo_m/2>=c.transicion_m&&b.s+b.largo_m/2<=c.largo-c.transicion_m;
+     if(otro?.tramo===c.tramo&&interior(c,p)&&interior(c,q)&&interior(otro,o.antes)&&interior(otro,o.despues))continue;
+     if(choqueRelativo(p,q,o.antes,o.despues))return false;
    }
-   ocupados.set(a.id,q);
+   ocupados.set(a.id,{antes:p,despues:q});
    return true;
  }});
 }
