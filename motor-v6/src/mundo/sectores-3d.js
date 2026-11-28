@@ -99,8 +99,9 @@ function colorEdificio(o,pz){
   if(o.color)return new THREE.Color(o.color);
   const e=pz?.escenario||PALETA_BASE;
   if(!o.generico)return new THREE.Color(e[3]);
-  const t=fin(o.tono)?o.tono:.5,c=new THREE.Color(t<.42?e[3]:t<.62?e[4]:t<.82?e[1]:e[2]);
-  return c.offsetHSL(0,0,((t*7)%1-.5)*.16);
+  const t=fin(o.tono)?o.tono:.5,c=new THREE.Color(t<.42?e[3]:t<.62?e[4]:t<.82?e[1]:e[2]).offsetHSL(0,0,((t*7)%1-.5)*.16);
+  /* el tono es del barrio, pero la fachada siempre se lee: ni tan oscura que se pierdan las ventanas ni tan saturada que encandile */
+  const h={};c.getHSL(h);return c.setHSL(h.h,Math.min(h.s,.62),Math.max(.3,Math.min(.85,h.l)));
 }
 function edificioColor(o,dst,origen,max,color){
   const n0=dst.p.length/3;edificio(o,o.base_m,dst.p,origen,max);
@@ -239,7 +240,7 @@ export class MundoSectores {
       const lista=p.partes.filter(a=>a.tipo===tipo);if(!lista.length)continue;
       const im=new THREE.InstancedMesh(formas[tipo],this.materiales.arbol,lista.length);im.name='arboles-'+tipo;
       lista.forEach((a,i)=>{tmp.position.set(a.x-this.origen[0],a.y-this.origen[1],a.z-this.origen[2]);tmp.rotation.set(0,(a.x*12.9898+a.z*78.233)%6.283,0);tmp.scale.setScalar(a.escala);tmp.updateMatrix();im.setMatrixAt(i,tmp.matrix);
-        col.copy(verdes[0]).offsetHSL(((a.x*.37+a.z*.11)%1-.5)*.04,0,((a.x*.53+a.z*.29)%1-.5)*.16-(tipo?.06:0));im.setColorAt(i,col);});
+        col.copy(verdes[0]).offsetHSL(((a.x*.37+a.z*.11)%1-.5)*.04,.05,((a.x*.53+a.z*.29)%1-.5)*.12-.14-(tipo?.06:0));im.setColorAt(i,col);   /* más oscuro que el suelo, para que se separe */});
       im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;im.computeBoundingSphere();
       grupo.add(im);n+=lista.length;
     }
