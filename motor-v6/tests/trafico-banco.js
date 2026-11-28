@@ -38,5 +38,5 @@ const bucle=new Bucle({actualizar:dt=>{
  cam.position.set(jugador.x+20,jugador.y+32,jugador.z-24);cam.lookAt(jugador.x,jugador.y,jugador.z);renderer.render(escena,cam);cuadros++;
  document.querySelector('output').textContent=(verde?'Verde':'Rojo')+' · '+e.cruces+' cruces · '+(bucle.pausado?'Pausa':'En marcha');
 }});
-window.bancoTrafico={estado:()=>({jugador:{...jugador},trafico:e,verde,choques,cuadros,pasos:bucle.pasos,pausa:bucle.pausado,drawCalls:renderer.info.render.calls,triangulos:renderer.info.render.triangles,instancias:capa.lotes.map(l=>l.count)}),cerrar:()=>{bucle.detener();capa.cerrar();renderer.dispose();}};
+window.bancoTrafico={estado:()=>({jugador:{...jugador},eje:Math.abs(v.dx)>Math.abs(v.dz)?'z':'x',trafico:e,verde,choques,cuadros,pasos:bucle.pasos,pausa:bucle.pausado,drawCalls:renderer.info.render.calls,triangulos:renderer.info.render.triangles,instancias:capa.lotes.map(l=>l.count)}),cerrar:()=>{bucle.detener();capa.cerrar();renderer.dispose();}};
 bucle.iniciar();

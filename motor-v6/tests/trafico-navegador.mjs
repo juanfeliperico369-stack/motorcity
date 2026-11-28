@@ -23,7 +23,8 @@ try{
  await page.waitForFunction(()=>window.bancoTrafico.estado().trafico.actores[0].estado==='obstaculo',undefined,{timeout:20000});
  const espera=await estado();assert.equal(espera.trafico.actores[0].velocidad,0);assert.equal(espera.trafico.cruces,0);
  // El jugador bloquea la vía. Apartarlo lateralmente usando entrada real.
- await page.keyboard.down('ArrowRight');await page.waitForFunction(x=>window.bancoTrafico.estado().jugador.x>x+8,espera.jugador.x,{timeout:10000});await page.keyboard.up('ArrowRight');
+ const eje=espera.eje,tecla=eje==='z'?'ArrowDown':'ArrowRight';
+ await page.keyboard.down(tecla);await page.waitForFunction(({eje,valor})=>window.bancoTrafico.estado().jugador[eje]>valor+8,{eje,valor:espera.jugador[eje]},{timeout:10000});await page.keyboard.up(tecla);
  await page.waitForFunction(s=>window.bancoTrafico.estado().trafico.actores[0].s>s+3,espera.trafico.actores[0].s,{timeout:10000});
  await page.keyboard.press('KeyP');const pausa=await estado();await page.evaluate(()=>new Promise(r=>{let n=0;const f=()=>++n>15?r():requestAnimationFrame(f);requestAnimationFrame(f);}));
  const congelado=await estado();assert.equal(congelado.pasos,pausa.pasos);assert.equal(congelado.trafico.actores[0].s,pausa.trafico.actores[0].s);
