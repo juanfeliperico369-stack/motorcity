@@ -1,0 +1,31 @@
+name: Motor City 6 · sectores y física
+on:
+  pull_request:
+    paths:
+      - 'motor-v6/**'
+      - '.github/workflows/motor-v6-sectores.yml'
+  push:
+    branches: ['ia/codex/**']
+    paths:
+      - 'motor-v6/**'
+      - '.github/workflows/motor-v6-sectores.yml'
+permissions:
+  contents: read
+jobs:
+  modulos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Bucle fijo
+        run: node motor-v6/tests/bucle.mjs
+      - name: Sectores
+        run: |
+          node motor-v6/tests/sectores.mjs
+          node motor-v6/tests/sectores-dependencias.mjs
+      - name: Física arcade y perfiles
+        run: |
+          node motor-v6/tests/fisica.mjs
+          node motor-v6/tests/perfiles-arcade.mjs
