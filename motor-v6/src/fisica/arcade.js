@@ -13,8 +13,8 @@ export function velocidadVehiculo(id) {
 }
 const limitar = (v, min, max) => Math.max(min, Math.min(max, v));
 /** Actualiza un cuerpo plano; rumbo 0 avanza hacia +z. Mando [-1,1]. */
-export function pasoArcade(estado, control, dt, { velocidadMax = 11, pie = false } = {}) {
-  if (!Number.isFinite(dt) || dt < 0 || !Number.isFinite(velocidadMax) || velocidadMax <= 0) throw new RangeError('dt y velocidad máxima inválidos');
+export function pasoArcade(estado, control, dt, { velocidadMax = 11, pie = false, manejo = 1 } = {}) {
+  if (!Number.isFinite(dt) || dt < 0 || !Number.isFinite(velocidadMax) || velocidadMax <= 0 || !Number.isFinite(manejo) || manejo <= 0) throw new RangeError('dt y velocidad máxima inválidos');
   const { x = 0, z = 0, velocidad = 0, rumbo = 0 } = estado;
   if (![x, z, velocidad, rumbo, control.avance ?? 0, control.giro ?? 0].every(Number.isFinite) || velocidad < 0 || velocidad > velocidadMax) throw new RangeError('Estado o mando inválido');
   const avance = limitar(control.avance ?? 0, 0, 1), giro = limitar(control.giro ?? 0, -1, 1);
@@ -25,7 +25,7 @@ export function pasoArcade(estado, control, dt, { velocidadMax = 11, pie = false
   const cambio = velocidadMax * dt / tiempo;
   const v = velocidad + limitar(meta - velocidad, -cambio, cambio);
   // 90° en 0,5 s a media velocidad; la respuesta se aplica en el primer paso.
-  const rumboNuevo = rumbo + giro * Math.PI * dt;
+  const rumboNuevo = rumbo + giro * Math.PI * dt * manejo;
   // Integrar por tramos: al alcanzar la meta se mantiene hasta terminar dt.
   const activo = Math.min(dt, Math.abs(meta - velocidad) * tiempo / velocidadMax);
   const distancia = (velocidad + v) * activo / 2 + v * (dt - activo);

@@ -9,7 +9,9 @@ import { chocaHuella } from './fisica/huellas.js';
 import { crearRedCiclo } from './fisica/red-ciclo.js';
 import { candidatoCarrera, iniciarCarrera, posicionCarrera, pasoCarrera } from './fisica/carrera.js';
 const $=id=>document.getElementById(id);
-const modos=[['bike','Bicicleta'],['foot','A pie'],['correr','Correr']];
+import { VEHICULOS, perfilVehiculo, radioVehiculo, admiteCarrera } from './vehiculos.js';
+import { crearGaraje } from './garaje-3d.js';
+const modos=VEHICULOS;
 async function iniciar(){
   const url=new URL('../datos/orbe/indice.json',import.meta.url);
   const resp=await fetch(url);if(!resp.ok)throw Error('No se pudo cargar el mapa de Orbe');
@@ -29,12 +31,10 @@ async function iniciar(){
   let listo=false,cuadros=0,estadoMundo={listo:false},carrera=null,rama=null;
   let distanciaUltima=0,crucesUltimos=0;
   let firmaRamas='';
-  const avatar=new THREE.Group(),material=new THREE.MeshStandardMaterial({color:0x176f87}),ropa=new THREE.Mesh(new THREE.CapsuleGeometry(.29,.76,3,8),material);
-  ropa.position.y=1.05;avatar.add(ropa);
-  const cabeza=new THREE.Mesh(new THREE.SphereGeometry(.21,8,6),new THREE.MeshStandardMaterial({color:0xc88e66}));cabeza.position.y=1.51;avatar.add(cabeza);
-  const bici=new THREE.Group(),llanta=new THREE.MeshStandardMaterial({color:0x29323b});
-  for(const z of [-.64,.64]){const rueda=new THREE.Mesh(new THREE.TorusGeometry(.31,.043,5,14),llanta);rueda.rotation.y=Math.PI/2;rueda.position.set(0,.34,z);bici.add(rueda);}
-  const cuerpo=new THREE.Mesh(new THREE.BoxGeometry(.17,.18,1.15),material);cuerpo.position.y=.48;bici.add(cuerpo);avatar.add(bici);escena.add(avatar);
+  const avatar=new THREE.Group(),garaje=crearGaraje();let modelo=garaje.get(modos[modo].id);
+  avatar.add(modelo);escena.add(avatar);
+  let vuelo=0,velVertical=0,impulsos=4,ultimoImpulso=false;
+  const selector=$('garaje');for(const [i,v] of modos.entries()){const b=document.createElement('button');b.textContent=v.nombre;b.dataset.vehiculo=v.id;b.onclick=()=>{seleccionar(i);selector.hidden=true;};selector.append(b);}
   const threeCam=new THREE.PerspectiveCamera(50,1,.3,1000);
   const terrenoCam={getHeight:(x,z)=>mundo.altura(x,z)??y};
   const cam=new CamaraCenitalInteligente(threeCam,{terreno:terrenoCam,colisiones:[]});
@@ -43,18 +43,19 @@ async function iniciar(){
   const teclas=new Set(),toques=new Map();
   const activo=k=>teclas.has(k)||[...toques.values()].includes(k);
   function limpiar(){teclas.clear();toques.clear();}
-  function perfil(){return modo===2?perfilArcade('foot',{correr:true}):perfilArcade(modos[modo][0]);}
+  function perfil(){return perfilVehiculo(modos[modo]);}
   const celda=(x,z)=>indice.sectores.find(s=>x>=s.x-indice.tamano_m/2&&x<s.x+indice.tamano_m/2&&z>=s.z-indice.tamano_m/2&&z<s.z+indice.tamano_m/2);
   function piso(x,z){const c=celda(x,z),s=c&&mundo.cargador.cache.get(c.id);return s&&s.zona!=='mar'?mundo.altura(x,z):undefined;}
   function obstaculo(a,b,altura){
     for(const s of mundo.cargador.cache.values())for(const o of s.objetos){
       if(!Number.isFinite(o.base_m)||!Number.isFinite(o.altura_m))continue;
       if(altura+1.72<=o.base_m||altura>=o.base_m+o.altura_m)continue;
-      if(chocaHuella([a.x,a.z],[b.x,b.z],o.huella,.36))return true;
+      if(chocaHuella([a.x,a.z],[b.x,b.z],o.huella,radioVehiculo(modos[modo])))return true;
     }return false;
   }
   function alternarCarrera(){
     if(pausa||!listo)return;
+    if(!carrera&&(!admiteCarrera(modos[modo])||vuelo>0))return;
     if(carrera){
       const p=posicionCarrera(red,carrera);
       const suelo=piso(estado.x,estado.z);
@@ -79,11 +80,17 @@ async function iniciar(){
       return;
     }
     const nuevo=pasoArcade(estado,{avance:activo('avanzar')?1:0,giro,freno:activo('freno')},dt,perfil());
-    const altura=piso(nuevo.x,nuevo.z);
-    if(altura===undefined||Math.abs(altura-y)>Math.max(.5,Math.hypot(nuevo.x-estado.x,nuevo.z-estado.z)*.65)||obstaculo(estado,nuevo,y)){
+    const altura=piso(nuevo.x,nuevo.z),sueloActual=piso(estado.x,estado.z);
+    const impulso=activo('impulso');
+    if(modos[modo].id==='jetpack'&&impulso&&!ultimoImpulso&&impulsos>0){velVertical=4;impulsos--;}
+    ultimoImpulso=impulso;
+    if(modos[modo].id==='jetpack'){velVertical=Math.max(-2.2,velVertical-4*dt);vuelo=Math.max(0,Math.min(8,vuelo+velVertical*dt));if(vuelo===0){velVertical=0;impulsos=4;}if(vuelo===8)velVertical=Math.min(0,velVertical);}
+    else{vuelo=0;velVertical=0;impulsos=4;}
+    const nuevaY=altura===undefined?y:altura+vuelo;
+    if(altura===undefined||sueloActual===undefined||(vuelo===0&&Math.abs(altura-sueloActual)>Math.max(.5,Math.hypot(nuevo.x-estado.x,nuevo.z-estado.z)*.65))||obstaculo(estado,nuevo,Math.min(y,nuevaY))){
       if(nuevo.x!==estado.x||nuevo.z!==estado.z)choques++;
       estado={...estado,velocidad:0,rumbo:nuevo.rumbo};
-    }else{estado=nuevo;y=altura;}
+    }else{estado=nuevo;y=nuevaY;}
     cam.actualizar(dt,{pos:new THREE.Vector3(estado.x,y,estado.z),vel:new THREE.Vector3(Math.sin(estado.rumbo)*estado.velocidad,0,Math.cos(estado.rumbo)*estado.velocidad),rumbo:estado.rumbo+Math.PI,rapidez:estado.velocidad});
   }
   function dibujar(alfa){
@@ -91,12 +98,12 @@ async function iniciar(){
     const h=piso(estado.x,estado.z);listo=estadoMundo.listo&&h!==undefined;
     if(listo&&bucle.pasos===0){y=yAnterior=h;}
     avatar.position.set(mezclar(anterior.x,estado.x,pausa?1:alfa),mezclar(yAnterior,y,pausa?1:alfa),mezclar(anterior.z,estado.z,pausa?1:alfa));avatar.rotation.y=estado.rumbo;
-    bici.visible=modo===0;
+    $('impulso').hidden=modos[modo].id!=='jetpack';
     const c=celda(estado.x,estado.z),s=c&&mundo.cargador.cache.get(c.id);
-    $('barrio').textContent=s?.barrio||'Orbe';$('vel').textContent=Math.round(estado.velocidad*3.6)+' km/h · '+modos[modo][1];
-    const disponible=!!carrera||(listo&&!!candidatoCarrera(red,{...estado,nivel:0}));
+    $('barrio').textContent=s?.barrio||'Orbe';$('vel').textContent=Math.round(estado.velocidad*3.6)+' km/h · '+modos[modo].nombre;
+    const disponible=!!carrera||(listo&&admiteCarrera(modos[modo])&&vuelo===0&&!!candidatoCarrera(red,{...estado,nivel:0}));
     $('carrera').hidden=!disponible;$('carrera').textContent=carrera?'Salir de la carrera':'Seguir ciclorruta';
-    $('modo').disabled=!!carrera;
+    $('modo').disabled=!!carrera;$('vehiculos').disabled=!!carrera;
     $('panelCarrera').hidden=!carrera;
     if(carrera){
       $('distancia').textContent=Math.floor(carrera.distancia)+' m · '+carrera.cruces+' cruces seguros';
@@ -111,13 +118,14 @@ async function iniciar(){
   }
   const bucle=new Bucle({actualizar:paso,dibujar});
   function pausar(valor=!pausa){pausa=valor;limpiar();anterior={...estado};yAnterior=y;if(pausa)bucle.pausar();else bucle.reanudar();$('pausa').textContent=pausa?'Continuar':'Pausa';$('pausa').setAttribute('aria-pressed',String(pausa));}
-  function cambiar(){if(pausa||carrera)return;modo=(modo+1)%modos.length;estado=adaptarVelocidad(estado,perfil());$('modo').textContent=modos[modo][1];}
-  const mapa={ArrowUp:'avanzar',KeyW:'avanzar',ArrowLeft:'izquierda',KeyA:'izquierda',ArrowRight:'derecha',KeyD:'derecha',ArrowDown:'freno',KeyS:'freno',Space:'freno'};
+  function seleccionar(i){if(pausa||carrera||vuelo>0||!modos[i])return;const anteriorModo=modo;modo=i;if(obstaculo(estado,estado,y)){modo=anteriorModo;return;}estado=adaptarVelocidad(estado,perfil());avatar.remove(modelo);modelo=garaje.get(modos[modo].id);avatar.add(modelo);$('modo').textContent=modos[modo].nombre;}
+  function cambiar(){seleccionar((modo+1)%modos.length);}
+  const mapa={ArrowUp:'avanzar',KeyW:'avanzar',ArrowLeft:'izquierda',KeyA:'izquierda',ArrowRight:'derecha',KeyD:'derecha',ArrowDown:'freno',KeyS:'freno',Space:'freno',KeyJ:'impulso'};
   addEventListener('keydown',e=>{if(mapa[e.code]){e.preventDefault();if(!pausa)teclas.add(mapa[e.code]);}else if(!e.repeat&&(e.code==='KeyP'||e.code==='Escape'))pausar();else if(!e.repeat&&e.code==='KeyV')cambiar();else if(!e.repeat&&e.code==='KeyR')alternarCarrera();else if(!e.repeat&&carrera&&/^Digit[1-9]$/.test(e.code)){const o=carrera.opciones[Number(e.code.slice(-1))-1];if(o)rama=o.tramo;}});
   addEventListener('keyup',e=>{if(mapa[e.code])teclas.delete(mapa[e.code]);});
-  for(const id of ['avanzar','izquierda','derecha','freno']){const btn=$(id);btn.addEventListener('pointerdown',e=>{e.preventDefault();if(!pausa){btn.setPointerCapture(e.pointerId);toques.set(e.pointerId,id);}});for(const evento of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(evento,e=>toques.delete(e.pointerId));}
-  $('carrera').onclick=alternarCarrera;$('modo').onclick=cambiar;$('pausa').onclick=()=>pausar();addEventListener('blur',()=>pausar(true));document.addEventListener('visibilitychange',()=>{if(document.hidden)pausar(true);});
-  window.RUN_CITY_MOTOR={estado:()=>({x:estado.x,z:estado.z,y,velocidad:estado.velocidad,modo:modos[modo][1],pausa,listo,choques,carrera:carrera?{fase:carrera.fase,distancia:carrera.distancia,cruces:carrera.cruces,evento:carrera.evento,tramo:carrera.ruta.tramo,sem:carrera.sem,opciones:carrera.opciones.map(o=>o.tramo)}:null,distanciaUltima,crucesUltimos,cuadros,pasos:bucle.pasos,carga:estadoMundo,drawCalls:renderer.info.render.calls})};
+  for(const id of ['avanzar','izquierda','derecha','freno','impulso']){const btn=$(id);btn.addEventListener('pointerdown',e=>{e.preventDefault();if(!pausa){btn.setPointerCapture(e.pointerId);toques.set(e.pointerId,id);}});for(const evento of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(evento,e=>toques.delete(e.pointerId));}
+  $('vehiculos').onclick=()=>{if(!carrera&&!pausa)selector.hidden=!selector.hidden;};$('carrera').onclick=alternarCarrera;$('modo').onclick=cambiar;$('pausa').onclick=()=>pausar();addEventListener('blur',()=>pausar(true));document.addEventListener('visibilitychange',()=>{if(document.hidden)pausar(true);});
+  window.RUN_CITY_MOTOR={estado:()=>({x:estado.x,z:estado.z,y,velocidad:estado.velocidad,modo:modos[modo].nombre,vehiculo:modos[modo].id,vuelo,impulsos,pausa,listo,choques,carrera:carrera?{fase:carrera.fase,distancia:carrera.distancia,cruces:carrera.cruces,evento:carrera.evento,tramo:carrera.ruta.tramo,sem:carrera.sem,opciones:carrera.opciones.map(o=>o.tramo)}:null,distanciaUltima,crucesUltimos,cuadros,pasos:bucle.pasos,carga:estadoMundo,drawCalls:renderer.info.render.calls})};
   cam.actualizar(1/60,{pos:new THREE.Vector3(estado.x,y,estado.z),vel:new THREE.Vector3(),rumbo:estado.rumbo+Math.PI,rapidez:0});
   bucle.iniciar();
 }
