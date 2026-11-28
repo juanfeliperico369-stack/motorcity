@@ -126,6 +126,27 @@ try {
   for (const b of cajas) ok(b.w >= 44 && b.h >= 44 && b.x >= 0 && b.y >= 0 && b.x + b.w <= 412 && b.y + b.h <= 860, `el botón ${b.id} mide ${Math.round(b.w)}×${Math.round(b.h)} y está entero en la pantalla`);
   for (let i = 0; i < cajas.length; i++) for (let j = i + 1; j < cajas.length; j++) { const a = cajas[i], b = cajas[j]; ok(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y, `${a.id} y ${b.id} no se montan`); }
 
+  /* ---- «avanza» (el arcade de persecución, docs/referencias/pako-2.md de Run-City): en la bici se avanza solo, una mitad
+     de la pantalla gira y las dos frenan; con toques reales, sin palanca ---- */
+  await page.locator('#ajustes').tap();
+  for (let i = 0; i < 3 && (await E()).ajustes.esquemaVehiculo !== 'avanza'; i++) await page.locator('#pEsquema').tap();
+  ok((await E()).ajustes.esquemaVehiculo === 'avanza', 'el esquema del vehículo pasa a «avanza» desde los ajustes');
+  await page.locator('#pCerrar').tap(); await esperar(() => document.getElementById('panel').hidden);
+  await esperar(() => window.MC6_BANCO.estado().velocidad > 4, undefined, 60000);
+  ok(true, 'sin tocar nada, la bici avanza sola');
+  const r0 = (await E()).rumbo;
+  await toque('touchStart', [[330, 600]]);
+  await esperar(r => window.MC6_BANCO.estado().rumbo < r - 0.6, r0, 60000);
+  ok((await E()).velocidad > 2, 'un dedo en la mitad derecha gira a la derecha sin dejar de avanzar');
+  await toque('touchStart', [[330, 600], [70, 600]]);
+  await esperar(() => window.MC6_BANCO.estado().velocidad < 0.1, undefined, 60000);
+  ok(true, 'un dedo en cada mitad frena hasta parar');
+  const sinPalanca = await page.evaluate(() => [...document.querySelectorAll('[data-palanca]')].every(e => e.hidden));
+  await toque('touchEnd', []);
+  ok(sinPalanca, 'en «avanza» no se dibuja la palanca');
+  await page.locator('#ajustes').tap(); await page.locator('#pEsquema').tap();
+  await page.locator('#pCerrar').tap(); await esperar(() => window.MC6_BANCO.estado().ajustes.esquemaVehiculo === 'directo');
+
   /* ---- al girar el celular: la recomendación, y aplicarla ---- */
   await page.setViewportSize({ width: 860, height: 412 });
   await page.waitForSelector('#aviso:not([hidden])');

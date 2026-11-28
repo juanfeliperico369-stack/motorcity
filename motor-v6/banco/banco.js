@@ -11,6 +11,7 @@ import { Obstaculos, proyectar } from '../src/camara/geometria.js';
 import { crearOclusion } from '../src/render/oclusion.js';
 import { Controles } from '../src/entrada/controles.js';
 import { ajustesControl } from '../src/entrada/preferencias.js';
+import { ESQUEMAS } from '../src/entrada/esquemas.js';
 import { moverArcade, perfilMovimiento } from '../src/fisica/arcade.js';
 import { guardian } from '../src/sonido/guardian.js';
 
@@ -158,7 +159,7 @@ $('pModo').onclick = () => cambiar({ palanca: { modo: ajustes.valores.palanca.mo
 $('pLado').onclick = () => cambiar({ palanca: { lado: ajustes.valores.palanca.lado === 'izquierda' ? 'derecha' : 'izquierda' } });
 $('pMenos').onclick = () => cambiar({ palanca: { tamano: ajustes.valores.palanca.tamano - 0.1 } });
 $('pMas').onclick = () => cambiar({ palanca: { tamano: ajustes.valores.palanca.tamano + 0.1 } });
-$('pEsquema').onclick = () => { const e = ajustes.valores.esquemaVehiculo === 'directo' ? 'manubrio' : 'directo'; cambiar({ esquemaVehiculo: e }); };
+$('pEsquema').onclick = () => { const e = ESQUEMAS[(ESQUEMAS.indexOf(ajustes.valores.esquemaVehiculo) + 1) % ESQUEMAS.length]; cambiar({ esquemaVehiculo: e }); };   // directo → manubrio → avanza
 $('pSeguir').onclick = () => cambiar({ camara: { seguirRumbo: !ajustes.valores.camara.seguirRumbo } });
 $('pMovimiento').onclick = () => cambiar({ camara: { menosMovimiento: !ajustes.valores.camara.menosMovimiento } });
 ponerModo(0); pintarAjustes();
