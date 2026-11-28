@@ -29,7 +29,9 @@
     padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: 0.01em;
     white-space: nowrap;
   }
-  .topBtns { display: flex; gap: 6px; pointer-events: auto; }
+  .topBtns { display: flex; gap: 6px; pointer-events: auto; flex-wrap: wrap; justify-content: flex-end; }
+  @media (max-width: 600px) { .top { flex-wrap: wrap; } .topBtns { margin-left: auto; } }
+  button:disabled { opacity: .55; cursor: not-allowed; }
   .btn {
     min-width: 44px; min-height: 44px; padding: 0 12px; border-radius: 12px;
     border: 1px solid var(--borde); background: var(--panel); color: var(--texto);
@@ -49,7 +51,7 @@
   }
   #aviso.on { opacity: 1; transform: translateX(-50%) translateY(0); }
   @media (max-width: 600px) {
-    #aviso { top: max(88px, calc(env(safe-area-inset-top) + 82px)); font-size: 12px; }
+    #aviso { top: max(130px, calc(env(safe-area-inset-top) + 120px)); font-size: 12px; }
   }
 
   /* Controles inferiores limpios */
@@ -91,7 +93,7 @@
     <div class="topBtns">
       <button class="btn" id="bModo" title="Cambiar Skate / Parkour / EnCicla (Tab)">🛹 Skate</button>
       <button class="btn" id="bZoom" title="Acercar / alejar cámara única (C)">🔍</button>
-      <button class="btn" id="bEscala" title="Ir a la fila de escala SI 1:1">📏</button>
+      <button class="btn" id="bPausa" title="Pausar o continuar (P)" aria-pressed="false">Pausa</button>
     </div>
   </div>
 

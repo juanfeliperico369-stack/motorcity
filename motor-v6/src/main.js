@@ -14,6 +14,7 @@ import { CamaraCenitalInteligente } from './camara.js';
 import { Skatepark3D } from './skatepark.js';
 import { PersonajeController } from './personaje.js';
 import { MundoEfectoGTA } from './mundo.js';
+import { Bucle, mezclar } from './nucleo/bucle.js';
 
 const $ = (s) => document.querySelector(s);
 
@@ -104,7 +105,12 @@ async function iniciar() {
 
   // ---------- ENTRADA: TECLADO + TÁCTIL (JOYSTICK IZQUIERDO + CÁMARA DERECHA + PELLIZCO) ----------
   const keys = new Set();
+  let bucle;
+  const limpiarEntrada = () => { keys.clear(); joy.id = null; joy.x = 0; joy.y = 0; joyKnob.style.transform = 'translate(0px, 0px)'; dedos.clear(); camDrag.id = null; pinchDist0 = 0; };
   window.addEventListener('keydown', (e) => {
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','Tab'].includes(e.code)) e.preventDefault();
+    if (e.code === 'Escape' || e.code === 'KeyP') { if (!e.repeat) cambiarPausa(); return; }
+    if (bucle?.pausado) return;
     keys.add(e.code);
     if (e.code === 'Space') { e.preventDefault(); jugador.pedirSalto(); }
     else if (e.code === 'KeyF' || e.code === 'KeyK') jugador.pedirTrucoOAccion();
@@ -130,6 +136,7 @@ async function iniciar() {
 
   joyEl.addEventListener('pointerdown', (e) => {
     e.stopPropagation();
+    if (bucle?.pausado) return;
     joyEl.setPointerCapture(e.pointerId);
     const r = joyEl.getBoundingClientRect();
     joy.id = e.pointerId;
@@ -195,14 +202,20 @@ async function iniciar() {
   // Botones mínimos del HUD
   $('#bModo').onclick = () => jugador.ciclarModo();
   $('#bZoom').onclick = () => { const p = camara.siguienteAcercamiento(); mostrarAviso(`🔍 ${p.nombre}`, 1.6); };
-  $('#bEscala').onclick = () => {
-    // Teletransporta frente a la fila de vehículos SI (bici, moto, taxi, bus, metro)
-    jugador.pos.set(42.5, terreno.getHeight(42.5, 5) + 0.2, 5);
-    jugador.vel.set(0, 0, 0);
-    jugador.rumbo = -Math.PI / 2;
-    camara.zoomObj = 0.86;
-    mostrarAviso('📏 Fila SI: Persona 1,72 m · EnCicla · Moto · Taxi · Bus · Metro', 3.0);
-  };
+  function cambiarPausa(forzar) {
+    if (!bucle) return;
+    const pausa = forzar ?? !bucle.pausado;
+    limpiarEntrada();
+    if (pausa) { bucle.pausar(); jugador.mesh.position.copy(jugador.pos); }
+    else { anterior.copy(jugador.pos); bucle.reanudar(); }
+    $('#bPausa').textContent = pausa ? 'Continuar' : 'Pausa';
+    $('#bPausa').setAttribute('aria-pressed', String(pausa));
+    $('#bModo').disabled = pausa; $('#bSalto').disabled = pausa; $('#bTruco').disabled = pausa;
+    mostrarAviso(pausa ? 'Juego en pausa' : 'Continúa explorando', 1.6);
+  }
+  $('#bPausa').onclick = () => cambiarPausa();
+  window.addEventListener('blur', () => cambiarPausa(true));
+  document.addEventListener('visibilitychange', () => { if(document.hidden) cambiarPausa(true); });
   $('#bSalto').onclick = () => jugador.pedirSalto();
   $('#bTruco').onclick = () => jugador.pedirTrucoOAccion();
 
@@ -230,14 +243,16 @@ async function iniciar() {
       combo: jugador.combo,
       paradasHechas: skatepark.paradas.filter((p) => p.completada).length,
       stats: mundo.stats,
+      pausa: bucle?.pausado ?? false,
+      pasos: bucle?.pasos ?? 0,
+      tiempoJuego: bucle?.t ?? 0,
+      descartado: bucle?.descartado ?? 0,
     }),
   };
 
   // ---------- BUCLE DE PASO FIJO 60 Hz ----------
-  const PASO = 1 / 60;
-  let acum = 0;
-  let ultimoT = performance.now();
   let hudT = 0;
+  const anterior = jugador.pos.clone();
 
   function leerEntrada() {
     let mx = joy.x;
@@ -255,25 +270,23 @@ async function iniciar() {
     };
   }
 
-  function cuadro(ahora) {
-    requestAnimationFrame(cuadro);
-    const dtReal = Math.min(0.1, Math.max(0, (ahora - ultimoT) / 1000));
-    ultimoT = ahora;
-    acum += dtReal;
-
+  function paso(dt) {
+    anterior.copy(jugador.pos);
     const entrada = leerEntrada();
-    while (acum >= PASO) {
-      const base = camara.getMoveBasis();
-      jugador.paso(PASO, entrada, base);
-      mundo.actualizar(PASO);
-      camara.actualizar(PASO, {
-        pos: jugador.pos,
-        vel: jugador.vel,
-        rumbo: jugador.rumbo,
-        rapidez: jugador.rapidezHorizontal(),
-      });
-      acum -= PASO;
-    }
+    jugador.paso(dt, entrada, camara.getMoveBasis());
+    mundo.actualizar(dt);
+    camara.actualizar(dt, {
+      pos: jugador.pos, vel: jugador.vel,
+      rumbo: jugador.rumbo, rapidez: jugador.rapidezHorizontal(),
+    });
+  }
+
+  function dibujar(alfa, dtReal) {
+    if (!bucle.pausado) jugador.mesh.position.set(
+      mezclar(anterior.x, jugador.pos.x, alfa),
+      mezclar(anterior.y, jugador.pos.y, alfa),
+      mezclar(anterior.z, jugador.pos.z, alfa));
+    else jugador.mesh.position.copy(jugador.pos);
 
     // Mover la caja de sombras del sol siguiendo al jugador (sombras siempre nítidas)
     sol.position.set(jugador.pos.x + 75, jugador.pos.y + 110, jugador.pos.z + 55);
@@ -300,7 +313,8 @@ async function iniciar() {
   }
 
   mostrarAviso('Puente 4 Sur · Arrastra para moverte · La cámara te sigue gradualmente', 3.5);
-  requestAnimationFrame(cuadro);
+  bucle = new Bucle({ actualizar: paso, dibujar });
+  bucle.iniciar();
 }
 
 iniciar();

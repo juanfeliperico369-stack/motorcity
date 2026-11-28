@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {createRequire} from 'node:module';
 const {chromium}=createRequire(import.meta.url)('playwright');
 const raiz=new URL('../../',import.meta.url);
-const modulos=new Set(['/motor-v6/tests/mundo-banco.js','/motor-v6/src/mundo-sectores.js','/motor-v6/src/sectores.js','/motor-v6/src/mundo/trabajador-sectores.js','/motor-v6/src/fisica/arcade.js','/js/vendor/three-0.170.0.module.min.js']);
+const modulos=new Set(['/motor-v6/tests/mundo-banco.js','/motor-v6/src/mundo-sectores.js','/motor-v6/src/sectores.js','/motor-v6/src/mundo/trabajador-sectores.js','/motor-v6/src/fisica/arcade.js','/motor-v6/src/nucleo/bucle.js','/js/vendor/three-0.170.0.module.min.js']);
 const idx={version:1,tamano_m:250,sectores:[0,1,2].map(i=>({id:'s'+i,url:'s'+i+'.json',x:i*250+125,z:125,dependencias:[]}))};
 function sector(i){
   const x=i*250,id='s'+i;
