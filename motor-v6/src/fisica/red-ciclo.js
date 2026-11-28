@@ -7,18 +7,21 @@ const punto = p => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite
 const idValido = id => typeof id === 'string' && id.length > 0;
 const mismos = (a,b) => a[0] === b[0] && a[1] === b[1];
 const acotar = (v,a,b) => Math.min(b,Math.max(a,v));
-export function crearRedCiclo(sectores, { completo = false } = {}) {
+export function crearRedCiclo(sectores, { completo = false, nodosCompletos = [] } = {}) {
   const nodos = new Map(), tramos = new Map(), conexiones = new Map();
   for (const sector of sectores) for (const n of sector.nodos) {
     if (!idValido(n.id) || !punto(n.posicion) || !Number.isFinite(n.altura_m) || !cruces.has(n.cruce) || nodos.has(n.id)) throw new RangeError('Nodo inválido o repetido');
     nodos.set(n.id, {...n,posicion:[...n.posicion]}); conexiones.set(n.id,[]);
   }
-  const ausentes = [];
+  const ausentes = [], vistos = new Set(), incompletos = new Set();
+  const confirmados = new Set(nodosCompletos);
+  for (const id of confirmados) if (!nodos.has(id)) throw new RangeError('Nodo completo desconocido');
   for (const sector of sectores) for (const t of sector.tramos) {
     if (t.red !== 'ciclovia') continue;
-    if (!idValido(t.id) || tramos.has(t.id) || !Array.isArray(t.puntos) || t.puntos.length < 2 || !t.puntos.every(punto) || !Number.isFinite(t.ancho_m) || t.ancho_m <= 0 || !Number.isFinite(t.pendiente) || !Number.isInteger(t.nivel)) throw new RangeError('Tramo inválido o repetido');
+    if (!idValido(t.id) || vistos.has(t.id) || !Array.isArray(t.puntos) || t.puntos.length < 2 || !t.puntos.every(punto) || !Number.isFinite(t.ancho_m) || t.ancho_m <= 0 || !Number.isFinite(t.pendiente) || !Number.isInteger(t.nivel)) throw new RangeError('Tramo inválido o repetido');
+    vistos.add(t.id);
     const a=nodos.get(t.desde), b=nodos.get(t.hasta);
-    if (!a || !b) { ausentes.push(t.id); continue; }
+    if (!a || !b) { ausentes.push(t.id); if(a)incompletos.add(a.id); if(b)incompletos.add(b.id); continue; }
     if (!mismos(a.posicion,t.puntos[0]) || !mismos(b.posicion,t.puntos.at(-1))) throw new RangeError('Extremos no coinciden con nodos');
     const puntos=t.puntos.map(p=>[...p]), segmentos=[];let largo=0;
     for(let i=1;i<puntos.length;i++){
@@ -32,8 +35,9 @@ export function crearRedCiclo(sectores, { completo = false } = {}) {
     conexiones.get(t.hasta).push({tramo:t.id,sentido:-1});
   }
   if(completo && ausentes.length)throw new RangeError('Red completa con extremos ausentes');
+  for(const id of confirmados) if(incompletos.has(id))throw new RangeError('Nodo declarado completo con extremo ausente');
   for(const c of conexiones.values())c.sort((a,b)=>a.tramo.localeCompare(b.tramo)||a.sentido-b.sentido);
-  return {nodos,tramos,conexiones,completo,ausentes};
+  return {nodos,tramos,conexiones,completo,ausentes,nodosCompletos:confirmados};
 }
 function tramoEstado(red,e){
   const t=red.tramos.get(e.tramo);
@@ -45,7 +49,9 @@ export function muestraCiclo(red,e,{anchoCarril=1}={}){
   const t=tramoEstado(red,e);
   const g=e.sentido===1?(t.segmentos.find(g=>e.s<g.inicio+g.largo)??t.segmentos.at(-1)):(t.segmentos.find(g=>e.s<=g.inicio+g.largo)??t.segmentos.at(-1));
   const u=acotar(e.s-g.inicio,0,g.largo), a=red.nodos.get(t.desde),b=red.nodos.get(t.hasta);
-  return {x:g.a[0]+u*g.dx,z:g.a[1]+u*g.dz,y:a.altura_m+(b.altura_m-a.altura_m)*e.s/t.largo,rumbo:Math.atan2(g.dx*e.sentido,g.dz*e.sentido),ancho_m:t.ancho_m,carriles:Math.max(1,Math.floor(t.ancho_m/anchoCarril)),pendiente:t.pendiente*e.sentido,nivel:t.nivel};
+  const pos=e.s===0?a.posicion:e.s===t.largo?b.posicion:u===0?g.a:u===g.largo?g.b:[g.a[0]+u*g.dx,g.a[1]+u*g.dz];
+  const y=e.s===0?a.altura_m:e.s===t.largo?b.altura_m:a.altura_m+(b.altura_m-a.altura_m)*e.s/t.largo;
+  return {x:pos[0],z:pos[1],y,rumbo:Math.atan2(g.dx*e.sentido,g.dz*e.sentido),ancho_m:t.ancho_m,carriles:Math.max(1,Math.floor(t.ancho_m/anchoCarril)),pendiente:t.pendiente*e.sentido,nivel:t.nivel};
 }
 /** Candidato de entrada, sin modificar al jugador. Distancia hasta centro de vía.
  * Si hay puentes superpuestos, el consumidor debe pasar su nivel real.
@@ -82,7 +88,7 @@ export function avanzarCiclo(red,e,metros,{rama,pasoPermitido=false}={}){
   const opciones=red.conexiones.get(nodo.id).filter(r=>r.tramo!==t.id);
   const base={estado,restante_m,nodo:nodo.id,cruce:nodo.cruce,opciones,posicion:muestraCiclo(red,estado)};
   if(nodo.cruce!=='ninguno'&&!pasoPermitido)return {...base,evento:'cruce'};
-  if(!red.completo && !opciones.length)return {...base,evento:'sin_datos'};
+  if(!red.completo && !red.nodosCompletos.has(nodo.id) && (rama===undefined || !opciones.some(o=>o.tramo===rama)))return {...base,evento:'sin_datos'};
   if(!opciones.length)return {...base,evento:'fin'};
   if(rama===undefined&&opciones.length>1)return {...base,evento:'bifurcacion'};
   const elegida=rama===undefined?opciones[0]:opciones.find(o=>o.tramo===rama);
