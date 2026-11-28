@@ -47,3 +47,5 @@ jobs:
         run: NODE_PATH="$RUNNER_TEMP/pw/node_modules" node motor-v6/tests/sectores-navegador.mjs
       - name: RCS1 y respaldo JSON con Worker real (CPU 4x)
         run: NODE_PATH="$RUNNER_TEMP/pw/node_modules" node motor-v6/tests/rcs1-navegador.mjs
+      - name: Escena WebGL y movimiento real por teclado (datos sintéticos)
+        run: NODE_PATH="$RUNNER_TEMP/pw/node_modules" node motor-v6/tests/mundo-sectores-navegador.mjs

@@ -23,6 +23,10 @@ function relieveValido(s){
 /** Altura de la MISMA triangulación que la malla, no interpolación bilineal. */
 export function alturaSector(s,x,z){
   if(!relieveValido(s)||!fin(x)||!fin(z)||!punto(s.origen)||!fin(s.tamano_m)||s.tamano_m<=0)return undefined;
+  return alturaValidada(s,x,z);
+}
+function alturaValidada(s,x,z){
+  if(!fin(x)||!fin(z))return undefined;
   const r=s.relieve,u=(x-s.origen[0])/s.tamano_m*(r.nx-1),v=(z-s.origen[1])/s.tamano_m*(r.nz-1);
   if(u<0||v<0||u>r.nx-1||v>r.nz-1)return undefined;
   const i=Math.min(r.nx-2,Math.floor(u)),j=Math.min(r.nz-2,Math.floor(v)),fx=u-i,fz=v-j,k=j*r.nx+i,h=r.alturas_m;
@@ -140,7 +144,8 @@ export class MundoSectores {
       const s=datos.get(id),partes={vial:[],ciclovia:[],edificio:[]},firmas={vial:[],ciclovia:[],edificio:[]};
       for(const tramo of s.tramos){
         if(idsTramo.has(tramo.id))throw new Error('Tramo global duplicado: '+tramo.id);idsTramo.add(tramo.id);
-        if(!cajas.some(b=>toca(b,caja(tramo.puntos,tramo.ancho_m/2))))continue;
+        const limites=caja(tramo.puntos,tramo.ancho_m/2);
+        if(!cajas.some(b=>toca(b,limites)))continue;
         const a=nodos.get(tramo.desde),b=nodos.get(tramo.hasta);
         if(!a||!b){this.omisiones.push({id:tramo.id,tipo:'extremos_sin_datos'});continue;}
         if(!['vial','ciclovia'].includes(tramo.red))throw new Error('Red desconocida');
@@ -148,7 +153,8 @@ export class MundoSectores {
       }
       for(const o of s.objetos){
         if(idsObjeto.has(o.id))throw new Error('Objeto global duplicado: '+o.id);idsObjeto.add(o.id);
-        if(!cajas.some(b=>toca(b,caja(o.huella))))continue;
+        const limites=caja(o.huella);
+        if(!cajas.some(b=>toca(b,limites)))continue;
         // Altura de edificio relativa a su base explícita. No adivinar niveles.
         if(!fin(o.altura_m)||o.altura_m<=0||!fin(o.base_m)){this.omisiones.push({id:o.id,tipo:'edificio_sin_alturas'});continue;}
         partes.edificio.push(o);firmas.edificio.push(o.id);
@@ -190,7 +196,7 @@ export class MundoSectores {
     const dentro=c=>x>=c.x-t/2&&x<c.x+t/2&&z>=c.z-t/2&&z<c.z+t/2;
     for(const c of [...candidatos.filter(dentro),...candidatos.filter(c=>!dentro(c))]){
       const s=this.cargador.cache.get(c.id);if(!s)continue;
-      const h=alturaSector(s,x,z);if(h!==undefined)return h;
+      const h=alturaValidada(s,x,z);if(h!==undefined)return h;
     }
     return undefined;
   }
