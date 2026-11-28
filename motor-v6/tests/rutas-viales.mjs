@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {RutasViales} from '../src/fisica/rutas-viales.js';
+const c=(id,desde,hasta,largo,ancho_m=2.75,tramo=id)=>({id,desde,hasta,largo,ancho_m,tramo,transicion_m:25});
+const cs=[c('a','a','b',100),c('b','b','c',150),c('c','b','d',80),c('d','d','c',60),c('e','c','e',100),c('estrecho','b','c',60,1),c('vuelta','b','a',100,2.75,'a')];
+const r=new RutasViales({carriles:new Map(cs.map(c=>[c.id,c]))});
+assert.deepEqual(r.buscar('a','e'),{ruta:['a','c','d','e'],coste:240});
+assert.deepEqual(r.buscar('a','e',{permitir:c=>c.id!=='c'}),{ruta:['a','b','e'],coste:250});
+assert.equal(r.buscar('a','vuelta'),null);
+assert.deepEqual(r.buscar('a','vuelta',{permitirU:true}).ruta,['a','vuelta']);
+assert.equal(r.buscar('estrecho','e'),null);
+assert.throws(()=>r.buscar('a','e',{coste:()=>-1}),/Coste/);
+assert.equal(r.buscar('a','e',{permitir:c=>c.id!=='e'}),null);
+console.log('OK: ruta mínima, carril cerrado, ancho, prohibición de retorno, coste y desconexión');
