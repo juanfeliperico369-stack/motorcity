@@ -1,0 +1,208 @@
+/* Motor City 6: escena incremental de sectores v1, sin datos inventados.
+ * Three.js es la misma copia fija 0.170 que utiliza el motor. Este módulo vive
+ * en src/ (no src/mundo/) para que el exportador reubique su import correctamente.
+ */
+import * as THREE from '../../js/vendor/three-0.170.0.module.min.js';
+import { CargadorSectores } from './sectores.js';
+
+const fin = Number.isFinite;
+const punto = p => Array.isArray(p) && p.length === 2 && p.every(fin);
+const limite = (v,a,b) => Math.max(a,Math.min(b,v));
+function caja(ps,m=0) {
+  const b=[Infinity,Infinity,-Infinity,-Infinity];
+  for(const [x,z] of ps){b[0]=Math.min(b[0],x-m);b[1]=Math.min(b[1],z-m);b[2]=Math.max(b[2],x+m);b[3]=Math.max(b[3],z+m);}
+  return b;
+}
+const toca=(a,b)=>a[0]<=b[2]&&a[2]>=b[0]&&a[1]<=b[3]&&a[3]>=b[1];
+const celda=(s,t)=>[s.x-t/2,s.z-t/2,s.x+t/2,s.z+t/2];
+
+function relieveValido(s){
+  const r=s.relieve;
+  return !!r&&Number.isInteger(r.nx)&&Number.isInteger(r.nz)&&r.nx>=2&&r.nz>=2&&r.nx<=129&&r.nz<=129&&Array.isArray(r.alturas_m)&&r.alturas_m.length===r.nx*r.nz&&r.alturas_m.every(fin)&&typeof r.fuente==='string'&&!!r.fuente.trim();
+}
+/** Altura de la MISMA triangulación que la malla, no interpolación bilineal. */
+export function alturaSector(s,x,z){
+  if(!relieveValido(s)||!fin(x)||!fin(z)||!punto(s.origen)||!fin(s.tamano_m)||s.tamano_m<=0)return undefined;
+  const r=s.relieve,u=(x-s.origen[0])/s.tamano_m*(r.nx-1),v=(z-s.origen[1])/s.tamano_m*(r.nz-1);
+  if(u<0||v<0||u>r.nx-1||v>r.nz-1)return undefined;
+  const i=Math.min(r.nx-2,Math.floor(u)),j=Math.min(r.nz-2,Math.floor(v)),fx=u-i,fz=v-j,k=j*r.nx+i,h=r.alturas_m;
+  const a=h[k],b=h[k+1],c=h[k+r.nx],d=h[k+r.nx+1];
+  return fx+fz<=1?a+fx*(b-a)+fz*(c-a):d+(1-fx)*(c-d)+(1-fz)*(b-d);
+}
+function triangulo(dst,a,b,c,origen,max){
+  if(dst.length/3+3>max)throw new RangeError('Límite de vértices de lote');
+  for(const p of [a,b,c])dst.push(p[0]-origen[0],p[1]-origen[1],p[2]-origen[2]);
+}
+function geometria(dst){
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(dst,3));
+  g.computeVertexNormals();g.computeBoundingSphere();return g;
+}
+function mallaRelieve(s,origen,max){
+  const r=s.relieve;
+  if(r.nx*r.nz>max)throw new RangeError('Límite de vértices de relieve');
+  const posiciones=[],indices=[];
+  for(let j=0;j<r.nz;j++)for(let i=0;i<r.nx;i++)posiciones.push(s.origen[0]+i*s.tamano_m/(r.nx-1)-origen[0],r.alturas_m[j*r.nx+i]-origen[1],s.origen[1]+j*s.tamano_m/(r.nz-1)-origen[2]);
+  for(let j=0;j<r.nz-1;j++)for(let i=0;i<r.nx-1;i++){const a=j*r.nx+i,b=a+1,c=a+r.nx,d=c+1;indices.push(a,c,b,b,c,d);}
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(posiciones,3));g.setIndex(indices);g.computeVertexNormals();g.computeBoundingSphere();return g;
+}
+function cinta(t,a,b,dst,origen,max){
+  const ps=t.puntos,dirs=[],dist=[0];
+  if(!punto(a.posicion)||!punto(b.posicion)||!fin(a.altura_m)||!fin(b.altura_m)||!Array.isArray(ps)||ps.length<2||!ps.every(punto)||!fin(t.ancho_m)||t.ancho_m<=0)throw new Error('Tramo inválido');
+  if(ps[0][0]!==a.posicion[0]||ps[0][1]!==a.posicion[1]||ps.at(-1)[0]!==b.posicion[0]||ps.at(-1)[1]!==b.posicion[1])throw new Error('Extremos de vía no coinciden');
+  for(let i=1;i<ps.length;i++){
+    const dx=ps[i][0]-ps[i-1][0],dz=ps[i][1]-ps[i-1][1],l=Math.hypot(dx,dz);
+    if(!fin(l)||l<=0)throw new Error('Segmento degenerado');
+    dirs.push([-dz/l,dx/l]);dist.push(dist.at(-1)+l);
+  }
+  const total=dist.at(-1),izq=[],der=[],medio=t.ancho_m/2;
+  // Junta acotada al semiancho: no expande la huella de dependencias del índice.
+  for(let i=0;i<ps.length;i++){
+    const u=dirs[Math.max(0,i-1)],v=dirs[Math.min(dirs.length-1,i)],nx=u[0]+v[0],nz=u[1]+v[1],l=Math.hypot(nx,nz);
+    if(l<1e-8)throw new Error('Retorno de 180 grados sin nodo intermedio');
+    const ox=nx/l*medio,oz=nz/l*medio;
+    const y=a.altura_m+(b.altura_m-a.altura_m)*dist[i]/total+(t.red==='ciclovia'?.035:.02);
+    izq.push([ps[i][0]+ox,y,ps[i][1]+oz]);der.push([ps[i][0]-ox,y,ps[i][1]-oz]);
+  }
+  for(let i=1;i<ps.length;i++){
+    triangulo(dst,izq[i-1],izq[i],der[i-1],origen,max);
+    triangulo(dst,izq[i],der[i],der[i-1],origen,max);
+  }
+}
+function edificio(o,base,dst,origen,max){
+  const ps=o.huella,h=o.altura_m;
+  if(!Array.isArray(ps)||ps.length<3||ps.length>512||!ps.every(punto)||!fin(base)||!fin(h)||h<=0)throw new Error('Huella/altura inválida');
+  const area=ps.reduce((s,p,i)=>{const q=ps[(i+1)%ps.length];return s+(p[0]-ps[0][0])*(q[1]-ps[0][1])-(q[0]-ps[0][0])*(p[1]-ps[0][1]);},0);
+  if(Math.abs(area)<1e-8)throw new Error('Huella sin área');
+  const caras=THREE.ShapeUtils.triangulateShape(ps.map(p=>new THREE.Vector2(p[0]-ps[0][0],p[1]-ps[0][1])),[]);
+  if(caras.length!==ps.length-2)throw new Error('Triangulación incompleta');
+  const techo=p=>[p[0],base+h,p[1]],pie=p=>[p[0],base,p[1]];
+  for(const [i,j,k] of caras){
+    const a=ps[i],b=ps[j],c=ps[k],signo=(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+    triangulo(dst,techo(a),techo(signo>0?c:b),techo(signo>0?b:c),origen,max);
+  }
+  for(let i=0;i<ps.length;i++){
+    let a=ps[i],b=ps[(i+1)%ps.length];if(area<0)[a,b]=[b,a];
+    triangulo(dst,pie(a),techo(a),pie(b),origen,max);
+    triangulo(dst,pie(b),techo(a),techo(b),origen,max);
+  }
+}
+function soltar(g){
+  g.removeFromParent();
+  g.traverse(o=>{if(o.geometry)o.geometry.dispose();});
+}
+
+/** Escena por lotes: carga de datos separada de construcción GPU.
+ * Índice completo v1; los sectores residentes son inmutables durante su vida.
+ * Llamar actualizar con posición global y procesar una vez por frame.
+ */
+export class MundoSectores {
+  constructor({indice,origenRender=[0,0,0],maxVerticesLote=120000,opcionesCarga={}}){
+    if(!indice||indice.version!==1||!fin(indice.tamano_m)||indice.tamano_m<250||indice.tamano_m>500||!Array.isArray(indice.sectores)||!indice.sectores.length||!Array.isArray(origenRender)||origenRender.length!==3||!origenRender.every(fin)||!Number.isInteger(maxVerticesLote)||maxVerticesLote<3)throw new RangeError('Índice u opciones de escena inválidos');
+    this.indice=indice;this.origen=[...origenRender];this.maxVerticesLote=maxVerticesLote;
+    this.catalogo=new Map(indice.sectores.map(s=>[s.id,s]));
+    this.raiz=new THREE.Group();this.raiz.name='MundoSectoresV1';
+    this.materiales={suelo:new THREE.MeshStandardMaterial({color:0x879a72,roughness:1}),vial:new THREE.MeshStandardMaterial({color:0x56585e,roughness:1}),ciclovia:new THREE.MeshStandardMaterial({color:0x398451,roughness:.9}),edificio:new THREE.MeshStandardMaterial({color:0xe4d7bc,roughness:.85})};
+    this.lotes=new Map();this.versiones=new Map();this.secuencia=0;this.visibles=[];this.cola=[];this.errores=[];this.omisiones=[];this.faltantes=[];this.sucio=true;this.cerrado=false;
+    const {alCargar,alExpulsar,...opts}=opcionesCarga;
+    this.cargador=new CargadorSectores({...opts,catalogo:indice.sectores,alCargar:(id,s)=>{this.versiones.set(id,++this.secuencia);this.sucio=true;alCargar?.(id,s);},alExpulsar:(id,s)=>{this.versiones.delete(id);this.sucio=true;alExpulsar?.(id,s);}});
+  }
+  actualizar({x,z,rumbo=0,radio=500,radioVisible=160,visibles}){
+    if(this.cerrado||![x,z,rumbo,radio,radioVisible].every(fin)||radioVisible<0)throw new RangeError('Escena cerrada o posición inválida');
+    const t=this.indice.tamano_m;
+    const ids=[...new Set(visibles??this.indice.sectores.filter(s=>{const b=celda(s,t),dx=Math.max(b[0]-x,0,x-b[2]),dz=Math.max(b[1]-z,0,z-b[3]);return Math.hypot(dx,dz)<=radioVisible;}).map(s=>s.id))].sort();
+    this.cargador.actualizar({x,z,rumbo,radio,visibles:ids});
+    if(ids.join('\0')!==this.visibles.join('\0')){this.visibles=ids;this.sucio=true;}
+  }
+  _planificar(){
+    const datos=this.cargador.cache,t=this.indice.tamano_m,validas=[],propietarios=new Set();
+    this.errores=[];this.omisiones=[];this.faltantes=[];
+    for(const id of this.visibles){
+      const c=this.catalogo.get(id),req=[id,...(c.dependencias||[])];
+      if(req.some(d=>!datos.has(d))){this.faltantes.push(id);continue;}
+      validas.push(c);for(const d of req)propietarios.add(d);
+    }
+    const nodos=new Map(),planes=new Map(),idsTramo=new Set(),idsObjeto=new Set(),cajas=validas.map(s=>celda(s,t));
+    for(const id of propietarios){
+      const s=datos.get(id),c=this.catalogo.get(id);
+      if(!s||s.id!==id||s.tamano_m!==t||!punto(s.origen)||s.origen[0]+t/2!==c.x||s.origen[1]+t/2!==c.z)throw new Error('Sector no coincide con índice: '+id);
+      for(const n of s.nodos){if(nodos.has(n.id))throw new Error('Nodo global duplicado: '+n.id);nodos.set(n.id,{n,id});}
+    }
+    // Terrain only for visible cells; roads and objects owned by dependencies
+    // are emitted once, when their conservative box intersects a ready cell.
+    for(const c of validas){
+      const s=datos.get(c.id);
+      if(!relieveValido(s)){this.omisiones.push({id:c.id,tipo:'relieve_sin_datos'});continue;}
+      planes.set('suelo:'+s.id,{tipo:'suelo',s,firma:String(this.versiones.get(s.id))});
+    }
+    for(const id of propietarios){
+      const s=datos.get(id),partes={vial:[],ciclovia:[],edificio:[]},firmas={vial:[],ciclovia:[],edificio:[]};
+      for(const tramo of s.tramos){
+        if(idsTramo.has(tramo.id))throw new Error('Tramo global duplicado: '+tramo.id);idsTramo.add(tramo.id);
+        if(!cajas.some(b=>toca(b,caja(tramo.puntos,tramo.ancho_m/2))))continue;
+        const a=nodos.get(tramo.desde),b=nodos.get(tramo.hasta);
+        if(!a||!b){this.omisiones.push({id:tramo.id,tipo:'extremos_sin_datos'});continue;}
+        if(!['vial','ciclovia'].includes(tramo.red))throw new Error('Red desconocida');
+        partes[tramo.red].push({tramo,a:a.n,b:b.n});firmas[tramo.red].push([tramo.id,this.versiones.get(a.id),this.versiones.get(b.id)]);
+      }
+      for(const o of s.objetos){
+        if(idsObjeto.has(o.id))throw new Error('Objeto global duplicado: '+o.id);idsObjeto.add(o.id);
+        if(!cajas.some(b=>toca(b,caja(o.huella))))continue;
+        // Altura de edificio relativa a su base explícita. No adivinar niveles.
+        if(!fin(o.altura_m)||o.altura_m<=0||!fin(o.base_m)){this.omisiones.push({id:o.id,tipo:'edificio_sin_alturas'});continue;}
+        partes.edificio.push(o);firmas.edificio.push(o.id);
+      }
+      for(const tipo of Object.keys(partes))if(partes[tipo].length)planes.set(tipo+':'+id,{tipo,partes:partes[tipo],firma:JSON.stringify([this.versiones.get(id),firmas[tipo]])});
+    }
+    for(const [k,l] of this.lotes)if(planes.get(k)?.firma!==l.firma){soltar(l.grupo);this.lotes.delete(k);}
+    this.cola=[...planes].filter(([k])=>!this.lotes.has(k));
+  }
+  _crear(k,p){
+    const grupo=new THREE.Group();grupo.name=k;
+    let g;
+    try{
+      if(p.tipo==='suelo')g=mallaRelieve(p.s,this.origen,this.maxVerticesLote);
+      else{
+        const dst=[];
+        for(const v of p.partes){if(p.tipo==='edificio')edificio(v,v.base_m,dst,this.origen,this.maxVerticesLote);else cinta(v.tramo,v.a,v.b,dst,this.origen,this.maxVerticesLote);}
+        g=geometria(dst);
+      }
+      const m=new THREE.Mesh(g,this.materiales[p.tipo]);m.receiveShadow=true;grupo.add(m);
+      const vertices=g.attributes.position.count,triangulos=(g.index?.count??vertices)/3;
+      const bytes=Object.values(g.attributes).reduce((s,a)=>s+a.array.byteLength,0)+(g.index?.array.byteLength??0);
+      this.raiz.add(grupo);this.lotes.set(k,{grupo,firma:p.firma,vertices,triangulos,bytes});
+    }catch(e){g?.dispose();grupo.removeFromParent();throw e;}
+  }
+  procesar({maxLotes=1}={}){
+    if(this.cerrado||!Number.isInteger(maxLotes)||maxLotes<1)throw new RangeError('Presupuesto de lotes inválido');
+    if(this.sucio){
+      this.sucio=false;
+      try{this._planificar();}catch(e){for(const l of this.lotes.values())soltar(l.grupo);this.lotes.clear();this.cola=[];this.errores.push({id:'plan',error:String(e.message||e)});}
+    }
+    let hechos=0;
+    while(hechos<maxLotes&&this.cola.length){const [k,p]=this.cola.shift();try{this._crear(k,p);}catch(e){this.errores.push({id:k,error:String(e.message||e)});}hechos++;}
+    return this.estado();
+  }
+  altura(x,z){
+    // Preferir el suelo visible de celda semiabierta; el borde externo es válido.
+    const t=this.indice.tamano_m,candidatos=this.visibles.map(id=>this.catalogo.get(id)).filter(c=>this.lotes.has('suelo:'+c.id));
+    const dentro=c=>x>=c.x-t/2&&x<c.x+t/2&&z>=c.z-t/2&&z<c.z+t/2;
+    for(const c of [...candidatos.filter(dentro),...candidatos.filter(c=>!dentro(c))]){
+      const s=this.cargador.cache.get(c.id);if(!s)continue;
+      const h=alturaSector(s,x,z);if(h!==undefined)return h;
+    }
+    return undefined;
+  }
+  estado(){
+    const carga=this.cargador.estado(),l=[...this.lotes.values()];
+    return {carga,visibles:[...this.visibles],faltantesDatos:[...this.faltantes],pendientesLotes:this.cola.length,lotes:l.length,vertices:l.reduce((n,v)=>n+v.vertices,0),triangulos:l.reduce((n,v)=>n+v.triangulos,0),bytesGeometria:l.reduce((n,v)=>n+v.bytes,0),omisiones:this.omisiones.map(o=>({...o})),errores:this.errores.map(e=>({...e})),listo:!this.cerrado&&!this.sucio&&!carga.fatal&&!carga.faltantes.length&&!this.faltantes.length&&!this.cola.length&&!this.errores.length&&!this.omisiones.length};
+  }
+  cerrar(){
+    if(this.cerrado)return;
+    this.cerrado=true;this.cargador.cerrar();
+    for(const l of this.lotes.values())soltar(l.grupo);
+    this.lotes.clear();this.cola=[];this.visibles=[];this.faltantes=[];this.omisiones=[];this.raiz.removeFromParent();
+    for(const mat of Object.values(this.materiales))mat.dispose();
+  }
+}
