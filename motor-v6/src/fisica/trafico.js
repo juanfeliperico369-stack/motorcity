@@ -27,7 +27,7 @@ export function muestraVial(c,s){
 /** Seguimiento por carril. La reserva externa de intersecciones es obligatoria
  * para entrar en la transición final; por defecto los actores se detienen
  * antes de la convergencia. No transfiere actores ni decide rutas. */
-export function pasoTrafico(red,actores,dt,{permiso=()=>false,limite=8.33,aceleracion=2.2,frenado=4,margen=2}={}){
+export function pasoTrafico(red,actores,dt,{permiso=()=>false,limite=8.33,aceleracion=2.2,frenado=4,margen=2,autorizarPaso=()=>true}={}){
  if(![dt,limite,aceleracion,frenado,margen].every(Number.isFinite)||dt<=0||dt>.1||limite<=0||aceleracion<=0||frenado<=0||margen<0)throw RangeError('Parámetros de tráfico inválidos');
  const grupos=new Map(),ids=new Set(),resultado=new Map();
  for(const a of actores){
@@ -44,7 +44,8 @@ export function pasoTrafico(red,actores,dt,{permiso=()=>false,limite=8.33,aceler
      const alcance=delante?Math.max(a.s,Math.min(stop,delante.s-(delante.largo_m+a.largo_m)/2-margen)):stop;
      const espacio=Math.max(0,alcance-a.s),objetivo=Math.min(limite,Math.sqrt(2*frenado*espacio)),v=clamp(objetivo,a.velocidad-frenado*dt,a.velocidad+aceleracion*dt);
      const paso=Math.min(espacio,Math.max(0,(a.velocidad+v)*dt/2));
-     const nuevo={...a,s:a.s+paso,velocidad:paso>=espacio-1e-8?0:v,estado:paso>=espacio-1e-8?(delante?'cola':permitido?'fin':'espera'):'marcha'};
+     let nuevo={...a,s:a.s+paso,velocidad:paso>=espacio-1e-8?0:v,estado:paso>=espacio-1e-8?(delante?'cola':permitido?'fin':'espera'):'marcha'};
+     if(paso>0&&!autorizarPaso(a,nuevo,c)){nuevo={...a,velocidad:0,estado:'obstaculo'};}
      resultado.set(a.id,nuevo);delante=nuevo;anterior=a;
    }
  }

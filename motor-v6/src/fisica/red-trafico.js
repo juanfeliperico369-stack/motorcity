@@ -28,7 +28,7 @@ export class RedTrafico {
    // el siguiente vehículo está parado. Reserva un corredor de salida completo.
    return this.actores.every(b=>b.id===a.id||b.carril!==c.id||b.s-b.largo_m/2>=this._salida(c,a)+a.largo_m/2+this.opts.margen-EPS);
  }
- paso(dt,{verde=()=>true,libre=()=>true}={}){
+ paso(dt,{verde=()=>true,libre=()=>true,autorizarPaso=()=>true}={}){
    if(!Number.isFinite(dt)||dt<=0||dt>.1)throw RangeError('dt inválido');
    this.tick++;
    const frente=new Map();
@@ -49,7 +49,7 @@ export class RedTrafico {
    // Los estacionados siguen siendo obstáculos longitudinales. Mantenerlos
    // en el paso del carril con velocidad cero en su línea final.
    const previo=new Map(this.actores.map(a=>[a.id,a]));
-   const movidos=pasoTrafico(this.red,this.actores,dt,{...this.opts,permiso:(n,a)=>{const r=this.reservas.get(n);return r?.actor===a.id&&r.fase==='entrada'&&r.entrada===a.carril;}});
+   const movidos=pasoTrafico(this.red,this.actores,dt,{...this.opts,autorizarPaso,permiso:(n,a)=>{const r=this.reservas.get(n);return r?.actor===a.id&&r.fase==='entrada'&&r.entrada===a.carril;}});
    this.actores=movidos.map(a=>{
      const old=previo.get(a.id),c=this.red.carriles.get(a.carril);
      a.distancia_m=old.distancia_m+a.s-old.s;
