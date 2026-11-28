@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import { CargadorSectores } from '../src/sectores.js';
+import { CargadorSectores } from '../src/mundo/sectores.js';
 class TrabajadorFalso {
   constructor() { this.envios = []; this.escuchas = {}; }
   addEventListener(tipo, f) { this.escuchas[tipo] = f; }

@@ -1,6 +1,6 @@
 /* Carrera sobre el mismo grafo métrico de la escena. Sin motor de tráfico:
  * señales de ensayo deterministas; el juego decide premios y economía. */
-import { proyectarCiclo, muestraCiclo, avanzarCiclo } from './red-ciclo.js';
+import { proyectarCiclo, muestraCiclo, avanzarCiclo } from '../mundo/red-ciclo.js';
 import { pasoArcade } from './arcade.js';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const ang=(a,b)=>Math.atan2(Math.sin(b-a),Math.cos(b-a));

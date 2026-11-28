@@ -8,16 +8,18 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { ESCALA, validarProporcionesSI } from '../src/escala.js';
+import { ESCALA, validarProporcionesSI } from '../src/nucleo/escala.js';
 
 const DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-// 1. Verificar sintaxis limpia en todos los módulos src/*.js
-const mods = fs.readdirSync(path.join(DIR, 'src')).filter((f) => f.endsWith('.js')).sort();
+// 1. Verificar sintaxis limpia en todos los módulos de src/ y sus carpetas (nucleo, camara, entrada, fisica, mundo, render, sonido)
+const listar = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(e => e.isDirectory() ? listar(path.join(d, e.name)) : e.name.endsWith('.js') ? [path.join(d, e.name)] : []);
+const mods = listar(path.join(DIR, 'src')).sort();
 assert.ok(mods.length >= 7, 'Faltan módulos base en motor-v6/src');
 for (const m of mods) {
-  execFileSync(process.execPath, ['--check', path.join(DIR, 'src', m)], { stdio: 'pipe' });
+  execFileSync(process.execPath, ['--check', m], { stdio: 'pipe' });
 }
+for (const carpeta of ['nucleo', 'camara', 'entrada', 'fisica', 'mundo', 'render', 'sonido']) assert.ok(fs.existsSync(path.join(DIR, 'src', carpeta)), 'Falta la carpeta del plano: ' + carpeta);
 console.log(`✓ Sintaxis válida en ${mods.length} módulos ES`);
 
 // 2. Validar Biblia de Escala SI (1 u = 1 m)

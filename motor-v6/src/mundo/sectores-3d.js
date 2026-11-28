@@ -1,8 +1,8 @@
 /* Motor City 6: escena incremental de sectores v1, sin datos inventados.
  * Three.js es la misma copia fija 0.170 que utiliza el motor. Este módulo vive
- * en src/ (no src/mundo/) para que el exportador reubique su import correctamente.
+ * en src/mundo/ e importa Three desde render/three.js (la única puerta), que el exportador reubica.
  */
-import * as THREE from '../../js/vendor/three-0.170.0.module.min.js';
+import * as THREE from '../render/three.js';
 import { CargadorSectores } from './sectores.js';
 
 const fin = Number.isFinite;
@@ -102,15 +102,16 @@ function soltar(g){
  * Llamar actualizar con posición global y procesar una vez por frame.
  */
 export class MundoSectores {
-  constructor({indice,origenRender=[0,0,0],maxVerticesLote=120000,paletas=new Map(),opcionesCarga={}}){
+  constructor({indice,origenRender=[0,0,0],maxVerticesLote=120000,paletas=new Map(),opcionesCarga={},alCrearMalla=null}){
     if(!indice||indice.version!==1||!fin(indice.tamano_m)||indice.tamano_m<250||indice.tamano_m>500||!Array.isArray(indice.sectores)||!indice.sectores.length||!Array.isArray(origenRender)||origenRender.length!==3||!origenRender.every(fin)||!Number.isInteger(maxVerticesLote)||maxVerticesLote<3)throw new RangeError('Índice u opciones de escena inválidos');
-    this.indice=indice;this.origen=[...origenRender];this.maxVerticesLote=maxVerticesLote;
+    this.indice=indice;this.origen=[...origenRender];this.maxVerticesLote=maxVerticesLote;this.alCrearMalla=alCrearMalla;
     this.catalogo=new Map(indice.sectores.map(s=>[s.id,s]));
     this.raiz=new THREE.Group();this.raiz.name='MundoSectoresV1';
     this.materiales={suelo:new THREE.MeshStandardMaterial({color:0x879a72,roughness:1}),vial:new THREE.MeshStandardMaterial({color:0x56585e,roughness:1}),ciclovia:new THREE.MeshStandardMaterial({color:0x398451,roughness:.9}),edificio:new THREE.MeshStandardMaterial({color:0xe4d7bc,roughness:.85})};
     this.paletas=paletas;this.materialesZona=new Map();this.lotes=new Map();this.versiones=new Map();this.secuencia=0;this.visibles=[];this.cola=[];this.errores=[];this.omisiones=[];this.faltantes=[];this.sucio=true;this.cerrado=false;
     const {alCargar,alExpulsar,...opts}=opcionesCarga;
-    this.cargador=new CargadorSectores({...opts,catalogo:indice.sectores,alCargar:(id,s)=>{this.versiones.set(id,++this.secuencia);this.sucio=true;alCargar?.(id,s);},alExpulsar:(id,s)=>{this.versiones.delete(id);this.sucio=true;alExpulsar?.(id,s);}});
+    this.revision=0; // sube con cada sector que entra o sale: el juego compara un número en vez de armar una firma cada cuadro
+    this.cargador=new CargadorSectores({...opts,catalogo:indice.sectores,alCargar:(id,s)=>{this.versiones.set(id,++this.secuencia);this.revision++;this.sucio=true;alCargar?.(id,s);},alExpulsar:(id,s)=>{this.versiones.delete(id);this.revision++;this.sucio=true;alExpulsar?.(id,s);}});
   }
   actualizar({x,z,rumbo=0,radio=500,radioVisible=160,visibles}){
     if(this.cerrado||![x,z,rumbo,radio,radioVisible].every(fin)||radioVisible<0)throw new RangeError('Escena cerrada o posición inválida');
@@ -177,6 +178,8 @@ export class MundoSectores {
       const pz=this.paletas.get(p.zona);let material=this.materiales[p.tipo];
       if(pz&&['suelo','edificio'].includes(p.tipo)){const key=p.zona+':'+p.tipo;if(!this.materialesZona.has(key)){const color=p.tipo==='suelo'?pz.escenario[0]:pz.escenario[3];const mat=material.clone();mat.color.set(color);this.materialesZona.set(key,mat);}material=this.materialesZona.get(key);}
       const m=new THREE.Mesh(g,material);m.receiveShadow=true;grupo.add(m);
+      // Aviso al juego (p. ej. la transparencia de render/oclusion.js en los edificios); un fallo suyo no tumba el lote.
+      try{this.alCrearMalla?.(p.tipo,m,k);}catch(e){this.errores.push({id:k,error:'alCrearMalla: '+String(e.message||e)});}
       const vertices=g.attributes.position.count,triangulos=(g.index?.count??vertices)/3;
       const bytes=Object.values(g.attributes).reduce((s,a)=>s+a.array.byteLength,0)+(g.index?.array.byteLength??0);
       this.raiz.add(grupo);this.lotes.set(k,{grupo,firma:p.firma,vertices,triangulos,bytes});

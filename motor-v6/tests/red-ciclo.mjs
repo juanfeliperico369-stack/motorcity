@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { crearRedCiclo, muestraCiclo, proyectarCiclo, avanzarCiclo } from '../src/fisica/red-ciclo.js';
+import { crearRedCiclo, muestraCiclo, proyectarCiclo, avanzarCiclo } from '../src/mundo/red-ciclo.js';
 const nodo=(id,x,z,h=0,cruce='ninguno')=>({id,posicion:[x,z],altura_m:h,cruce});
 const tramo=(id,desde,hasta,puntos,ancho_m=2,pendiente=0,nivel=0)=>({id,desde,hasta,puntos,ancho_m,pendiente,nivel,red:'ciclovia'});
 const datos=[{nodos:[nodo('a',0,0),nodo('b',10,10,2,'semaforo'),nodo('c',20,10,2),nodo('d',10,20,2)],tramos:[tramo('ab','a','b',[[0,0],[10,0],[10,10]],2,.1),tramo('bc','b','c',[[10,10],[20,10]],3),tramo('bd','b','d',[[10,10],[10,20]],1.5)]}];

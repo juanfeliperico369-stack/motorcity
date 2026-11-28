@@ -1,6 +1,6 @@
 // Banco interactivo sintético: no es Orbe ni el videojuego de producción.
 import * as THREE from '../../js/vendor/three-0.170.0.module.min.js';
-import { MundoSectores } from '../src/mundo-sectores.js';
+import { MundoSectores } from '../src/mundo/sectores-3d.js';
 import { pasoArcade, perfilArcade } from '../src/fisica/arcade.js';
 import { Bucle } from '../src/nucleo/bucle.js';
 const escena=new THREE.Scene();escena.background=new THREE.Color(0x9ab6ca);

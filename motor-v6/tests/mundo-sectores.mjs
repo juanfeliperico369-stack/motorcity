@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { MundoSectores, alturaSector } from '../src/mundo-sectores.js';
+import { MundoSectores, alturaSector } from '../src/mundo/sectores-3d.js';
 class W{
   constructor(){this.e={};this.m=[];}
   addEventListener(k,f){this.e[k]=f;}

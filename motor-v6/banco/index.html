@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es-CO"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Motor City 6 · Banco de la cámara y los controles</title><link rel="icon" href="data:,">
+<style>
+:root{--mc6-abajo:env(safe-area-inset-bottom,0px);--fondo:#102b3bf0;--borde:#ffffff55;--texto:#fff}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#9cc6d6;color:var(--texto);font:600 14px system-ui,sans-serif;overflow:hidden;-webkit-user-select:none;user-select:none}
+canvas{display:block;width:100vw;height:100dvh;touch-action:none}
+.hud{position:fixed;left:8px;right:8px;top:max(8px,env(safe-area-inset-top));display:flex;gap:6px;align-items:flex-start;justify-content:space-between;pointer-events:none}
+.estado{background:var(--fondo);border:1px solid var(--borde);border-radius:12px;padding:6px 10px;max-width:58vw}.estado small{display:block;font-weight:500;color:#d4e7ee}
+.botones{display:flex;gap:6px;pointer-events:auto}
+button{font:inherit;color:#fff;background:#21516aee;border:1px solid #a4c6d3;border-radius:12px;min-width:48px;min-height:48px;padding:0 10px;cursor:pointer;touch-action:manipulation}
+button[aria-pressed=true]{background:#d8b05b;color:#14252e}button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.acciones{position:fixed;right:max(12px,env(safe-area-inset-right));bottom:calc(16px + var(--mc6-abajo));display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.panel{position:fixed;left:8px;right:8px;top:72px;max-width:420px;margin-left:auto;background:#102b3bf7;border:1px solid var(--borde);border-radius:14px;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px;z-index:5}
+.panel[hidden],.aviso[hidden]{display:none}.panel h2{grid-column:1/-1;margin:2px 0 4px;font-size:15px}
+.aviso{position:fixed;left:50%;bottom:calc(150px + var(--mc6-abajo));transform:translateX(-50%);width:min(360px,calc(100vw - 24px));background:#102b3bf7;border:1px solid var(--borde);border-radius:14px;padding:10px;text-align:center;z-index:6}
+.aviso div{display:flex;gap:6px;justify-content:center;margin-top:8px}
+#velo{position:fixed;inset:0;background:#06142077;pointer-events:none}#velo[hidden]{display:none}
+</style></head><body>
+<canvas id="cv" aria-label="Ciudad de prueba en 3D"></canvas>
+<div class="hud"><div class="estado"><span id="modo">A pie</span><small id="vel">Cargando…</small></div>
+<div class="botones"><button id="pausa" aria-pressed="false" aria-label="Pausa">❚❚</button><button id="ajustes" aria-label="Ajustes de los controles">⚙</button></div></div>
+<div class="acciones"><button id="centrar" aria-label="Centrar la cámara">◎</button><button id="vehiculo" aria-label="Cambiar de vehículo">🚲</button><button id="carrera" aria-label="Seguir la ciclorruta" aria-pressed="false">➜</button></div>
+<div id="panel" class="panel" hidden><h2>Controles</h2>
+<button id="pModo">Palanca: flotante</button><button id="pLado">Mano: izquierda</button>
+<button id="pMenos">Tamaño −</button><button id="pMas">Tamaño +</button>
+<button id="pEsquema">Esquema: directo</button><button id="pSeguir" aria-pressed="true">Cámara sigue el rumbo</button>
+<button id="pMovimiento" aria-pressed="false">Menos movimiento</button><button id="pCerrar">Listo</button></div>
+<div id="aviso" class="aviso" role="status" hidden><span id="avisoTexto"></span><div><button id="avisoSi">Usar</button><button id="avisoNo">Así está bien</button></div></div>
+<div id="velo" hidden></div>
+<script type="module" src="./banco.js"></script>
+</body></html>

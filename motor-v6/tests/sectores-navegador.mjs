@@ -9,7 +9,7 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const fuentes = new Map([
-  ['/sectores.js', new URL('../src/sectores.js', import.meta.url)],
+  ['/mundo/sectores.js', new URL('../src/mundo/sectores.js', import.meta.url)],
   ['/mundo/trabajador-sectores.js', new URL('../src/mundo/trabajador-sectores.js', import.meta.url)],
 ]);
 // Datos sintéticos v1: red conectada entre sectores de 250 m; no es Orbe real.
@@ -44,7 +44,7 @@ try {
   pagina.on('console', m => { if (m.type() === 'error') errores.push(`console: ${m.text()}`); });
   await pagina.goto(`http://127.0.0.1:${servidor.address().port}/`);
   const recorrido = pagina.evaluate(async () => {
-    const { CargadorSectores } = await import('/sectores.js');
+    const { CargadorSectores } = await import('/mundo/sectores.js');
     const catalogo = Array.from({length:6}, (_, i) => ({id:`s${i}`,url:`/datos/${i}.json`,x:i*250+125,z:125,dependencias:i<5?[`s${i+1}`]:[]}));
     const fallos = [], inicios = new Map(), demoras = [], visitas = new Set();
     let maxCache = 0, maxPendientes = 0, cuadros = 0;
