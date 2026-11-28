@@ -25,7 +25,12 @@ export class Bucle {
     this.dibujar(this.pausado ? 0 : this.acum / this.paso, dt);
     return n;
   }
-  iniciar(raf = globalThis.requestAnimationFrame) { const f = ms => { this.cuadro(ms); this._raf = raf(f); }; this._raf = raf(f); return this; }
+  /* El bucle nunca se detiene por un error de un cuadro (un juego congelado es peor): lo cuenta, lo muestra las primeras
+     veces en la consola y sigue. Las pruebas leen bucle.fallos. */
+  iniciar(raf = globalThis.requestAnimationFrame) {
+    const f = ms => { try { this.cuadro(ms); } catch (e) { this.fallos = (this.fallos || 0) + 1; this.ultimoFallo = e; if (this.fallos <= 3) console.error('Motor City · un cuadro falló:', e); } this._raf = raf(f); };
+    this._raf = raf(f); return this;
+  }
   detener(caf = globalThis.cancelAnimationFrame) { if (this._raf && caf) caf(this._raf); this._raf = 0; }
 }
 /* interpolar entre el estado del paso anterior y el actual */

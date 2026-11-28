@@ -4,6 +4,7 @@
  */
 import * as THREE from '../render/three.js';
 import { CargadorSectores } from './sectores.js';
+import { aplicarFachadas } from '../render/fachadas.js';
 
 const fin = Number.isFinite;
 const punto = p => Array.isArray(p) && p.length === 2 && p.every(fin);
@@ -92,9 +93,34 @@ function edificio(o,base,dst,origen,max){
     triangulo(dst,pie(b),techo(a),techo(b),origen,max);
   }
 }
+/* el color de un edificio: el de los datos, o uno de la paleta de su barrio (lo genérico varía por tono) */
+const PALETA_BASE=['#3f8a4f','#5b4636','#0e6378','#e8e4c4','#ffd36b'];
+function colorEdificio(o,pz){
+  if(o.color)return new THREE.Color(o.color);
+  const e=pz?.escenario||PALETA_BASE;
+  if(!o.generico)return new THREE.Color(e[3]);
+  const t=fin(o.tono)?o.tono:.5,c=new THREE.Color(t<.42?e[3]:t<.62?e[4]:t<.82?e[1]:e[2]).offsetHSL(0,0,((t*7)%1-.5)*.16);
+  /* el tono es del barrio, pero la fachada siempre se lee: ni tan oscura que se pierdan las ventanas ni tan saturada que encandile */
+  const h={};c.getHSL(h);return c.setHSL(h.h,Math.min(h.s,.62),Math.max(.3,Math.min(.85,h.l)));
+}
+function edificioColor(o,dst,origen,max,color){
+  const n0=dst.p.length/3;edificio(o,o.base_m,dst.p,origen,max);
+  for(let i=n0;i<dst.p.length/3;i++){dst.c.push(color.r,color.g,color.b);dst.f.push(o.base_m-origen[1],o.base_m+o.altura_m-origen[1]);}
+}
+/* los árboles: dos formas facetadas (copa redonda y pino), con el tronco, en instancias */
+let ARBOLES=null;
+function formasArbol(){
+  if(ARBOLES)return ARBOLES;
+  const unir=(partes)=>{const pos=[],col=[];for(const [g,c] of partes){const n=g.index?g.toNonIndexed():g,a=n.attributes.position.array;for(let i=0;i<a.length;i+=3){pos.push(a[i],a[i+1],a[i+2]);col.push(c.r,c.g,c.b);}n.dispose();g.dispose();}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.computeVertexNormals();g.computeBoundingSphere();return g;};
+  const tronco=()=>new THREE.CylinderGeometry(.13,.2,1.8,5).translate(0,.9,0),cafe=new THREE.Color('#6b4a32'),verde=new THREE.Color('#ffffff');
+  ARBOLES=[unir([[tronco(),cafe],[new THREE.IcosahedronGeometry(1.7,0).translate(0,3.1,0),verde]]),unir([[tronco(),cafe],[new THREE.ConeGeometry(1.5,4.2,7).translate(0,3.5,0),verde]])];
+  return ARBOLES;
+}
 function soltar(g){
   g.removeFromParent();
-  g.traverse(o=>{if(o.geometry)o.geometry.dispose();});
+  // Los árboles en instancias comparten su forma entre sectores: se sueltan sus instancias, no la forma.
+  g.traverse(o=>{if(o.isInstancedMesh){o.dispose();return;}if(o.geometry)o.geometry.dispose();});
 }
 
 /** Escena por lotes: carga de datos separada de construcción GPU.
@@ -102,12 +128,14 @@ function soltar(g){
  * Llamar actualizar con posición global y procesar una vez por frame.
  */
 export class MundoSectores {
-  constructor({indice,origenRender=[0,0,0],maxVerticesLote=120000,paletas=new Map(),opcionesCarga={},alCrearMalla=null}){
+  constructor({indice,origenRender=[0,0,0],maxVerticesLote=120000,paletas=new Map(),opcionesCarga={},alCrearMalla=null,generico=null}){
     if(!indice||indice.version!==1||!fin(indice.tamano_m)||indice.tamano_m<250||indice.tamano_m>500||!Array.isArray(indice.sectores)||!indice.sectores.length||!Array.isArray(origenRender)||origenRender.length!==3||!origenRender.every(fin)||!Number.isInteger(maxVerticesLote)||maxVerticesLote<3)throw new RangeError('Índice u opciones de escena inválidos');
     this.indice=indice;this.origen=[...origenRender];this.maxVerticesLote=maxVerticesLote;this.alCrearMalla=alCrearMalla;
+    // Lo genérico (mundo/generico.js): una función ({sector,vecinos,celda}) => {objetos,arboles}, una vez por versión de cada sector.
+    this.generico=generico;this.genericos=new Map();
     this.catalogo=new Map(indice.sectores.map(s=>[s.id,s]));
     this.raiz=new THREE.Group();this.raiz.name='MundoSectoresV1';
-    this.materiales={suelo:new THREE.MeshStandardMaterial({color:0x879a72,roughness:1}),vial:new THREE.MeshStandardMaterial({color:0x56585e,roughness:1}),ciclovia:new THREE.MeshStandardMaterial({color:0x398451,roughness:.9}),edificio:new THREE.MeshStandardMaterial({color:0xe4d7bc,roughness:.85})};
+    this.materiales={suelo:new THREE.MeshStandardMaterial({color:0x879a72,roughness:1}),vial:new THREE.MeshStandardMaterial({color:0x56585e,roughness:1}),ciclovia:new THREE.MeshStandardMaterial({color:0x398451,roughness:.9}),edificio:aplicarFachadas(new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.85})),arbol:new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.95,flatShading:true})};
     this.paletas=paletas;this.materialesZona=new Map();this.lotes=new Map();this.versiones=new Map();this.secuencia=0;this.visibles=[];this.cola=[];this.errores=[];this.omisiones=[];this.faltantes=[];this.sucio=true;this.cerrado=false;
     const {alCargar,alExpulsar,...opts}=opcionesCarga;
     this.revision=0; // sube con cada sector que entra o sale: el juego compara un número en vez de armar una firma cada cuadro
@@ -116,7 +144,17 @@ export class MundoSectores {
   actualizar({x,z,rumbo=0,radio=500,radioVisible=160,visibles}){
     if(this.cerrado||![x,z,rumbo,radio,radioVisible].every(fin)||radioVisible<0)throw new RangeError('Escena cerrada o posición inválida');
     const t=this.indice.tamano_m;
-    const ids=[...new Set(visibles??this.indice.sectores.filter(s=>{const b=celda(s,t),dx=Math.max(b[0]-x,0,x-b[2]),dz=Math.max(b[1]-z,0,z-b[3]);return Math.hypot(dx,dz)<=radioVisible;}).map(s=>s.id))].sort();
+    // Lo visible, del más cercano al más lejano, mientras quepa con sus dependencias en la caché del cargador: con la cámara
+    // de lejos el radio crece, y los sectores más lejanos esperan en vez de romper la carga (this.recortados los cuenta).
+    let ids;
+    if(visibles)ids=[...new Set(visibles)].sort();
+    else{
+      const dist=s=>{const b=celda(s,t);return Math.hypot(Math.max(b[0]-x,0,x-b[2]),Math.max(b[1]-z,0,z-b[3]));};
+      const cand=this.indice.sectores.map(s=>[s,dist(s)]).filter(([,d])=>d<=radioVisible).sort((a,b)=>a[1]-b[1]||a[0].id.localeCompare(b[0].id));
+      const elegidos=new Set(),tope=this.cargador.tope;ids=[];
+      for(const [s] of cand){const nuevos=[s.id,...(s.dependencias||[])].filter(d=>!elegidos.has(d));if(elegidos.size+nuevos.length>tope)continue;for(const d of nuevos)elegidos.add(d);ids.push(s.id);}
+      this.recortados=cand.length-ids.length;ids.sort();
+    }
     this.cargador.actualizar({x,z,rumbo,radio,visibles:ids});
     if(ids.join('\0')!==this.visibles.join('\0')){this.visibles=ids;this.sucio=true;}
   }
@@ -127,6 +165,14 @@ export class MundoSectores {
       const c=this.catalogo.get(id),req=[id,...(c.dependencias||[])];
       if(req.some(d=>!datos.has(d))){this.faltantes.push(id);continue;}
       validas.push(c);for(const d of req)propietarios.add(d);
+    }
+    // Lo genérico de cada celda visible, con sus vecinos cargados; se rehace solo si cambia la versión de alguno.
+    for(const id of [...this.genericos.keys()])if(!datos.has(id)){this.genericos.delete(id);this.revision++;}
+    if(this.generico)for(const c of validas){
+      const deps=c.dependencias||[],firma=[c.id,...deps].map(d=>this.versiones.get(d)).join(':'),previo=this.genericos.get(c.id);
+      if(previo&&previo.firma===firma)continue;
+      let r;try{r=this.generico({sector:datos.get(c.id),vecinos:deps.map(d=>datos.get(d)),celda:celda(c,t)})||{};}catch(e){r={};this.errores.push({id:'generico:'+c.id,error:String(e.message||e)});}
+      this.genericos.set(c.id,{firma,objetos:Array.isArray(r.objetos)?r.objetos:[],arboles:Array.isArray(r.arboles)?r.arboles:[]});this.revision++;
     }
     const nodos=new Map(),planes=new Map(),idsTramo=new Set(),idsObjeto=new Set(),cajas=validas.map(s=>celda(s,t));
     for(const id of propietarios){
@@ -160,6 +206,12 @@ export class MundoSectores {
         if(!fin(o.altura_m)||o.altura_m<=0||!fin(o.base_m)){this.omisiones.push({id:o.id,tipo:'edificio_sin_alturas'});continue;}
         partes.edificio.push(o);firmas.edificio.push(o.id);
       }
+      const gen=this.genericos.get(id);
+      if(gen&&validas.some(c=>c.id===id)){
+        for(const o of gen.objetos){if(idsObjeto.has(o.id))throw new Error('Objeto global duplicado: '+o.id);idsObjeto.add(o.id);partes.edificio.push(o);}
+        firmas.edificio.push('generico:'+gen.firma);
+        if(gen.arboles.length)planes.set('arboles:'+id,{tipo:'arboles',zona:s.zona,partes:gen.arboles,firma:gen.firma});
+      }
       for(const tipo of Object.keys(partes))if(partes[tipo].length)planes.set(tipo+':'+id,{tipo,zona:s.zona,partes:partes[tipo],firma:JSON.stringify([this.versiones.get(id),firmas[tipo]])});
     }
     for(const [k,l] of this.lotes)if(planes.get(k)?.firma!==l.firma){soltar(l.grupo);this.lotes.delete(k);}
@@ -169,14 +221,20 @@ export class MundoSectores {
     const grupo=new THREE.Group();grupo.name=k;
     let g;
     try{
+      const pz=this.paletas.get(p.zona);
+      if(p.tipo==='arboles'){this._crearArboles(k,p,grupo,pz);return;}
       if(p.tipo==='suelo')g=mallaRelieve(p.s,this.origen,this.maxVerticesLote);
-      else{
+      else if(p.tipo==='edificio'){
+        const dst={p:[],c:[],f:[]};
+        for(const v of p.partes)edificioColor(v,dst,this.origen,this.maxVerticesLote,colorEdificio(v,pz));
+        g=geometria(dst.p);g.setAttribute('color',new THREE.Float32BufferAttribute(dst.c,3));g.setAttribute('aFachada',new THREE.Float32BufferAttribute(dst.f,2));
+      }else{
         const dst=[];
-        for(const v of p.partes){if(p.tipo==='edificio')edificio(v,v.base_m,dst,this.origen,this.maxVerticesLote);else cinta(v.tramo,v.a,v.b,dst,this.origen,this.maxVerticesLote);}
+        for(const v of p.partes)cinta(v.tramo,v.a,v.b,dst,this.origen,this.maxVerticesLote);
         g=geometria(dst);
       }
-      const pz=this.paletas.get(p.zona);let material=this.materiales[p.tipo];
-      if(pz&&['suelo','edificio'].includes(p.tipo)){const key=p.zona+':'+p.tipo;if(!this.materialesZona.has(key)){const color=p.tipo==='suelo'?pz.escenario[0]:pz.escenario[3];const mat=material.clone();mat.color.set(color);this.materialesZona.set(key,mat);}material=this.materialesZona.get(key);}
+      let material=this.materiales[p.tipo];
+      if(pz&&p.tipo==='suelo'){const key=p.zona+':'+p.tipo;if(!this.materialesZona.has(key)){const mat=material.clone();mat.color.set(pz.escenario[0]);this.materialesZona.set(key,mat);}material=this.materialesZona.get(key);}
       const m=new THREE.Mesh(g,material);m.receiveShadow=true;grupo.add(m);
       // Aviso al juego (p. ej. la transparencia de render/oclusion.js en los edificios); un fallo suyo no tumba el lote.
       try{this.alCrearMalla?.(p.tipo,m,k);}catch(e){this.errores.push({id:k,error:'alCrearMalla: '+String(e.message||e)});}
@@ -185,6 +243,26 @@ export class MundoSectores {
       this.raiz.add(grupo);this.lotes.set(k,{grupo,firma:p.firma,vertices,triangulos,bytes});
     }catch(e){g?.dispose();grupo.removeFromParent();throw e;}
   }
+  _crearArboles(k,p,grupo,pz){
+    const formas=formasArbol(),verdes=(pz?.escenario?[pz.escenario[0]]:['#3f8a4f']).map(c=>new THREE.Color(c)),tmp=new THREE.Object3D(),col=new THREE.Color(),hsl={};
+    let n=0;
+    for(const tipo of [0,1]){
+      const lista=p.partes.filter(a=>a.tipo===tipo);if(!lista.length)continue;
+      const im=new THREE.InstancedMesh(formas[tipo],this.materiales.arbol,lista.length);im.name='arboles-'+tipo;
+      lista.forEach((a,i)=>{tmp.position.set(a.x-this.origen[0],a.y-this.origen[1],a.z-this.origen[2]);tmp.rotation.set(0,(a.x*12.9898+a.z*78.233)%6.283,0);tmp.scale.setScalar(a.escala);tmp.updateMatrix();im.setMatrixAt(i,tmp.matrix);
+        col.copy(verdes[0]).offsetHSL(((a.x*.37+a.z*.11)%1-.5)*.04,.05,((a.x*.53+a.z*.29)%1-.5)*.1-.07-(tipo?.03:0));col.getHSL(hsl);col.setHSL(hsl.h,hsl.s,Math.max(.2,hsl.l));im.setColorAt(i,col);   /* un poco más oscuro que el suelo, para que se separe, pero nunca negro */});
+      im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;im.computeBoundingSphere();
+      grupo.add(im);n+=lista.length;
+    }
+    this.raiz.add(grupo);this.lotes.set(k,{grupo,firma:p.firma,vertices:0,triangulos:0,bytes:n*64,instancias:n,compartida:true});
+  }
+  /** Todos los edificios de los sectores cargados, de los datos y genéricos: un solo registro para la cámara y los choques. */
+  *objetos(){
+    for(const s of this.cargador.cache.values())for(const o of s.objetos)yield o;
+    for(const g of this.genericos.values())for(const o of g.objetos)yield o;
+  }
+  /** Los árboles genéricos (para que el juego los haga chocar). */
+  *arboles(){for(const g of this.genericos.values())for(const a of g.arboles)yield a;}
   procesar({maxLotes=1}={}){
     if(this.cerrado||!Number.isInteger(maxLotes)||maxLotes<1)throw new RangeError('Presupuesto de lotes inválido');
     if(this.sucio){

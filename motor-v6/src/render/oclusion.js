@@ -57,7 +57,7 @@ export function crearOclusion(THREE) {
   function aplicar(material) { if (!material || parchados.has(material)) return material; parchados.add(material); inyectar(material, 'opaco'); return material; }
   function materialFantasma(base) {
     let m = materialesFantasma.get(base);
-    if (!m) { m = base.clone(); m.transparent = true; m.depthWrite = false; m.opacity = 1; inyectar(m, 'fantasma'); materialesFantasma.set(base, m); }
+    if (!m) { m = base.clone(); m.userData = {}; base.userData.alClonar?.(m); m.transparent = true; m.depthWrite = false; m.opacity = 1; inyectar(m, 'fantasma'); materialesFantasma.set(base, m); }
     return m;
   }
   /** Agrega a la malla su fantasma (comparte la geometría). */
