@@ -40,6 +40,9 @@ jobs:
           node motor-v6/tests/sensacion.mjs
           node motor-v6/tests/entrada.mjs
           node motor-v6/tests/guardado-sonido.mjs
+          node motor-v6/tests/generico.mjs
+          node motor-v6/tests/mundo-generico.mjs
+          node motor-v6/tests/calidad.mjs
           node motor-v6/tests/trafico.mjs
           node motor-v6/tests/red-trafico.mjs
           node motor-v6/tests/choques-trafico.mjs

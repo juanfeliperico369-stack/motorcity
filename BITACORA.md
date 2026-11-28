@@ -1,5 +1,18 @@
 # Bitácora de Motor City
 
+## 28-nov-2026 · Motor City 6: lo genérico, las fachadas, el regulador de calidad y dos arreglos de robustez (Claude A)
+- **Lo genérico** (`mundo/generico.js`, plan de Run City § 13.3: «con una semilla y no se guarda»):
+  - edificios que dan al frente de cada calle (con segunda fila en el centro y los barrios) y árboles en los andenes, con estilos de manzana: centro, barrio, puerto, costa, loma, campo, parque y ninguno;
+  - las reglas del craqueo se cumplen por construcción: nada sobre vías, ciclorrutas, agua, hitos ni otro edificio; entero en su sector; anclado a la ladera; con el mismo resultado para la misma semilla.
+- **En los sectores** (`mundo/sectores-3d.js`): opción `generico`, una vez por versión de cada celda con sus vecinos; color por edificio desde la paleta de su barrio, con la luminosidad acotada para que las ventanas se lean; árboles en instancias; y `objetos()` y `arboles()` como un solo registro para la cámara y los choques.
+- **Las fachadas** (`render/fachadas.js`): ventanas por piso, vitrinas, antepecho y techo, en el sombreador, sin moiré de lejos y también en la copia fantasma de la oclusión.
+- **El regulador de calidad** (`nucleo/calidad.js`): baja la resolución de dibujo por escalones si los cuadros van lentos y la sube si sobra, sin oscilar.
+- **Robustez:** lo visible se recorta a lo que cabe en la caché (con la cámara de lejos el cargador lanzaba un error), y el bucle ya no se detiene por un error de un cuadro.
+- **Probado:**
+  - pruebas nuevas: `generico.mjs` (19), `mundo-generico.mjs` (13), `calidad.mjs` (9) y `bucle.mjs` (+1);
+  - la prueba WebGL de Codex compila las fachadas;
+  - en Orbe hay 524 edificios y 1.218 árboles en 9 sectores visibles, con 36 llamadas de dibujo y 29.000 triángulos; con CPU 4× y WebGL por software va a 33 fps de mediana (con el regulador).
+
 ## 28-nov-2026 · Motor City 6 · F1: la cámara del § 5, la entrada, la sensación del § 12, el sonido y el guardado (Claude A)
 - **La cámara única** (`motor-v6/src/camara/`): lo justo a 36 m y 50°, el zoom de 120 m a 7 m, el rumbo con resorte críticamente amortiguado (90° en ~1,3 s, zona muerta de 12°, tope de 100°/s, quieta no gira), la espera de 2,5 s tras tocarla, centrar, subir como grúa o encoger el brazo ante una pared, nunca dentro de un edificio, y la transición a la persecución de Run Scooter en 0,8 s. La transparencia de lo que tapa va en el sombreador (`render/oclusion.js`), en dos pasadas y con borde suave.
 - **La entrada** (`src/entrada/`): palanca fija o flotante (tamaño, opacidad, mano, zona muerta y sensibilidad), gestos de dos dedos, teclado, mando, los esquemas directo y manubrio, la recomendación al girar el celular y los ajustes guardados.
@@ -1425,3 +1438,6 @@ Rama `ia/chatgpt/planeta-cache-410-20261121`, basada en `main` 4.1.0: single-fli
 ## 28-nov-2026 · Motor City 6, relevo de carga y física
 - Se reconcilia la rama de carga/física con la de dependencias; conserva recorrido 3D, cancelación, validación y cinemática saturada. Se añaden telemetría, liberación, perfiles explícitos a pie y lector RCS1 optativo con respaldo JSON.
 - Pruebas adicionales de módulo y navegador programadas en CI específica; resultado pendiente. No se toca motor 5.x ni main.
+
+## 28-nov-2026 · Vida urbana (Eón)
+- Reconciliación de #45 con main b59ae40 tras #46: se conservan generador, fachadas, calidad y bucle de Claude A; se añaden módulos de tráfico, señalización, mobiliario y adoquín y sus pruebas, sin alterar main. Firma documental Eón.

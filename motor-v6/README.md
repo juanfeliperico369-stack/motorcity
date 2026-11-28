@@ -25,15 +25,18 @@
 ```text
 motor-v6/
 ├── src/                            # EL MOTOR: lo que Run City trae con herramientas/traer-motor.mjs (no se edita allá)
-│   ├── nucleo/    bucle.js (paso fijo 60 Hz con interpolación y pausa), escala.js (SI), guardado.js (versionado, migraciones)
+│   ├── nucleo/    bucle.js (paso fijo 60 Hz con interpolación y pausa), escala.js (SI), guardado.js (versionado, migraciones),
+│   │              calidad.js (el regulador: baja la resolución, nunca la fluidez)
 │   ├── camara/    camara.js (LA CÁMARA ÚNICA del § 5), geometria.js (prismas, rayos, proyección), three.js (adaptador)
 │   ├── entrada/   palanca.js (fija o flotante), gestos.js (dos dedos, pellizco, rueda), teclado.js, mando.js,
 │   │              esquemas.js (directo o manubrio), orientacion.js (la recomendación al girar), preferencias.js,
 │   │              tactil.js (el DOM) y controles.js (todo junto)
 │   ├── fisica/    arcade.js (la sensación del § 12: rampas de EnCicla y su giro), carrera.js, huellas.js, recorrido.js
-│   ├── mundo/     sectores.js (carga por cercanía con trabajador), sectores-3d.js, trabajador-sectores.js,
+│   ├── mundo/     sectores.js (carga por cercanía con trabajador), sectores-3d.js, trabajador-sectores.js, generico.js (lo genérico:
+│   │              manzanas al frente de cada calle y árboles, con una semilla y sin guardarse),
 │   │              red-ciclo.js (el grafo de ciclorrutas), superficie.js (agua y puentes), ambiente.js (río, mar y puente)
-│   ├── render/    three.js (la única puerta a Three.js 0.170), oclusion.js (lo que tapa se vuelve transparente)
+│   ├── render/    three.js (la única puerta a Three.js 0.170), oclusion.js (lo que tapa se vuelve transparente),
+│   │              fachadas.js (ventanas por piso en el sombreador)
 │   ├── sonido/    guardian.js (al salir de la app todo calla), rodar.js
 │   └── (prototipo heredado del valle: camara.js, main.js, mundo.js, personaje.js, skatepark.js, terreno.js y
 │        texturas.js, de la demo de la 4 Sur; pasan a Run City en F3, con la cámara única)
@@ -66,6 +69,9 @@ node motor-v6/tests/camara.mjs         # las promesas del § 5 (48 pruebas)
 node motor-v6/tests/sensacion.mjs      # las cifras del § 12 para cada tipo de movimiento (1.325 medidas)
 node motor-v6/tests/entrada.mjs        # palanca, gestos, esquemas, teclado, mando, orientación y ajustes
 node motor-v6/tests/guardado-sonido.mjs
+node motor-v6/tests/generico.mjs       # las reglas del craqueo en lo genérico (19 pruebas)
+node motor-v6/tests/mundo-generico.mjs # lo genérico dentro de los sectores, con Three real
+node motor-v6/tests/calidad.mjs        # el regulador de calidad
 node motor-v6/tests/banco-navegador.mjs   # el banco en Chromium móvil 412×860 con CPU 4× (Playwright)
 python3 -m http.server 8080            # y abrir http://127.0.0.1:8080/motor-v6/banco/ (o /motor-v6/demo.html)
 ```
