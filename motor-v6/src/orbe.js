@@ -82,7 +82,7 @@ async function iniciar(){
   }
   function paso(dt){
     anterior={...estado};yAnterior=y;
-    if(!listo||restaurando){estado={...estado,velocidad:0};return;}
+    if(!listo||mundo.cargador.fatal||restaurando){estado={...estado,velocidad:0};return;}
     const giro=Math.max(-1,Math.min(1,Number(activo('derecha'))-Number(activo('izquierda'))+joyX));
     if(carrera){
       const c=pasoCarrera(red,carrera,{lateral:giro,freno:activo('freno')||joyY>.25,rama},dt,perfil(),bucle.t);
@@ -108,7 +108,8 @@ async function iniciar(){
     cam.actualizar(dt,{pos:new THREE.Vector3(estado.x,y,estado.z),vel:new THREE.Vector3(Math.sin(estado.rumbo)*estado.velocidad,0,Math.cos(estado.rumbo)*estado.velocidad),rumbo:estado.rumbo+Math.PI,rapidez:estado.velocidad});
   }
   function dibujar(alfa){
-    mundo.actualizar({...estado,radio:650,radioVisible:65});estadoMundo=mundo.procesar({maxLotes:2});
+    if(!mundo.cargador.fatal)mundo.actualizar({...estado,radio:650,radioVisible:65});
+    estadoMundo=mundo.procesar({maxLotes:2});
     const firma=[...mundo.versiones].sort((a,b)=>a[0].localeCompare(b[0])).map(v=>v.join(':')).join('|');
     if(firma!==firmaCam){firmaCam=firma;cajasCam.length=0;for(const sector of mundo.cargador.cache.values())for(const o of sector.objetos){if(!Number.isFinite(o.base_m)||!Number.isFinite(o.altura_m))continue;const xs=o.huella.map(p=>p[0]),zs=o.huella.map(p=>p[1]);cajasCam.push({minX:Math.min(...xs),maxX:Math.max(...xs),minZ:Math.min(...zs),maxZ:Math.max(...zs),minY:o.base_m,maxY:o.base_m+o.altura_m});}}
     const h=piso(estado.x,estado.z,restaurando||primerSuelo?null:y);listo=estadoMundo.listo&&h!==undefined;
@@ -135,11 +136,13 @@ async function iniciar(){
       if(firma!==firmaRamas){firmaRamas=firma;const panel=$('ramas');panel.replaceChildren();for(const [i,o] of carrera.opciones.entries()){const b=document.createElement('button');b.textContent=o.angulo>.35?'Derecha':o.angulo<-.35?'Izquierda':'Recto';b.setAttribute('aria-label',b.textContent+' · '+(i+1));b.dataset.rama=o.tramo;b.onclick=()=>{rama=o.tramo;};panel.append(b);}}
       for(const b of $('ramas').children)b.setAttribute('aria-pressed',String(b.dataset.rama===rama));
     }else{firmaRamas='';$('ramas').replaceChildren();}
-    $('aviso').hidden=listo||pausa;$('aviso').textContent=estadoMundo.errores?.length?'Error de geometría; revisa los datos':'Cargando terreno y vías…';
+    const falloCarga=!!estadoMundo.carga?.fatal||estadoMundo.carga?.fallos?.some(id=>estadoMundo.carga.faltantes.includes(id));
+    $('aviso').hidden=(listo||pausa)&&!falloCarga;
+    $('aviso').textContent=falloCarga?'No se pudo cargar el mapa. Recarga para intentar de nuevo.':estadoMundo.errores?.length?'Error de geometría; revisa los datos':'Cargando terreno y vías…';
     renderer.render(escena,threeCam);cuadros++;
   }
   const bucle=new Bucle({actualizar:paso,dibujar});
-  function pausar(valor=!pausa){pausa=valor;limpiar();anterior={...estado};yAnterior=y;if(pausa)bucle.pausar();else bucle.reanudar();$('pausa').textContent=pausa?'Continuar':'Pausa';$('pausa').setAttribute('aria-pressed',String(pausa));$('velo').hidden=!pausa;}
+  function pausar(valor=!pausa){pausa=valor;limpiar();anterior={...estado};yAnterior=y;if(pausa){bucle.pausar();sonido.actualizar(0,false);}else bucle.reanudar();$('pausa').textContent=pausa?'Continuar':'Pausa';$('pausa').setAttribute('aria-pressed',String(pausa));$('velo').hidden=!pausa;}
   function seleccionar(i){if(pausa||carrera||vuelo>0||!modos[i])return;const anteriorModo=modo;modo=i;if(obstaculo(estado,estado,y)){modo=anteriorModo;return;}estado=adaptarVelocidad(estado,perfil());avatar.remove(modelo);modelo=garaje.get(modos[modo].id);avatar.add(modelo);$('modo').textContent=modos[modo].nombre;}
   function cambiar(){seleccionar((modo+1)%modos.length);}
   function guardar(){if(!listo||carrera||vuelo>0)return;try{guardado=escribirGuardado(localStorage,{version:1,mundo:'orbe-g0',x:estado.x,z:estado.z,rumbo:estado.rumbo,vehiculo:modos[modo].id,distancia:distanciaUltima,cruces:crucesUltimos},ids);}catch{guardado=false;}$('guardar').textContent=guardado?'Guardado':'No guardado';}
