@@ -6,7 +6,7 @@
  */
 export const VELOCIDADES = Object.freeze({ caminar: 3.5, correr: 7, bici: 11 });
 // RunRunZero/src/data.js VEH.spd; bici normalizada a su multiplicador 0.96.
-export const MULTIPLICADORES = Object.freeze({ quad: .8, inline: .86, skate: .84, long: .88, scooter: .85, uni: .83, bike: .96, trike: .88, ebike: 1, escooter: .98, euc: 1, moped: 1.06, moto: 1.14, auto: 1.18, camion: 1.05, jetpack: 1.1 });
+export const MULTIPLICADORES = Object.freeze({ foot: .62, quad: .8, inline: .86, skate: .84, long: .88, scooter: .85, uni: .83, bike: .96, trike: .88, ebike: 1, escooter: .98, euc: 1, moped: 1.06, moto: 1.14, auto: 1.18, camion: 1.05, jetpack: 1.1 });
 export function velocidadVehiculo(id) {
   if (!Object.prototype.hasOwnProperty.call(MULTIPLICADORES, id)) throw new RangeError(`Vehículo desconocido: ${id}`);
   return VELOCIDADES.bici * MULTIPLICADORES[id] / MULTIPLICADORES.bike;
@@ -26,7 +26,9 @@ export function pasoArcade(estado, control, dt, { velocidadMax = 11, pie = false
   const v = velocidad + limitar(meta - velocidad, -cambio, cambio);
   // 90° en 0,5 s a media velocidad; la respuesta se aplica en el primer paso.
   const rumboNuevo = rumbo + giro * Math.PI * dt;
-  const distancia = (velocidad + v) * dt / 2;
+  // Integrar por tramos: al alcanzar la meta se mantiene hasta terminar dt.
+  const activo = Math.min(dt, Math.abs(meta - velocidad) * tiempo / velocidadMax);
+  const distancia = (velocidad + v) * activo / 2 + v * (dt - activo);
   const angulo = (rumbo + rumboNuevo) / 2;
   return { ...estado, x: x + Math.sin(angulo) * distancia, z: z + Math.cos(angulo) * distancia, velocidad: v, rumbo: rumboNuevo };
 }

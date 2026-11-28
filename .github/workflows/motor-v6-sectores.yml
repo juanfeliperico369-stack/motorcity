@@ -1,0 +1,36 @@
+name: Motor City 6 · sectores en navegador
+on:
+  pull_request:
+    paths:
+      - 'motor-v6/src/**'
+      - 'motor-v6/tests/**'
+      - '.github/workflows/motor-v6-sectores.yml'
+  push:
+    paths:
+      - 'motor-v6/src/**'
+      - 'motor-v6/tests/**'
+      - '.github/workflows/motor-v6-sectores.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pruebas de componentes
+        run: |
+          node motor-v6/tests/verificar.mjs
+          node motor-v6/tests/bucle.mjs
+          node motor-v6/tests/fisica.mjs
+          node motor-v6/tests/sectores.mjs
+      - name: Instalar Playwright fuera del repositorio
+        run: npm install --prefix "$RUNNER_TEMP/pw" --no-audit --no-fund playwright@1.56.1
+      - name: Instalar Chromium y dependencias
+        run: '"$RUNNER_TEMP/pw/node_modules/.bin/playwright" install --with-deps chromium'
+      - name: Recorrido continuo y trabajador real
+        run: NODE_PATH="$RUNNER_TEMP/pw/node_modules" node motor-v6/tests/sectores-navegador.mjs
