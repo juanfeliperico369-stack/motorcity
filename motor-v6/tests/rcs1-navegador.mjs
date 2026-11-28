@@ -17,6 +17,8 @@ const server=createServer(async(req,res)=>{
     const path=new URL(req.url,'http://localhost').pathname;
     if(path==='/favicon.ico'){res.writeHead(204);res.end();return;}
     if(path==='/'){res.setHeader('Content-Type','text/html');res.end('<!doctype html><title>RCS1</title>');return;}
+    if(path==='/legacy/sectores.js'){res.setHeader('Content-Type','text/javascript');res.end(await readFile(fuentes.get('/sectores.js')));return;}
+    if(path==='/legacy/mundo/trabajador-sectores.js'){res.setHeader('Content-Type','text/javascript');res.end('globalThis.DecompressionStream = undefined;\n'+await readFile(fuentes.get('/mundo/trabajador-sectores.js'),'utf8'));return;}
     if(fuentes.has(path)){res.setHeader('Content-Type','text/javascript');res.end(await readFile(fuentes.get(path)));return;}
     const m=/^\/datos\/([a-z]+)\.(json|rcs)$/.exec(path);
     if(m){
@@ -56,12 +58,8 @@ try{
   const normal=await pedir('json','json');assert.deepEqual(normal.s,cuerpo('json'));assert.equal(normal.estado.formatos.json,'json');
   for(const id of ['crc','truncado','grande']){const mal=await pedir(id,'banco',true);assert.equal(mal.s,undefined);}
   assert.ok(pedidos.includes('bien.rcs')&&pedidos.includes('json.json'));assert.ok(!pedidos.includes('bien.json'));
-  // Simular falta de API en el Worker (no en el hilo de página), con la misma fuente.
-  await page.route('**/mundo/trabajador-sectores.js',async route=>{
-    const response=await route.fetch();const text=await response.text();
-    await route.fulfill({response,body:'globalThis.DecompressionStream = undefined;\n'+text});
-  });
-  await page.evaluate(async()=>{const {CargadorSectores}=await import('/sectores.js');window.fallback=new CargadorSectores({catalogo:[{id:'bien',url:'/datos/bien.json',url_binaria:'/datos/bien.rcs',x:0,z:0}],preferirBinario:true,tope:1,reintentos:0});});
+  // Servir una copia de prueba del Worker sin API, sin interceptación de red.
+  await page.evaluate(async()=>{const {CargadorSectores}=await import('/legacy/sectores.js');window.fallback=new CargadorSectores({catalogo:[{id:'bien',url:'/datos/bien.json',url_binaria:'/datos/bien.rcs',x:0,z:0}],preferirBinario:true,tope:1,reintentos:0});});
   const respaldo=await pedir('bien','fallback');assert.equal(respaldo.estado.formatos.bien,'json');assert.deepEqual(respaldo.s,cuerpo('bien'));
   await page.evaluate(()=>{window.banco.cerrar();window.json.cerrar();window.fallback.cerrar();});
   assert.deepEqual(errores,[]);
