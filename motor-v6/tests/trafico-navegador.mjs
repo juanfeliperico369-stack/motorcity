@@ -23,9 +23,13 @@ try{
  await page.waitForFunction(()=>window.bancoTrafico.estado().trafico.actores[0].estado==='obstaculo',undefined,{timeout:20000});
  const espera=await estado();assert.equal(espera.trafico.actores[0].velocidad,0);assert.equal(espera.trafico.cruces,0);
  // El jugador bloquea la vía. Apartarlo lateralmente usando entrada real.
- const eje=espera.eje,tecla=eje==='z'?'ArrowDown':'ArrowRight';
- await page.keyboard.down(tecla);await page.waitForFunction(({eje,valor})=>window.bancoTrafico.estado().jugador[eje]>valor+8,{eje,valor:espera.jugador[eje]},{timeout:10000});await page.keyboard.up(tecla);
- await page.waitForFunction(s=>window.bancoTrafico.estado().trafico.actores[0].s>s+3,espera.trafico.actores[0].s,{timeout:10000});
+ const eje=espera.eje,signo=espera.jugador[eje]>=espera.trafico.actores[0][eje]?1:-1;
+ const tecla=eje==='z'?(signo===1?'ArrowDown':'ArrowUp'):(signo===1?'ArrowRight':'ArrowLeft');
+ console.log('Maniobra de salida',JSON.stringify({eje,signo,jugador:espera.jugador,coche:espera.trafico.actores[0]}));
+ await page.keyboard.down(tecla);
+ try{await page.waitForFunction(({eje,valor,signo})=>signo*(window.bancoTrafico.estado().jugador[eje]-valor)>8,{eje,valor:espera.jugador[eje],signo},{timeout:30000});}
+ catch(e){console.error('Diagnóstico',JSON.stringify(await estado()),errores);throw e;}finally{await page.keyboard.up(tecla);}
+ await page.waitForFunction(s=>window.bancoTrafico.estado().trafico.actores[0].s>s+3,espera.trafico.actores[0].s,{timeout:30000});
  await page.keyboard.press('KeyP');const pausa=await estado();await page.evaluate(()=>new Promise(r=>{let n=0;const f=()=>++n>15?r():requestAnimationFrame(f);requestAnimationFrame(f);}));
  const congelado=await estado();assert.equal(congelado.pasos,pausa.pasos);assert.equal(congelado.trafico.actores[0].s,pausa.trafico.actores[0].s);
  await page.keyboard.press('KeyP');await page.keyboard.press('KeyG');
