@@ -15,6 +15,16 @@
 - **Hallazgos principales:** ningún juego hermano ejecuta `dist/motor.js` (150 MB en copias muertas); `getaway.html` pesa 30,12 MB (solo 1,1 % es código del juego); 8 renderizadores y 4 físicas en conflicto; mobiliario (`27-mobiliario.js`) invisible en 3D con colisión activa (`15-terreno.js:109`); `45-tres.js:242` encoge el radio de carga a 140 m al acercar; pruebas E2E que teletransportan y `medir.mjs` sin techo de FPS; portada y HUD saturados/recortados con nombres internos (`Codex`).
 - **Código tocado:** ninguno (auditoría de solo lectura + documentación).
 
+## 28-nov-2026 · Motor City 6 · F1: el corazón, el bucle de paso fijo (Claude)
+- **Lo que pidió el autor:** con la luz verde de Run City (`Run-City/docs/PLAN-RUN-CITY.md`), rehacer el motor desde cero. El primer módulo es el corazón: `motor-v6/src/nucleo/bucle.js`.
+- **Qué hace:**
+  - la física va a paso fijo de 1/60 s y el dibujo se interpola (alfa);
+  - tiene un tope de 5 pasos por cuadro, sin «espiral de la muerte» en un celular lento;
+  - la pausa está probada: la física no avanza, el dibujo sigue y al reanudar no hay salto;
+  - tiene escala de tiempo y un reloj de juego.
+- **Qué se probó:** `node motor-v6/tests/bucle.mjs`, 7 pruebas en verde. También entró en la QA.
+- **Sigue (Claude A):** la cámara del § 5 del plan, la entrada, la física con la sensación de EnCicla, el sonido y el guardado. Después, traerlo a `Run-City`.
+
 ## 27-nov-2026 · 5.5.2 · Turno Cero sin nombres de IA a la vista y la revisión de comentarios que tragan código (Claude)
 - **De dónde sale:** las auditorías del 27‑nov (Gemini/Antigravity y Codex) y el OK del autor para arreglar antes de la muestra.
 - **Qué cambió:**
