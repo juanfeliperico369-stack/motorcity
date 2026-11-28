@@ -1,3 +1,5 @@
+> **REEMPLAZADO (28‑nov‑2026) por el plan de Run City:** `Run-City/docs/PLAN-RUN-CITY.md`.
+
 # Plan Valle 3D · Los gemelos mejorados de EnCicla y El Metro sobre un solo mundo 3D (27‑nov‑2026)
 
 > **Qué une este plan, y por qué manda:**
