@@ -45,6 +45,7 @@ async function iniciar(){
   const cam=new CamaraCenitalInteligente(threeCam,{terreno:terrenoCam,colisiones:[]});
   cam.yaw=estado.rumbo+Math.PI;cam.blanco.set(estado.x,y+1.3,estado.z);cam.ojo.set(estado.x-18,y+25,estado.z+10);cam.zoom=cam.zoomObj=.64;
   const resize=()=>{renderer.setSize(innerWidth,innerHeight,false);threeCam.aspect=innerWidth/innerHeight;threeCam.updateProjectionMatrix();};addEventListener('resize',resize);resize();
+  const hud=document.querySelector('.hud');const ajustarPaneles=()=>document.documentElement.style.setProperty('--panel-top',Math.ceil(hud.getBoundingClientRect().bottom+8)+'px');new ResizeObserver(ajustarPaneles).observe(hud);ajustarPaneles();
   const teclas=new Set(),toques=new Map();
   const activo=k=>teclas.has(k)||[...toques.values()].includes(k);
   function limpiar(){teclas.clear();toques.clear();}
@@ -115,7 +116,7 @@ async function iniciar(){
     $('barrio').textContent=s?.barrio||'Orbe';$('vel').textContent=Math.round(estado.velocidad*3.6)+' km/h · '+modos[modo].nombre;
     const disponible=!!carrera||(listo&&admiteCarrera(modos[modo])&&vuelo===0&&!!candidatoCarrera(red,{...estado,nivel:0}));
     $('carrera').hidden=!disponible;$('carrera').textContent=carrera?'Salir de la carrera':'Seguir ciclorruta';
-    $('modo').disabled=!!carrera;$('vehiculos').disabled=!!carrera;$('guardar').disabled=!listo||!!carrera||vuelo>0;
+    $('modo').disabled=!!carrera||pausa;$('vehiculos').disabled=!!carrera||pausa;$('guardar').disabled=!listo||!!carrera||vuelo>0;
     $('panelCarrera').hidden=!carrera;
     if(carrera){
       $('distancia').textContent=Math.floor(carrera.distancia)+' m · '+carrera.cruces+' cruces seguros';

@@ -1,7 +1,7 @@
 /* Catálogo de Run Scooter: IDs, nombres, multiplicadores y manejo de
  * RunRunZero/src/data.js VEH. Las dimensiones son parámetros de diseño
  * de modelos simplificados en metros, no medidas de marcas reales. */
-import { perfilArcade } from './arcade.js';
+import { perfilArcade } from './fisica/arcade.js';
 export const VEHICULOS=Object.freeze([
  ['bike','Bicicleta','ciclo',.94,.7,1.7],
  ['foot','A pie','pie',1.3,.6,.6],
