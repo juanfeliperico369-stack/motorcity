@@ -134,6 +134,19 @@ export class CargadorSectores {
       fallos: [...this.fallidos], fatal: this.fatal, erroresCallbacks: this.erroresCallbacks.map(e => ({...e}))
     };
   }
+  /** Vuelve a pedir, sin recargar la página, lo que falló ya con sus reintentos (sin red o con el servidor caído): primero
+   *  lo que hace falta para lo visible. Devuelve false si no se puede (el trabajador se cayó o el cargador está cerrado):
+   *  entonces hace falta un cargador nuevo o recargar. */
+  reintentar() {
+    if (this.cerrado || this.fatal) return false;
+    const ids = [...this.fallidos].filter(id => this.deseados.has(id) && !this.cache.has(id) && !this.pendientes.has(id));
+    for (const id of this.fallidos) this.intentos.delete(id);
+    this.fallidos.clear();
+    ids.sort((a, b) => Number(this.requeridos.has(b)) - Number(this.requeridos.has(a)));
+    this.cola.unshift(...ids.map(id => this.catalogo.get(id)));
+    this._despachar();
+    return true;
+  }
   obtener(id) { if (!this.cache.has(id)) return undefined; const v = this.cache.get(id); this.cache.delete(id); this.cache.set(id, v); return v; }
   cerrar() {
     if (this.cerrado) return;
