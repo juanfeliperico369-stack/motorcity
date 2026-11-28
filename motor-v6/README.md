@@ -32,7 +32,7 @@ motor-v6/
 │   │              esquemas.js (directo o manubrio), orientacion.js (la recomendación al girar), preferencias.js,
 │   │              tactil.js (el DOM) y controles.js (todo junto)
 │   ├── fisica/    arcade.js (la sensación del § 12: rampas de EnCicla y su giro), carrera.js, huellas.js, recorrido.js
-│   ├── mundo/     sectores.js (carga por cercanía con trabajador), sectores-3d.js, trabajador-sectores.js, generico.js (lo genérico:
+│   ├── mundo/     sectores.js (carga por cercanía con trabajador; reintentar() sin recargar), sectores-3d.js, trabajador-sectores.js, generico.js (lo genérico:
 │   │              manzanas al frente de cada calle y árboles, con una semilla y sin guardarse),
 │   │              red-ciclo.js (el grafo de ciclorrutas), superficie.js (agua y puentes), ambiente.js (río, mar y puente)
 │   ├── render/    three.js (la única puerta a Three.js 0.170), oclusion.js (lo que tapa se vuelve transparente),

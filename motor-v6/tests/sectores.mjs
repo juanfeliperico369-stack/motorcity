@@ -106,4 +106,20 @@ const catalogo = [{id:'atras', x:0,z:-100,url:'a'}, {id:'adelante',x:0,z:100,url
   await recibir({data:{id:'a',token:1,url:'https://example.test/a'}});
   assert.ok(señal.aborted); assert.match(resultados[0].error,/200 KB/);
 }
-console.log('✓ prioridades, dependencias, cancelación, reintentos, tiempos, caída de trabajador y validación de datos');
+{
+  /* reintentar(): lo que falló ya con sus reintentos se vuelve a pedir sin recargar, primero lo que hace falta para lo
+     visible; con el trabajador caído o el cargador cerrado no se puede */
+  const w = new TrabajadorFalso(), errores = [], cargados = [];
+  const c = new CargadorSectores({catalogo, baseURL, tope:3, trabajador:w, concurrencia:1, reintentos:0, alError:(...e) => errores.push(e), alCargar:id => cargados.push(id)});
+  c.actualizar({x:0,z:0,visibles:['visible'],radio:150});
+  assert.equal(w.cargas()[0].id,'visible'); w.fallar(w.cargas()[0]);
+  assert.equal(w.cargas()[1].id,'adelante'); w.fallar(w.cargas()[1]);
+  w.fallar(w.cargas()[2]); assert.deepEqual(c.estado().fallos.sort(),['adelante','atras','visible']); assert.equal(errores.length,3);
+  c.actualizar({x:0,z:0,visibles:['visible'],radio:150}); assert.equal(w.cargas().length,3);   // sin reintentar, no se vuelve a pedir
+  assert.equal(c.reintentar(),true); assert.deepEqual(c.estado().fallos,[]);
+  assert.equal(w.cargas().length,4); assert.equal(w.cargas()[3].id,'visible');                  // primero lo que se ve
+  w.responder(w.cargas()[3]); assert.deepEqual(c.estado().faltantes,[]);
+  w.responder(w.cargas()[4]); w.responder(w.cargas()[5]); assert.deepEqual(cargados.sort(),['adelante','atras','visible']);
+  w.escuchas.error({message:'se cayó'}); assert.equal(c.reintentar(),false); c.cerrar(); assert.equal(c.reintentar(),false);
+}
+console.log('✓ prioridades, dependencias, cancelación, reintentos, reintentar sin recargar, tiempos, caída de trabajador y validación de datos');
