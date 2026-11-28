@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {crearCarrilesViales,muestraVial} from '../src/fisica/trafico.js';
+import {RutasViales} from '../src/fisica/rutas-viales.js';
 import {RedTrafico} from '../src/fisica/red-trafico.js';
 import {CapaTrafico} from '../src/render/trafico.js';
 const dir=process.argv[2];if(!dir)throw Error('Directorio de sectores compilados requerido');
@@ -15,6 +16,23 @@ for(const c of red.carriles.values()){
  assert.ok(Math.hypot(q.x-b.posicion[0],q.z-b.posicion[1])<1e-7);
  assert.equal(c.ancho_m,2.75);
 }
+const plan=new RutasViales(red);
+let rutas=0,inalcanzables=0,maxTramos=0;
+for(const a of plan.carriles.values())for(const b of plan.carriles.values()){
+ if(a.id===b.id)continue;
+ const q=plan.buscar(a.id,b.id);
+ if(!q){inalcanzables++;continue;}
+ assert.equal(q.ruta[0],a.id);assert.equal(q.ruta.at(-1),b.id);
+ for(let i=1;i<q.ruta.length;i++){
+   const u=red.carriles.get(q.ruta[i-1]),v=red.carriles.get(q.ruta[i]);
+   assert.equal(u.hasta,v.desde);assert.notEqual(u.tramo,v.tramo);
+ }
+ assert.equal(new Set(q.ruta).size,q.ruta.length);
+ rutas++;maxTramos=Math.max(maxTramos,q.ruta.length);
+}
+assert.equal(rutas+inalcanzables,plan.carriles.size*(plan.carriles.size-1));
+assert.ok(rutas>2000);
+console.log('RUTAS ORBE: '+plan.carriles.size+' carriles elegibles; '+rutas+' pares conectados sin giro U; '+inalcanzables+' no alcanzables; máximo '+maxTramos+' tramos');
 const sim=new RedTrafico(red);
 const entradas=[...red.carriles.values()].filter(c=>c.hasta==='n_km0'&&c.largo>=56),salidas=[...red.carriles.values()].filter(c=>c.desde==='n_km0'&&c.largo>=56);
 assert.ok(entradas.length>=3&&salidas.length>=3);

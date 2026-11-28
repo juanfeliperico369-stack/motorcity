@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'motor-v6/src/fisica/*trafico.js'
+      - 'motor-v6/src/fisica/rutas-viales.js'
       - 'motor-v6/src/render/trafico.js'
       - 'motor-v6/tests/trafico-orbe.mjs'
       - 'motor-v6/tests/trafico-banco.js'
@@ -11,6 +12,7 @@ on:
   push:
     paths:
       - 'motor-v6/src/fisica/*trafico.js'
+      - 'motor-v6/src/fisica/rutas-viales.js'
       - 'motor-v6/src/render/trafico.js'
       - 'motor-v6/tests/trafico-orbe.mjs'
       - 'motor-v6/tests/trafico-banco.js'
