@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: juanfeliperico369-stack/Run-City
-          ref: 166293b509f6a9098ffcdce893517b22999bc8a8
+          ref: 00d9f708d50d231ab57f8984368a678ebb2c1ab8
           path: _orbe
           persist-credentials: false
       - uses: actions/setup-node@v4
