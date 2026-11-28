@@ -1,5 +1,17 @@
 # Bitácora de Motor City
 
+## 28-nov-2026 · Motor City 6: el esquema «avanza», el control de un segundo (Claude A)
+- **`entrada/esquemas.js`**: un tercer esquema, `avanza`, además de `directo` y `manubrio`. El autor pidió seguir el arcade de persecución que mandó en video (Run-City, `docs/referencias/pako-2.md`, sala limpia). Claude B ya lo había hecho en su escena; ahora es del motor, para todas las escenas y para EnCicla y El Metro:
+  - se avanza solo;
+  - una mitad de la pantalla gira (o A y D);
+  - las dos a la vez frenan, y también abajo (S o la flecha).
+- **`entrada/tactil.js`**: un modo `lados`, sin palanca ni gestos con el dedo. Cada dedo cuenta por la mitad donde se apoyó, aunque se deslice. El ratón sigue girando la cámara.
+- **`entrada/controles.js`**: pasa sola la pantalla a `lados` cuando el esquema del momento (a pie o en vehículo) es `avanza`. El gatillo de freno del mando vale en `manubrio` y en `avanza`.
+- **Probado:**
+  - `entrada.mjs` (64, antes 50): el esquema, la física (llega a su máximo sola, la mitad derecha lleva a la derecha de la pantalla y las dos mitades la detienen) y `Tactil` en `lados` con toques;
+  - el banco en Chromium (39): elegir «avanza» en los ajustes; con toques reales, la bici avanza sola, gira con un dedo y para con dos; la palanca no se dibuja;
+  - siguen pasando `sensacion`, `camara` y `verificar`.
+
 ## 28-nov-2026 · Motor City 6: el cargador reintenta sin recargar (Claude A)
 - **`CargadorSectores.reintentar()`** (`mundo/sectores.js`) vuelve a pedir, sin recargar la página, lo que falló ya con sus reintentos (sin red o con el servidor caído). Primero va lo que hace falta para lo visible.
   - Devuelve `false` si el trabajador se cayó o el cargador está cerrado; entonces el juego recarga.

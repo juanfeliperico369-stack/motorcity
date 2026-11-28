@@ -3,6 +3,8 @@
    - Toques sobre el mundo (la «superficie», normalmente el canvas): si caen donde va la palanca, la mueven; si no, son
      gestos de la cámara (entrada/gestos.js). Los botones del HUD tienen sus propios eventos y no llegan aquí.
    - El ratón no toma la palanca (en el computador se mueve con el teclado): arrastrar gira e inclina, la rueda acerca.
+   - Modo «lados» (el esquema «avanza», entrada/esquemas.js): no hay palanca ni gestos con el dedo; cada dedo cuenta por
+     su mitad de la pantalla (izquierda o derecha), y las dos a la vez son el freno. La cámara sigue sola.
    - Al perder el foco o pausar, todo se suelta (limpiar()). */
 import { Palanca } from './palanca.js';
 import { Gestos } from './gestos.js';
@@ -15,7 +17,8 @@ const ESTILO = `.mc6-palanca{position:fixed;left:0;top:0;pointer-events:none;z-i
 export class Tactil {
   constructor({ superficie, camara, preferencias = {}, gestos = {}, contenedor = globalThis.document?.body } = {}) {
     this.superficie = superficie; this.palanca = new Palanca(preferencias); this.gestos = new Gestos(camara, gestos); this.activo = true;
-    this.dueno = new Map();                                  // id del toque → 'palanca' | 'gestos'
+    this.dueno = new Map();                                  // id del toque → 'palanca' | 'gestos' | 'lados'
+    this.modo = 'palanca'; this.lados = new Map();           // «lados»: cada dedo y su mitad (−1 izquierda, 1 derecha)
     const doc = superficie.ownerDocument;
     if (!doc.getElementById('mc6-palanca-estilo')) { const s = doc.createElement('style'); s.id = 'mc6-palanca-estilo'; s.textContent = ESTILO; doc.head.append(s); }
     this.base = doc.createElement('div'); this.base.className = 'mc6-palanca mc6-palanca-base'; this.base.dataset.palanca = 'base';
@@ -28,7 +31,8 @@ export class Tactil {
         if (!this.activo) return;
         const p = pos(e); this.palanca.medir(p.ancho, p.alto, this._abajoSeguro());
         let quien = null;
-        if (e.pointerType !== 'mouse' && this.palanca.empezar(e.pointerId, p.x, p.y)) quien = 'palanca';
+        if (this.modo === 'lados' && e.pointerType !== 'mouse') { this.lados.set(e.pointerId, p.x < p.ancho / 2 ? -1 : 1); quien = 'lados'; }
+        else if (this.modo === 'palanca' && e.pointerType !== 'mouse' && this.palanca.empezar(e.pointerId, p.x, p.y)) quien = 'palanca';
         else if (this.gestos.empezar(e.pointerId, p.x, p.y)) quien = 'gestos';
         if (!quien) return;
         this.dueno.set(e.pointerId, quien); e.preventDefault();
@@ -38,6 +42,7 @@ export class Tactil {
       ev('pointermove', e => {
         const quien = this.dueno.get(e.pointerId); if (!quien) return;
         const p = pos(e);
+        if (quien === 'lados') return;   // el dedo cuenta por la mitad donde se apoyó
         if (quien === 'palanca') this.palanca.mover(e.pointerId, p.x, p.y); else this.gestos.mover(e.pointerId, p.x, p.y, p);
         this.dibujar();
       }),
@@ -49,17 +54,23 @@ export class Tactil {
     globalThis.addEventListener?.('resize', this._medir); this._medir();
   }
   _abajoSeguro() { try { const v = getComputedStyle(this.superficie.ownerDocument.documentElement).getPropertyValue('--mc6-abajo'); return parseFloat(v) || 0; } catch { return 0; } }
-  _fin(id) { const quien = this.dueno.get(id); if (!quien) return; this.dueno.delete(id); if (quien === 'palanca') this.palanca.terminar(id); else this.gestos.terminar(id); this.dibujar(); }
-  /** El vector de la palanca: { x, y, m } (x derecha, y arriba). */
-  vector() { return this.palanca.vector(); }
+  _fin(id) { const quien = this.dueno.get(id); if (!quien) return; this.dueno.delete(id); if (quien === 'lados') this.lados.delete(id); else if (quien === 'palanca') this.palanca.terminar(id); else this.gestos.terminar(id); this.dibujar(); }
+  /** El vector de la palanca: { x, y, m } (x derecha, y arriba). En «lados»: x es −1, 0 o 1 y freno, las dos mitades. */
+  vector() {
+    if (this.modo !== 'lados') return this.palanca.vector();
+    const v = [...this.lados.values()], izq = v.includes(-1), der = v.includes(1);
+    return { x: (der ? 1 : 0) - (izq ? 1 : 0), y: 0, m: izq || der ? 1 : 0, freno: izq && der };
+  }
+  /** 'palanca' (directo y manubrio) o 'lados' (avanza); al cambiar se suelta todo. */
+  cambiarModo(modo) { if (modo === this.modo || (modo !== 'palanca' && modo !== 'lados')) return; this.limpiar(); this.modo = modo; this.dibujar(); }
   ajustar(preferencias) { this.palanca.ajustar(preferencias); this._limpiarDuenos(); this.dibujar(); }
   ajustarGestos(p) { this.gestos.ajustar(p); }
   /** Suelta todo (pausa, perder el foco, abrir un menú). */
-  limpiar() { this.palanca.soltar(); this.gestos.cancelar(); this._limpiarDuenos(); this.dibujar(); }
+  limpiar() { this.palanca.soltar(); this.gestos.cancelar(); this.lados.clear(); this._limpiarDuenos(); this.dibujar(); }
   _limpiarDuenos() { for (const id of this.dueno.keys()) { try { this.superficie.releasePointerCapture(id); } catch { /* ya suelto */ } } this.dueno.clear(); }
   pausar(si) { this.activo = !si; if (si) this.limpiar(); this.dibujar(); }
   dibujar() {
-    const d = this.palanca.dibujo(), r = d.radio, rp = 22, mostrar = this.activo && (d.visible || d.guia);
+    const d = this.palanca.dibujo(), r = d.radio, rp = 22, mostrar = this.activo && this.modo === 'palanca' && (d.visible || d.guia);
     this.base.hidden = !mostrar; this.perilla.hidden = !mostrar || d.guia;
     if (!mostrar) return;
     Object.assign(this.base.style, { width: r * 2 + 'px', height: r * 2 + 'px', opacity: String(d.guia ? d.opacidad * 0.45 : d.opacidad), transform: `translate(${d.base.x - r}px,${d.base.y - r}px)` });

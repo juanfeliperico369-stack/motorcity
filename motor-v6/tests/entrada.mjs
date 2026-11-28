@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { Palanca, normalizarPreferencias } from '../src/entrada/palanca.js';
 import { Gestos } from '../src/entrada/gestos.js';
+import { Tactil } from '../src/entrada/tactil.js';
 import { mandoDesdeVector, vectorHacia } from '../src/entrada/esquemas.js';
 import { vectorTeclas } from '../src/entrada/teclado.js';
 import { leerMando } from '../src/entrada/mando.js';
@@ -67,6 +68,37 @@ const cerca = (a, b, e, m) => ok(Math.abs(a - b) <= e, `${m} (${a} vs ${b})`);
   cam.colocar({ x: 0, y: 0, z: 0, rumbo: 0 });
   for (let i = 0; i < 20; i++) e = moverArcade(e, mandoDesdeVector({ x: 1, y: 0.5, m: 1 }, cam.base(), 'manubrio'), 1 / 60, P);
   ok(proyectar(cam.pose(1), { x: e.x, y: 0, z: e.z }, 412 / 860).x > 0.01, 'en manubrio, girar a la derecha también va a la derecha de la pantalla');
+  /* avanza: se avanza solo; una mitad gira; las dos (o abajo) frenan */
+  const av = v => mandoDesdeVector(v, cam.base(), 'avanza');
+  ok(av({ x: 0, y: 0, m: 0 }).avance === 1 && av({ x: 0, y: 0, m: 0 }).giro === 0 && !av({ x: 0, y: 0, m: 0 }).freno, 'en avanza, sin tocar nada se avanza solo');
+  ok(av({ x: 1, y: 0, m: 1 }).giro === 1 && av({ x: 1, y: 0, m: 1 }).avance === 1, 'en avanza, una mitad gira sin dejar de avanzar');
+  ok(av({ x: 0, y: 0, m: 1, freno: true }).freno && av({ x: 0, y: 0, m: 1, freno: true }).avance === 0, 'en avanza, las dos mitades a la vez frenan');
+  ok(av({ x: 0, y: -1, m: 1 }).freno && av({ x: 0, y: 1, m: 1 }).avance === 1 && !av({ x: 0, y: 1, m: 1 }).freno, 'en avanza, abajo (S o la flecha) frena; arriba no');
+  let ea = { x: 0, z: 0, rumbo: 0, velocidad: 0, w: 0 };
+  for (let i = 0; i < 240; i++) ea = moverArcade(ea, av({ x: 0, y: 0, m: 0 }), 1 / 60, P);
+  ok(ea.velocidad > 0.9 * P.velocidadMax && ea.z > 10, `con la física, avanza solo hasta su máximo (${ea.velocidad.toFixed(2)} m/s)`);
+  cam.colocar({ x: ea.x, y: 0, z: ea.z, rumbo: ea.rumbo });
+  let eg = { ...ea }; for (let i = 0; i < 30; i++) eg = moverArcade(eg, av({ x: 1, y: 0, m: 1 }), 1 / 60, P);
+  ok(proyectar(cam.pose(1), { x: eg.x, y: 0, z: eg.z }, 412 / 860).x > proyectar(cam.pose(1), { x: ea.x, y: 0, z: ea.z }, 412 / 860).x + 0.01, 'en avanza, la mitad derecha lleva a la derecha de la pantalla');
+  for (let i = 0; i < 120; i++) ea = moverArcade(ea, av({ x: 0, y: 0, m: 1, freno: true }), 1 / 60, P);
+  ok(ea.velocidad < 0.05, 'y frenando con las dos mitades se detiene');
+}
+/* ---- avanza en la pantalla táctil (Tactil en «lados»): sin palanca, cada dedo cuenta por su mitad ---- */
+{
+  const el = () => ({ style: {}, dataset: {}, hidden: false, className: '', remove() {} }), escuchas = {};
+  const doc = { getElementById: () => null, createElement: el, head: { append() {} }, documentElement: {} };
+  const superficie = { ownerDocument: doc, addEventListener: (t, f) => { escuchas[t] = f; }, removeEventListener() {}, getBoundingClientRect: () => ({ left: 0, top: 0, width: 412, height: 860 }), setPointerCapture() {}, releasePointerCapture() {} };
+  const t = new Tactil({ superficie, camara: new Camara(), contenedor: { append() {} } });
+  const toque = (tipo, id, x, y = 600) => escuchas[tipo]({ pointerId: id, pointerType: 'touch', clientX: x, clientY: y, preventDefault() {} });
+  t.cambiarModo('lados');
+  ok(t.base.hidden && t.perilla.hidden, 'en «lados» no se dibuja la palanca');
+  toque('pointerdown', 1, 330); ok(t.vector().x === 1 && t.vector().m === 1 && !t.vector().freno, 'un dedo en la mitad derecha gira a la derecha');
+  toque('pointerdown', 2, 60); ok(t.vector().x === 0 && t.vector().freno, 'con un dedo en cada mitad, frena');
+  toque('pointerup', 1, 330); ok(t.vector().x === -1 && !t.vector().freno, 'al soltar el de la derecha queda el de la izquierda');
+  toque('pointermove', 2, 380); ok(t.vector().x === -1, 'el dedo cuenta por la mitad donde se apoyó, aunque se deslice');
+  toque('pointerup', 2, 380); ok(t.vector().m === 0, 'sin dedos no hay giro (y en avanza se sigue derecho)');
+  toque('pointerdown', 3, 300); t.cambiarModo('palanca'); ok(t.vector().m === 0 && t.lados.size === 0 && t.dueno.size === 0, 'al volver a la palanca se suelta todo');
+  t.cerrar();
 }
 /* ---- la cámara a gusto: arrastrar, dos dedos (girar, pellizcar, inclinar) y la rueda ---- */
 {

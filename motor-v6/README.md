@@ -29,8 +29,8 @@ motor-v6/
 │   │              calidad.js (el regulador: baja la resolución, nunca la fluidez)
 │   ├── camara/    camara.js (LA CÁMARA ÚNICA del § 5), geometria.js (prismas, rayos, proyección), three.js (adaptador)
 │   ├── entrada/   palanca.js (fija o flotante), gestos.js (dos dedos, pellizco, rueda), teclado.js, mando.js,
-│   │              esquemas.js (directo o manubrio), orientacion.js (la recomendación al girar), preferencias.js,
-│   │              tactil.js (el DOM) y controles.js (todo junto)
+│   │              esquemas.js (directo, manubrio o avanza), orientacion.js (la recomendación al girar), preferencias.js,
+│   │              tactil.js (el DOM; palanca o «lados») y controles.js (todo junto)
 │   ├── fisica/    arcade.js (la sensación del § 12: rampas de EnCicla y su giro), carrera.js, huellas.js, recorrido.js
 │   ├── mundo/     sectores.js (carga por cercanía con trabajador; reintentar() sin recargar), sectores-3d.js, trabajador-sectores.js, generico.js (lo genérico:
 │   │              manzanas al frente de cada calle y árboles, con una semilla y sin guardarse),

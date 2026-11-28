@@ -2,7 +2,8 @@
    teclado y el mando, con los ajustes guardados del jugador. En cada paso fijo da lo que entiende la física:
      const c = new Controles({ superficie: canvas, camara, ajustes: ajustesControl({ clave: 'run-city.controles' }) });
      bucle: const { mover, correr, accion } = c.paso(dt, { aPie: true }); estado = moverArcade(estado, mover, dt, perfil);
-   - El esquema (directo o manubrio) es el de los ajustes, uno a pie y otro en vehículo.
+   - El esquema (directo, manubrio o avanza) es el de los ajustes, uno a pie y otro en vehículo. Con «avanza», la pantalla
+     táctil pasa a «lados» (sin palanca): una mitad gira y las dos frenan.
    - Q/E y la palanca derecha del mando giran la cámara; Z/X y los gatillos del mando no se cruzan: los gatillos solo
      aceleran y frenan en manubrio.
    - pausar(true) suelta todo y no deja que nada se mueva hasta reanudar. */
@@ -48,6 +49,7 @@ export class Controles {
   paso(dt, { aPie = true } = {}) {
     if (this.pausado) return { mover: {}, correr: false, accion: false, origen: 'pausa' };
     const v = this.ajustes.valores, esquema = aPie ? v.esquemaPie : v.esquemaVehiculo, base = this.camara.base(), m = leerMando();
+    this.tactil.cambiarModo(esquema === 'avanza' ? 'lados' : 'palanca');
     const giroCam = this.teclado.girarCamara * GIRO_TECLA * dt + (m.conectado ? -m.camara.x * GIRO_MANDO * dt : 0);
     if (giroCam) this.camara.girar(giroCam);
     if (m.conectado && m.camara.y) this.camara.inclinar(m.camara.y * dt);
@@ -58,7 +60,7 @@ export class Controles {
     if (!(vec.m > 0)) { vec = this.teclado.vector(); origen = 'teclado'; }
     if (!(vec.m > 0) && m.conectado) { vec = m.mover; origen = 'mando'; }
     if (!(vec.m > 0)) origen = 'nada';
-    let mover = mandoDesdeVector(vec, base, esquema, { freno: m.conectado && m.frenar > 0.5 && esquema === 'manubrio' });
+    let mover = mandoDesdeVector(vec, base, esquema, { freno: m.conectado && m.frenar > 0.5 && esquema !== 'directo' });
     if (esquema === 'manubrio' && m.conectado && m.acelerar > 0.05) mover = { ...mover, avance: Math.max(mover.avance || 0, m.acelerar) };
     return { mover, correr: this.teclado.correr || (m.conectado && m.correr), accion: this.teclado.accion || (m.conectado && m.accion), origen, vector: vec };
   }
