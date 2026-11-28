@@ -71,7 +71,7 @@ export class CamaraCenitalInteligente {
   orbitarManual(dYaw, dPitch = 0) {
     this.yaw += dYaw;
     this.pitchOffset = clamp(this.pitchOffset + dPitch, -0.22, 0.25);
-    this.pausaManualSeg = 1.65; // respeta el encuadre elegido antes de retomar auto-seguimiento
+    this.pausaManualSeg = 2.5; // respeta el encuadre elegido antes de retomar auto-seguimiento
   }
 
   /** Acercar o alejar continuamente (rueda, pellizco o botones +/-) */
@@ -167,7 +167,7 @@ export class CamaraCenitalInteligente {
       for (const box of this.colisiones) {
         if (px >= box.minX - 0.6 && px <= box.maxX + 0.6 &&
             pz >= box.minZ - 0.6 && pz <= box.maxZ + 0.6 &&
-            py < box.maxY + 0.8) {
+            py < box.maxY + 0.8 && py >= (box.minY ?? -Infinity) - 0.6) {
           brazoObj = Math.min(brazoObj, Math.max(0.38, (i - 1) / muestras));
           break;
         }

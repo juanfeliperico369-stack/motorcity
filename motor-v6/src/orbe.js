@@ -43,16 +43,18 @@ async function iniciar(){
   const avatar=new THREE.Group(),garaje=crearGaraje();let modelo=garaje.get(modos[modo].id);
   avatar.add(modelo);escena.add(avatar);$('modo').textContent=modos[modo].nombre;
   let vuelo=0,velVertical=0,impulsos=4,ultimoImpulso=false;
-  const selector=$('garaje');for(const [i,v] of modos.entries()){const b=document.createElement('button');b.textContent=v.nombre;b.dataset.vehiculo=v.id;b.onclick=()=>{seleccionar(i);selector.hidden=true;};selector.append(b);}
+  const selector=$('garaje');for(const [i,v] of modos.entries()){const b=document.createElement('button');b.textContent=v.nombre;b.dataset.vehiculo=v.id;b.onclick=()=>{seleccionar(i);selector.hidden=true;};$('listaGaraje').append(b);}
   const threeCam=new THREE.PerspectiveCamera(50,1,.3,1000);
   const terrenoCam={getHeight:(x,z)=>mundo.altura(x,z)??y};
-  const cam=new CamaraCenitalInteligente(threeCam,{terreno:terrenoCam,colisiones:[]});
-  cam.yaw=estado.rumbo+Math.PI;cam.blanco.set(estado.x,y+1.3,estado.z);cam.ojo.set(estado.x-18,y+25,estado.z+10);cam.zoom=cam.zoomObj=.45;
+  const cajasCam=[];let firmaCam='';
+  const cam=new CamaraCenitalInteligente(threeCam,{terreno:terrenoCam,colisiones:cajasCam});
+  cam.yaw=estado.rumbo+Math.PI;cam.blanco.set(estado.x,y+1.3,estado.z);cam.ojo.set(estado.x-18,y+25,estado.z+10);cam.zoom=cam.zoomObj=.56;
   const resize=()=>{renderer.setSize(innerWidth,innerHeight,false);threeCam.aspect=innerWidth/innerHeight;threeCam.updateProjectionMatrix();};addEventListener('resize',resize);resize();
   const hud=document.querySelector('.hud');const ajustarPaneles=()=>document.documentElement.style.setProperty('--panel-top',Math.ceil(hud.getBoundingClientRect().bottom+8)+'px');new ResizeObserver(ajustarPaneles).observe(hud);ajustarPaneles();
   const teclas=new Set(),toques=new Map();
   const activo=k=>teclas.has(k)||[...toques.values()].includes(k);
-  function limpiar(){teclas.clear();toques.clear();}
+  let joyId=null,joyX=0,joyY=0;
+  function limpiar(){teclas.clear();toques.clear();joyId=null;joyX=joyY=0;$('joy-knob').style.transform='translate(0px,0px)';}
   function perfil(){return perfilVehiculo(modos[modo]);}
   const celda=(x,z)=>indice.sectores.find(s=>x>=s.x-indice.tamano_m/2&&x<s.x+indice.tamano_m/2&&z>=s.z-indice.tamano_m/2&&z<s.z+indice.tamano_m/2);
   function pisoInfo(x,z,referencia=y){return superficie(ambiente,vias,x,z,mundo.altura(x,z),referencia);}
@@ -81,16 +83,16 @@ async function iniciar(){
   function paso(dt){
     anterior={...estado};yAnterior=y;
     if(!listo||restaurando){estado={...estado,velocidad:0};return;}
-    const giro=Number(activo('derecha'))-Number(activo('izquierda'));
+    const giro=Math.max(-1,Math.min(1,Number(activo('derecha'))-Number(activo('izquierda'))+joyX));
     if(carrera){
-      const c=pasoCarrera(red,carrera,{lateral:giro,freno:activo('freno'),rama},dt,perfil(),bucle.t);
+      const c=pasoCarrera(red,carrera,{lateral:giro,freno:activo('freno')||joyY>.25,rama},dt,perfil(),bucle.t);
       const p=posicionCarrera(red,c);
       if(piso(p.x,p.z,p.y)!==undefined&&!obstaculo(estado,p,p.y)){carrera=c;estado={x:p.x,z:p.z,rumbo:p.rumbo,velocidad:c.velocidad};y=p.y;if(!c.opciones.some(o=>o.tramo===rama))rama=null;}
       else{carrera={...carrera,velocidad:0};estado={...estado,velocidad:0};}
       cam.actualizar(dt,{pos:new THREE.Vector3(estado.x,y,estado.z),vel:new THREE.Vector3(Math.sin(estado.rumbo)*estado.velocidad,0,Math.cos(estado.rumbo)*estado.velocidad),rumbo:estado.rumbo+Math.PI,rapidez:estado.velocidad});
       return;
     }
-    const nuevo=pasoArcade(estado,{avance:activo('avanzar')?1:0,giro,freno:activo('freno')},dt,perfil());
+    const nuevo=pasoArcade(estado,{avance:activo('avanzar')?1:Math.max(0,-joyY),giro,freno:activo('freno')||joyY>.25},dt,perfil());
     const altura=piso(nuevo.x,nuevo.z),sueloActual=piso(estado.x,estado.z);
     const impulso=activo('impulso');
     if(modos[modo].id==='jetpack'&&impulso&&!ultimoImpulso&&impulsos>0){velVertical=4;impulsos--;}
@@ -107,6 +109,8 @@ async function iniciar(){
   }
   function dibujar(alfa){
     mundo.actualizar({...estado,radio:650,radioVisible:65});estadoMundo=mundo.procesar({maxLotes:2});
+    const firma=[...mundo.versiones].sort((a,b)=>a[0].localeCompare(b[0])).map(v=>v.join(':')).join('|');
+    if(firma!==firmaCam){firmaCam=firma;cajasCam.length=0;for(const sector of mundo.cargador.cache.values())for(const o of sector.objetos){if(!Number.isFinite(o.base_m)||!Number.isFinite(o.altura_m))continue;const xs=o.huella.map(p=>p[0]),zs=o.huella.map(p=>p[1]);cajasCam.push({minX:Math.min(...xs),maxX:Math.max(...xs),minZ:Math.min(...zs),maxZ:Math.max(...zs),minY:o.base_m,maxY:o.base_m+o.altura_m});}}
     const h=piso(estado.x,estado.z,restaurando||primerSuelo?null:y);listo=estadoMundo.listo&&h!==undefined;
     if(restaurando&&estadoMundo.listo){
       if(h===undefined||obstaculo(estado,estado,h)){estado={x:1350,z:1110,velocidad:0,rumbo:Math.PI/2};anterior={...estado};y=yAnterior=15;listo=false;modo=0;avatar.remove(modelo);modelo=garaje.get(modos[modo].id);avatar.add(modelo);$('modo').textContent=modos[modo].nombre;}
@@ -135,12 +139,14 @@ async function iniciar(){
     renderer.render(escena,threeCam);cuadros++;
   }
   const bucle=new Bucle({actualizar:paso,dibujar});
-  function pausar(valor=!pausa){pausa=valor;limpiar();anterior={...estado};yAnterior=y;if(pausa)bucle.pausar();else bucle.reanudar();$('pausa').textContent=pausa?'Continuar':'Pausa';$('pausa').setAttribute('aria-pressed',String(pausa));}
+  function pausar(valor=!pausa){pausa=valor;limpiar();anterior={...estado};yAnterior=y;if(pausa)bucle.pausar();else bucle.reanudar();$('pausa').textContent=pausa?'Continuar':'Pausa';$('pausa').setAttribute('aria-pressed',String(pausa));$('velo').hidden=!pausa;}
   function seleccionar(i){if(pausa||carrera||vuelo>0||!modos[i])return;const anteriorModo=modo;modo=i;if(obstaculo(estado,estado,y)){modo=anteriorModo;return;}estado=adaptarVelocidad(estado,perfil());avatar.remove(modelo);modelo=garaje.get(modos[modo].id);avatar.add(modelo);$('modo').textContent=modos[modo].nombre;}
   function cambiar(){seleccionar((modo+1)%modos.length);}
   function guardar(){if(!listo||carrera||vuelo>0)return;try{guardado=escribirGuardado(localStorage,{version:1,mundo:'orbe-g0',x:estado.x,z:estado.z,rumbo:estado.rumbo,vehiculo:modos[modo].id,distancia:distanciaUltima,cruces:crucesUltimos},ids);}catch{guardado=false;}$('guardar').textContent=guardado?'Guardado':'No guardado';}
   $('guardar').onclick=guardar;
-  $('sonido').onclick=async()=>{const on=await sonido.alternar();$('sonido').textContent=on?'Sonido sí':'Sonido no';$('sonido').setAttribute('aria-pressed',String(on));};
+  $('cerrarGaraje').onclick=()=>{selector.hidden=true;};
+  $('tipoControl').onclick=()=>{limpiar();const pad=$('pad');pad.hidden=!pad.hidden;$('joystick').hidden=!pad.hidden;$('tipoControl').textContent=pad.hidden?'Control: palanca':'Control: flechas';};
+  $('sonido').onclick=async()=>{const on=await sonido.alternar();$('sonido').textContent=on?'Sonido: activo':'Sonido: apagado';$('sonido').setAttribute('aria-pressed',String(on));};
   $('zoom').onclick=()=>cam.siguienteAcercamiento();
   const dedos=new Map();let pellizco=0;
   $('cv').addEventListener('wheel',e=>{e.preventDefault();cam.ajustarZoom(e.deltaY<0?.08:-.08);},{passive:false});
@@ -150,9 +156,14 @@ async function iniciar(){
   const mapa={ArrowUp:'avanzar',KeyW:'avanzar',ArrowLeft:'izquierda',KeyA:'izquierda',ArrowRight:'derecha',KeyD:'derecha',ArrowDown:'freno',KeyS:'freno',Space:'freno',KeyJ:'impulso'};
   addEventListener('keydown',e=>{if(mapa[e.code]){e.preventDefault();if(!pausa)teclas.add(mapa[e.code]);}else if(!e.repeat&&(e.code==='KeyP'||e.code==='Escape'))pausar();else if(!e.repeat&&e.code==='KeyV')cambiar();else if(!e.repeat&&e.code==='KeyR')alternarCarrera();else if(!e.repeat&&carrera&&/^Digit[1-9]$/.test(e.code)){const o=carrera.opciones[Number(e.code.slice(-1))-1];if(o)rama=o.tramo;}});
   addEventListener('keyup',e=>{if(mapa[e.code])teclas.delete(mapa[e.code]);});
+  const joystick=$('joystick');
+  function moverJoy(e){const b=joystick.getBoundingClientRect(),dx=(e.clientX-b.left-b.width/2)/(b.width*.36),dy=(e.clientY-b.top-b.height/2)/(b.height*.36),n=Math.hypot(dx,dy),k=n>1?1/n:1;joyX=n<.12?0:dx*k;joyY=n<.12?0:dy*k;$('joy-knob').style.transform='translate('+joyX*b.width*.36+'px,'+joyY*b.height*.36+'px)';}
+  joystick.addEventListener('pointerdown',e=>{e.preventDefault();if(pausa||joyId!==null)return;joyId=e.pointerId;joystick.setPointerCapture(joyId);moverJoy(e);});
+  joystick.addEventListener('pointermove',e=>{if(e.pointerId===joyId)moverJoy(e);});
+  for(const evento of ['pointerup','pointercancel','lostpointercapture'])joystick.addEventListener(evento,e=>{if(e.pointerId===joyId){joyId=null;joyX=joyY=0;$('joy-knob').style.transform='translate(0px,0px)';}});
   for(const id of ['avanzar','izquierda','derecha','freno','impulso']){const btn=$(id);btn.addEventListener('pointerdown',e=>{e.preventDefault();if(!pausa){btn.setPointerCapture(e.pointerId);toques.set(e.pointerId,id);}});for(const evento of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(evento,e=>toques.delete(e.pointerId));}
   $('ajustes').onclick=()=>{selector.hidden=true;$('opciones').hidden=!$('opciones').hidden;};$('vehiculos').onclick=()=>{if(!carrera&&!pausa){$('opciones').hidden=true;selector.hidden=!selector.hidden;}};$('carrera').onclick=alternarCarrera;$('modo').onclick=cambiar;$('pausa').onclick=()=>pausar();addEventListener('blur',()=>pausar(true));document.addEventListener('visibilitychange',()=>{if(document.hidden)pausar(true);});
-  window.RUN_CITY_MOTOR={estado:()=>({x:estado.x,z:estado.z,y,velocidad:estado.velocidad,modo:modos[modo].nombre,vehiculo:modos[modo].id,vuelo,impulsos,pausa,listo,choques,carrera:carrera?{fase:carrera.fase,distancia:carrera.distancia,cruces:carrera.cruces,evento:carrera.evento,tramo:carrera.ruta.tramo,sem:carrera.sem,opciones:carrera.opciones.map(o=>o.tramo)}:null,distanciaUltima,crucesUltimos,guardado,sonido:sonido.activo,camYaw:cam.yaw,camZoom:cam.zoom,cuadros,pasos:bucle.pasos,carga:estadoMundo,nivel:pisoInfo(estado.x,estado.z)?.nivel??null,ambiente:{rio:true,mar:true,puente:true},drawCalls:renderer.info.render.calls})};
+  window.RUN_CITY_MOTOR={estado:()=>({x:estado.x,z:estado.z,y,velocidad:estado.velocidad,modo:modos[modo].nombre,vehiculo:modos[modo].id,vuelo,impulsos,pausa,listo,choques,carrera:carrera?{fase:carrera.fase,distancia:carrera.distancia,cruces:carrera.cruces,evento:carrera.evento,tramo:carrera.ruta.tramo,sem:carrera.sem,opciones:carrera.opciones.map(o=>o.tramo)}:null,distanciaUltima,crucesUltimos,guardado,sonido:sonido.activo,camYaw:cam.yaw,camZoom:cam.zoom,camBrazo:cam.brazoFactor,cajasCam:cajasCam.length,joy:{x:joyX,y:joyY},cuadros,pasos:bucle.pasos,carga:estadoMundo,nivel:pisoInfo(estado.x,estado.z)?.nivel??null,ambiente:{rio:true,mar:true,puente:true},drawCalls:renderer.info.render.calls})};
   cam.actualizar(1/60,{pos:new THREE.Vector3(estado.x,y,estado.z),vel:new THREE.Vector3(),rumbo:estado.rumbo+Math.PI,rapidez:0});
   bucle.iniciar();
 }
