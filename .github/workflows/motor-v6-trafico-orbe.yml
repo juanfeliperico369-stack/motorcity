@@ -5,6 +5,8 @@ on:
       - 'motor-v6/src/fisica/*trafico.js'
       - 'motor-v6/src/fisica/rutas-viales.js'
       - 'motor-v6/src/render/trafico.js'
+      - 'motor-v6/src/render/mobiliario.js'
+      - 'motor-v6/tests/mobiliario-orbe.mjs'
       - 'motor-v6/tests/trafico-orbe.mjs'
       - 'motor-v6/tests/trafico-banco.js'
       - 'motor-v6/tests/trafico-navegador.mjs'
@@ -14,6 +16,8 @@ on:
       - 'motor-v6/src/fisica/*trafico.js'
       - 'motor-v6/src/fisica/rutas-viales.js'
       - 'motor-v6/src/render/trafico.js'
+      - 'motor-v6/src/render/mobiliario.js'
+      - 'motor-v6/tests/mobiliario-orbe.mjs'
       - 'motor-v6/tests/trafico-orbe.mjs'
       - 'motor-v6/tests/trafico-banco.js'
       - 'motor-v6/tests/trafico-navegador.mjs'
@@ -30,7 +34,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: juanfeliperico369-stack/Run-City
-          ref: a250cb2d6cafc179e7768681a4d86f62c0911f0c
+          ref: ffa3faeff360cde6d2735e226a2cefe92708fd64
           path: _orbe
           persist-credentials: false
       - uses: actions/setup-node@v4
@@ -40,6 +44,9 @@ jobs:
         run: |
           cd _orbe
           python3 -B mundo/tuberia/preparar-escena-orbe.py mundo/orbe "$RUNNER_TEMP/escena-orbe" docs/orbe/ambiente-v1.json
+          python3 -B mundo/tuberia/mobiliario_orbe.py "$RUNNER_TEMP/escena-orbe" docs/arte/fachadas-y-densidad-orbe.json "$RUNNER_TEMP/mobiliario.json"
+      - name: Verificar instancias y huellas de las 27 piezas de plaza
+        run: node motor-v6/tests/mobiliario-orbe.mjs "$RUNNER_TEMP/mobiliario.json"
       - name: Probar itinerarios y capa de instancias con la topología de Orbe
         run: node motor-v6/tests/trafico-orbe.mjs "$RUNNER_TEMP/escena-orbe"
       - name: Instalar Playwright

@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import {MobiliarioUrbano} from '../src/render/mobiliario.js';
+const datos=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+assert.equal(datos.piezas.length,27);assert.equal(datos.rechazos.length,0);
+assert.equal(datos.piezas.filter(p=>p.tipo==='banca').length,14);
+assert.equal(datos.piezas.filter(p=>p.tipo==='farol').length,13);
+const capa=new MobiliarioUrbano();
+const e=capa.cargar(datos.piezas);
+assert.deepEqual(e,{piezas:27,lotes:3,instancias:[28,95,13]});
+assert.equal(capa.huellas().length,27);
+assert.ok(capa.huellas().every((h,i)=>h.id===datos.piezas[i].id&&h.base_m===datos.piezas[i].y));
+capa.cerrar();assert.equal(capa.raiz.children.length,0);
+console.log('OK: mobiliario real de diseño, 27 piezas, 136 instancias, tres lotes y 27 huellas; recursos liberados');
