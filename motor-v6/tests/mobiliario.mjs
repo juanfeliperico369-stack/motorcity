@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {MobiliarioUrbano} from '../src/render/mobiliario.js';
+const b={id:'b',tipo:'banca',x:0,y:2,z:0,rumbo:Math.PI/2,ancho_m:1.8,fondo_m:.65,altura_m:1,huella:[[-.325,-.9],[.325,-.9],[.325,.9],[-.325,.9]]};
+const f={id:'f',tipo:'farol',x:10,y:3,z:10,rumbo:0,ancho_m:.45,fondo_m:.45,altura_m:4.2,huella:[[9.775,9.775],[10.225,9.775],[10.225,10.225],[9.775,10.225]]};
+const capa=new MobiliarioUrbano({tope:2});
+assert.deepEqual(capa.cargar([b,f]),{piezas:2,lotes:3,instancias:[2,7,1]});
+assert.equal(capa.huellas().length,2);assert.equal(capa.huellas()[1].base_m,3);
+const h=capa.huellas();h[0].huella[0][0]=99;assert.equal(capa.huellas()[0].huella[0][0],-.325);
+assert.throws(()=>capa.cargar([b,b]),/Pieza inválida/);
+assert.throws(()=>capa.cargar([b,f,b]),/capacidad/);
+assert.deepEqual(capa.cargar([]),{piezas:0,lotes:0,instancias:[0,0,0]});
+capa.cerrar();assert.equal(capa.raiz.children.length,0);assert.throws(()=>capa.cargar([b]),/cerrado/);
+console.log('OK: mobiliario instanciado, huellas físicas independientes, capacidad y disposición');

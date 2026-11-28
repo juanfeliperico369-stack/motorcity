@@ -1438,3 +1438,6 @@ Rama `ia/chatgpt/planeta-cache-410-20261121`, basada en `main` 4.1.0: single-fli
 ## 28-nov-2026 · Motor City 6, relevo de carga y física
 - Se reconcilia la rama de carga/física con la de dependencias; conserva recorrido 3D, cancelación, validación y cinemática saturada. Se añaden telemetría, liberación, perfiles explícitos a pie y lector RCS1 optativo con respaldo JSON.
 - Pruebas adicionales de módulo y navegador programadas en CI específica; resultado pendiente. No se toca motor 5.x ni main.
+
+## 28-nov-2026 · Vida urbana (Eón)
+- Reconciliación de #45 con main b59ae40 tras #46: se conservan generador, fachadas, calidad y bucle de Claude A; se añaden módulos de tráfico, señalización, mobiliario y adoquín y sus pruebas, sin alterar main. Firma documental Eón.

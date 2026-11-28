@@ -1,0 +1,84 @@
+name: Motor City 6 · tráfico en Orbe real de diseño
+on:
+  pull_request:
+    paths:
+      - 'motor-v6/src/fisica/*trafico.js'
+      - 'motor-v6/src/fisica/rutas-viales.js'
+      - 'motor-v6/src/render/trafico.js'
+      - 'motor-v6/src/render/mobiliario.js'
+      - 'motor-v6/src/render/semaforos.js'
+      - 'motor-v6/src/render/adoquin.js'
+      - 'motor-v6/src/mundo/vida-urbana.js'
+      - 'motor-v6/tests/vida-urbana-orbe.mjs'
+      - 'motor-v6/tests/vida-urbana-banco.js'
+      - 'motor-v6/tests/vida-urbana-navegador.mjs'
+      - 'motor-v6/tests/adoquin-orbe.mjs'
+      - 'motor-v6/tests/mobiliario-orbe.mjs'
+      - 'motor-v6/tests/trafico-orbe.mjs'
+      - 'motor-v6/tests/trafico-banco.js'
+      - 'motor-v6/tests/trafico-navegador.mjs'
+      - '.github/workflows/motor-v6-trafico-orbe.yml'
+  push:
+    paths:
+      - 'motor-v6/src/fisica/*trafico.js'
+      - 'motor-v6/src/fisica/rutas-viales.js'
+      - 'motor-v6/src/render/trafico.js'
+      - 'motor-v6/src/render/mobiliario.js'
+      - 'motor-v6/src/render/semaforos.js'
+      - 'motor-v6/src/render/adoquin.js'
+      - 'motor-v6/src/mundo/vida-urbana.js'
+      - 'motor-v6/tests/vida-urbana-orbe.mjs'
+      - 'motor-v6/tests/vida-urbana-banco.js'
+      - 'motor-v6/tests/vida-urbana-navegador.mjs'
+      - 'motor-v6/tests/adoquin-orbe.mjs'
+      - 'motor-v6/tests/mobiliario-orbe.mjs'
+      - 'motor-v6/tests/trafico-orbe.mjs'
+      - 'motor-v6/tests/trafico-banco.js'
+      - 'motor-v6/tests/trafico-navegador.mjs'
+      - '.github/workflows/motor-v6-trafico-orbe.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  orbe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: juanfeliperico369-stack/Run-City
+          ref: 00d9f708d50d231ab57f8984368a678ebb2c1ab8
+          path: _orbe
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Compilar datos G-0 y carriles validados
+        run: |
+          cd _orbe
+          python3 -B mundo/tuberia/preparar-escena-orbe.py mundo/orbe "$RUNNER_TEMP/escena-orbe" docs/orbe/ambiente-v1.json
+          python3 -B mundo/tuberia/mobiliario_orbe.py "$RUNNER_TEMP/escena-orbe" docs/arte/plaza-rotativa-y-reconciliacion-g3.json "$RUNNER_TEMP/mobiliario.json"
+      - name: Verificar instancias y huellas de las 27 piezas de plaza
+        run: node motor-v6/tests/mobiliario-orbe.mjs "$RUNNER_TEMP/mobiliario.json" "$RUNNER_TEMP/escena-orbe"
+      - name: Verificar adoquín recortado sobre relieve C2 y vías reales
+        run: node motor-v6/tests/adoquin-orbe.mjs "$RUNNER_TEMP/escena-orbe" "$RUNNER_TEMP/mobiliario.json"
+      - name: Probar itinerarios y capa de instancias con la topología de Orbe
+        run: node motor-v6/tests/trafico-orbe.mjs "$RUNNER_TEMP/escena-orbe"
+      - name: Verificar composición de vida urbana
+        run: node motor-v6/tests/vida-urbana-orbe.mjs "$RUNNER_TEMP/escena-orbe" "$RUNNER_TEMP/mobiliario.json"
+      - name: Instalar Playwright
+        run: npm install --prefix "$RUNNER_TEMP/pw" --no-audit --no-fund playwright@1.56.1
+      - name: Banco WebGL y controles reales
+        run: |
+          export MC_CHROMIUM="$(command -v chromium || command -v google-chrome || command -v google-chrome-stable)"
+          NODE_PATH="$RUNNER_TEMP/pw/node_modules" MC_CAPTURAS="$RUNNER_TEMP/trafico-capturas" node motor-v6/tests/trafico-navegador.mjs "$RUNNER_TEMP/escena-orbe"
+      - name: Banco WebGL compuesto con sectores reales
+        run: |
+          export MC_CHROMIUM="$(command -v chromium || command -v google-chrome || command -v google-chrome-stable)"
+          NODE_PATH="$RUNNER_TEMP/pw/node_modules" MC_CAPTURAS="$RUNNER_TEMP/trafico-capturas" node motor-v6/tests/vida-urbana-navegador.mjs "$RUNNER_TEMP/escena-orbe" "$RUNNER_TEMP/mobiliario.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: banco-trafico-orbe
+          path: ${{ runner.temp }}/trafico-capturas
+          retention-days: 14

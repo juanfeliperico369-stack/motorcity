@@ -43,6 +43,13 @@ jobs:
           node motor-v6/tests/generico.mjs
           node motor-v6/tests/mundo-generico.mjs
           node motor-v6/tests/calidad.mjs
+          node motor-v6/tests/trafico.mjs
+          node motor-v6/tests/red-trafico.mjs
+          node motor-v6/tests/choques-trafico.mjs
+          node motor-v6/tests/rutas-viales.mjs
+          node motor-v6/tests/mobiliario.mjs
+          node motor-v6/tests/adoquin.mjs
+          node motor-v6/tests/semaforos.mjs
       - name: Instalar Playwright fuera del repositorio
         run: npm install --prefix "$RUNNER_TEMP/pw" --no-audit --no-fund playwright@1.56.1
       - name: Usar Chromium o Chrome del runner

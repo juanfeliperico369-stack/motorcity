@@ -1,0 +1,3 @@
+# Red de tráfico
+
+RedTrafico crea actores con itinerarios explícitos, solo fuera de transiciones. Reserva exclusiva de nodo desde la línea de espera hasta la salida del vehículo de la siguiente transición. Cola FIFO por instante de llegada y desempate por ID, autorización verde/libre externa, reserva de espacio de salida. Sin teletransporte ni reciclaje automático: el destino es la línea antes del último nodo, donde se estaciona hasta retirada explícita. No garantiza circulación en red saturada ni colisión con jugador/peatones, ni cruces entre geometrías ajenas al grafo. Un permiso concedido se mantiene hasta liberar el nodo. No hay animación de giro suavizada. Eón — firma documental.
