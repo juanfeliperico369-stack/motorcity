@@ -46,11 +46,10 @@ export class RedTrafico {
      this.reservas.set(n,{actor:a.id,entrada:c.id,salida:d.id,fase:'entrada'});
      this.solicitudes.delete(a.id);
    }
-   const activos=this.actores.filter(a=>!a.terminado),estacionados=this.actores.filter(a=>a.terminado);
    // Los estacionados siguen siendo obstáculos longitudinales. Mantenerlos
    // en el paso del carril con velocidad cero en su línea final.
    const previo=new Map(this.actores.map(a=>[a.id,a]));
-   const movidos=pasoTrafico(this.red,[...activos,...estacionados],dt,{...this.opts,permiso:(n,a)=>{const r=this.reservas.get(n);return r?.actor===a.id&&r.fase==='entrada'&&r.entrada===a.carril;}});
+   const movidos=pasoTrafico(this.red,this.actores,dt,{...this.opts,permiso:(n,a)=>{const r=this.reservas.get(n);return r?.actor===a.id&&r.fase==='entrada'&&r.entrada===a.carril;}});
    this.actores=movidos.map(a=>{
      const old=previo.get(a.id),c=this.red.carriles.get(a.carril);
      a.distancia_m=old.distancia_m+a.s-old.s;

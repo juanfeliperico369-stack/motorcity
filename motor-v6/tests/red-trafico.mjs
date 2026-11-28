@@ -16,14 +16,19 @@ assert.throws(()=>sim.agregar({id:'solapado',ruta:['n:1'],s:39}),/superpuesta/);
 const dt=1/60;
 for(let i=0;i<900;i++){const e=sim.paso(dt,{verde:()=>false});assert.equal(e.cruces,0);assert.equal(e.reservas.length,0);assert.ok(e.actores.every(a=>a.s<=73+1e-7));}
 assert.equal(sim.estado().actores.find(a=>a.id==='uno').s,73);
-let previo=sim.estado(),max=0,cruces=[];
+let previo=sim.estado(),max=0,cruces=[],llegados=new Set(),bloqueo=false;
 for(let i=0;i<5400;i++){
  const e=sim.paso(dt);max=Math.max(max,e.reservas.length);assert.ok(e.reservas.length<=1);
  for(const a of e.actores){const b=previo.actores.find(b=>b.id===a.id);assert.ok(Math.hypot(a.x-b.x,a.z-b.z)<.17,'salto de posición');assert.ok(a.distancia_m>=b.distancia_m-1e-7);if(a.i!==b.i)cruces.push(a.id);}
  for(const a of e.actores)for(const b of e.actores)if(a.id!==b.id&&a.carril===b.carril)assert.ok(Math.abs(a.s-b.s)>=6-1e-7);
+ for(const a of e.actores)if(a.terminado)llegados.add(a.id);
+ const dos=e.actores.find(a=>a.id==='dos'),tres=e.actores.find(a=>a.id==='tres');
+ // El segundo destino es compartido: mantener el primer vehículo aparcado
+ // hasta comprobar que el siguiente realmente queda en cola detrás de él.
+ if(dos?.terminado&&tres?.i===1&&Math.abs(tres.s-(dos.s-6))<.01&&tres.velocidad===0){bloqueo=true;assert.equal(sim.quitar('dos'),true);}
  previo=e;
- if(e.actores.every(a=>a.terminado))break;
+ if(llegados.size===3)break;
 }
-assert.ok(previo.actores.every(a=>a.terminado));assert.equal(previo.cruces,3);assert.equal(max,1);assert.equal(previo.reservas.length,0);assert.deepEqual(cruces,['dos','uno','tres']);
+assert.equal(llegados.size,3,JSON.stringify(previo));assert.equal(bloqueo,true);assert.ok(previo.actores.every(a=>a.terminado));assert.equal(previo.cruces,3);assert.equal(max,1);assert.equal(previo.reservas.length,0);assert.deepEqual(cruces,['dos','uno','tres']);
 assert.equal(sim.quitar('uno'),true);assert.equal(sim.quitar('no'),false);
 console.log('OK: tres itinerarios, rojo, reserva exclusiva FIFO, transición continua y destino; '+previo.tick+' pasos');
