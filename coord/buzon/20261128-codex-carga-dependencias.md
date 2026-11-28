@@ -1,0 +1,3 @@
+# Run City · X-3 · Relevo técnico
+
+Se preserva el commit padre cd53d677356921af27ae3968f0c4be5fdab9a206 (carga y física inicial). Se amplía el cargador con dependencias directas del índice de Run City, caché protegida, liberación de recursos, descarte de respuestas antiguas, reintento espaciado y estado medible. 9 pruebas de lógica en JavaScript con Worker simulado correctas. Pendiente Node/CI y navegador real, 30 km/h y 2 s, Android 7, memoria GPU. Consultar motor-v6/SECTORES-DEPENDENCIAS.md. Integración y exportación del motor corresponden al integrador; no se modifica el motor 5.x publicado.
