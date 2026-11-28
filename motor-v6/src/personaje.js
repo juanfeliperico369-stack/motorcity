@@ -11,7 +11,7 @@
    ===================================================================== */
 
 import * as THREE from '../../js/vendor/three-0.170.0.module.min.js';
-import { ESCALA } from './escala.js';
+import { ESCALA } from './nucleo/escala.js';
 
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 function angDif(a, b) {

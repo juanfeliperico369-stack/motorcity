@@ -1,4 +1,4 @@
-import * as THREE from '../../js/vendor/three-0.170.0.module.min.js';
+import * as THREE from '../render/three.js';
 export function crearAmbiente(cfg,sectores){
  const g=new THREE.Group();g.name='Agua e infraestructura';
  const agua=new THREE.MeshStandardMaterial({color:0x2f7fb0,roughness:.42,metalness:.12,side:THREE.DoubleSide});

@@ -1,5 +1,14 @@
 # Bitácora de Motor City
 
+## 28-nov-2026 · Motor City 6 · F1: la cámara del § 5, la entrada, la sensación del § 12, el sonido y el guardado (Claude A)
+- **La cámara única** (`motor-v6/src/camara/`): lo justo a 36 m y 50°, el zoom de 120 m a 7 m, el rumbo con resorte críticamente amortiguado (90° en ~1,3 s, zona muerta de 12°, tope de 100°/s, quieta no gira), la espera de 2,5 s tras tocarla, centrar, subir como grúa o encoger el brazo ante una pared, nunca dentro de un edificio, y la transición a la persecución de Run Scooter en 0,8 s. La transparencia de lo que tapa va en el sombreador (`render/oclusion.js`), en dos pasadas y con borde suave.
+- **La entrada** (`src/entrada/`): palanca fija o flotante (tamaño, opacidad, mano, zona muerta y sensibilidad), gestos de dos dedos, teclado, mando, los esquemas directo y manubrio, la recomendación al girar el celular y los ajustes guardados.
+- **La física** (`fisica/arcade.js`): `moverArcade` con el giro de EnCicla (según la marcha y con inercia); `pasoArcade` sigue igual para la carrera.
+- **El sonido y el guardado:** `sonido/guardian.js` (rescatado de `js/01-sonido-guardian.js`, sin parchear nada global) y `nucleo/guardado.js` (versiones y migraciones; no pisa una partida más nueva).
+- **La estructura del plano § 4:** `nucleo/`, `camara/`, `entrada/`, `fisica/`, `mundo/`, `render/` y `sonido/`. La escena de Orbe y el catálogo de los 17 vehículos pasan a `Run-City/juego/orbe/`.
+- **Probado:** `camara.mjs` (48), `sensacion.mjs` (1.325 medidas dentro de las metas del § 12), `entrada.mjs` (50), `guardado-sonido.mjs` (23), las de Codex con las rutas nuevas, y `banco-navegador.mjs` en Chromium móvil 412×860 con CPU 4× (34: toques reales, pellizco a los extremos, pausa, carrera, giro del celular; 45 fps de mediana con WebGL por software y 10 MB de memoria JS).
+- **Falta:** pasar a la cámara única el prototipo de la 4 Sur (`demo.html`, `main.js`, `skatepark.js`) y llevarlo a Run City (F3); probar en un celular de verdad.
+
 ## 28-nov-2026 · Sectores y física de Motor City 6 para Run City
 - Cargador con Worker, dependencias directas por celda, caché acotada, cancelación y recuperación de errores. Física con 17 perfiles y recorridos geométricos 3D.
 - Pasan las cuatro suites Node de v6 y el ensayo HTTP/Worker real: 258,44 m a 30 km/h, espera máxima local de 16,7 ms, sin errores. Es una prueba de componente con datos sintéticos, no una escena ni un celular físico.

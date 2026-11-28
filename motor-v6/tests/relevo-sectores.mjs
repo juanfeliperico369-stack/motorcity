@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { CargadorSectores } from '../src/sectores.js';
+import { CargadorSectores } from '../src/mundo/sectores.js';
 import { perfilArcade, adaptarVelocidad, pasoArcade, MULTIPLICADORES } from '../src/fisica/arcade.js';
 class W {
   constructor(){this.eventos={};this.envios=[];}

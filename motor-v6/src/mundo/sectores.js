@@ -16,7 +16,7 @@ export class CargadorSectores {
     for (const s of this.catalogo.values()) for (const id of s.dependencias) if (!this.catalogo.has(id)) throw new RangeError(`Dependencia desconocida: ${id}`);
     Object.assign(this, { tope, concurrencia, timeoutMs, reintentos, preferirBinario, alCargar, alError, alExpulsar });
     this.cache = new Map(); this.pesos = new Map(); this.requeridos = new Set(); this.erroresCallbacks = []; this.pendientes = new Map(); this.cola = []; this.deseados = new Set(); this.intentos = new Map(); this.fallidos = new Set(); this.secuencia = 0; this.cerrado = false; this.fatal = null;
-    this.trabajador = trabajador || new Worker(new URL('./mundo/trabajador-sectores.js', import.meta.url), { type: 'module' });
+    this.trabajador = trabajador || new Worker(new URL('./trabajador-sectores.js', import.meta.url), { type: 'module' });
     this.recibir = e => this._recibir(e.data);
     this.errorTrabajador = e => this._fatal(e.message || 'Falló el trabajador de sectores');
     this.trabajador.addEventListener('message', this.recibir);

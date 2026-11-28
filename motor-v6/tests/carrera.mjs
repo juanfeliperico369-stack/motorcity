@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {crearRedCiclo} from '../src/fisica/red-ciclo.js';
+import {crearRedCiclo} from '../src/mundo/red-ciclo.js';
 import {iniciarCarrera,posicionCarrera,pasoCarrera,luzCruce} from '../src/fisica/carrera.js';
 import {perfilArcade} from '../src/fisica/arcade.js';
 const n=(id,x,z,cruce='ninguno')=>({id,posicion:[x,z],altura_m:0,cruce});
