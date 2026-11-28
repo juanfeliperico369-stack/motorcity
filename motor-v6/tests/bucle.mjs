@@ -1,0 +1,11 @@
+/* Pruebas del bucle de paso fijo (Motor City 6 · nucleo/bucle.js). Uso: node motor-v6/tests/bucle.mjs */
+import { Bucle, mezclar } from '../src/nucleo/bucle.js';
+let mal = 0; const ok = (c, m) => { console.log((c ? '✓ ' : '✗ ') + m); if (!c) mal++; };
+const correr = (fps, seg, conf = {}) => { let u = 0, d = 0, alfas = []; const B = new Bucle({ actualizar: () => u++, dibujar: a => { d++; alfas.push(a); }, ...conf }); const ms = 1000 / fps; for (let i = 0; i <= Math.round(seg * fps); i++) B.cuadro(i * ms); return { B, u, d, alfas }; };
+{ const r = correr(30, 1); ok(Math.abs(r.u - 60) <= 1 && Math.abs(r.B.t - 1) < 0.02, 'a 30 fps da 60 pasos en 1 s (' + r.u + ', t=' + r.B.t.toFixed(3) + ')'); }
+{ const r = correr(144, 1); ok(Math.abs(r.u - 60) <= 1 && r.alfas.every(a => a >= 0 && a < 1), 'a 144 fps da 60 pasos y alfa siempre en [0, 1) (' + r.u + ')'); }
+{ let u = 0, d = 0; const B = new Bucle({ actualizar: () => u++, dibujar: () => d++ }); for (let i = 0; i <= 30; i++) B.cuadro(i * 16.67); const u0 = u, t0 = B.t; B.pausar(); for (let i = 31; i <= 90; i++) B.cuadro(i * 16.67); ok(u === u0 && B.t === t0 && d > 60, 'en pausa la física no avanza y el dibujo sigue (pasos ' + u0 + '→' + u + ')'); B.reanudar(); const n = B.cuadro(5000) + B.cuadro(5016.67); ok(n <= 1, 'al reanudar no hay salto aunque pasaron segundos (' + n + ' pasos)'); }
+{ let u = 0; const B = new Bucle({ actualizar: () => u++, maxPasos: 5 }); B.cuadro(0); B.cuadro(250); ok(u === 5 && B.descartado > 0.1, 'un tirón de 250 ms: tope de 5 pasos y lo demás se descarta (' + u + ', ' + B.descartado.toFixed(3) + ' s)'); }
+{ const r = correr(60, 2, {}); r.B.escala = 1; const h = correr(60, 2); const L = new Bucle({ actualizar: () => {} }); L.escala = 0.5; let u = 0; L.actualizar = () => u++; for (let i = 0; i <= 120; i++) L.cuadro(i * 16.67); ok(Math.abs(u - 60) <= 1 && h.u === r.u, 'cámara lenta ×0,5 da la mitad de pasos y todo es repetible (' + u + ')'); }
+ok(mezclar(10, 20, 0.25) === 12.5, 'mezclar interpola entre dos pasos');
+console.log(mal ? '✗ ' + mal + ' pruebas del bucle fallaron' : '✓ el bucle de paso fijo está bien'); process.exit(mal ? 1 : 0);
