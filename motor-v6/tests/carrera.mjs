@@ -17,7 +17,7 @@ assert.equal(c.ruta.tramo,'ab');assert.ok(c.ruta.s<=10);assert.ok(c.velocidad<.0
 let verde=0;while(luzCruce(red.nodos.get('b'),verde)!=='verde')verde++;
 for(let i=0;i<240&&c.ruta.tramo==='ab';i++)c=pasoCarrera(red,c,{rama:'bc'},dt,perfil,verde);
 assert.equal(c.ruta.tramo,'bc');assert.equal(posicionCarrera(red,c).z,10);
-assert.ok(c.distancia>=8);
+assert.ok(Math.abs(c.distancia-8)<1e-8);assert.equal(c.cruces,1);
 for(let i=0;i<120&&c.fase!=='fin';i++)c=pasoCarrera(red,c,{lateral:1},dt,perfil,verde);
 assert.ok(Math.abs(c.carril)<=1.85);
 console.log('OK: entrada continua, señal roja, rama explícita, carril limitado y salida métrica');

@@ -51,6 +51,7 @@ export function pasoCarrera(red,prev,control,dt,perfil,tJuego){
   // Distancia de frenada del perfil arcade, con 1 paso de margen.
   const frenada=c.velocidad*c.velocidad*.7/(2*perfil.velocidadMax)+c.velocidad*dt;
   const freno=!!control.freno||(parar&&d<=frenada+.15);
+  if(!permiso&&freno)c.rojo=true;
   const mov=pasoArcade({x:0,z:0,rumbo:0,velocidad:c.velocidad},{avance:1,freno},dt,perfil);
   c.velocidad=mov.velocidad;
   const r=avanzarCiclo(red,c.ruta,mov.z,{rama:c.rama??undefined,pasoPermitido:permiso});
